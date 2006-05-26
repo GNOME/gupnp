@@ -1,0 +1,11 @@
+prefix=@prefix@
+exec_prefix=${prefix}
+libdir=${exec_prefix}/lib
+includedir=${prefix}/include
+
+Name: gupnp-1.0
+Description: GObject-based UPnP library
+Version: @VERSION@
+Libs: -L${libdir} -lgupnp-1.0
+Cflags: -I${includedir}/gupnp-1.0
+Requires: gobject-2.0 gssdp-1.0 libsoup-2.2
