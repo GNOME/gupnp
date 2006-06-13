@@ -19,5 +19,19 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#include "gupnp-context.h"
-#include "gupnp-error.h"
+#ifndef __GUPNP_SOCKET_SOURCE_H__
+#define __GUPNP_SOCKET_SOURCE_H__
+
+G_BEGIN_DECLS
+
+typedef struct _GUPnPSocketSource GUPnPSocketSource;
+
+GUPnPSocketSource *
+gupnp_socket_source_new    (void);
+
+int
+gupnp_socket_source_get_fd (GUPnPSocketSource *socket_source);
+
+G_END_DECLS
+
+#endif /* __GUPNP_SOCKET_SOURCE_H__ */

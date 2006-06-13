@@ -19,5 +19,18 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#include "gupnp-context.h"
-#include "gupnp-error.h"
+#ifndef __GUPNP_ERROR_H__
+#define __GUPNP_ERROR_H__
+
+#include <glib.h>
+
+G_BEGIN_DECLS
+
+GQuark
+gupnp_error_quark (void) G_GNUC_CONST;
+
+#define GUPNP_ERROR_QUARK (gupnp_error_quark ())
+
+G_END_DECLS
+
+#endif /* __GUPNP_ERROR_H__ */

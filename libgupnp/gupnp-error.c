@@ -19,5 +19,15 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#include "gupnp-context.h"
 #include "gupnp-error.h"
+
+GQuark
+gupnp_error_quark (void)
+{
+        static GQuark quark = 0;
+
+        if (!quark)
+                quark = g_quark_from_static_string ("gupnp-error-quark");
+
+        return quark;
+}
