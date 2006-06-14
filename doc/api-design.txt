@@ -1,0 +1,288 @@
+Generic
+===
+
+- An interface for retrieving information about a device:
+
+        interface GUPnPDeviceInfo
+
+                const char *gupnp_device_info_get_location          (GUPnPDeviceInfo *info);
+                const char *gupnp_device_info_get_type              (GUPnPDeviceInfo *info);
+                const char *gupnp_device_info_get_friendly_name     (GUPnPDeviceInfo *info);
+                const char *gupnp_device_info_get_manufacturer      (GUPnPDeviceInfo *info);
+                const char *gupnp_device_info_get_manufacturer_url  (GUPnPDeviceInfo *info);
+                const char *gupnp_device_info_get_model_description (GUPnPDeviceInfo *info);
+                const char *gupnp_device_info_get_model_name        (GUPnPDeviceInfo *info);
+                const char *gupnp_device_info_get_model_number      (GUPnPDeviceInfo *info);
+                const char *gupnp_device_info_get_model_url         (GUPnPDeviceInfo *info);
+                const char *gupnp_device_info_get_serial_number     (GUPnPDeviceInfo *info);
+                const char *gupnp_device_info_get_udn               (GUPnPDeviceInfo *info);
+                const char *gupnp_device_info_get_upc               (GUPnPDeviceInfo *info);
+                const char *gupnp_device_info_get_icon_url          (GUPnPDeviceInfo *info,
+                                                                     const char      *requested_format,
+                                                                     int              requested_depth,
+                                                                     int              requested_width,
+                                                                     int              requested_height,
+                                                                     gboolean         prefer_bigger,
+                                                                     char           **format,
+                                                                     int             *depth,
+                                                                     int             *weight,
+                                                                     int             *height);
+
+- An interface for retrieving information about a service:
+
+        interface GUPnPServiceInfo
+
+                const char *gupnp_service_info_get_type                   (GUPnPServiceInfo *info);
+                const char *gupnp_service_info_get_id                     (GUPnPServiceInfo *info);
+                const char *gupnp_service_info_get_scpd_url               (GUPnPServiceInfo *info);
+                const char *gupnp_service_info_get_control_url            (GUPnPServiceInfo *info);
+                const char *gupnp_service_info_get_event_subscription_url (GUPnPServiceInfo *info);
+
+Server side
+===
+
+- A device class for implementing devices:
+
+        class GUPnPDevice implements GUPnPDeviceInfo
+
+                GList        *gupnp_device_list_devices       (GUPnPDevice *device);
+
+                GList        *gupnp_device_list_device_types  (GUPnPDevice *device);
+
+                GUPnPDevice  *gupnp_device_get_device         (GUPnPDevice *device,
+                                                               const char  *type);
+
+
+                GList        *gupnp_device_list_services      (GUPnPDevice *device);
+
+                GList        *gupnp_device_list_service_types (GUPnPDevice *device);
+
+                GUPnPService *gupnp_device_get_service        (GUPnPDevice *device,
+                                                               const char  *type);
+
+- A root device class:
+        
+        class GUPnPRootDevice extends GUPnPDevice
+
+                GUPnPRootDevice *gupnp_root_device_new             (SoupServer      *server,
+                                                                    GSSDPClient     *ssdp_client,
+                                                                    const char      *description_file,
+                                                                    const char      *relative_location_url,
+                                                                    GError         **error);
+
+
+                SoupServer      *gupnp_root_device_get_server      (GUPnPRootDevice *root_device);
+
+                GSSDPClient     *gupnp_root_device_get_ssdp_client (GUPnPRootDevice *root_device);
+
+
+                void             gupnp_root_device_set_available   (GUPnPRootDevice *root_device,
+                                                                    gboolean         available);
+
+                gboolean         gupnp_root_device_get_available   (GUPnPRootDevice *root_device);
+
+- A service class for implementing services:
+
+        typedef void (* GUPnPServiceActionFunction) (GUPnPService                 *service,
+                                                     GUPnPServiceActionInvocation *invocation);
+
+        struct GUPnPServiceActionInvocation
+
+                /* gupnp_service_action_get (invocation,
+                 *                           "in-argument1", G_TYPE_STRING, &value,
+                 *                           "in-argument2", G_TYPE_INT, &value2,
+                 *                           NULL);
+                 */
+                void gupnp_service_action_get           (GUPnPServiceActionInvocation *invocation,
+                                                         ...);
+
+                void gupnp_service_action_get_valist    (GUPnPServiceActionInvocation *invocation,
+                                                         va_list                       var_args);
+
+                void gupnp_service_action_get_value     (GUPnPServiceActionInvocation *invocation,
+                                                         const char                   *argument,
+                                                         GValue                       *value);
+
+
+                /* gupnp_service_action_set (invocation,
+                 *                           "out-argument1", G_TYPE_STRING, "value",
+                 *                           "out-argument2", G_TYPE_INT, 3,
+                 *                           NULL);
+                 */
+                void gupnp_service_action_set           (GUPnPServiceActionInvocation *invocation,
+                                                         ...);
+
+                void gupnp_service_action_set_valist    (GUPnPServiceActionInvocation *invocation,
+                                                         va_list                       var_args);
+
+                void gupnp_service_action_set_value     (GUPnPServiceActionInvocation *invocation,
+                                                         const char                   *argument,
+                                                         const GValue                 *value);
+
+                void gupnp_service_action_return        (GUPnPServiceActionInvocation *invocation);
+                void gupnp_service_action_return_error  (GUPnPServiceActionInvocation *invocation,
+                                                         GError                       *error);
+        
+        class GUPnPService implements GUPnPServiceInfo
+
+                signal void notify_failed (GUPnPService *service,
+                                           const char   *notify_url,
+                                           GError       *reason);
+                
+
+                void gupnp_service_class_install_action        (GUPnPServiceClass         *class,
+                                                                const char                *action,
+                                                                GUPnPServiceActionFunction function);
+                void gupnp_service_class_install_static_action (GUPnPServiceClass         *class,
+                                                                const char                *action,
+                                                                GUPnPServiceActionFunction function);
+
+
+                void     gupnp_service_class_set_property_is_state_variable (GUPnPServiceClass *class,
+                                                                             const char        *property_name,
+                                                                             gboolean           is_state_variable);
+                gboolean gupnp_service_class_get_property_is_state_variable (GUPnPServiceClass *class,
+                                                                             const char        *property_name);
+       
+
+                void          gupnp_service_freeze_notify (GUPnPService *service);
+
+                void          gupnp_service_thaw_notify   (GUPnPService *service);
+
+Client side
+===
+
+- A device proxy class for talking to a device:
+
+        class GUPnPDeviceProxy implements GUPnPDeviceInfo
+
+                GList             *gupnp_device_proxy_list_devices       (GUPnPDeviceProxy *proxy);
+
+                GList             *gupnp_device_proxy_list_device_types  (GUPnPDeviceProxy *proxy);
+
+                GUPnPDeviceProxy  *gupnp_device_proxy_get_device         (GUPnPDeviceProxy *proxy,
+                                                                          const char       *type);
+
+
+                GList             *gupnp_device_proxy_list_services      (GUPnPDeviceProxy *proxy);
+
+                GList             *gupnp_device_proxy_list_service_types (GUPnPDeviceProxy *proxy);
+
+                GUPnPServiceProxy *gupnp_device_proxy_get_service        (GUPnPDeviceProxy *proxy,
+                                                                          const char       *type);
+- A service proxy class for talking to a service:
+        
+        typedef void (* GUPnPServiceProxyActionCallback) (GUPnPService            *service,
+                                                          GUPnPServiceProxyAction *action,
+                                                          gpointer                 user_data);
+
+        typedef void (* GUPnPServiceProxyNotifyCallback) (GUPnPService            *service,
+                                                          const char              *variable,
+                                                          GValue                  *value,
+                                                          gpointer                 user_data);
+
+        class GUPnPServiceProxy implements GUPnPServiceInfo
+                
+                signal void subscription_lost (GUPnPServiceProxy *proxy,
+                                               GError            *reason);
+
+                /* gupnp_service_proxy_send_action (proxy,
+                 *                                  "action",
+                 *                                  NULL,
+                 *                                  /* In args */
+                 *                                  "in-argument1", G_TYPE_STRING, "in-value",
+                 *                                  "in-argument2", G_TYPE_INT, 3,
+                 *                                  NULL,
+                 *                                  /* Out args */
+                 *                                  "out-argument1", G_TYPE_STRING, &out_value,
+                 *                                  "out-argument2", G_TYPE_INT, &out_value2,
+                 *                                  NULL);
+                 */
+                gboolean gupnp_service_proxy_send_action        (GUPnPServiceProxy               *proxy,
+                                                                 const char                      *action,
+                                                                 GError                         **error,
+                                                                 ...);
+
+                gboolean gupnp_service_proxy_send_action_valist (GUPnPServiceProxy               *proxy,
+                                                                 const char                      *action,
+                                                                 GError                         **error,
+                                                                 va_list                          var_args);
+
+                /* action = gupnp_service_proxy_begin_action (proxy,
+                 *                                            "action",
+                 *                                            callback,
+                 *                                            user_data,
+                 *                                            /* In args */
+                 *                                            "in-argument1", G_TYPE_STRING, "in-value",
+                 *                                            "in-argument2", G_TYPE_INT, 3,
+                 *                                            NULL);
+                 */
+                GUPnPServiceProxyAction *gupnp_service_proxy_begin_action        (GUPnPServiceProxy              *proxy,
+                                                                                  const char                     *action,
+                                                                                  GUPnPServiceProxyActionCallback callback,
+                                                                                  gpointer                        user_data,
+                                                                                  ...);
+
+                GUPnPServiceProxyAction *gupnp_service_proxy_begin_action_valist (GUPnPServiceProxy              *proxy,
+                                                                                  const char                     *action,
+                                                                                  GUPnPServiceProxyActionCallback callback,
+                                                                                  gpointer                        user_data,
+                                                                                  va_list                         var_args);
+
+                /* gupnp_service_proxy_end_action (proxy,
+                 *                                 action,
+                 *                                 NULL,
+                 *                                 /* Out args */
+                 *                                 "out-argument1", G_TYPE_STRING, &out_value,
+                 *                                 "out-argument2", G_TYPE_INT, &out_value2,
+                 *                                 NULL);
+                 */
+                gboolean gupnp_service_proxy_end_action               (GUPnPServiceProxy              *proxy,
+                                                                       GUPnPServiceProxyAction        *action,
+                                                                       GError                        **error,
+                                                                       ...);
+
+                gboolean gupnp_service_proxy_end_action_valist        (GUPnPServiceProxy              *proxy,
+                                                                       GUPnPServiceProxyAction        *action,
+                                                                       GError                        **error,
+                                                                       va_list                         var_args);
+
+                void     gupnp_service_proxy_cancel_action            (GUPnPServiceProxy              *proxy,
+                                                                       GUPnPServiceProxyAction        *action);
+
+
+                guint    gupnp_service_proxy_add_notify               (GUPnPServiceProxy              *proxy,
+                                                                       const char                     *variable,
+                                                                       GUPnPServiceProxyNotifyCallback callback,
+                                                                       gpointer                        user_data);
+
+                void     gupnp_service_proxy_remove_notify            (GUPnPServiceProxy              *proxy,
+                                                                       guint                           id);
+
+
+                void     gupnp_service_proxy_set_subscribed           (GUPnPServiceProxy              *proxy,
+                                                                       gboolean                        subscribed);
+
+                gboolean gupnp_service_proxy_get_subscribed           (GUPnPServiceProxy              *proxy);
+
+- A control point class for discovering devices:
+
+        class GUPnPControlPoint extends GSSDPServiceBrowser
+
+                signal device_available   (GUPnPControlPoint *control_point,
+                                           GUPnPDeviceProxy  *device);
+
+                signal device_unavailable (GUPnPControlPoint *control_point,
+                                           GUPnPDeviceProxy  *device);
+
+
+                GUPnPControlPoint *gupnp_control_point_new          (GSSDPClient       *ssdp_client);
+
+
+                GList             *gupnp_control_point_list_devices (GUPnPControlPoint *control_point);
+
+Notes
+===
+
+- Language negotiation happens through the HTTP Accept-Language header. This is set by the client code to the user's
+  locale. Serving up different device description files for different languages is the job of the separate web server.
