@@ -26,17 +26,17 @@
 
 G_BEGIN_DECLS
 
-GType gupnp_device_info_get_type (void) G_GNUC_CONST;
+GType gupnp_device_info_type (void) G_GNUC_CONST;
 
 #define GUPNP_TYPE_DEVICE_INFO \
-                (gupnp_device_info_get_type ())
+                (gupnp_device_info_type ())
 #define GUPNP_DEVICE_INFO(obj) \
                 (G_TYPE_CHECK_INSTANCE_CAST ((obj), \
-                 GUPNP_DEVICE_INFO, \
+                 GUPNP_TYPE_DEVICE_INFO, \
                  GUPnPDeviceInfo))
 #define GUPNP_IS_DEVICE_INFO(obj) \
                 (G_TYPE_CHECK_INSTANCE_TYPE ((obj), \
-                 GUPNP_DEVICE_INFO))
+                 GUPNP_TYPE_DEVICE_INFO))
 #define GUPNP_DEVICE_INFO_GET_IFACE(obj) \
                 (G_TYPE_INSTANCE_GET_INTERFACE ((obj), \
                  GUPNP_TYPE_DEVICE_INFO, \

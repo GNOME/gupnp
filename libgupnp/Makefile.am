@@ -4,7 +4,8 @@ libgupnpincdir = $(includedir)/gupnp-1.0/libgupnp
 
 lib_LTLIBRARIES = libgupnp-1.0.la
 
-libgupnpinc_HEADERS = gupnp-error.h		\
+libgupnpinc_HEADERS = gupnp-device-info.h	\
+		      gupnp-error.h		\
 		      gupnp.h
 
 gupnp-marshal.c: gupnp-marshal.list
@@ -15,7 +16,8 @@ gupnp-marshal.h: gupnp-marshal.list
 
 BUILT_SOURCES = gupnp-marshal.c gupnp-marshal.h
 
-libgupnp_1_0_la_SOURCES = gupnp-error.c		\
+libgupnp_1_0_la_SOURCES = gupnp-device-info.c	\
+			  gupnp-error.c		\
 			  $(BUILT_SOURCES)
 
 libgupnp_1_0_la_LIBADD = $(LIBGUPNP_LIBS)
