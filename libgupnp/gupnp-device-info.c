@@ -19,7 +19,71 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#include <string.h>
+
 #include "gupnp-device-info.h"
+#include "xml-util.h"
+
+typedef enum {
+        QUARK_TYPE,
+        QUARK_FRIENDLY_NAME,
+        QUARK_MANUFACTURER,
+        QUARK_MANUFACTURER_URL,
+        QUARK_MODEL_DESCRIPTION,
+        QUARK_MODEL_NAME,
+        QUARK_MODEL_NUMBER,
+        QUARK_MODEL_URL,
+        QUARK_SERIAL_NUMBER,
+        QUARK_UDN,
+        QUARK_UPC,
+        QUARK_LAST
+} Quark;
+
+static GQuark quarks[QUARK_LAST];
+
+static void
+gupnp_device_info_base_init (gpointer class)
+{
+        static gboolean initialized = FALSE;
+
+        if (!initialized) {
+                quarks[QUARK_TYPE] =
+                        g_quark_from_static_string
+                                ("gupnp-device-info-type");
+                quarks[QUARK_FRIENDLY_NAME] =
+                        g_quark_from_static_string
+                                ("gupnp-device-info-friendly-name");
+                quarks[QUARK_MANUFACTURER] =
+                        g_quark_from_static_string
+                                ("gupnp-device-info-manufacturer");
+                quarks[QUARK_MANUFACTURER_URL] =
+                        g_quark_from_static_string
+                                ("gupnp-device-info-manufacturer-url");
+                quarks[QUARK_MODEL_DESCRIPTION] =
+                        g_quark_from_static_string
+                                ("gupnp-device-info-model-description");
+                quarks[QUARK_MODEL_NAME] =
+                        g_quark_from_static_string
+                                ("gupnp-device-info-model-name");
+                quarks[QUARK_MODEL_NUMBER] =
+                        g_quark_from_static_string
+                                ("gupnp-device-info-model-number");
+                quarks[QUARK_MODEL_URL] =
+                        g_quark_from_static_string
+                                ("gupnp-device-info-model-url");
+                quarks[QUARK_SERIAL_NUMBER] =
+                        g_quark_from_static_string
+                                ("gupnp-device-info-serial-number");
+                quarks[QUARK_UDN] =
+                        g_quark_from_static_string
+                                ("gupnp-device-info-udn");
+                quarks[QUARK_UPC] =
+                        g_quark_from_static_string
+                                ("gupnp-device-info-upc");
+                
+                initialized = TRUE;
+        }
+}
 
 GType
 gupnp_device_info_type (void)
@@ -29,7 +93,7 @@ gupnp_device_info_type (void)
         if (!type) {
                 static const GTypeInfo info = {
                         sizeof (GUPnPDeviceInfoIface),
-                	NULL,
+                	gupnp_device_info_base_init,
                 	NULL,
                 	NULL,
                 	NULL,
@@ -67,18 +131,55 @@ gupnp_device_info_get_location (GUPnPDeviceInfo *info)
         return iface->get_location (info);
 }
 
+static const char *
+get_property (GUPnPDeviceInfo *info,
+              const char      *element_name,
+              Quark            quark)
+{
+        xmlChar *value;
+
+        g_return_val_if_fail (GUPNP_IS_DEVICE_INFO (info), NULL);
+
+        value = g_object_get_qdata (G_OBJECT (info), quarks[quark]);
+        if (!value) {
+                GUPnPDeviceInfoIface *iface;
+                xmlDoc *doc;
+                xmlNode *node;
+                
+                iface = GUPNP_DEVICE_INFO_GET_IFACE (info);
+
+                g_return_val_if_fail (iface->get_doc, NULL);
+                doc = iface->get_doc (info);
+        
+                node = xml_util_find_element (doc, element_name);
+                if (node)
+                        value = xmlNodeGetContent (node);
+                else {
+                        g_warning ("\"%s\" node not found in device "
+                                   "description.", element_name);
+
+                        value = xmlStrdup ((xmlChar *) "");
+                }
+
+                g_object_set_qdata_full (G_OBJECT (info),
+                                         quarks[quark],
+                                         value,
+                                         xmlFree);
+        }
+
+        return (const char *) value;
+}
+
 /**
  * gupnp_device_info_get_type
  * @info: An object implementing the #GUPnPDeviceInfo interface
  *
- * Return value: The device type.
+ * Return value: The UPnP device type.
  **/
 const char *
 gupnp_device_info_get_type (GUPnPDeviceInfo *info)
 {
-        g_return_val_if_fail (GUPNP_IS_DEVICE_INFO (info), NULL);
-
-        return NULL;
+        return get_property (info, "deviceType", QUARK_TYPE);
 }
 
 /**
@@ -90,9 +191,7 @@ gupnp_device_info_get_type (GUPnPDeviceInfo *info)
 const char *
 gupnp_device_info_get_friendly_name (GUPnPDeviceInfo *info)
 {
-        g_return_val_if_fail (GUPNP_IS_DEVICE_INFO (info), NULL);
-
-        return NULL;
+        return get_property (info, "friendlyName", QUARK_FRIENDLY_NAME);
 }
 
 /**
@@ -104,9 +203,7 @@ gupnp_device_info_get_friendly_name (GUPnPDeviceInfo *info)
 const char *
 gupnp_device_info_get_manufacturer (GUPnPDeviceInfo *info)
 {
-        g_return_val_if_fail (GUPNP_IS_DEVICE_INFO (info), NULL);
-
-        return NULL;
+        return get_property (info, "manufacturer", QUARK_MANUFACTURER);
 }
 
 /**
@@ -118,9 +215,7 @@ gupnp_device_info_get_manufacturer (GUPnPDeviceInfo *info)
 const char *
 gupnp_device_info_get_manufacturer_url (GUPnPDeviceInfo *info)
 {
-        g_return_val_if_fail (GUPNP_IS_DEVICE_INFO (info), NULL);
-
-        return NULL;
+        return get_property (info, "manufacturerURL", QUARK_MANUFACTURER_URL);
 }
 
 /**
@@ -132,9 +227,7 @@ gupnp_device_info_get_manufacturer_url (GUPnPDeviceInfo *info)
 const char *
 gupnp_device_info_get_model_description (GUPnPDeviceInfo *info)
 {
-        g_return_val_if_fail (GUPNP_IS_DEVICE_INFO (info), NULL);
-
-        return NULL;
+        return get_property (info, "modelDescription", QUARK_MODEL_DESCRIPTION);
 }
 
 /**
@@ -146,9 +239,7 @@ gupnp_device_info_get_model_description (GUPnPDeviceInfo *info)
 const char *
 gupnp_device_info_get_model_name (GUPnPDeviceInfo *info)
 {
-        g_return_val_if_fail (GUPNP_IS_DEVICE_INFO (info), NULL);
-
-        return NULL;
+        return get_property (info, "modelName", QUARK_MODEL_NAME);
 }
 
 /**
@@ -160,9 +251,7 @@ gupnp_device_info_get_model_name (GUPnPDeviceInfo *info)
 const char *
 gupnp_device_info_get_model_number (GUPnPDeviceInfo *info)
 {
-        g_return_val_if_fail (GUPNP_IS_DEVICE_INFO (info), NULL);
-
-        return NULL;
+        return get_property (info, "modelDescription", QUARK_MODEL_DESCRIPTION);
 }
 
 /**
@@ -174,9 +263,7 @@ gupnp_device_info_get_model_number (GUPnPDeviceInfo *info)
 const char *
 gupnp_device_info_get_model_url (GUPnPDeviceInfo *info)
 {
-        g_return_val_if_fail (GUPNP_IS_DEVICE_INFO (info), NULL);
-
-        return NULL;
+        return get_property (info, "modelURL", QUARK_MODEL_URL);
 }
 
 /**
@@ -188,9 +275,7 @@ gupnp_device_info_get_model_url (GUPnPDeviceInfo *info)
 const char *
 gupnp_device_info_get_serial_number (GUPnPDeviceInfo *info)
 {
-        g_return_val_if_fail (GUPNP_IS_DEVICE_INFO (info), NULL);
-
-        return NULL;
+        return get_property (info, "serialNumber", QUARK_SERIAL_NUMBER);
 }
 
 /**
@@ -202,9 +287,7 @@ gupnp_device_info_get_serial_number (GUPnPDeviceInfo *info)
 const char *
 gupnp_device_info_get_udn (GUPnPDeviceInfo *info)
 {
-        g_return_val_if_fail (GUPNP_IS_DEVICE_INFO (info), NULL);
-
-        return NULL;
+        return get_property (info, "UDN", QUARK_UDN);
 }
 
 /**
@@ -216,9 +299,7 @@ gupnp_device_info_get_udn (GUPnPDeviceInfo *info)
 const char *
 gupnp_device_info_get_upc (GUPnPDeviceInfo *info)
 {
-        g_return_val_if_fail (GUPNP_IS_DEVICE_INFO (info), NULL);
-
-        return NULL;
+        return get_property (info, "UPC", QUARK_UPC);
 }
 
 /**

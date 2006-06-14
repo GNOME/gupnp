@@ -1,0 +1,51 @@
+/* 
+ * Copyright (C) 2006 OpenedHand Ltd.
+ *
+ * Author: Jorn Baayen <jorn@openedhand.com>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Library General Public
+ * License as published by the Free Software Foundation; either
+ * version 2 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Library General Public License for more details.
+ *
+ * You should have received a copy of the GNU Library General Public
+ * License along with this library; if not, write to the
+ * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+ * Boston, MA 02111-1307, USA.
+ */
+
+#include <string.h>
+
+#include "xml-util.h"
+
+static xmlNode *
+find_element_1level (xmlNode    *node,
+                     const char *element_name)
+{
+        for (; node; node = node->next)
+                if (!strcmp (element_name, (char *) node->name))
+                        return node;
+
+        return NULL;
+}
+
+xmlNode *
+xml_util_find_element (xmlDoc *doc, const char *element_name)
+{
+        xmlNode *node;
+
+        node = find_element_1level (xmlDocGetRootElement (doc), "root");
+        if (!node)
+                return NULL;
+
+        node = find_element_1level (node->children, "device");
+        if (!node)
+                return NULL;
+
+        return find_element_1level (node->children, element_name);
+}

@@ -18,6 +18,8 @@ BUILT_SOURCES = gupnp-marshal.c gupnp-marshal.h
 
 libgupnp_1_0_la_SOURCES = gupnp-device-info.c	\
 			  gupnp-error.c		\
+			  xml-util.c		\
+			  xml-util.h		\
 			  $(BUILT_SOURCES)
 
 libgupnp_1_0_la_LIBADD = $(LIBGUPNP_LIBS)

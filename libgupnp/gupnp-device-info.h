@@ -23,6 +23,7 @@
 #define __GUPNP_DEVICE_INFO_H__
 
 #include <glib-object.h>
+#include <libxml/tree.h>
 
 G_BEGIN_DECLS
 
@@ -49,6 +50,7 @@ typedef struct {
 
         /* vtable */
         const char * (* get_location) (GUPnPDeviceInfo *info);
+        xmlDoc     * (* get_doc)      (GUPnPDeviceInfo *info);
 
         /* future padding */
         void (* _gupnp_reserved1) (void);
