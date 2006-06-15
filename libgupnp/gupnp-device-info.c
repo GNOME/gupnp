@@ -151,13 +151,16 @@ get_property (GUPnPDeviceInfo *info,
                 g_return_val_if_fail (iface->get_doc, NULL);
                 doc = iface->get_doc (info);
         
-                node = xml_util_find_element (doc, element_name);
+                node = xml_util_get_element ((xmlNode *) doc,
+                                             "root",
+                                             "device",
+                                             element_name,
+                                             NULL);
+
                 if (node)
                         value = xmlNodeGetContent (node);
                 else {
-                        g_warning ("\"%s\" node not found in device "
-                                   "description.", element_name);
-
+                        /* So that g_object_get_qdata() does not return NULL */
                         value = xmlStrdup ((xmlChar *) "");
                 }
 
@@ -302,37 +305,222 @@ gupnp_device_info_get_upc (GUPnPDeviceInfo *info)
         return get_property (info, "UPC", QUARK_UPC);
 }
 
+typedef struct {
+        xmlChar *mime_type;
+        int      width;
+        int      height;
+        int      depth;
+        xmlChar *url;
+
+        int      weight;
+} Icon;
+
+static Icon *
+icon_parse (xmlNode *node)
+{
+        Icon *icon;
+        xmlNode *prop;
+
+        icon = g_slice_new0 (Icon);
+
+        prop = xml_util_get_element (node, "mimetype", NULL);
+        if (prop)
+                icon->mime_type = xmlNodeGetContent (prop);
+
+        prop = xml_util_get_element (node, "width", NULL);
+        if (prop)
+                icon->width = xml_util_node_get_content_int (prop);
+        else
+                icon->width = -1;
+        
+        prop = xml_util_get_element (node, "height", NULL);
+        if (prop)
+                icon->height = xml_util_node_get_content_int (prop);
+        else
+                icon->width = -1;
+        
+        prop = xml_util_get_element (node, "depth", NULL);
+        if (prop)
+                icon->depth = xml_util_node_get_content_int (prop);
+        else
+                icon->width = -1;
+        
+        prop = xml_util_get_element (node, "url", NULL);
+        if (prop)
+                icon->url = xmlNodeGetContent (prop);
+
+        return icon;
+}
+
+static void
+icon_free (Icon *icon)
+{
+        if (icon->mime_type)
+                xmlFree (icon->mime_type);
+        if (icon->url)
+                xmlFree (icon->url);
+
+        g_slice_free (Icon, icon);
+}
+
 /**
  * gupnp_device_info_get_icon_url
  * @info: An object implementing the #GUPnPDeviceInfo interface
- * @requested_format: The requested file format
- * @requested_depth: The requested color depth
- * @cequested_width: The requested width
- * @requested_height: The requested height
+ * @requested_mime_type: The requested file format, or NULL for any
+ * @requested_depth: The requested color depth, or -1 for any
+ * @cequested_width: The requested width, or -1 for any
+ * @requested_height: The requested height, or -1 for any
  * @prefer_bigger: TRUE if a bigger, rather than a smaller icon should be
  * returned if no exact match could be found
- * @format: The location where to store the the format of the returned icon,
+ * @mime_type: The location where to store the the format of the returned icon,
  * or NULL. The returned string should be freed after use
  * @depth: The location where to store the depth of the returned icon, or NULL
  * @width: The location where to store the width of the returned icon, or NULL
- * @height::The location where to store the height of the returned icon, or NULL
+ * @height: The location where to store the height of the returned icon, or NULL
  *
  * Return value: A URL pointing to the icon most closely matching the
- * given criteria.
+ * given criteria, or NULL. If @requested_mime_type is set, only icons with
+ * this mime type will be returned. If @requested_depth is set, only icons with 
+ * this or lower depth will be returned. If @requested_width and/or
+ * @requested_height are set, only icons that are this size or smaller are
+ * returned, unless @prefer_bigger is set, in which case the next biggest icon 
+ * will be returned. The returned strings should be freed.
  **/
-const char *
+char *
 gupnp_device_info_get_icon_url (GUPnPDeviceInfo *info,
-                                const char      *requested_format,
+                                const char      *requested_mime_type,
                                 int              requested_depth,
                                 int              requested_width,
                                 int              requested_height,
                                 gboolean         prefer_bigger,
-                                char           **format,
+                                char           **mime_type,
                                 int             *depth,
-                                int             *weight,
+                                int             *width,
                                 int             *height)
 {
-        g_return_val_if_fail (GUPNP_IS_DEVICE_INFO (info), NULL);
+        GUPnPDeviceInfoIface *iface;
+        xmlDoc *doc;
+        xmlNode *node;
+        GList *icons, *l;
+        Icon *icon, *closest;
+        char *ret;
 
-        return NULL;
+        g_return_val_if_fail (GUPNP_IS_DEVICE_INFO (info), NULL);
+                
+        iface = GUPNP_DEVICE_INFO_GET_IFACE (info);
+
+        g_return_val_if_fail (iface->get_doc, NULL);
+        doc = iface->get_doc (info);
+
+        /* List available icons */
+        icons = NULL;
+
+        node = xml_util_get_element ((xmlNode *) doc,
+                                     "root",
+                                     "device",
+                                     "iconList",
+                                     NULL);
+
+        for (node = node->children; node; node = node->next) {
+                if (!strcmp ("icon", (char *) node->name)) {
+                        gboolean mime_type_ok;
+
+                        icon = icon_parse (node);
+
+                        if (requested_mime_type) {
+                                mime_type_ok =
+                                        !strcmp (requested_mime_type,
+                                                 (char *) icon->mime_type);
+                        } else
+                                mime_type_ok = TRUE;
+
+                        if (requested_depth >= 0)
+                                icon->weight = requested_depth - icon->depth;
+
+                        /* Filter out icons with incorrect mime type or
+                         * incorrect depth. */
+                        if (mime_type_ok && icon->weight >= 0) {
+                                if (requested_width >= 0) {
+                                        if (prefer_bigger) {
+                                                icon->weight +=
+                                                        icon->width -
+                                                        requested_width;
+                                        } else {
+                                                icon->weight +=
+                                                        requested_width -
+                                                        icon->width;
+                                        }
+                                }
+                                
+                                if (requested_height >= 0) {
+                                        if (prefer_bigger) {
+                                                icon->weight +=
+                                                        icon->height -
+                                                        requested_height;
+                                        } else {
+                                                icon->weight +=
+                                                        requested_height -
+                                                        icon->height;
+                                        }
+                                }
+                                
+                                icons = g_list_prepend (icons, icon);
+                        } else
+                                icon_free (icon);
+                }
+        }
+
+        /* Find closest match */
+        closest = NULL;
+        for (l = icons; l; l = l->next) {
+                icon = l->data;
+
+                /* Look between icons with positive weight first */
+                if (icon->weight >= 0) {
+                        if (!closest || icon->weight < closest->weight)
+                                closest = icon;
+                }
+        }
+
+        if (!closest) {
+                icon = l->data;
+
+                /* No icons with positive weight, look at ones with
+                 * negative weight */
+                if (!closest || icon->weight > closest->weight)
+                        closest = icon;
+        }
+
+        /* Fill in return values */
+        if (closest) {
+                if (mime_type)
+                        *mime_type = g_strdup ((char *) icon->mime_type);
+                if (depth)
+                        *depth = icon->depth;
+                if (width)
+                        *width = icon->width;
+                if (height)
+                        *height = icon->height;
+
+                ret = g_strdup ((char *) icon->url);
+        } else {
+                if (mime_type)
+                        *mime_type = NULL;
+                if (depth)
+                        *depth = -1;
+                if (width)
+                        *width = -1;
+                if (height)
+                        *height = -1;
+
+                ret = NULL;
+        }
+
+        /* Cleanup */
+        while (icons) {
+                icon_free (icons->data);
+                icons = g_list_delete_link (icons, icons);
+        }
+
+        return ret;
 }

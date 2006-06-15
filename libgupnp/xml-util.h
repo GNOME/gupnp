@@ -23,8 +23,14 @@
 #define __XML_UTIL_H__
 
 #include <libxml/tree.h>
+#include <stdarg.h>
+#include <glib.h>
 
 xmlNode *
-xml_util_find_element (xmlDoc *doc, const char *element_name);
+xml_util_get_element          (xmlNode *node,
+                               ...) G_GNUC_NULL_TERMINATED;
+
+int
+xml_util_node_get_content_int (xmlNode *node);
 
 #endif /* __XML_UTIL_H__ */

@@ -27,7 +27,8 @@
 
 G_BEGIN_DECLS
 
-GType gupnp_device_info_type (void) G_GNUC_CONST;
+GType
+gupnp_device_info_type (void) G_GNUC_CONST;
 
 #define GUPNP_TYPE_DEVICE_INFO \
                 (gupnp_device_info_type ())
@@ -59,29 +60,53 @@ typedef struct {
         void (* _gupnp_reserved4) (void);
 } GUPnPDeviceInfoIface;
 
-const char *gupnp_device_info_get_location          (GUPnPDeviceInfo *info);
-const char *gupnp_device_info_get_type              (GUPnPDeviceInfo *info);
-const char *gupnp_device_info_get_friendly_name     (GUPnPDeviceInfo *info);
-const char *gupnp_device_info_get_manufacturer      (GUPnPDeviceInfo *info);
-const char *gupnp_device_info_get_manufacturer_url  (GUPnPDeviceInfo *info);
-const char *gupnp_device_info_get_model_description (GUPnPDeviceInfo *info);
-const char *gupnp_device_info_get_model_name        (GUPnPDeviceInfo *info);
-const char *gupnp_device_info_get_model_number      (GUPnPDeviceInfo *info);
-const char *gupnp_device_info_get_model_url         (GUPnPDeviceInfo *info);
-const char *gupnp_device_info_get_serial_number     (GUPnPDeviceInfo *info);
-const char *gupnp_device_info_get_udn               (GUPnPDeviceInfo *info);
-const char *gupnp_device_info_get_upc               (GUPnPDeviceInfo *info);
+const char *
+gupnp_device_info_get_location          (GUPnPDeviceInfo *info);
 
-const char *gupnp_device_info_get_icon_url (GUPnPDeviceInfo *info,
-                                            const char      *requested_format,
-                                            int              requested_depth,
-                                            int              requested_width,
-                                            int              requested_height,
-                                            gboolean         prefer_bigger,
-                                            char           **format,
-                                            int             *depth,
-                                            int             *weight,
-                                            int             *height);
+const char *
+gupnp_device_info_get_type              (GUPnPDeviceInfo *info);
+
+const char *
+gupnp_device_info_get_friendly_name     (GUPnPDeviceInfo *info);
+
+const char *
+gupnp_device_info_get_manufacturer      (GUPnPDeviceInfo *info);
+
+const char *
+gupnp_device_info_get_manufacturer_url  (GUPnPDeviceInfo *info);
+
+const char *
+gupnp_device_info_get_model_description (GUPnPDeviceInfo *info);
+
+const char *
+gupnp_device_info_get_model_name        (GUPnPDeviceInfo *info);
+
+const char *
+gupnp_device_info_get_model_number      (GUPnPDeviceInfo *info);
+
+const char *
+gupnp_device_info_get_model_url         (GUPnPDeviceInfo *info);
+
+const char *
+gupnp_device_info_get_serial_number     (GUPnPDeviceInfo *info);
+
+const char *
+gupnp_device_info_get_udn               (GUPnPDeviceInfo *info);
+
+const char *
+gupnp_device_info_get_upc               (GUPnPDeviceInfo *info);
+
+char *
+gupnp_device_info_get_icon_url          (GUPnPDeviceInfo *info,
+                                         const char      *requested_mime_type,
+                                         int              requested_depth,
+                                         int              requested_width,
+                                         int              requested_height,
+                                         gboolean         prefer_bigger,
+                                         char           **mime_type,
+                                         int             *depth,
+                                         int             *width,
+                                         int             *height);
 
 G_END_DECLS
 

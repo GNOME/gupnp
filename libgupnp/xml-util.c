@@ -23,29 +23,48 @@
 
 #include "xml-util.h"
 
-static xmlNode *
-find_element_1level (xmlNode    *node,
-                     const char *element_name)
+xmlNode *
+xml_util_get_element (xmlNode *node,
+                      ...)
 {
-        for (; node; node = node->next)
-                if (!strcmp (element_name, (char *) node->name))
-                        return node;
+        va_list var_args;
 
-        return NULL;
+        va_start (var_args, node);
+
+        while (TRUE) {
+                const char *arg;
+
+                arg = va_arg (var_args, const char *);
+                if (!arg)
+                        break;
+
+                for (node = node->children; node; node = node->next)
+                        if (!strcmp (arg, (char *) node->name))
+                                break;
+
+                if (!node)
+                        break;
+        }
+        
+        va_end (var_args);
+
+        return node;
 }
 
-xmlNode *
-xml_util_find_element (xmlDoc *doc, const char *element_name)
+int
+xml_util_node_get_content_int (xmlNode *node)
 {
-        xmlNode *node;
+        xmlChar *tmp;
 
-        node = find_element_1level (xmlDocGetRootElement (doc), "root");
-        if (!node)
-                return NULL;
+        tmp = xmlNodeGetContent (node);
+        if (tmp) {
+                int i;
 
-        node = find_element_1level (node->children, "device");
-        if (!node)
-                return NULL;
+                i = atoi ((char *) tmp);
 
-        return find_element_1level (node->children, element_name);
+                xmlFree (tmp);
+
+                return i;
+        } else
+                return -1;
 }
