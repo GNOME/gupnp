@@ -71,7 +71,7 @@ typedef struct {
         void (* _gupnp_reserved2) (void);
         void (* _gupnp_reserved3) (void);
         void (* _gupnp_reserved4) (void);
-} GUPnPServiceProxyIface;
+} GUPnPServiceProxyClass;
 
 typedef struct _GUPnPServiceProxyAction GUPnPServiceProxyAction;
 

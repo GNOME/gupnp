@@ -67,7 +67,7 @@ typedef struct {
         void (* _gupnp_reserved2) (void);
         void (* _gupnp_reserved3) (void);
         void (* _gupnp_reserved4) (void);
-} GUPnPDeviceProxyIface;
+} GUPnPDeviceProxyClass;
 
 GList *
 gupnp_device_proxy_list_devices       (GUPnPDeviceProxy *proxy);
