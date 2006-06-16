@@ -25,6 +25,7 @@
 #include "gupnp-device-proxy.h"
 
 GUPnPDeviceProxy *
-_gupnp_device_proxy_new (const char *location);
+_gupnp_device_proxy_new (const char *location,
+                         xmlNode    *element);
 
 #endif /* __GUPNP_DEVICE_PROXY_PRIVATE_H__ */

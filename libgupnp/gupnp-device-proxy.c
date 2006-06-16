@@ -19,8 +19,11 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#include <string.h>
+
 #include "gupnp-device-proxy.h"
 #include "gupnp-device-proxy-private.h"
+#include "xml-util.h"
 
 static void
 gupnp_device_proxy_info_init (GUPnPDeviceInfoIface *iface);
@@ -35,7 +38,8 @@ G_DEFINE_TYPE_EXTENDED (GUPnPDeviceProxy,
 struct _GUPnPDeviceProxyPrivate {
         char *location;
 
-        xmlDoc *doc;
+        xmlNode *element;
+        gboolean free_doc;
 };
 
 static const char *
@@ -48,17 +52,14 @@ gupnp_device_proxy_get_location (GUPnPDeviceInfo *info)
         return proxy->priv->location;
 }
 
-static xmlDoc *
-gupnp_device_proxy_get_doc (GUPnPDeviceInfo *info)
+static xmlNode *
+gupnp_device_proxy_get_element (GUPnPDeviceInfo *info)
 {
         GUPnPDeviceProxy *proxy;
         
         proxy = GUPNP_DEVICE_PROXY (info);
 
-        if (!proxy->priv->doc)
-                proxy->priv->doc = xmlParseFile (proxy->priv->location);
-
-        return proxy->priv->doc;
+        return proxy->priv->element;
 }
 
 static void
@@ -78,8 +79,8 @@ gupnp_device_proxy_finalize (GObject *object)
 
         g_free (proxy->priv->location);
 
-        if (proxy->priv->doc)
-                xmlFreeDoc (proxy->priv->doc);
+        if (proxy->priv->free_doc && proxy->priv->element)
+                xmlFreeDoc ((xmlDoc *) proxy->priv->element);
 }
 
 static void
@@ -98,15 +99,37 @@ static void
 gupnp_device_proxy_info_init (GUPnPDeviceInfoIface *iface)
 {
         iface->get_location = gupnp_device_proxy_get_location;
-        iface->get_doc      = gupnp_device_proxy_get_doc;
+        iface->get_element  = gupnp_device_proxy_get_element;
 }
 
 GList *
 gupnp_device_proxy_list_devices (GUPnPDeviceProxy *proxy)
 {
+        GList *devices;
+        xmlNode *element;
+
         g_return_val_if_fail (GUPNP_IS_DEVICE_PROXY (proxy), NULL);
 
-        return NULL;
+        devices = NULL;
+
+        element = xml_util_get_element (proxy->priv->element,
+                                        "root",
+                                        "device",
+                                        "deviceList",
+                                        NULL);
+        if (!element)
+                return NULL;
+
+        for (element = element->children; element; element = element->next) {
+                /* XXX refcount */
+                if (!strcmp ("device", (char *) element->name)) {
+                        devices = g_list_prepend
+                                        (devices,
+                                         _gupnp_device_proxy_new (proxy->priv->location, element));
+                }
+        }
+
+        return devices;
 }
 
 GList *
@@ -154,7 +177,8 @@ gupnp_device_proxy_get_service (GUPnPDeviceProxy *proxy,
 }
 
 GUPnPDeviceProxy *
-_gupnp_device_proxy_new (const char *location)
+_gupnp_device_proxy_new (const char *location,
+                         xmlNode    *element)
 {
         GUPnPDeviceProxy *proxy;
 
@@ -162,6 +186,15 @@ _gupnp_device_proxy_new (const char *location)
                               NULL);
 
         proxy->priv->location = g_strdup (location);
+
+        if (element)
+                proxy->priv->element = element;
+        else {
+                proxy->priv->element =
+                        (xmlNode *) xmlParseFile (proxy->priv->location);
+
+                proxy->priv->free_doc = TRUE;
+        }
 
         return proxy;
 }

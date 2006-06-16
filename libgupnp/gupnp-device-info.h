@@ -51,7 +51,7 @@ typedef struct {
 
         /* vtable */
         const char * (* get_location) (GUPnPDeviceInfo *info);
-        xmlDoc     * (* get_doc)      (GUPnPDeviceInfo *info);
+        xmlNode    * (* get_element)  (GUPnPDeviceInfo *info);
 
         /* future padding */
         void (* _gupnp_reserved1) (void);

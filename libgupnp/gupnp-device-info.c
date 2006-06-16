@@ -143,22 +143,21 @@ get_property (GUPnPDeviceInfo *info,
         value = g_object_get_qdata (G_OBJECT (info), quarks[quark]);
         if (!value) {
                 GUPnPDeviceInfoIface *iface;
-                xmlDoc *doc;
-                xmlNode *node;
+                xmlNode *element;
                 
                 iface = GUPNP_DEVICE_INFO_GET_IFACE (info);
 
-                g_return_val_if_fail (iface->get_doc, NULL);
-                doc = iface->get_doc (info);
+                g_return_val_if_fail (iface->get_element, NULL);
+                element = iface->get_element (info);
         
-                node = xml_util_get_element ((xmlNode *) doc,
-                                             "root",
-                                             "device",
-                                             element_name,
-                                             NULL);
+                element = xml_util_get_element (element,
+                                                "root",
+                                                "device",
+                                                element_name,
+                                                NULL);
 
-                if (node)
-                        value = xmlNodeGetContent (node);
+                if (element)
+                        value = xmlNodeGetContent (element);
                 else {
                         /* So that g_object_get_qdata() does not return NULL */
                         value = xmlStrdup ((xmlChar *) "");
@@ -316,36 +315,36 @@ typedef struct {
 } Icon;
 
 static Icon *
-icon_parse (xmlNode *node)
+icon_parse (xmlNode *element)
 {
         Icon *icon;
         xmlNode *prop;
 
         icon = g_slice_new0 (Icon);
 
-        prop = xml_util_get_element (node, "mimetype", NULL);
+        prop = xml_util_get_element (element, "mimetype", NULL);
         if (prop)
                 icon->mime_type = xmlNodeGetContent (prop);
 
-        prop = xml_util_get_element (node, "width", NULL);
+        prop = xml_util_get_element (element, "width", NULL);
         if (prop)
                 icon->width = xml_util_node_get_content_int (prop);
         else
                 icon->width = -1;
         
-        prop = xml_util_get_element (node, "height", NULL);
+        prop = xml_util_get_element (element, "height", NULL);
         if (prop)
                 icon->height = xml_util_node_get_content_int (prop);
         else
                 icon->width = -1;
         
-        prop = xml_util_get_element (node, "depth", NULL);
+        prop = xml_util_get_element (element, "depth", NULL);
         if (prop)
                 icon->depth = xml_util_node_get_content_int (prop);
         else
                 icon->width = -1;
         
-        prop = xml_util_get_element (node, "url", NULL);
+        prop = xml_util_get_element (element, "url", NULL);
         if (prop)
                 icon->url = xmlNodeGetContent (prop);
 
@@ -399,8 +398,7 @@ gupnp_device_info_get_icon_url (GUPnPDeviceInfo *info,
                                 int             *height)
 {
         GUPnPDeviceInfoIface *iface;
-        xmlDoc *doc;
-        xmlNode *node;
+        xmlNode *element;
         GList *icons, *l;
         Icon *icon, *closest;
         char *ret;
@@ -409,23 +407,23 @@ gupnp_device_info_get_icon_url (GUPnPDeviceInfo *info,
                 
         iface = GUPNP_DEVICE_INFO_GET_IFACE (info);
 
-        g_return_val_if_fail (iface->get_doc, NULL);
-        doc = iface->get_doc (info);
+        g_return_val_if_fail (iface->get_element, NULL);
+        element = iface->get_element (info);
 
         /* List available icons */
         icons = NULL;
 
-        node = xml_util_get_element ((xmlNode *) doc,
-                                     "root",
-                                     "device",
-                                     "iconList",
-                                     NULL);
+        element = xml_util_get_element (element,
+                                        "root",
+                                        "device",
+                                        "iconList",
+                                        NULL);
 
-        for (node = node->children; node; node = node->next) {
-                if (!strcmp ("icon", (char *) node->name)) {
+        for (element = element->children; element; element = element->next) {
+                if (!strcmp ("icon", (char *) element->name)) {
                         gboolean mime_type_ok;
 
-                        icon = icon_parse (node);
+                        icon = icon_parse (element);
 
                         if (requested_mime_type) {
                                 mime_type_ok =
