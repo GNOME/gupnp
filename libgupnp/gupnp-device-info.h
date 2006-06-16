@@ -28,10 +28,10 @@
 G_BEGIN_DECLS
 
 GType
-gupnp_device_info_type (void) G_GNUC_CONST;
+gupnp_device_info_get_type (void) G_GNUC_CONST;
 
 #define GUPNP_TYPE_DEVICE_INFO \
-                (gupnp_device_info_type ())
+                (gupnp_device_info_get_type ())
 #define GUPNP_DEVICE_INFO(obj) \
                 (G_TYPE_CHECK_INSTANCE_CAST ((obj), \
                  GUPNP_TYPE_DEVICE_INFO, \
@@ -64,7 +64,7 @@ const char *
 gupnp_device_info_get_location          (GUPnPDeviceInfo *info);
 
 const char *
-gupnp_device_info_get_type              (GUPnPDeviceInfo *info);
+gupnp_device_info_get_device_type       (GUPnPDeviceInfo *info);
 
 const char *
 gupnp_device_info_get_friendly_name     (GUPnPDeviceInfo *info);

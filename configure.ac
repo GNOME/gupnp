@@ -1,7 +1,7 @@
 AC_PREREQ(2.53)
 AC_INIT(gupnp, 0.1, http://projects.o-hand.com/gupnp)
 AM_INIT_AUTOMAKE()
-AC_CONFIG_SRCDIR(libgupnp/gupnp-context.c)
+AC_CONFIG_SRCDIR(libgupnp/gupnp.h)
 AM_CONFIG_HEADER(config.h)
 AM_MAINTAINER_MODE
 
@@ -10,7 +10,10 @@ AC_PROG_CC
 AC_STDC_HEADERS
 AC_PROG_LIBTOOL
 
-PKG_CHECK_MODULES(LIBGUPNP, gobject-2.0 >= 2.9.1 gssdp-1.0 libsoup-2.2)
+PKG_CHECK_MODULES(LIBGUPNP, gobject-2.0 >= 2.9.1 \
+                            gssdp-1.0 \
+                            libsoup-2.2 \
+                            libxml-2.0)
 
 # glib-genmarshal
 GLIB_GENMARSHAL=`pkg-config --variable=glib_genmarshal glib-2.0`

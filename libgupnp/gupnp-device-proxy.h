@@ -28,10 +28,10 @@
 G_BEGIN_DECLS
 
 GType
-gupnp_device_proxy_type (void) G_GNUC_CONST;
+gupnp_device_proxy_get_type (void) G_GNUC_CONST;
 
 #define GUPNP_TYPE_DEVICE_PROXY \
-                (gupnp_device_proxy_type ())
+                (gupnp_device_proxy_get_type ())
 #define GUPNP_DEVICE_PROXY(obj) \
                 (G_TYPE_CHECK_INSTANCE_CAST ((obj), \
                  GUPNP_TYPE_DEVICE_PROXY, \

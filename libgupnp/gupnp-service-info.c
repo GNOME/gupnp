@@ -23,7 +23,7 @@
 #include "xml-util.h"
 
 typedef enum {
-        QUARK_TYPE,
+        QUARK_SERVICE_TYPE,
         QUARK_ID,
         QUARK_SCPD_URL,
         QUARK_CONTROL_URL,
@@ -39,9 +39,9 @@ gupnp_service_info_base_init (gpointer class)
         static gboolean initialized = FALSE;
 
         if (!initialized) {
-                quarks[QUARK_TYPE] =
+                quarks[QUARK_SERVICE_TYPE] =
                         g_quark_from_static_string
-                                ("gupnp-service-info-type");
+                                ("gupnp-service-info-service-type");
                 quarks[QUARK_ID] =
                         g_quark_from_static_string
                                 ("gupnp-service-info-id");
@@ -60,7 +60,7 @@ gupnp_service_info_base_init (gpointer class)
 }
 
 GType
-gupnp_service_info_type (void)
+gupnp_service_info_get_type (void)
 {
         static GType type = 0;
 
@@ -126,15 +126,15 @@ get_property (GUPnPServiceInfo *info,
 }
 
 /**
- * gupnp_service_info_get_type
+ * gupnp_service_info_get_service_type
  * @info: An object implementing the #GUPnPServiceInfo interface
  *
  * Return value: The UPnP service type.
  **/
 const char *
-gupnp_service_info_get_type (GUPnPServiceInfo *info)
+gupnp_service_info_get_service_type (GUPnPServiceInfo *info)
 {
-        return get_property (info, "serviceType", QUARK_TYPE);
+        return get_property (info, "serviceType", QUARK_SERVICE_TYPE);
 }
 
 /**

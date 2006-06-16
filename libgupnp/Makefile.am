@@ -20,14 +20,15 @@ gupnp-marshal.h: gupnp-marshal.list
 
 BUILT_SOURCES = gupnp-marshal.c gupnp-marshal.h
 
-libgupnp_1_0_la_SOURCES = gupnp-control-point.c	\
-			  gupnp-device-info.c	\
-			  gupnp-device-proxy.c	\
-			  gupnp-error.c		\
-			  gupnp-service-info.c	\
-			  gupnp-service-proxy.c	\
-			  xml-util.c		\
-			  xml-util.h		\
+libgupnp_1_0_la_SOURCES = gupnp-control-point.c		\
+			  gupnp-device-info.c		\
+			  gupnp-device-proxy.c		\
+			  gupnp-device-proxy-private.h	\
+			  gupnp-error.c			\
+			  gupnp-service-info.c		\
+			  gupnp-service-proxy.c		\
+			  xml-util.c			\
+			  xml-util.h			\
 			  $(BUILT_SOURCES)
 
 libgupnp_1_0_la_LIBADD = $(LIBGUPNP_LIBS)

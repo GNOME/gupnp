@@ -25,7 +25,7 @@
 #include "xml-util.h"
 
 typedef enum {
-        QUARK_TYPE,
+        QUARK_DEVICE_TYPE,
         QUARK_FRIENDLY_NAME,
         QUARK_MANUFACTURER,
         QUARK_MANUFACTURER_URL,
@@ -47,9 +47,9 @@ gupnp_device_info_base_init (gpointer class)
         static gboolean initialized = FALSE;
 
         if (!initialized) {
-                quarks[QUARK_TYPE] =
+                quarks[QUARK_DEVICE_TYPE] =
                         g_quark_from_static_string
-                                ("gupnp-device-info-type");
+                                ("gupnp-device-info-device-type");
                 quarks[QUARK_FRIENDLY_NAME] =
                         g_quark_from_static_string
                                 ("gupnp-device-info-friendly-name");
@@ -86,7 +86,7 @@ gupnp_device_info_base_init (gpointer class)
 }
 
 GType
-gupnp_device_info_type (void)
+gupnp_device_info_get_type (void)
 {
         static GType type = 0;
 
@@ -174,15 +174,15 @@ get_property (GUPnPDeviceInfo *info,
 }
 
 /**
- * gupnp_device_info_get_type
+ * gupnp_device_info_get_device_type
  * @info: An object implementing the #GUPnPDeviceInfo interface
  *
  * Return value: The UPnP device type.
  **/
 const char *
-gupnp_device_info_get_type (GUPnPDeviceInfo *info)
+gupnp_device_info_get_device_type (GUPnPDeviceInfo *info)
 {
-        return get_property (info, "deviceType", QUARK_TYPE);
+        return get_property (info, "deviceType", QUARK_DEVICE_TYPE);
 }
 
 /**

@@ -28,10 +28,10 @@
 G_BEGIN_DECLS
 
 GType
-gupnp_service_info_type (void) G_GNUC_CONST;
+gupnp_service_info_get_type (void) G_GNUC_CONST;
 
 #define GUPNP_TYPE_SERVICE_INFO \
-                (gupnp_service_info_type ())
+                (gupnp_service_info_get_type ())
 #define GUPNP_SERVICE_INFO(obj) \
                 (G_TYPE_CHECK_INSTANCE_CAST ((obj), \
                  GUPNP_TYPE_SERVICE_INFO, \
@@ -60,7 +60,7 @@ typedef struct {
 } GUPnPServiceInfoIface;
 
 const char *
-gupnp_service_info_get_type                   (GUPnPServiceInfo *info);
+gupnp_service_info_get_service_type           (GUPnPServiceInfo *info);
 
 const char *
 gupnp_service_info_get_id                     (GUPnPServiceInfo *info);

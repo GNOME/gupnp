@@ -6,7 +6,7 @@ Generic
         interface GUPnPDeviceInfo
 
                 const char *gupnp_device_info_get_location          (GUPnPDeviceInfo *info);
-                const char *gupnp_device_info_get_type              (GUPnPDeviceInfo *info);
+                const char *gupnp_device_info_get_device_type       (GUPnPDeviceInfo *info);
                 const char *gupnp_device_info_get_friendly_name     (GUPnPDeviceInfo *info);
                 const char *gupnp_device_info_get_manufacturer      (GUPnPDeviceInfo *info);
                 const char *gupnp_device_info_get_manufacturer_url  (GUPnPDeviceInfo *info);
@@ -25,7 +25,7 @@ Generic
                                                                      gboolean         prefer_bigger,
                                                                      char           **format,
                                                                      int             *depth,
-                                                                     int             *weight,
+                                                                     int             *width,
                                                                      int             *height);
 
 - An interface for retrieving information about a service:

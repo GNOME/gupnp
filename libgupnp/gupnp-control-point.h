@@ -29,10 +29,10 @@
 G_BEGIN_DECLS
 
 GType
-gupnp_control_point_type (void) G_GNUC_CONST;
+gupnp_control_point_get_type (void) G_GNUC_CONST;
 
 #define GUPNP_TYPE_CONTROL_POINT \
-                (gupnp_control_point_type ())
+                (gupnp_control_point_get_type ())
 #define GUPNP_CONTROL_POINT(obj) \
                 (G_TYPE_CHECK_INSTANCE_CAST ((obj), \
                  GUPNP_TYPE_CONTROL_POINT, \
