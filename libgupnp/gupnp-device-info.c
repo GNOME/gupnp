@@ -150,11 +150,7 @@ get_property (GUPnPDeviceInfo *info,
                 g_return_val_if_fail (iface->get_element, NULL);
                 element = iface->get_element (info);
         
-                element = xml_util_get_element (element,
-                                                "root",
-                                                "device",
-                                                element_name,
-                                                NULL);
+                element = xml_util_get_element (element, element_name, NULL);
 
                 if (element)
                         value = xmlNodeGetContent (element);
@@ -413,11 +409,7 @@ gupnp_device_info_get_icon_url (GUPnPDeviceInfo *info,
         /* List available icons */
         icons = NULL;
 
-        element = xml_util_get_element (element,
-                                        "root",
-                                        "device",
-                                        "iconList",
-                                        NULL);
+        element = xml_util_get_element (element, "iconList", NULL);
 
         for (element = element->children; element; element = element->next) {
                 if (!strcmp ("icon", (char *) element->name)) {

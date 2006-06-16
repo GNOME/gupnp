@@ -38,8 +38,9 @@ G_DEFINE_TYPE_EXTENDED (GUPnPDeviceProxy,
 struct _GUPnPDeviceProxyPrivate {
         char *location;
 
+        xmlDoc *doc;
+
         xmlNode *element;
-        gboolean free_doc;
 };
 
 static const char *
@@ -79,8 +80,8 @@ gupnp_device_proxy_finalize (GObject *object)
 
         g_free (proxy->priv->location);
 
-        if (proxy->priv->free_doc && proxy->priv->element)
-                xmlFreeDoc ((xmlDoc *) proxy->priv->element);
+        if (proxy->priv->doc)
+                xmlFreeDoc (proxy->priv->doc);
 }
 
 static void
@@ -102,6 +103,14 @@ gupnp_device_proxy_info_init (GUPnPDeviceInfoIface *iface)
         iface->get_element  = gupnp_device_proxy_get_element;
 }
 
+/**
+ * gupnp_device_proxy_list_devices
+ * @proxy: A #GUPnPDeviceProxy
+ *
+ * Return value: A #GList of #GUPnPDeviceProxy objects representing the
+ * devices directly contained in @proxy. The returned list should be
+ * g_list_free()'ed and the elements should be g_object_unref()'ed.
+ **/
 GList *
 gupnp_device_proxy_list_devices (GUPnPDeviceProxy *proxy)
 {
@@ -113,19 +122,19 @@ gupnp_device_proxy_list_devices (GUPnPDeviceProxy *proxy)
         devices = NULL;
 
         element = xml_util_get_element (proxy->priv->element,
-                                        "root",
-                                        "device",
                                         "deviceList",
                                         NULL);
         if (!element)
                 return NULL;
 
         for (element = element->children; element; element = element->next) {
-                /* XXX refcount */
                 if (!strcmp ("device", (char *) element->name)) {
-                        devices = g_list_prepend
-                                        (devices,
-                                         _gupnp_device_proxy_new (proxy->priv->location, element));
+                        GUPnPDeviceProxy *child;
+
+                        child = _gupnp_device_proxy_new_from_element
+                                        (proxy->priv->location, element);
+
+                        devices = g_list_prepend (devices, child);
                 }
         }
 
@@ -176,25 +185,93 @@ gupnp_device_proxy_get_service (GUPnPDeviceProxy *proxy,
         return NULL;
 }
 
+static xmlNode *
+find_device_element_by_udn (xmlNode    *element,
+                            const char *udn)
+{
+        xmlNode *tmp;
+
+        tmp = xml_util_get_element (element,
+                                    "UDN",
+                                    NULL);
+        if (tmp) {
+                xmlChar *content;
+                gboolean match;
+
+                content = xmlNodeGetContent (tmp);
+                
+                match = !strcmp (udn, (char *) content);
+
+                xmlFree (content);
+
+                if (match)
+                        return element;
+        }
+
+        tmp = xml_util_get_element (element,
+                                    "deviceList",
+                                    NULL);
+        if (tmp) {
+                for (tmp = tmp->children; tmp; tmp = tmp->next) {
+                        element = find_device_element_by_udn (tmp, udn);
+                        if (element)
+                                return element;
+                }
+        }
+
+        return NULL;
+}
+
 GUPnPDeviceProxy *
-_gupnp_device_proxy_new (const char *location,
-                         xmlNode    *element)
+_gupnp_device_proxy_new_from_udn (const char *location,
+                                  const char *udn)
 {
         GUPnPDeviceProxy *proxy;
+
+        g_return_val_if_fail (location, NULL);
+        g_return_val_if_fail (udn, NULL);
 
         proxy = g_object_new (GUPNP_TYPE_DEVICE_PROXY,
                               NULL);
 
         proxy->priv->location = g_strdup (location);
 
-        if (element)
-                proxy->priv->element = element;
-        else {
-                proxy->priv->element =
-                        (xmlNode *) xmlParseFile (proxy->priv->location);
+        proxy->priv->doc = xmlParseFile (proxy->priv->location);
 
-                proxy->priv->free_doc = TRUE;
+        proxy->priv->element =
+                xml_util_get_element ((xmlNode *) proxy->priv->doc,
+                                      "root",
+                                      "device",
+                                      NULL);
+        proxy->priv->element =
+                find_device_element_by_udn (proxy->priv->element, udn);
+
+        if (!proxy->priv->element) {
+                g_warning ("Device description does not contain device "
+                           "with UDN \"%s\".", udn);
+
+                g_object_unref (proxy);
+                proxy = NULL;
         }
+
+        return proxy;
+}
+
+GUPnPDeviceProxy *
+_gupnp_device_proxy_new_from_element (const char *location,
+                                      xmlNode    *element)
+{
+        GUPnPDeviceProxy *proxy;
+
+        g_return_val_if_fail (location, NULL);
+        g_return_val_if_fail (element, NULL);
+
+        proxy = g_object_new (GUPNP_TYPE_DEVICE_PROXY,
+                              NULL);
+
+        proxy->priv->location = g_strdup (location);
+
+        proxy->priv->element = element;
 
         return proxy;
 }
