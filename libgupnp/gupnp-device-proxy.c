@@ -315,6 +315,7 @@ find_device_element_by_udn (xmlNode    *element,
 }
 
 /**
+ * gupnp_device_proxy_new
  * @location: The location of the device description file
  * @udn: The UDN of the device to create a proxy for.
  *
@@ -322,8 +323,8 @@ find_device_element_by_udn (xmlNode    *element,
  * from the device description file specified by @location.
  **/
 GUPnPDeviceProxy *
-_gupnp_device_proxy_new_from_udn (const char *location,
-                                  const char *udn)
+gupnp_device_proxy_new (const char *location,
+                        const char *udn)
 {
         GUPnPDeviceProxy *proxy;
 
@@ -357,6 +358,7 @@ _gupnp_device_proxy_new_from_udn (const char *location,
 }
 
 /**
+ * _gupnp_device_proxy_new_from_element
  * @location: The location of the device description file
  * @element: The #xmlNode ponting to the right device element
  *

@@ -1,25 +1,18 @@
-#include <libgupnp/gupnp.h>
+#include <libgupnp/gupnp-device-proxy-private.h>
 
 int
 main (int argc, char **argv)
 {
-        GSSDPClient *client;
-        GUPnPControlPoint *cp;
-        GMainLoop *main_loop;
+        GUPnPDeviceProxy *proxy;
         
         g_type_init ();
 
-        client = gssdp_client_new (NULL, NULL);
+        proxy = gupnp_device_proxy_new (argv[1], "uuid:UUID");
 
-        cp = gupnp_control_point_new (client, "upnp:rootdevice");
-        gssdp_service_browser_set_active (GSSDP_SERVICE_BROWSER (cp), TRUE);
+        g_print ("Type: %s\n",
+                 gupnp_device_info_get_device_type (GUPNP_DEVICE_INFO (proxy)));
 
-        main_loop = g_main_loop_new (NULL, FALSE);
-        g_main_loop_run (main_loop);
-        g_main_loop_unref (main_loop);
-
-        g_object_unref (cp);
-        g_object_unref (client);
+        g_object_unref (proxy);
 
         return 0;
 }

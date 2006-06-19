@@ -86,6 +86,10 @@ typedef void
                                      GValue                  *value,
                                      gpointer                 user_data);
 
+GUPnPServiceProxy *
+gupnp_service_proxy_new            (const char                     *location,
+                                    const char                     *usn);
+
 gboolean
 gupnp_service_proxy_send_action    (GUPnPServiceProxy              *proxy,
                                     const char                     *action,

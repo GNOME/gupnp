@@ -20,7 +20,6 @@
  */
 
 #include "gupnp-error.h"
-#include "gupnp-control-point.h"
 #include "gupnp-device-info.h"
 #include "gupnp-device-proxy.h"
 #include "gupnp-service-info.h"
