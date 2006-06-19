@@ -276,10 +276,11 @@ Client side
                                            GUPnPDeviceProxy  *device);
 
 
-                GUPnPControlPoint *gupnp_control_point_new          (GSSDPClient       *ssdp_client);
+                GUPnPControlPoint *gupnp_control_point_new          (GSSDPClient       *ssdp_client,
+                                                                     const char        *target);
 
 
-                GList             *gupnp_control_point_list_devices (GUPnPControlPoint *control_point);
+                const GList       *gupnp_control_point_list_devices (GUPnPControlPoint *control_point);
 
 Notes
 ===

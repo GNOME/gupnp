@@ -78,9 +78,10 @@ typedef struct {
 } GUPnPControlPointClass;
 
 GUPnPControlPoint *
-gupnp_control_point_new          (GSSDPClient       *ssdp_client);
+gupnp_control_point_new          (GSSDPClient       *ssdp_client,
+                                  const char        *target);
 
-GList *
+const GList *
 gupnp_control_point_list_devices (GUPnPControlPoint *control_point);
 
 G_END_DECLS
