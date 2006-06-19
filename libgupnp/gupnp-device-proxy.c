@@ -109,7 +109,7 @@ gupnp_device_proxy_info_init (GUPnPDeviceInfoIface *iface)
  *
  * Return value: A #GList of #GUPnPDeviceProxy objects representing the
  * devices directly contained in @proxy. The returned list should be
- * g_list_free()'ed and the elements should be g_object_unref()'ed.
+ * g_list_free()'d and the elements should be g_object_unref()'d.
  **/
 GList *
 gupnp_device_proxy_list_devices (GUPnPDeviceProxy *proxy)
@@ -141,22 +141,109 @@ gupnp_device_proxy_list_devices (GUPnPDeviceProxy *proxy)
         return devices;
 }
 
+/**
+ * gupnp_device_proxy_list_device_types
+ * @proxy: A #GUPnPDeviceProxy
+ *
+ * Return value: A #GList of strings representing the types of the devices
+ * directly contained in @proxy. The returned list should be g_list_free()'d
+ * and the elements should be g_free()'d.
+ **/
 GList *
 gupnp_device_proxy_list_device_types (GUPnPDeviceProxy *proxy)
 {
+        GList *device_types;
+        xmlNode *element;
+
         g_return_val_if_fail (GUPNP_IS_DEVICE_PROXY (proxy), NULL);
 
-        return NULL;
+        device_types = NULL;
+
+        element = xml_util_get_element (proxy->priv->element,
+                                        "deviceList",
+                                        NULL);
+        if (!element)
+                return NULL;
+
+        for (element = element->children; element; element = element->next) {
+                if (!strcmp ("device", (char *) element->name)) {
+                        xmlNode *type_element;
+                        xmlChar *type;
+
+                        type_element = xml_util_get_element (element,
+                                                             "deviceType",
+                                                             NULL);
+                        if (!type_element)
+                                continue;
+
+                        type = xmlNodeGetContent (type_element);
+                        if (!type)
+                                continue;
+
+                        device_types =
+                                g_list_prepend (device_types,
+                                                g_strdup ((char *) type));
+                        xmlFree (type);
+                }
+        }
+
+        return device_types;
 }
 
+/**
+ * gupnp_device_proxy_get_device
+ * @proxy: A #GUPnPDeviceProxy
+ * @type: The type of the device to be retrieved.
+ *
+ * Return value: The device with type @type directly contained in @proxy as
+ * a #GUPnPDeviceProxy object, or NULL if no such device was found.
+ **/
 GUPnPDeviceProxy *
 gupnp_device_proxy_get_device (GUPnPDeviceProxy *proxy,
                                const char       *type)
 {
+        GUPnPDeviceProxy *child;
+        xmlNode *element;
+
         g_return_val_if_fail (GUPNP_IS_DEVICE_PROXY (proxy), NULL);
         g_return_val_if_fail (type, NULL);
 
-        return NULL;
+        child = NULL;
+
+        element = xml_util_get_element (proxy->priv->element,
+                                        "deviceList",
+                                        NULL);
+        if (!element)
+                return NULL;
+
+        for (element = element->children; element; element = element->next) {
+                if (!strcmp ("device", (char *) element->name)) {
+                        xmlNode *type_element;
+                        xmlChar *type_str;
+
+                        type_element = xml_util_get_element (element,
+                                                             "deviceType",
+                                                             NULL);
+                        if (!type_element)
+                                continue;
+
+                        type_str = xmlNodeGetContent (type_element);
+                        if (!type_str)
+                                continue;
+
+                        if (!strcmp (type, (char *) type_str)) {
+                                child = _gupnp_device_proxy_new_from_element
+                                              (proxy->priv->location, element);
+                        }
+
+                        xmlFree (type_str);
+
+                        if (child)
+                                break;
+                }
+        }
+
+        return child;
 }
 
 GList *
@@ -185,6 +272,10 @@ gupnp_device_proxy_get_service (GUPnPDeviceProxy *proxy,
         return NULL;
 }
 
+/**
+ * @element: An #xmlNode pointing to a "device" element
+ * @udn: The UDN of the device element to find
+ **/
 static xmlNode *
 find_device_element_by_udn (xmlNode    *element,
                             const char *udn)
@@ -212,6 +303,7 @@ find_device_element_by_udn (xmlNode    *element,
                                     "deviceList",
                                     NULL);
         if (tmp) {
+                /* Recurse into children */
                 for (tmp = tmp->children; tmp; tmp = tmp->next) {
                         element = find_device_element_by_udn (tmp, udn);
                         if (element)
@@ -222,6 +314,13 @@ find_device_element_by_udn (xmlNode    *element,
         return NULL;
 }
 
+/**
+ * @location: The location of the device description file
+ * @udn: The UDN of the device to create a proxy for.
+ *
+ * Return value: A #GUPnPDeviceProxy for the device with UDN @udn, as read
+ * from the device description file specified by @location.
+ **/
 GUPnPDeviceProxy *
 _gupnp_device_proxy_new_from_udn (const char *location,
                                   const char *udn)
@@ -257,6 +356,13 @@ _gupnp_device_proxy_new_from_udn (const char *location,
         return proxy;
 }
 
+/**
+ * @location: The location of the device description file
+ * @element: The #xmlNode ponting to the right device element
+ *
+ * Return value: A #GUPnPDeviceProxy for the device with element @element, as
+ * read from the device description file specified by @location.
+ **/
 GUPnPDeviceProxy *
 _gupnp_device_proxy_new_from_element (const char *location,
                                       xmlNode    *element)
