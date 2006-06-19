@@ -50,7 +50,8 @@ typedef struct {
         GTypeInterface iface;
 
         /* vtable */
-        xmlNode * (* get_element) (GUPnPServiceInfo *info);
+        const char * (* get_location) (GUPnPServiceInfo *info);
+        xmlNode    * (* get_element)  (GUPnPServiceInfo *info);
 
         /* future padding */
         void (* _gupnp_reserved1) (void);
@@ -58,6 +59,9 @@ typedef struct {
         void (* _gupnp_reserved3) (void);
         void (* _gupnp_reserved4) (void);
 } GUPnPServiceInfoIface;
+
+const char *
+gupnp_service_info_get_location               (GUPnPServiceInfo *info);
 
 const char *
 gupnp_service_info_get_service_type           (GUPnPServiceInfo *info);

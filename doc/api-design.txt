@@ -192,7 +192,7 @@ Client side
 
 
                 GUPnPServiceProxy *gupnp_service_proxy_new (const char *location,
-                                                            const char *usn);
+                                                            const char *id);
 
 
                 /* gupnp_service_proxy_send_action (proxy,

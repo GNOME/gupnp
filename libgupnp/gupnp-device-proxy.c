@@ -23,6 +23,7 @@
 
 #include "gupnp-device-proxy.h"
 #include "gupnp-device-proxy-private.h"
+#include "gupnp-service-proxy-private.h"
 #include "xml-util.h"
 
 static void
@@ -246,30 +247,147 @@ gupnp_device_proxy_get_device (GUPnPDeviceProxy *proxy,
         return child;
 }
 
+/**
+ * gupnp_device_proxy_list_services
+ * @proxy: A #GUPnPDeviceProxy
+ *
+ * Return value: A #GList of #GUPnPServiceProxy objects representing the
+ * services directly contained in @proxy. The returned list should be
+ * g_list_free()'d and the elements should be g_object_unref()'d.
+ **/
 GList *
 gupnp_device_proxy_list_services (GUPnPDeviceProxy *proxy)
 {
+        GList *services;
+        xmlNode *element;
+
         g_return_val_if_fail (GUPNP_IS_DEVICE_PROXY (proxy), NULL);
 
-        return NULL;
+        services = NULL;
+
+        element = xml_util_get_element (proxy->priv->element,
+                                        "serviceList",
+                                        NULL);
+        if (!element)
+                return NULL;
+
+        for (element = element->children; element; element = element->next) {
+                if (!strcmp ("service", (char *) element->name)) {
+                        GUPnPServiceProxy *service;
+
+                        service = _gupnp_service_proxy_new_from_element
+                                        (proxy->priv->location, element);
+
+                        services = g_list_prepend (services, service);
+                }
+        }
+
+        return services;
 }
 
+/**
+ * gupnp_device_proxy_list_service_types
+ * @proxy: A #GUPnPDeviceProxy
+ *
+ * Return value: A #GList of strings representing the types of the services
+ * directly contained in @proxy. The returned list should be g_list_free()'d
+ * and the elements should be g_free()'d.
+ **/
 GList *
 gupnp_device_proxy_list_service_types (GUPnPDeviceProxy *proxy)
 {
+        GList *service_types;
+        xmlNode *element;
+
         g_return_val_if_fail (GUPNP_IS_DEVICE_PROXY (proxy), NULL);
 
-        return NULL;
+        service_types = NULL;
+
+        element = xml_util_get_element (proxy->priv->element,
+                                        "serviceList",
+                                        NULL);
+        if (!element)
+                return NULL;
+
+        for (element = element->children; element; element = element->next) {
+                if (!strcmp ("service", (char *) element->name)) {
+                        xmlNode *type_element;
+                        xmlChar *type;
+
+                        type_element = xml_util_get_element (element,
+                                                             "serviceType",
+                                                             NULL);
+                        if (!type_element)
+                                continue;
+
+                        type = xmlNodeGetContent (type_element);
+                        if (!type)
+                                continue;
+
+                        service_types =
+                                g_list_prepend (service_types,
+                                                g_strdup ((char *) type));
+                        xmlFree (type);
+                }
+        }
+
+        return service_types;
 }
 
+/**
+ * gupnp_device_proxy_get_service
+ * @proxy: A #GUPnPDeviceProxy
+ * @type: The type of the service to be retrieved.
+ *
+ * Return value: The service with type @type directly contained in @proxy as
+ * a #GUPnPServiceProxy object, or NULL if no such service was found.
+ **/
 GUPnPServiceProxy *
 gupnp_device_proxy_get_service (GUPnPDeviceProxy *proxy,
                                 const char       *type)
 {
+        GUPnPServiceProxy *service;
+        xmlNode *element;
+
         g_return_val_if_fail (GUPNP_IS_DEVICE_PROXY (proxy), NULL);
         g_return_val_if_fail (type, NULL);
 
-        return NULL;
+        service = NULL;
+
+        element = xml_util_get_element (proxy->priv->element,
+                                        "serviceList",
+                                        NULL);
+        if (!element)
+                return NULL;
+
+        for (element = element->children; element; element = element->next) {
+                if (!strcmp ("service", (char *) element->name)) {
+                        xmlNode *type_element;
+                        xmlChar *type_str;
+
+                        type_element = xml_util_get_element (element,
+                                                             "serviceType",
+                                                             NULL);
+                        if (!type_element)
+                                continue;
+
+                        type_str = xmlNodeGetContent (type_element);
+                        if (!type_str)
+                                continue;
+
+                        if (!strcmp (type, (char *) type_str)) {
+                                service = _gupnp_service_proxy_new_from_element
+                                              (proxy->priv->location, element);
+                        }
+
+                        xmlFree (type_str);
+
+                        if (service)
+                                break;
+                }
+        }
+
+        return service;
 }
 
 /**

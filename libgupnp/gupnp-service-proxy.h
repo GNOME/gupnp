@@ -88,7 +88,7 @@ typedef void
 
 GUPnPServiceProxy *
 gupnp_service_proxy_new            (const char                     *location,
-                                    const char                     *usn);
+                                    const char                     *id);
 
 gboolean
 gupnp_service_proxy_send_action    (GUPnPServiceProxy              *proxy,

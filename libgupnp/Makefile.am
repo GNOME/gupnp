@@ -25,6 +25,7 @@ libgupnp_1_0_la_SOURCES = gupnp-device-info.c		\
 			  gupnp-error.c			\
 			  gupnp-service-info.c		\
 			  gupnp-service-proxy.c		\
+			  gupnp-service-proxy-private.h \
 			  xml-util.c			\
 			  xml-util.h			\
 			  $(BUILT_SOURCES)

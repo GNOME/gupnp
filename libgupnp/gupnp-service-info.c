@@ -86,6 +86,25 @@ gupnp_service_info_get_type (void)
         return type;
 }
 
+/**
+ * gupnp_service_info_get_location
+ * @info: An object implementing the #GUPnPServiceInfo interface
+ *
+ * Return value: The location of the device description file.
+ **/
+const char *
+gupnp_service_info_get_location (GUPnPServiceInfo *info)
+{
+        GUPnPServiceInfoIface *iface;
+
+        g_return_val_if_fail (GUPNP_IS_SERVICE_INFO (info), NULL);
+
+        iface = GUPNP_SERVICE_INFO_GET_IFACE (info);
+
+        g_return_val_if_fail (iface->get_location, NULL);
+        return iface->get_location (info);
+}
+
 static const char *
 get_property (GUPnPServiceInfo *info,
               const char       *element_name,
