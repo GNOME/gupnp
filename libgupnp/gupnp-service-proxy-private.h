@@ -25,7 +25,7 @@
 #include "gupnp-service-proxy.h"
 
 GUPnPServiceProxy *
-_gupnp_service_proxy_new_from_element (const char *location,
-                                       xmlNode    *element);
+_gupnp_service_proxy_new_from_element (xmlNode    *element,
+                                       const char *location);
 
 #endif /* __GUPNP_SERVICE_PROXY_PRIVATE_H__ */

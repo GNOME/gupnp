@@ -28,6 +28,9 @@
 
 static void
 gupnp_device_proxy_info_init (GUPnPDeviceInfoIface *iface);
+static GUPnPDeviceProxy *
+_gupnp_device_proxy_new_from_element (xmlNode    *element,
+                                      const char *location);
 
 G_DEFINE_TYPE_EXTENDED (GUPnPDeviceProxy,
                         gupnp_device_proxy,
@@ -38,8 +41,6 @@ G_DEFINE_TYPE_EXTENDED (GUPnPDeviceProxy,
 
 struct _GUPnPDeviceProxyPrivate {
         char *location;
-
-        xmlDoc *doc;
 
         xmlNode *element;
 };
@@ -80,9 +81,6 @@ gupnp_device_proxy_finalize (GObject *object)
         proxy = GUPNP_DEVICE_PROXY (object);
 
         g_free (proxy->priv->location);
-
-        if (proxy->priv->doc)
-                xmlFreeDoc (proxy->priv->doc);
 }
 
 static void
@@ -133,7 +131,7 @@ gupnp_device_proxy_list_devices (GUPnPDeviceProxy *proxy)
                         GUPnPDeviceProxy *child;
 
                         child = _gupnp_device_proxy_new_from_element
-                                        (proxy->priv->location, element);
+                                        (element, proxy->priv->location);
 
                         devices = g_list_prepend (devices, child);
                 }
@@ -234,7 +232,7 @@ gupnp_device_proxy_get_device (GUPnPDeviceProxy *proxy,
 
                         if (!strcmp (type, (char *) type_str)) {
                                 child = _gupnp_device_proxy_new_from_element
-                                              (proxy->priv->location, element);
+                                              (element, proxy->priv->location);
                         }
 
                         xmlFree (type_str);
@@ -276,7 +274,7 @@ gupnp_device_proxy_list_services (GUPnPDeviceProxy *proxy)
                         GUPnPServiceProxy *service;
 
                         service = _gupnp_service_proxy_new_from_element
-                                        (proxy->priv->location, element);
+                                        (element, proxy->priv->location);
 
                         services = g_list_prepend (services, service);
                 }
@@ -377,7 +375,7 @@ gupnp_device_proxy_get_service (GUPnPDeviceProxy *proxy,
 
                         if (!strcmp (type, (char *) type_str)) {
                                 service = _gupnp_service_proxy_new_from_element
-                                              (proxy->priv->location, element);
+                                              (element, proxy->priv->location);
                         }
 
                         xmlFree (type_str);
@@ -394,9 +392,9 @@ gupnp_device_proxy_get_service (GUPnPDeviceProxy *proxy,
  * @element: An #xmlNode pointing to a "device" element
  * @udn: The UDN of the device element to find
  **/
-static xmlNode *
-find_device_element_by_udn (xmlNode    *element,
-                            const char *udn)
+xmlNode *
+_gupnp_device_proxy_find_element_for_udn (xmlNode    *element,
+                                          const char *udn)
 {
         xmlNode *tmp;
 
@@ -423,7 +421,10 @@ find_device_element_by_udn (xmlNode    *element,
         if (tmp) {
                 /* Recurse into children */
                 for (tmp = tmp->children; tmp; tmp = tmp->next) {
-                        element = find_device_element_by_udn (tmp, udn);
+                        element =
+                                _gupnp_device_proxy_find_element_for_udn
+                                        (tmp, udn);
+
                         if (element)
                                 return element;
                 }
@@ -434,15 +435,17 @@ find_device_element_by_udn (xmlNode    *element,
 
 /**
  * gupnp_device_proxy_new
- * @location: The location of the device description file
+ * @doc: A device description document
  * @udn: The UDN of the device to create a proxy for.
+ * @location: The location of the device description file
  *
  * Return value: A #GUPnPDeviceProxy for the device with UDN @udn, as read
- * from the device description file specified by @location.
+ * from the device description @doc.
  **/
 GUPnPDeviceProxy *
-gupnp_device_proxy_new (const char *location,
-                        const char *udn)
+gupnp_device_proxy_new (xmlDoc     *doc,
+                        const char *udn,
+                        const char *location)
 {
         GUPnPDeviceProxy *proxy;
 
@@ -454,15 +457,17 @@ gupnp_device_proxy_new (const char *location,
 
         proxy->priv->location = g_strdup (location);
 
-        proxy->priv->doc = xmlParseFile (proxy->priv->location);
-
         proxy->priv->element =
-                xml_util_get_element ((xmlNode *) proxy->priv->doc,
+                xml_util_get_element ((xmlNode *) doc,
                                       "root",
                                       "device",
                                       NULL);
-        proxy->priv->element =
-                find_device_element_by_udn (proxy->priv->element, udn);
+
+        if (proxy->priv->element) {
+                proxy->priv->element =
+                        _gupnp_device_proxy_find_element_for_udn 
+                                (proxy->priv->element, udn);
+        }
 
         if (!proxy->priv->element) {
                 g_warning ("Device description does not contain device "
@@ -477,15 +482,15 @@ gupnp_device_proxy_new (const char *location,
 
 /**
  * _gupnp_device_proxy_new_from_element
- * @location: The location of the device description file
  * @element: The #xmlNode ponting to the right device element
+ * @location: The location of the device description file
  *
  * Return value: A #GUPnPDeviceProxy for the device with element @element, as
  * read from the device description file specified by @location.
  **/
-GUPnPDeviceProxy *
-_gupnp_device_proxy_new_from_element (const char *location,
-                                      xmlNode    *element)
+static GUPnPDeviceProxy *
+_gupnp_device_proxy_new_from_element (xmlNode    *element,
+                                      const char *location)
 {
         GUPnPDeviceProxy *proxy;
 

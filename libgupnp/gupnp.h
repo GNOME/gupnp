@@ -19,6 +19,7 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#include "gupnp-control-point.h"
 #include "gupnp-error.h"
 #include "gupnp-device-info.h"
 #include "gupnp-device-proxy.h"

@@ -51,6 +51,7 @@ typedef struct {
 
         /* vtable */
         const char * (* get_location) (GUPnPServiceInfo *info);
+        const char * (* get_udn)      (GUPnPServiceInfo *info);
         xmlNode    * (* get_element)  (GUPnPServiceInfo *info);
 
         /* future padding */
@@ -62,6 +63,9 @@ typedef struct {
 
 const char *
 gupnp_service_info_get_location               (GUPnPServiceInfo *info);
+
+const char *
+gupnp_service_info_get_udn                    (GUPnPServiceInfo *info);
 
 const char *
 gupnp_service_info_get_service_type           (GUPnPServiceInfo *info);

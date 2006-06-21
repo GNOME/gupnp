@@ -22,6 +22,8 @@
 #ifndef __GUPNP_SERVICE_PROXY_H__
 #define __GUPNP_SERVICE_PROXY_H__
 
+#include <libxml/tree.h>
+
 #include "gupnp-service-info.h"
 #include "gupnp-service-proxy.h"
 
@@ -64,7 +66,7 @@ typedef struct {
 
         /* signals */
         void (* subscription_lost) (GUPnPServiceProxy *proxy,
-                                    GError            *reason);
+                                    const GError      *reason);
 
         /* future padding */
         void (* _gupnp_reserved1) (void);
@@ -87,8 +89,10 @@ typedef void
                                      gpointer                 user_data);
 
 GUPnPServiceProxy *
-gupnp_service_proxy_new            (const char                     *location,
-                                    const char                     *id);
+gupnp_service_proxy_new            (xmlDoc                         *doc,
+                                    const char                     *udn,
+                                    const char                     *type,
+                                    const char                     *location);
 
 gboolean
 gupnp_service_proxy_send_action    (GUPnPServiceProxy              *proxy,

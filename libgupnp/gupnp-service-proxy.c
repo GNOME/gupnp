@@ -23,6 +23,7 @@
 
 #include "gupnp-service-proxy.h"
 #include "gupnp-service-proxy-private.h"
+#include "gupnp-device-proxy-private.h"
 #include "xml-util.h"
 
 static void
@@ -37,8 +38,7 @@ G_DEFINE_TYPE_EXTENDED (GUPnPServiceProxy,
 
 struct _GUPnPServiceProxyPrivate {
         char *location;
-
-        xmlDoc *doc;
+        char *udn;
 
         xmlNode *element;
 
@@ -67,6 +67,16 @@ gupnp_service_proxy_get_location (GUPnPServiceInfo *info)
         return proxy->priv->location;
 }
 
+static const char *
+gupnp_service_proxy_get_udn (GUPnPServiceInfo *info)
+{
+        GUPnPServiceProxy *proxy;
+        
+        proxy = GUPNP_SERVICE_PROXY (info);
+        
+        return proxy->priv->udn;
+}
+
 static xmlNode *
 gupnp_service_proxy_get_element (GUPnPServiceInfo *info)
 {
@@ -93,9 +103,7 @@ gupnp_service_proxy_finalize (GObject *object)
         proxy = GUPNP_SERVICE_PROXY (object);
 
         g_free (proxy->priv->location);
-
-        if (proxy->priv->doc)
-                xmlFreeDoc (proxy->priv->doc);
+        g_free (proxy->priv->udn);
 }
 
 static void
@@ -137,6 +145,7 @@ static void
 gupnp_service_proxy_info_init (GUPnPServiceInfoIface *iface)
 {
         iface->get_location = gupnp_service_proxy_get_location;
+        iface->get_udn      = gupnp_service_proxy_get_udn;
         iface->get_element  = gupnp_service_proxy_get_element;
 }
 
@@ -392,11 +401,11 @@ gupnp_service_proxy_get_subscribed (GUPnPServiceProxy *proxy)
 
 /**
  * @element: An #xmlNode pointing to a "device" element
- * @id: The ID of the service element to find
+ * @type: The type of the service element to find
  **/
 static xmlNode *
-find_service_element_by_id (xmlNode    *element,
-                            const char *id)
+find_service_element_for_type (xmlNode    *element,
+                               const char *type)
 {
         xmlNode *tmp;
 
@@ -405,18 +414,18 @@ find_service_element_by_id (xmlNode    *element,
                                     NULL);
         if (tmp) {
                 for (tmp = tmp->children; tmp; tmp = tmp->next) {
-                        xmlNode *id_element;
+                        xmlNode *type_element;
 
-                        id_element = xml_util_get_element (tmp,
-                                                           "serviceId",
-                                                           NULL);
-                        if (id_element) {
+                        type_element = xml_util_get_element (tmp,
+                                                             "serviceType",
+                                                             NULL);
+                        if (type_element) {
                                 xmlChar *content;
                                 gboolean match;
 
-                                content = xmlNodeGetContent (id_element);
+                                content = xmlNodeGetContent (type_element);
                                 
-                                match = !strcmp (id, (char *) content);
+                                match = !strcmp (type, (char *) content);
 
                                 xmlFree (content);
 
@@ -426,56 +435,59 @@ find_service_element_by_id (xmlNode    *element,
                 }
         }
 
-        tmp = xml_util_get_element (element,
-                                    "deviceList",
-                                    NULL);
-        if (tmp) {
-                /* Recurse into children */
-                for (tmp = tmp->children; tmp; tmp = tmp->next) {
-                        element = find_service_element_by_id (tmp, id);
-                        if (element)
-                                return element;
-                }
-        }
-
         return NULL;
 }
 
 /**
  * gupnp_service_proxy_new
+ * @doc: A device description document
+ * @udn: The UDN of the device the service is contained in
+ * @type: The type of the service to create a proxy for
  * @location: The location of the service description file
- * @id: The ID of the service to create a proxy for.
  *
- * Return value: A #GUPnPServiceProxy for the service with ID @id, as read
- * from the service description file specified by @location.
+ * Return value: A #GUPnPServiceProxy for the service with type @type from
+ * the device with UDN @udn, as read from the device description file specified
+ * by @doc.
  **/
 GUPnPServiceProxy *
-gupnp_service_proxy_new (const char *location,
-                         const char *id)
+gupnp_service_proxy_new (xmlDoc     *doc,
+                         const char *udn,
+                         const char *type,
+                         const char *location)
 {
         GUPnPServiceProxy *proxy;
 
-        g_return_val_if_fail (location, NULL);
-        g_return_val_if_fail (id, NULL);
+        g_return_val_if_fail (doc, NULL);
+        g_return_val_if_fail (udn, NULL);
+        g_return_val_if_fail (type, NULL);
 
         proxy = g_object_new (GUPNP_TYPE_SERVICE_PROXY,
                               NULL);
 
+        proxy->priv->udn      = g_strdup (udn);
         proxy->priv->location = g_strdup (location);
 
-        proxy->priv->doc = xmlParseFile (proxy->priv->location);
-
         proxy->priv->element =
-                xml_util_get_element ((xmlNode *) proxy->priv->doc,
+                xml_util_get_element ((xmlNode *) doc,
                                       "root",
                                       "device",
                                       NULL);
-        proxy->priv->element =
-                find_service_element_by_id (proxy->priv->element, id);
+        
+        if (proxy->priv->element) {
+                proxy->priv->element =
+                        _gupnp_device_proxy_find_element_for_udn
+                                (proxy->priv->element, udn);
+
+                if (proxy->priv->element) {
+                        proxy->priv->element = 
+                                find_service_element_for_type
+                                        (proxy->priv->element, type);
+                }
+        }
 
         if (!proxy->priv->element) {
                 g_warning ("Device description does not contain service "
-                           "with ID \"%s\".", id);
+                           "with type \"%s\".", type);
 
                 g_object_unref (proxy);
                 proxy = NULL;
@@ -486,15 +498,15 @@ gupnp_service_proxy_new (const char *location,
 
 /**
  * _gupnp_service_proxy_new_from_element
- * @location: The location of the service description file
  * @element: The #xmlNode ponting to the right service element
+ * @location: The location of the service description file
  *
  * Return value: A #GUPnPServiceProxy for the service with element @element, as
  * read from the service description file specified by @location.
  **/
 GUPnPServiceProxy *
-_gupnp_service_proxy_new_from_element (const char *location,
-                                       xmlNode    *element)
+_gupnp_service_proxy_new_from_element (xmlNode    *element,
+                                       const char *location)
 {
         GUPnPServiceProxy *proxy;
 

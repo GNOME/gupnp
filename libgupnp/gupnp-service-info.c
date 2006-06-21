@@ -105,6 +105,25 @@ gupnp_service_info_get_location (GUPnPServiceInfo *info)
         return iface->get_location (info);
 }
 
+/**
+ * gupnp_service_info_get_udn
+ * @info: An object implementing the #GUPnPServiceInfo interface
+ *
+ * Return value: The UDN of the containing device.
+ **/
+const char *
+gupnp_service_info_get_udn (GUPnPServiceInfo *info)
+{
+        GUPnPServiceInfoIface *iface;
+
+        g_return_val_if_fail (GUPNP_IS_SERVICE_INFO (info), NULL);
+
+        iface = GUPNP_SERVICE_INFO_GET_IFACE (info);
+
+        g_return_val_if_fail (iface->get_udn, NULL);
+        return iface->get_udn (info);
+}
+
 static const char *
 get_property (GUPnPServiceInfo *info,
               const char       *element_name,
