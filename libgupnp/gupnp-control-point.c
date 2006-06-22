@@ -33,6 +33,8 @@ struct _GUPnPControlPointPrivate {
         GList *services;
 
         GHashTable *doc_cache;
+
+        GList *pending_gets;
 };
 
 enum {
@@ -51,12 +53,32 @@ typedef struct {
         int ref_count;
 } DescriptionDoc;
 
-void
+static void
 description_doc_free (DescriptionDoc *doc)
 {
         xmlFreeDoc (doc->doc);
 
         g_slice_free (DescriptionDoc, doc);
+}
+
+typedef struct {
+        GUPnPControlPoint *control_point;
+
+        char *udn;
+        char *service_type;
+        char *description_url;
+        
+        SoupMessage *message;
+} GetDescriptionURLData;
+
+static void
+get_description_url_data_free (GetDescriptionURLData *data)
+{
+        g_free (data->udn);
+        g_free (data->service_type);
+        g_free (data->description_url);
+
+        g_slice_free (GetDescriptionURLData, data);
 }
 
 static void
@@ -93,6 +115,25 @@ gupnp_control_point_dispose (GObject *object)
                 control_point->priv->services =
                         g_list_delete_link (control_point->priv->services,
                                             control_point->priv->services);
+        }
+        
+        /* Cancel any pending description file GETs */
+        while (control_point->priv->pending_gets) {
+                GetDescriptionURLData *data;
+                GUPnPContext *context;
+                SoupSession *session;
+
+                data = control_point->priv->pending_gets->data;
+
+                context = gupnp_control_point_get_context (control_point);
+                session = _gupnp_context_get_session (context);
+                soup_session_cancel_message (session, data->message);
+
+                get_description_url_data_free (data);
+
+                control_point->priv->pending_gets =
+                        g_list_delete_link (control_point->priv->pending_gets,
+                                            control_point->priv->pending_gets);
         }
 }
 
@@ -174,20 +215,12 @@ description_loaded (GUPnPControlPoint *control_point,
         return ret;
 }
 
-typedef struct {
-        GUPnPControlPoint *control_point;
-
-        char *udn;
-        char *service_type;
-        char *description_url;
-} GotDescriptionURLData;
-
 /**
  * Description URL downloaded.
  **/
 static void
 got_description_url (SoupMessage           *msg,
-                     GotDescriptionURLData *data)
+                     GetDescriptionURLData *data)
 {
         if (SOUP_STATUS_IS_SUCCESSFUL (msg->status_code)) {
                 DescriptionDoc *doc;
@@ -216,11 +249,7 @@ got_description_url (SoupMessage           *msg,
         } else
                         g_warning ("Failed to GET %s", data->description_url);
 
-        g_free (data->udn);
-        g_free (data->service_type);
-        g_free (data->description_url);
-
-        g_slice_free (GotDescriptionURLData, data);
+        get_description_url_data_free (data);
 }
 
 /**
@@ -254,28 +283,32 @@ load_description (GUPnPControlPoint *control_point,
                 /* Asynchronously download doc */
                 GUPnPContext *context;
                 SoupSession *session;
-                SoupMessage *msg;
-                GotDescriptionURLData *data;
+                GetDescriptionURLData *data;
 
                 context = gupnp_control_point_get_context (control_point);
 
                 session = _gupnp_context_get_session (context);
 
-                /* XXX cancelation */
-                msg = soup_message_new (SOUP_METHOD_GET, description_url);
+                data = g_slice_new (GetDescriptionURLData);
 
-                data = g_slice_new (GotDescriptionURLData);
-
-                data->control_point   = control_point;
+                data->control_point = control_point;
+                
                 data->udn             = g_strdup (udn);
                 data->service_type    = g_strdup (service_type);
                 data->description_url = g_strdup (description_url);
 
+                data->message = soup_message_new (SOUP_METHOD_GET,
+                                                  description_url);
+
 	        soup_session_queue_message (session,
-                                            msg,
+                                            data->message,
                                             (SoupMessageCallbackFn)
                                                    got_description_url,
                                             data);
+
+                control_point->priv->pending_gets =
+                        g_list_prepend (control_point->priv->pending_gets,
+                                        data);
         }
 }
 
