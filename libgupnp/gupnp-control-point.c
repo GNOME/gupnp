@@ -117,8 +117,11 @@ description_loaded (GUPnPControlPoint *control_point,
                     const char        *service_type,
                     const char        *description_url)
 {
+        GUPnPContext *context;
         gboolean ret;
         char *full_udn;
+
+        context = gupnp_control_point_get_context (control_point);
 
         ret = FALSE;
 
@@ -127,7 +130,8 @@ description_loaded (GUPnPControlPoint *control_point,
         if (service_type) {
                 GUPnPServiceProxy *proxy;
 
-                proxy = gupnp_service_proxy_new (doc,
+                proxy = gupnp_service_proxy_new (context,
+                                                 doc,
                                                  full_udn,
                                                  service_type,
                                                  description_url);
@@ -146,7 +150,8 @@ description_loaded (GUPnPControlPoint *control_point,
         } else {
                 GUPnPDeviceProxy *proxy;
 
-                proxy = gupnp_device_proxy_new (doc,
+                proxy = gupnp_device_proxy_new (context,
+                                                doc,
                                                 full_udn,
                                                 description_url);
                 if (proxy) {
@@ -311,7 +316,7 @@ gupnp_control_point_service_available (GSSDPServiceBrowser *service_browser,
 
         /* Verify we have a location */
         if (!locations) {
-                g_warning ("No Location header");
+                g_warning ("No Location header for device with USN %s", usn);
                 return;
         }
 

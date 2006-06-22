@@ -24,6 +24,7 @@
 
 #include <libxml/tree.h>
 
+#include "gupnp-context.h"
 #include "gupnp-device-info.h"
 #include "gupnp-service-proxy.h"
 
@@ -72,9 +73,13 @@ typedef struct {
 } GUPnPDeviceProxyClass;
 
 GUPnPDeviceProxy *
-gupnp_device_proxy_new                (xmlDoc           *doc,
+gupnp_device_proxy_new                (GUPnPContext     *context,
+                                       xmlDoc           *doc,
                                        const char       *udn,
                                        const char       *location);
+
+GUPnPContext *
+gupnp_device_proxy_get_context        (GUPnPDeviceProxy *proxy);
 
 GList *
 gupnp_device_proxy_list_devices       (GUPnPDeviceProxy *proxy);

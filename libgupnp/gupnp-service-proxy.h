@@ -24,6 +24,7 @@
 
 #include <libxml/tree.h>
 
+#include "gupnp-context.h"
 #include "gupnp-service-info.h"
 #include "gupnp-service-proxy.h"
 
@@ -89,10 +90,14 @@ typedef void
                                      gpointer                 user_data);
 
 GUPnPServiceProxy *
-gupnp_service_proxy_new            (xmlDoc                         *doc,
+gupnp_service_proxy_new            (GUPnPContext                   *context,
+                                    xmlDoc                         *doc,
                                     const char                     *udn,
                                     const char                     *type,
                                     const char                     *location);
+
+GUPnPContext *
+gupnp_service_proxy_get_context    (GUPnPServiceProxy              *proxy);
 
 gboolean
 gupnp_service_proxy_send_action    (GUPnPServiceProxy              *proxy,
