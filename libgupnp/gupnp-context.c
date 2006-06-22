@@ -20,12 +20,14 @@
  */
 
 #include "gupnp-context.h"
+#include "gupnp-context-private.h"
 
 G_DEFINE_TYPE (GUPnPContext,
                gupnp_context,
                GSSDP_TYPE_CLIENT);
 
 struct _GUPnPContextPrivate {
+        SoupSession *session;
 };
 
 static void
@@ -35,6 +37,8 @@ gupnp_context_init (GUPnPContext *context)
                 G_TYPE_INSTANCE_GET_PRIVATE (context,
                                              GUPNP_TYPE_CONTEXT,
                                              GUPnPContextPrivate);
+
+        context->priv->session = soup_session_async_new ();
 }
 
 static void
@@ -43,14 +47,11 @@ gupnp_context_dispose (GObject *object)
         GUPnPContext *context;
 
         context = GUPNP_CONTEXT (object);
-}
 
-static void
-gupnp_context_finalize (GObject *object)
-{
-        GUPnPContext *context;
-
-        context = GUPNP_CONTEXT (object);
+        if (context->priv->session) {
+                g_object_unref (context->priv->session);
+                context->priv->session = NULL;
+        }
 }
 
 static void
@@ -60,10 +61,15 @@ gupnp_context_class_init (GUPnPContextClass *klass)
 
         object_class = G_OBJECT_CLASS (klass);
 
-        object_class->dispose  = gupnp_context_dispose;
-        object_class->finalize = gupnp_context_finalize;
+        object_class->dispose = gupnp_context_dispose;
 
         g_type_class_add_private (klass, sizeof (GUPnPContextPrivate));
+}
+
+SoupSession *
+_gupnp_context_get_session (GUPnPContext *context)
+{
+        return context->priv->session;
 }
 
 /**

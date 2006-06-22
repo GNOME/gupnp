@@ -22,6 +22,7 @@
 #include <string.h>
 
 #include "gupnp-control-point.h"
+#include "gupnp-context-private.h"
 
 G_DEFINE_TYPE (GUPnPControlPoint,
                gupnp_control_point,
@@ -173,6 +174,55 @@ description_loaded (GUPnPControlPoint *control_point,
         return ret;
 }
 
+typedef struct {
+        GUPnPControlPoint *control_point;
+
+        char *udn;
+        char *service_type;
+        char *description_url;
+} GotDescriptionURLData;
+
+/**
+ * Description URL downloaded.
+ **/
+static void
+got_description_url (SoupMessage           *msg,
+                     GotDescriptionURLData *data)
+{
+        if (SOUP_STATUS_IS_SUCCESSFUL (msg->status_code)) {
+                DescriptionDoc *doc;
+                xmlDoc *xml_doc;
+
+                xml_doc = xmlParseMemory (msg->response.body,
+                                          msg->response.length);
+                if (xml_doc) {
+                        if (description_loaded (data->control_point,
+                                                xml_doc,
+                                                data->udn,
+                                                data->service_type,
+                                                data->description_url)) {
+                                doc = g_slice_new (DescriptionDoc);
+                                
+                                doc->doc       = xml_doc;
+                                doc->ref_count = 1;
+                                
+                                g_hash_table_insert
+                                        (data->control_point->priv->doc_cache,
+                                         g_strdup (data->description_url),
+                                         doc);
+                        }
+                } else
+                        g_warning ("Failed to parse %s", data->description_url);
+        } else
+                        g_warning ("Failed to GET %s", data->description_url);
+
+        g_free (data->udn);
+        g_free (data->service_type);
+        g_free (data->description_url);
+
+        g_slice_free (GotDescriptionURLData, data);
+}
+
 /**
  * Downloads and parses (or takes from cache) @description_url,
  * creating:
@@ -192,6 +242,7 @@ load_description (GUPnPControlPoint *control_point,
         doc = g_hash_table_lookup (control_point->priv->doc_cache,
                                    description_url);
         if (doc) {
+                /* Doc was cached */
                 if (description_loaded (control_point,
                                         doc->doc,
                                         udn,
@@ -200,28 +251,31 @@ load_description (GUPnPControlPoint *control_point,
                         doc->ref_count++;
                 }
         } else {
-                xmlDoc *xml_doc;
+                /* Asynchronously download doc */
+                GUPnPContext *context;
+                SoupSession *session;
+                SoupMessage *msg;
+                GotDescriptionURLData *data;
 
-                /* XXX async */
-                xml_doc = xmlParseFile (description_url);
-                if (xml_doc) {
-                        if (description_loaded (control_point,
-                                                xml_doc,
-                                                udn,
-                                                service_type,
-                                                description_url)) {
-                                doc = g_slice_new (DescriptionDoc);
-                                
-                                doc->doc       = xml_doc;
-                                doc->ref_count = 1;
-                                
-                                g_hash_table_insert
-                                        (control_point->priv->doc_cache,
-                                         g_strdup (description_url),
-                                         doc);
-                        }
-                } else
-                        g_warning ("Failed to parse %s", description_url);
+                context = gupnp_control_point_get_context (control_point);
+
+                session = _gupnp_context_get_session (context);
+
+                /* XXX cancelation */
+                msg = soup_message_new (SOUP_METHOD_GET, description_url);
+
+                data = g_slice_new (GotDescriptionURLData);
+
+                data->control_point   = control_point;
+                data->udn             = g_strdup (udn);
+                data->service_type    = g_strdup (service_type);
+                data->description_url = g_strdup (description_url);
+
+	        soup_session_queue_message (session,
+                                            msg,
+                                            (SoupMessageCallbackFn)
+                                                   got_description_url,
+                                            data);
         }
 }
 
