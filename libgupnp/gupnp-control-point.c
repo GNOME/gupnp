@@ -520,13 +520,34 @@ gupnp_control_point_class_init (GUPnPControlPointClass *klass)
  * Return value: A new #GUPnPControlPoint object.
  **/
 GUPnPControlPoint *
-gupnp_control_point_new (GSSDPClient *ssdp_client,
-                         const char  *target)
+gupnp_control_point_new (GUPnPContext *context,
+                         const char   *target)
 {
+        g_return_val_if_fail (GUPNP_IS_CONTEXT (context), NULL);
+
         return g_object_new (GUPNP_TYPE_CONTROL_POINT,
-                             "client", ssdp_client,
+                             "client", context,
                              "target", target,
                              NULL);
+}
+
+/**
+ * gupnp_control_point_get_context
+ * @control_point: A #GUPnPControlPoint
+ *
+ * Return value: The #GUPnPContext associated with @control_point.
+ **/
+GUPnPContext *
+gupnp_control_point_get_context (GUPnPControlPoint *control_point)
+{
+        GSSDPClient *client;
+        
+        g_return_val_if_fail (GUPNP_IS_CONTROL_POINT (control_point), NULL);
+
+        client = gssdp_service_browser_get_client
+                                (GSSDP_SERVICE_BROWSER (control_point));
+
+        return GUPNP_CONTEXT (client);
 }
 
 /**

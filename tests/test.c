@@ -15,6 +15,8 @@
  *  After that:
  *  - GUPnPContext, which is a subclass of GSSDPClient, with port prop
  *    pass this to all constructors (control point being the only public one)
+ *        SoupSession
+ *        SoupServer
 */
 
 static void
@@ -50,14 +52,14 @@ int
 main (int argc, char **argv)
 {
         GError *error;
-        GSSDPClient *client;
+        GUPnPContext *context;
         GUPnPControlPoint *cp;
         GMainLoop *main_loop;
         
         g_type_init ();
 
         error = NULL;
-        client = gssdp_client_new (NULL, &error);
+        context = gupnp_context_new (NULL, &error);
         if (error) {
                 g_error (error->message);
                 g_error_free (error);
@@ -65,7 +67,7 @@ main (int argc, char **argv)
                 return 1;
         }
 
-        cp = gupnp_control_point_new (client, "upnp:rootdevice");
+        cp = gupnp_control_point_new (context, "upnp:rootdevice");
 
         g_signal_connect (cp,
                           "device-proxy-available",
@@ -91,7 +93,7 @@ main (int argc, char **argv)
         g_main_loop_unref (main_loop);
 
         g_object_unref (cp);
-        g_object_unref (client);
+        g_object_unref (context);
 
         return 0;
 }

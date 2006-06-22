@@ -24,6 +24,7 @@
 
 #include <libgssdp/gssdp-service-browser.h>
 
+#include "gupnp-context.h"
 #include "gupnp-device-proxy.h"
 #include "gupnp-service-proxy.h"
 
@@ -85,8 +86,11 @@ typedef struct {
 } GUPnPControlPointClass;
 
 GUPnPControlPoint *
-gupnp_control_point_new                  (GSSDPClient       *ssdp_client,
+gupnp_control_point_new                  (GUPnPContext      *context,
                                           const char        *target);
+
+GUPnPContext *
+gupnp_control_point_get_context          (GUPnPControlPoint *control_point);
 
 const GList *
 gupnp_control_point_list_device_proxies  (GUPnPControlPoint *control_point);

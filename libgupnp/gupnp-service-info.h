@@ -82,6 +82,8 @@ gupnp_service_info_get_control_url            (GUPnPServiceInfo *info);
 const char *
 gupnp_service_info_get_event_subscription_url (GUPnPServiceInfo *info);
 
+/* XXX actions, variables */
+
 G_END_DECLS
 
 #endif /* __GUPNP_SERVICE_INFO_H__ */

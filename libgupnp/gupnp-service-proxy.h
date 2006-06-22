@@ -149,7 +149,6 @@ void
 gupnp_service_proxy_remove_notify  (GUPnPServiceProxy              *proxy,
                                     guint                           id);
 
-
 void
 gupnp_service_proxy_set_subscribed (GUPnPServiceProxy              *proxy,
                                     gboolean                        subscribed);
