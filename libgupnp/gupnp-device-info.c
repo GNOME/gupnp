@@ -242,6 +242,7 @@ get_property (GUPnPDeviceInfo *info,
                 xmlChar *value;
                 char *ret;
                 
+                /* Make glib memmanaged */
                 value = xmlNodeGetContent (element);
                 ret = g_strdup ((char *) value);
                 xmlFree (value);

@@ -83,19 +83,19 @@ gupnp_service_info_get_location               (GUPnPServiceInfo *info);
 const char *
 gupnp_service_info_get_udn                    (GUPnPServiceInfo *info);
 
-const char *
+char *
 gupnp_service_info_get_service_type           (GUPnPServiceInfo *info);
 
-const char *
+char *
 gupnp_service_info_get_id                     (GUPnPServiceInfo *info);
 
-const char *
+char *
 gupnp_service_info_get_scpd_url               (GUPnPServiceInfo *info);
 
-const char *
+char *
 gupnp_service_info_get_control_url            (GUPnPServiceInfo *info);
 
-const char *
+char *
 gupnp_service_info_get_event_subscription_url (GUPnPServiceInfo *info);
 
 typedef struct {

@@ -38,17 +38,6 @@ struct _GUPnPServiceInfoPrivate {
         GList *pending_gets;
 };
 
-typedef enum {
-        QUARK_SERVICE_TYPE,
-        QUARK_ID,
-        QUARK_SCPD_URL,
-        QUARK_CONTROL_URL,
-        QUARK_EVENT_SUB_URL,
-        QUARK_LAST
-} Quark;
-
-static GQuark quarks[QUARK_LAST];
-
 enum {
         PROP_0,
         PROP_CONTEXT,
@@ -192,22 +181,6 @@ gupnp_service_info_class_init (GUPnPServiceInfoClass *klass)
                                       NULL,
                                       G_PARAM_READWRITE |
                                       G_PARAM_CONSTRUCT_ONLY));
-        
-        quarks[QUARK_SERVICE_TYPE] =
-                g_quark_from_static_string
-                        ("gupnp-service-info-service-type");
-        quarks[QUARK_ID] =
-                g_quark_from_static_string
-                        ("gupnp-service-info-id");
-        quarks[QUARK_SCPD_URL] =
-                g_quark_from_static_string
-                        ("gupnp-service-info-scpd-url");
-        quarks[QUARK_CONTROL_URL] =
-                g_quark_from_static_string
-                        ("gupnp-service-info-control-url");
-        quarks[QUARK_EVENT_SUB_URL] =
-                g_quark_from_static_string
-                        ("gupnp-service-info-event-sub-url");
 }
 
 /**
@@ -226,7 +199,7 @@ gupnp_service_info_get_context (GUPnPServiceInfo *info)
 
 /**
  * gupnp_service_info_get_location
- * @info: An object implementing the #GUPnPServiceInfo interface
+ * @info: A #GUPnPServiceInfo
  *
  * Return value: The location of the device description file.
  **/
@@ -240,7 +213,7 @@ gupnp_service_info_get_location (GUPnPServiceInfo *info)
 
 /**
  * gupnp_service_info_get_udn
- * @info: An object implementing the #GUPnPServiceInfo interface
+ * @info: A #GUPnPServiceInfo
  *
  * Return value: The UDN of the containing device.
  **/
@@ -252,103 +225,96 @@ gupnp_service_info_get_udn (GUPnPServiceInfo *info)
         return info->priv->udn;
 }
 
-static const char *
+static char *
 get_property (GUPnPServiceInfo *info,
-              const char       *element_name,
-              Quark             quark)
+              const char       *element_name)
 {
-        xmlChar *value;
+        GUPnPServiceInfoClass *class;
+        xmlNode *element;
 
         g_return_val_if_fail (GUPNP_IS_SERVICE_INFO (info), NULL);
 
-        value = g_object_get_qdata (G_OBJECT (info), quarks[quark]);
-        if (!value) {
-                GUPnPServiceInfoClass *class;
-                xmlNode *element;
+        class = GUPNP_SERVICE_INFO_GET_CLASS (info);
+
+        g_return_val_if_fail (class->get_element, NULL);
+        element = class->get_element (info);
+
+        element = xml_util_get_element (element,
+                                        element_name,
+                                        NULL);
+
+        if (element) {
+                xmlChar *value;
+                char *ret;
                 
-                class = GUPNP_SERVICE_INFO_GET_CLASS (info);
+                /* Make glib memmanaged */
+                value = xmlNodeGetContent (element);
+                ret = g_strdup ((char *) value);
+                xmlFree (value);
 
-                g_return_val_if_fail (class->get_element, NULL);
-                element = class->get_element (info);
-        
-                element = xml_util_get_element (element,
-                                                element_name,
-                                                NULL);
-
-                if (element)
-                        value = xmlNodeGetContent (element);
-                else {
-                        /* So that g_object_get_qdata() does not return NULL */
-                        value = xmlStrdup ((xmlChar *) "");
-                }
-
-                g_object_set_qdata_full (G_OBJECT (info),
-                                         quarks[quark],
-                                         value,
-                                         xmlFree);
-        }
-
-        return (const char *) value;
+                return ret;
+        } else
+                return NULL;
 }
 
 /**
  * gupnp_service_info_get_service_type
- * @info: An object implementing the #GUPnPServiceInfo interface
+ * @info: A #GUPnPServiceInfo
  *
- * Return value: The UPnP service type.
+ * Return value: The UPnP service type, or NULL. g_free() after use.
  **/
-const char *
+char *
 gupnp_service_info_get_service_type (GUPnPServiceInfo *info)
 {
-        return get_property (info, "serviceType", QUARK_SERVICE_TYPE);
+        return get_property (info, "serviceType");
 }
 
 /**
  * gupnp_service_info_get_type
- * @info: An object implementing the #GUPnPServiceInfo interface
+ * @info: A #GUPnPServiceInfo
  *
- * Return value: The ID.
+ * Return value: The ID, or NULL. g_free() after use.
  **/
-const char *
+char *
 gupnp_service_info_get_id (GUPnPServiceInfo *info)
 {
-        return get_property (info, "serviceId", QUARK_ID);
+        return get_property (info, "serviceId");
 }
 
 /**
  * gupnp_service_info_get_type
- * @info: An object implementing the #GUPnPServiceInfo interface
+ * @info: A #GUPnPServiceInfo
  *
- * Return value: The SCPD URL.
+ * Return value: The SCPD URL, or NULL. g_free() after use.
  **/
-const char *
+char *
 gupnp_service_info_get_scpd_url (GUPnPServiceInfo *info)
 {
-        return get_property (info, "SCPDURL", QUARK_SCPD_URL);
+        return get_property (info, "SCPDURL");
 }
 
 /**
  * gupnp_service_info_get_type
- * @info: An object implementing the #GUPnPServiceInfo interface
+ * @info: A #GUPnPServiceInfo
  *
- * Return value: The control URL.
+ * Return value: The control URL, or NULL. g_free() after use.
  **/
-const char *
+char *
 gupnp_service_info_get_control_url (GUPnPServiceInfo *info)
 {
-        return get_property (info, "controlURL", QUARK_CONTROL_URL);
+        return get_property (info, "controlURL");
 }
 
 /**
  * gupnp_service_info_get_type
- * @info: An object implementing the #GUPnPServiceInfo interface
+ * @info: A #GUPnPServiceInfo
  *
- * Return value: The event subscription URL.
+ * Return value: The event subscription URL, or NULL. g_free() after use.
  **/
-const char *
+char *
 gupnp_service_info_get_event_subscription_url (GUPnPServiceInfo *info)
 {
-        return get_property (info, "eventSubURL", QUARK_EVENT_SUB_URL);
+        return get_property (info, "eventSubURL");
 }
 
 /**
@@ -390,6 +356,7 @@ gupnp_service_info_list_actions (GUPnPServiceInfo                   *info,
 
         session = _gupnp_context_get_session (info->priv->context);
 
+        /* XXX free */
         message = soup_message_new (SOUP_METHOD_GET,
                                     gupnp_service_info_get_scpd_url (info));
 

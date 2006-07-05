@@ -23,8 +23,11 @@ static void
 device_proxy_available_cb (GUPnPControlPoint *cp,
                            GUPnPDeviceProxy  *proxy)
 {
-        g_print ("Device available with type: %s\n",
-                 gupnp_device_info_get_device_type (GUPNP_DEVICE_INFO (proxy)));
+        char *type;
+
+        type = gupnp_device_info_get_device_type (GUPNP_DEVICE_INFO (proxy));
+        g_print ("Device available with type: %s\n", type);
+        g_free (type);
 }
 
 static void
@@ -37,9 +40,11 @@ static void
 service_proxy_available_cb (GUPnPControlPoint *cp,
                             GUPnPServiceProxy *proxy)
 {
-        g_print ("Service available with type: %s\n",
-                 gupnp_service_info_get_service_type
-                                (GUPNP_SERVICE_INFO (proxy)));
+        char *type;
+
+        type = gupnp_service_info_get_service_type (GUPNP_SERVICE_INFO (proxy));
+        g_print ("Service available with type: %s\n", type);
+        g_free (type);
 }
 
 static void
