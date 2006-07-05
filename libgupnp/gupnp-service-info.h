@@ -118,7 +118,8 @@ typedef struct {
 
 typedef void
 (* GUPnPServiceInfoListActionsCallback) (GUPnPServiceInfo *info,
-                                         GList            *actions);
+                                         GList            *actions,
+                                         gpointer          user_data);
 
 void
 gupnp_service_info_list_actions (GUPnPServiceInfo                   *info,
