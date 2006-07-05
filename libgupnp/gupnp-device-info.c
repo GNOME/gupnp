@@ -24,280 +24,354 @@
 #include "gupnp-device-info.h"
 #include "xml-util.h"
 
-typedef enum {
-        QUARK_DEVICE_TYPE,
-        QUARK_FRIENDLY_NAME,
-        QUARK_MANUFACTURER,
-        QUARK_MANUFACTURER_URL,
-        QUARK_MODEL_DESCRIPTION,
-        QUARK_MODEL_NAME,
-        QUARK_MODEL_NUMBER,
-        QUARK_MODEL_URL,
-        QUARK_SERIAL_NUMBER,
-        QUARK_UDN,
-        QUARK_UPC,
-        QUARK_LAST
-} Quark;
+G_DEFINE_ABSTRACT_TYPE (GUPnPDeviceInfo,
+                        gupnp_device_info,
+                        G_TYPE_OBJECT);
 
-static GQuark quarks[QUARK_LAST];
+struct _GUPnPDeviceInfoPrivate {
+        GUPnPContext *context;
+
+        char *location;
+        char *udn;
+};
+
+enum {
+        PROP_0,
+        PROP_CONTEXT,
+        PROP_LOCATION,
+        PROP_UDN
+};
 
 static void
-gupnp_device_info_base_init (gpointer class)
+gupnp_device_info_init (GUPnPDeviceInfo *info)
 {
-        static gboolean initialized = FALSE;
+        info->priv = G_TYPE_INSTANCE_GET_PRIVATE (info,
+                                                  GUPNP_TYPE_DEVICE_INFO,
+                                                  GUPnPDeviceInfoPrivate);
+}
 
-        if (!initialized) {
-                quarks[QUARK_DEVICE_TYPE] =
-                        g_quark_from_static_string
-                                ("gupnp-device-info-device-type");
-                quarks[QUARK_FRIENDLY_NAME] =
-                        g_quark_from_static_string
-                                ("gupnp-device-info-friendly-name");
-                quarks[QUARK_MANUFACTURER] =
-                        g_quark_from_static_string
-                                ("gupnp-device-info-manufacturer");
-                quarks[QUARK_MANUFACTURER_URL] =
-                        g_quark_from_static_string
-                                ("gupnp-device-info-manufacturer-url");
-                quarks[QUARK_MODEL_DESCRIPTION] =
-                        g_quark_from_static_string
-                                ("gupnp-device-info-model-description");
-                quarks[QUARK_MODEL_NAME] =
-                        g_quark_from_static_string
-                                ("gupnp-device-info-model-name");
-                quarks[QUARK_MODEL_NUMBER] =
-                        g_quark_from_static_string
-                                ("gupnp-device-info-model-number");
-                quarks[QUARK_MODEL_URL] =
-                        g_quark_from_static_string
-                                ("gupnp-device-info-model-url");
-                quarks[QUARK_SERIAL_NUMBER] =
-                        g_quark_from_static_string
-                                ("gupnp-device-info-serial-number");
-                quarks[QUARK_UDN] =
-                        g_quark_from_static_string
-                                ("gupnp-device-info-udn");
-                quarks[QUARK_UPC] =
-                        g_quark_from_static_string
-                                ("gupnp-device-info-upc");
-                
-                initialized = TRUE;
+static void
+gupnp_device_info_set_property (GObject      *object,
+                                guint         property_id,
+                                const GValue *value,
+                                GParamSpec   *pspec)
+{
+        GUPnPDeviceInfo *info;
+
+        info = GUPNP_DEVICE_INFO (object);
+
+        switch (property_id) {
+        case PROP_CONTEXT:
+                info->priv->context =
+                        g_object_ref (g_value_get_object (value));
+                break;
+        case PROP_LOCATION:
+                g_free (info->priv->location);
+                info->priv->location =
+                        g_value_dup_string (value);
+                break;
+        case PROP_UDN:
+                g_free (info->priv->udn);
+                info->priv->udn =
+                        g_value_dup_string (value);
+                break;
+        default:
+                G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
+                break;
         }
 }
 
-GType
-gupnp_device_info_get_type (void)
+static void
+gupnp_device_info_get_property (GObject    *object,
+                                guint       property_id,
+                                GValue     *value,
+                                GParamSpec *pspec)
 {
-        static GType type = 0;
+        GUPnPDeviceInfo *info;
 
-        if (!type) {
-                static const GTypeInfo info = {
-                        sizeof (GUPnPDeviceInfoIface),
-                	gupnp_device_info_base_init,
-                	NULL,
-                	NULL,
-                	NULL,
-                	NULL,
-                	0,
-                	0,
-                	NULL
-                };
+        info = GUPNP_DEVICE_INFO (object);
 
-                type = g_type_register_static (G_TYPE_INTERFACE,
-                                               "GUPnPDeviceInfo",
-				               &info,
-                                               0);
+        switch (property_id) {
+        case PROP_CONTEXT:
+                g_value_set_object (value,
+                                    info->priv->context);
+                break;
+        case PROP_LOCATION:
+                g_value_set_string (value,
+                                    info->priv->location);
+                break;
+        case PROP_UDN:
+                g_value_set_string (value,
+                                    info->priv->udn);
+                break;
+        default:
+                G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
+                break;
         }
+}
 
-        return type;
+static void
+gupnp_device_info_dispose (GObject *object)
+{
+        GUPnPDeviceInfo *info;
+
+        info = GUPNP_DEVICE_INFO (object);
+
+        if (info->priv->context) {
+                g_object_unref (info->priv->context);
+                info->priv->context = NULL;
+        }
+}
+
+static void
+gupnp_device_info_finalize (GObject *object)
+{
+        GUPnPDeviceInfo *info;
+
+        info = GUPNP_DEVICE_INFO (object);
+
+        g_free (info->priv->location);
+        g_free (info->priv->udn);
+}
+
+static void
+gupnp_device_info_class_init (GUPnPDeviceInfoClass *klass)
+{
+        GObjectClass *object_class;
+
+        object_class = G_OBJECT_CLASS (klass);
+
+        object_class->set_property = gupnp_device_info_set_property;
+        object_class->get_property = gupnp_device_info_get_property;
+        object_class->dispose      = gupnp_device_info_dispose;
+        object_class->finalize     = gupnp_device_info_finalize;
+
+        g_type_class_add_private (klass, sizeof (GUPnPDeviceInfoPrivate));
+
+        g_object_class_install_property
+                (object_class,
+                 PROP_CONTEXT,
+                 g_param_spec_object ("context",
+                                      "Context",
+                                      "GUPnPContext",
+                                      GUPNP_TYPE_CONTEXT,
+                                      G_PARAM_READWRITE |
+                                      G_PARAM_CONSTRUCT_ONLY));
+
+        g_object_class_install_property
+                (object_class,
+                 PROP_LOCATION,
+                 g_param_spec_string ("location",
+                                      "Location",
+                                      "The location of the device description "
+                                      "file",
+                                      NULL,
+                                      G_PARAM_READWRITE |
+                                      G_PARAM_CONSTRUCT_ONLY));
+
+        g_object_class_install_property
+                (object_class,
+                 PROP_UDN,
+                 g_param_spec_string ("udn",
+                                      "UDN",
+                                      "The UDN",
+                                      NULL,
+                                      G_PARAM_READWRITE |
+                                      G_PARAM_CONSTRUCT_ONLY));
+}
+
+/**
+ * gupnp_device_info_get_context
+ * @info: A #GUPnPDeviceInfo
+ *
+ * Return value: The associated #GUPnPContext.
+ **/
+GUPnPContext *
+gupnp_device_info_get_context (GUPnPDeviceInfo *info)
+{
+        g_return_val_if_fail (GUPNP_IS_DEVICE_INFO (info), NULL);
+
+        return info->priv->context;
 }
 
 /**
  * gupnp_device_info_get_location
- * @info: An object implementing the #GUPnPDeviceInfo interface
+ * @info: A #GUPnPDeviceInfo
  *
  * Return value: The location of the device description file.
  **/
 const char *
 gupnp_device_info_get_location (GUPnPDeviceInfo *info)
 {
-        GUPnPDeviceInfoIface *iface;
-
         g_return_val_if_fail (GUPNP_IS_DEVICE_INFO (info), NULL);
 
-        iface = GUPNP_DEVICE_INFO_GET_IFACE (info);
-
-        g_return_val_if_fail (iface->get_location, NULL);
-        return iface->get_location (info);
-}
-
-static const char *
-get_property (GUPnPDeviceInfo *info,
-              const char      *element_name,
-              Quark            quark)
-{
-        xmlChar *value;
-
-        g_return_val_if_fail (GUPNP_IS_DEVICE_INFO (info), NULL);
-
-        value = g_object_get_qdata (G_OBJECT (info), quarks[quark]);
-        if (!value) {
-                GUPnPDeviceInfoIface *iface;
-                xmlNode *element;
-                
-                iface = GUPNP_DEVICE_INFO_GET_IFACE (info);
-
-                g_return_val_if_fail (iface->get_element, NULL);
-                element = iface->get_element (info);
-        
-                element = xml_util_get_element (element, element_name, NULL);
-
-                if (element)
-                        value = xmlNodeGetContent (element);
-                else {
-                        /* So that g_object_get_qdata() does not return NULL */
-                        value = xmlStrdup ((xmlChar *) "");
-                }
-
-                g_object_set_qdata_full (G_OBJECT (info),
-                                         quarks[quark],
-                                         value,
-                                         xmlFree);
-        }
-
-        return (const char *) value;
-}
-
-/**
- * gupnp_device_info_get_device_type
- * @info: An object implementing the #GUPnPDeviceInfo interface
- *
- * Return value: The UPnP device type.
- **/
-const char *
-gupnp_device_info_get_device_type (GUPnPDeviceInfo *info)
-{
-        return get_property (info, "deviceType", QUARK_DEVICE_TYPE);
-}
-
-/**
- * gupnp_device_info_get_friendly_name
- * @info: An object implementing the #GUPnPDeviceInfo interface
- *
- * Return value: The friendly name.
- **/
-const char *
-gupnp_device_info_get_friendly_name (GUPnPDeviceInfo *info)
-{
-        return get_property (info, "friendlyName", QUARK_FRIENDLY_NAME);
-}
-
-/**
- * gupnp_device_info_get_manufacturer
- * @info: An object implementing the #GUPnPDeviceInfo interface
- *
- * Return value: The manufacturer.
- **/
-const char *
-gupnp_device_info_get_manufacturer (GUPnPDeviceInfo *info)
-{
-        return get_property (info, "manufacturer", QUARK_MANUFACTURER);
-}
-
-/**
- * gupnp_device_info_get_manufacturer_url
- * @info: An object implementing the #GUPnPDeviceInfo interface
- *
- * Return value: A URL pointing to the manufacturers website.
- **/
-const char *
-gupnp_device_info_get_manufacturer_url (GUPnPDeviceInfo *info)
-{
-        return get_property (info, "manufacturerURL", QUARK_MANUFACTURER_URL);
-}
-
-/**
- * gupnp_device_info_get_model_description
- * @info: An object implementing the #GUPnPDeviceInfo interface
- *
- * Return value: The description of the device model.
- **/
-const char *
-gupnp_device_info_get_model_description (GUPnPDeviceInfo *info)
-{
-        return get_property (info, "modelDescription", QUARK_MODEL_DESCRIPTION);
-}
-
-/**
- * gupnp_device_info_get_model_name
- * @info: An object implementing the #GUPnPDeviceInfo interface
- *
- * Return value: The name of the device model.
- **/
-const char *
-gupnp_device_info_get_model_name (GUPnPDeviceInfo *info)
-{
-        return get_property (info, "modelName", QUARK_MODEL_NAME);
-}
-
-/**
- * gupnp_device_info_get_model_number
- * @info: An object implementing the #GUPnPDeviceInfo interface
- *
- * Return value: The model number.
- **/
-const char *
-gupnp_device_info_get_model_number (GUPnPDeviceInfo *info)
-{
-        return get_property (info, "modelDescription", QUARK_MODEL_DESCRIPTION);
-}
-
-/**
- * gupnp_device_info_get_model_url
- * @info: An object implementing the #GUPnPDeviceInfo interface
- *
- * Return value: A URL pointing to the device models website.
- **/
-const char *
-gupnp_device_info_get_model_url (GUPnPDeviceInfo *info)
-{
-        return get_property (info, "modelURL", QUARK_MODEL_URL);
-}
-
-/**
- * gupnp_device_info_get_serial_number
- * @info: An object implementing the #GUPnPDeviceInfo interface
- *
- * Return value: The serial number.
- **/
-const char *
-gupnp_device_info_get_serial_number (GUPnPDeviceInfo *info)
-{
-        return get_property (info, "serialNumber", QUARK_SERIAL_NUMBER);
+        return info->priv->location;
 }
 
 /**
  * gupnp_device_info_get_udn
- * @info: An object implementing the #GUPnPDeviceInfo interface
+ * @info: A #GUPnPDeviceInfo
  *
  * Return value: The UDN.
  **/
 const char *
 gupnp_device_info_get_udn (GUPnPDeviceInfo *info)
 {
-        return get_property (info, "UDN", QUARK_UDN);
+        g_return_val_if_fail (GUPNP_IS_DEVICE_INFO (info), NULL);
+
+        return info->priv->udn;
+}
+
+static char *
+get_property (GUPnPDeviceInfo *info,
+              const char      *element_name)
+{
+        GUPnPDeviceInfoClass *class;
+        xmlNode *element;
+
+        g_return_val_if_fail (GUPNP_IS_DEVICE_INFO (info), NULL);
+
+        class = GUPNP_DEVICE_INFO_GET_CLASS (info);
+
+        g_return_val_if_fail (class->get_element, NULL);
+        element = class->get_element (info);
+
+        element = xml_util_get_element (element, element_name, NULL);
+
+        if (element) {
+                xmlChar *value;
+                char *ret;
+                
+                value = xmlNodeGetContent (element);
+                ret = g_strdup ((char *) value);
+                xmlFree (value);
+
+                return ret;
+        } else
+                return NULL;
+}
+
+/**
+ * gupnp_device_info_get_device_type
+ * @info: A #GUPnPDeviceInfo
+ *
+ * Return value: The UPnP device type, or NULL. g_free() after use.
+ **/
+char *
+gupnp_device_info_get_device_type (GUPnPDeviceInfo *info)
+{
+        return get_property (info, "deviceType");
+}
+
+/**
+ * gupnp_device_info_get_friendly_name
+ * @info: A #GUPnPDeviceInfo
+ *
+ * Return value: The friendly name, or NULL. g_free() after use.
+ **/
+char *
+gupnp_device_info_get_friendly_name (GUPnPDeviceInfo *info)
+{
+        return get_property (info, "friendlyName");
+}
+
+/**
+ * gupnp_device_info_get_manufacturer
+ * @info: A #GUPnPDeviceInfo
+ *
+ * Return value: The manufacturer, or NULL. g_free() after use.
+ **/
+char *
+gupnp_device_info_get_manufacturer (GUPnPDeviceInfo *info)
+{
+        return get_property (info, "manufacturer");
+}
+
+/**
+ * gupnp_device_info_get_manufacturer_url
+ * @info: A #GUPnPDeviceInfo
+ *
+ * Return value: A URL pointing to the manufacturers website, or NULL.
+ * g_free() after use.
+ **/
+char *
+gupnp_device_info_get_manufacturer_url (GUPnPDeviceInfo *info)
+{
+        return get_property (info, "manufacturerURL");
+}
+
+/**
+ * gupnp_device_info_get_model_description
+ * @info: A #GUPnPDeviceInfo
+ *
+ * Return value: The description of the device model, or NULL. g_free() after
+ * use.
+ **/
+char *
+gupnp_device_info_get_model_description (GUPnPDeviceInfo *info)
+{
+        return get_property (info, "modelDescription");
+}
+
+/**
+ * gupnp_device_info_get_model_name
+ * @info: A #GUPnPDeviceInfo
+ *
+ * Return value: The name of the device model, or NULL. g_free() after use.
+ **/
+char *
+gupnp_device_info_get_model_name (GUPnPDeviceInfo *info)
+{
+        return get_property (info, "modelName");
+}
+
+/**
+ * gupnp_device_info_get_model_number
+ * @info: A #GUPnPDeviceInfo
+ *
+ * Return value: The model number, or NULL. g_free() after use.
+ **/
+char *
+gupnp_device_info_get_model_number (GUPnPDeviceInfo *info)
+{
+        return get_property (info, "modelDescription");
+}
+
+/**
+ * gupnp_device_info_get_model_url
+ * @info: A #GUPnPDeviceInfo
+ *
+ * Return value: A URL pointing to the device models website, or NULL.
+ * g_free() after use.
+ **/
+char *
+gupnp_device_info_get_model_url (GUPnPDeviceInfo *info)
+{
+        return get_property (info, "modelURL");
+}
+
+/**
+ * gupnp_device_info_get_serial_number
+ * @info: A #GUPnPDeviceInfo
+ *
+ * Return value: The serial number, or NULL. g_free() after use.
+ **/
+char *
+gupnp_device_info_get_serial_number (GUPnPDeviceInfo *info)
+{
+        return get_property (info, "serialNumber");
 }
 
 /**
  * gupnp_device_info_get_upc
- * @info: An object implementing the #GUPnPDeviceInfo interface
+ * @info: A #GUPnPDeviceInfo
  *
- * Return value: The UPC.
+ * Return value: The UPC, or NULL. g_free() after use.
  **/
-const char *
+char *
 gupnp_device_info_get_upc (GUPnPDeviceInfo *info)
 {
-        return get_property (info, "UPC", QUARK_UPC);
+        return get_property (info, "UPC");
 }
 
 typedef struct {
@@ -360,7 +434,7 @@ icon_free (Icon *icon)
 
 /**
  * gupnp_device_info_get_icon_url
- * @info: An object implementing the #GUPnPDeviceInfo interface
+ * @info: A #GUPnPDeviceInfo
  * @requested_mime_type: The requested file format, or NULL for any
  * @requested_depth: The requested color depth, or -1 for any
  * @cequested_width: The requested width, or -1 for any
@@ -393,7 +467,7 @@ gupnp_device_info_get_icon_url (GUPnPDeviceInfo *info,
                                 int             *width,
                                 int             *height)
 {
-        GUPnPDeviceInfoIface *iface;
+        GUPnPDeviceInfoClass *class;
         xmlNode *element;
         GList *icons, *l;
         Icon *icon, *closest;
@@ -401,10 +475,10 @@ gupnp_device_info_get_icon_url (GUPnPDeviceInfo *info,
 
         g_return_val_if_fail (GUPNP_IS_DEVICE_INFO (info), NULL);
                 
-        iface = GUPNP_DEVICE_INFO_GET_IFACE (info);
+        class = GUPNP_DEVICE_INFO_GET_CLASS (info);
 
-        g_return_val_if_fail (iface->get_element, NULL);
-        element = iface->get_element (info);
+        g_return_val_if_fail (class->get_element, NULL);
+        element = class->get_element (info);
 
         /* List available icons */
         icons = NULL;

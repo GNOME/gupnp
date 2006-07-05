@@ -27,6 +27,7 @@
 GUPnPServiceProxy *
 _gupnp_service_proxy_new_from_element (GUPnPContext *context,
                                        xmlNode      *element,
-                                       const char   *location);
+                                       const char   *location,
+                                       const char   *udn);
 
 #endif /* __GUPNP_SERVICE_PROXY_PRIVATE_H__ */

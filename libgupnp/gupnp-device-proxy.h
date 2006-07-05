@@ -57,13 +57,13 @@ gupnp_device_proxy_get_type (void) G_GNUC_CONST;
 typedef struct _GUPnPDeviceProxyPrivate GUPnPDeviceProxyPrivate;
 
 typedef struct {
-        GObject parent;
+        GUPnPDeviceInfo parent;
 
         GUPnPDeviceProxyPrivate *priv;
 } GUPnPDeviceProxy;
 
 typedef struct {
-        GObjectClass parent_class;
+        GUPnPDeviceInfoClass parent_class;
 
         /* future padding */
         void (* _gupnp_reserved1) (void);
@@ -77,9 +77,6 @@ gupnp_device_proxy_new                (GUPnPContext     *context,
                                        xmlDoc           *doc,
                                        const char       *udn,
                                        const char       *location);
-
-GUPnPContext *
-gupnp_device_proxy_get_context        (GUPnPDeviceProxy *proxy);
 
 GList *
 gupnp_device_proxy_list_devices       (GUPnPDeviceProxy *proxy);

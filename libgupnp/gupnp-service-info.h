@@ -25,6 +25,8 @@
 #include <glib-object.h>
 #include <libxml/tree.h>
 
+#include "gupnp-context.h"
+
 G_BEGIN_DECLS
 
 GType
@@ -36,30 +38,44 @@ gupnp_service_info_get_type (void) G_GNUC_CONST;
                 (G_TYPE_CHECK_INSTANCE_CAST ((obj), \
                  GUPNP_TYPE_SERVICE_INFO, \
                  GUPnPServiceInfo))
+#define GUPNP_SERVICE_INFO_CLASS(obj) \
+                (G_TYPE_CHECK_CLASS_CAST ((obj), \
+                 GUPNP_TYPE_SERVICE_INFO, \
+                 GUPnPServiceInfoClass))
 #define GUPNP_IS_SERVICE_INFO(obj) \
                 (G_TYPE_CHECK_INSTANCE_TYPE ((obj), \
                  GUPNP_TYPE_SERVICE_INFO))
-#define GUPNP_SERVICE_INFO_GET_IFACE(obj) \
-                (G_TYPE_INSTANCE_GET_INTERFACE ((obj), \
+#define GUPNP_IS_SERVICE_INFO_CLASS(obj) \
+                (G_TYPE_CHECK_CLASS_TYPE ((obj), \
+                 GUPNP_TYPE_SERVICE_INFO))
+#define GUPNP_SERVICE_INFO_GET_CLASS(obj) \
+                (G_TYPE_INSTANCE_GET_CLASS ((obj), \
                  GUPNP_TYPE_SERVICE_INFO, \
-                 GUPnPServiceInfoIface))
+                 GUPnPServiceInfoClass))
 
-typedef struct _GUPnPServiceInfo GUPnPServiceInfo; /* Dummy typedef */
+typedef struct _GUPnPServiceInfoPrivate GUPnPServiceInfoPrivate;
 
 typedef struct {
-        GTypeInterface iface;
+        GObject parent;
+        
+        GUPnPServiceInfoPrivate *priv;
+} GUPnPServiceInfo;
+
+typedef struct {
+        GObjectClass parent_class;
 
         /* vtable */
-        const char * (* get_location) (GUPnPServiceInfo *info);
-        const char * (* get_udn)      (GUPnPServiceInfo *info);
-        xmlNode    * (* get_element)  (GUPnPServiceInfo *info);
+        xmlNode * (* get_element) (GUPnPServiceInfo *info);
 
         /* future padding */
         void (* _gupnp_reserved1) (void);
         void (* _gupnp_reserved2) (void);
         void (* _gupnp_reserved3) (void);
         void (* _gupnp_reserved4) (void);
-} GUPnPServiceInfoIface;
+} GUPnPServiceInfoClass;
+
+GUPnPContext *
+gupnp_service_info_get_context                (GUPnPServiceInfo *info);
 
 const char *
 gupnp_service_info_get_location               (GUPnPServiceInfo *info);
@@ -82,7 +98,35 @@ gupnp_service_info_get_control_url            (GUPnPServiceInfo *info);
 const char *
 gupnp_service_info_get_event_subscription_url (GUPnPServiceInfo *info);
 
-/* XXX actions, variables */
+typedef struct {
+        char *name;
+
+        GList *args;
+} GUPnPServiceInfoAction;
+
+typedef struct {
+        char *name;
+        char *related_state_variable;
+
+        GType type;
+        GList *allowed_values;
+
+        gboolean retval;
+
+        gboolean evented;
+} GUPnPServiceInfoActionArgument;
+
+typedef void
+(* GUPnPServiceInfoListActionsCallback) (GUPnPServiceInfo *info,
+                                         GList            *actions);
+
+void
+gupnp_service_info_list_actions (GUPnPServiceInfo                   *info,
+                                 GUPnPServiceInfoListActionsCallback cb,
+                                 gpointer                            user_data);
+
+void
+gupnp_service_info_free_action_list (GList *list);
 
 G_END_DECLS
 

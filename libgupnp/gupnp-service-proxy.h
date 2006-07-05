@@ -57,13 +57,13 @@ gupnp_service_proxy_get_type (void) G_GNUC_CONST;
 typedef struct _GUPnPServiceProxyPrivate GUPnPServiceProxyPrivate;
 
 typedef struct {
-        GObject parent;
+        GUPnPServiceInfo parent;
 
         GUPnPServiceProxyPrivate *priv;
 } GUPnPServiceProxy;
 
 typedef struct {
-        GObjectClass parent_class;
+        GUPnPServiceInfoClass parent_class;
 
         /* signals */
         void (* subscription_lost) (GUPnPServiceProxy *proxy,
@@ -95,9 +95,6 @@ gupnp_service_proxy_new            (GUPnPContext                   *context,
                                     const char                     *udn,
                                     const char                     *type,
                                     const char                     *location);
-
-GUPnPContext *
-gupnp_service_proxy_get_context    (GUPnPServiceProxy              *proxy);
 
 gboolean
 gupnp_service_proxy_send_action    (GUPnPServiceProxy              *proxy,

@@ -26,22 +26,11 @@
 #include "gupnp-device-proxy-private.h"
 #include "xml-util.h"
 
-static void
-gupnp_service_proxy_info_init (GUPnPServiceInfoIface *iface);
-
-G_DEFINE_TYPE_EXTENDED (GUPnPServiceProxy,
-                        gupnp_service_proxy,
-                        G_TYPE_OBJECT,
-                        0,
-                        G_IMPLEMENT_INTERFACE (GUPNP_TYPE_SERVICE_INFO,
-                                               gupnp_service_proxy_info_init));
+G_DEFINE_TYPE (GUPnPServiceProxy,
+               gupnp_service_proxy,
+               GUPNP_TYPE_SERVICE_INFO);
 
 struct _GUPnPServiceProxyPrivate {
-        GUPnPContext *context;
-
-        char *location;
-        char *udn;
-
         xmlNode *element;
 
         gboolean subscribed;
@@ -49,7 +38,6 @@ struct _GUPnPServiceProxyPrivate {
 
 enum {
         PROP_0,
-        PROP_CONTEXT,
         PROP_SUBSCRIBED
 };
 
@@ -59,26 +47,6 @@ enum {
 };
 
 static guint signals[LAST_SIGNAL];
-
-static const char *
-gupnp_service_proxy_get_location (GUPnPServiceInfo *info)
-{
-        GUPnPServiceProxy *proxy;
-        
-        proxy = GUPNP_SERVICE_PROXY (info);
-        
-        return proxy->priv->location;
-}
-
-static const char *
-gupnp_service_proxy_get_udn (GUPnPServiceInfo *info)
-{
-        GUPnPServiceProxy *proxy;
-        
-        proxy = GUPNP_SERVICE_PROXY (info);
-        
-        return proxy->priv->udn;
-}
 
 static xmlNode *
 gupnp_service_proxy_get_element (GUPnPServiceInfo *info)
@@ -109,10 +77,6 @@ gupnp_service_proxy_set_property (GObject      *object,
         proxy = GUPNP_SERVICE_PROXY (object);
 
         switch (property_id) {
-        case PROP_CONTEXT:
-                proxy->priv->context =
-                        g_object_ref (g_value_get_object (value));
-                break;
         case PROP_SUBSCRIBED:
                 gupnp_service_proxy_set_subscribed
                                 (proxy, g_value_get_boolean (value));
@@ -134,10 +98,6 @@ gupnp_service_proxy_get_property (GObject    *object,
         proxy = GUPNP_SERVICE_PROXY (object);
 
         switch (property_id) {
-        case PROP_CONTEXT:
-                g_value_set_object (value,
-                                    proxy->priv->context);
-                break;
         case PROP_SUBSCRIBED:
                 g_value_set_boolean (value,
                                      proxy->priv->subscribed);
@@ -155,10 +115,7 @@ gupnp_service_proxy_dispose (GObject *object)
 
         proxy = GUPNP_SERVICE_PROXY (object);
 
-        if (proxy->priv->context) {
-                g_object_unref (proxy->priv->context);
-                proxy->priv->context = NULL;
-        }
+        /* XXX */
 }
 
 static void
@@ -168,14 +125,14 @@ gupnp_service_proxy_finalize (GObject *object)
 
         proxy = GUPNP_SERVICE_PROXY (object);
 
-        g_free (proxy->priv->location);
-        g_free (proxy->priv->udn);
+        /* XXX */
 }
 
 static void
 gupnp_service_proxy_class_init (GUPnPServiceProxyClass *klass)
 {
         GObjectClass *object_class;
+        GUPnPServiceInfoClass *info_class;
 
         object_class = G_OBJECT_CLASS (klass);
 
@@ -183,19 +140,13 @@ gupnp_service_proxy_class_init (GUPnPServiceProxyClass *klass)
         object_class->get_property = gupnp_service_proxy_get_property;
         object_class->dispose      = gupnp_service_proxy_dispose;
         object_class->finalize     = gupnp_service_proxy_finalize;
+
+        info_class = GUPNP_SERVICE_INFO_CLASS (klass);
+        
+        info_class->get_element = gupnp_service_proxy_get_element;
         
         g_type_class_add_private (klass, sizeof (GUPnPServiceProxyPrivate));
 
-        g_object_class_install_property
-                (object_class,
-                 PROP_CONTEXT,
-                 g_param_spec_object ("context",
-                                      "Context",
-                                      "GUPnPContext",
-                                      GUPNP_TYPE_CONTEXT,
-                                      G_PARAM_READWRITE |
-                                      G_PARAM_CONSTRUCT_ONLY));
-        
         g_object_class_install_property
                 (object_class,
                  PROP_SUBSCRIBED,
@@ -218,28 +169,6 @@ gupnp_service_proxy_class_init (GUPnPServiceProxyClass *klass)
                               G_TYPE_NONE,
                               1,
                               G_TYPE_POINTER);
-}
-
-static void
-gupnp_service_proxy_info_init (GUPnPServiceInfoIface *iface)
-{
-        iface->get_location = gupnp_service_proxy_get_location;
-        iface->get_udn      = gupnp_service_proxy_get_udn;
-        iface->get_element  = gupnp_service_proxy_get_element;
-}
-
-/**
- * gupnp_service_proxy_get_context
- * @proxy: A #GUPnPServiceProxy
- *
- * Return value: The #GUPnPContext associated with @proxy.
- **/
-GUPnPContext *
-gupnp_service_proxy_get_context (GUPnPServiceProxy *proxy)
-{
-        g_return_val_if_fail (GUPNP_IS_SERVICE_PROXY (proxy), NULL);
-
-        return proxy->priv->context;
 }
 
 /**
@@ -553,15 +482,13 @@ gupnp_service_proxy_new (GUPnPContext *context,
         GUPnPServiceProxy *proxy;
 
         g_return_val_if_fail (doc, NULL);
-        g_return_val_if_fail (udn, NULL);
         g_return_val_if_fail (type, NULL);
 
         proxy = g_object_new (GUPNP_TYPE_SERVICE_PROXY,
                               "context", context,
+                              "location", location,
+                              "udn", udn,
                               NULL);
-
-        proxy->priv->udn      = g_strdup (udn);
-        proxy->priv->location = g_strdup (location);
 
         proxy->priv->element =
                 xml_util_get_element ((xmlNode *) doc,
@@ -597,6 +524,7 @@ gupnp_service_proxy_new (GUPnPContext *context,
  * @context: A #GUPnPContext
  * @element: The #xmlNode ponting to the right service element
  * @location: The location of the service description file
+ * @udn: The UDN of the device the service is contained in
  *
  * Return value: A #GUPnPServiceProxy for the service with element @element, as
  * read from the service description file specified by @location.
@@ -604,18 +532,18 @@ gupnp_service_proxy_new (GUPnPContext *context,
 GUPnPServiceProxy *
 _gupnp_service_proxy_new_from_element (GUPnPContext *context,
                                        xmlNode      *element,
+                                       const char   *udn,
                                        const char   *location)
 {
         GUPnPServiceProxy *proxy;
 
-        g_return_val_if_fail (location, NULL);
         g_return_val_if_fail (element, NULL);
 
         proxy = g_object_new (GUPNP_TYPE_SERVICE_PROXY,
                               "context", context,
+                              "location", location,
+                              "udn", udn,
                               NULL);
-
-        proxy->priv->location = g_strdup (location);
 
         proxy->priv->element = element;
 

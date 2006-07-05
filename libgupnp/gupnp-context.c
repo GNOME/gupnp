@@ -33,6 +33,7 @@ struct _GUPnPContextPrivate {
 static void
 gupnp_context_init (GUPnPContext *context)
 {
+        /* XXX include UPnP/1.0 in server ID */
         context->priv =
                 G_TYPE_INSTANCE_GET_PRIVATE (context,
                                              GUPNP_TYPE_CONTEXT,

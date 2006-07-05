@@ -25,6 +25,8 @@
 #include <glib-object.h>
 #include <libxml/tree.h>
 
+#include "gupnp-context.h"
+
 G_BEGIN_DECLS
 
 GType
@@ -36,64 +38,79 @@ gupnp_device_info_get_type (void) G_GNUC_CONST;
                 (G_TYPE_CHECK_INSTANCE_CAST ((obj), \
                  GUPNP_TYPE_DEVICE_INFO, \
                  GUPnPDeviceInfo))
+#define GUPNP_DEVICE_INFO_CLASS(obj) \
+                (G_TYPE_CHECK_CLASS_CAST ((obj), \
+                 GUPNP_TYPE_DEVICE_INFO, \
+                 GUPnPDeviceInfoClass))
 #define GUPNP_IS_DEVICE_INFO(obj) \
                 (G_TYPE_CHECK_INSTANCE_TYPE ((obj), \
                  GUPNP_TYPE_DEVICE_INFO))
-#define GUPNP_DEVICE_INFO_GET_IFACE(obj) \
-                (G_TYPE_INSTANCE_GET_INTERFACE ((obj), \
+#define GUPNP_IS_DEVICE_INFO_CLASS(obj) \
+                (G_TYPE_CHECK_CLASS_TYPE ((obj), \
+                 GUPNP_TYPE_DEVICE_INFO))
+#define GUPNP_DEVICE_INFO_GET_CLASS(obj) \
+                (G_TYPE_INSTANCE_GET_CLASS ((obj), \
                  GUPNP_TYPE_DEVICE_INFO, \
-                 GUPnPDeviceInfoIface))
+                 GUPnPDeviceInfoClass))
 
-typedef struct _GUPnPDeviceInfo GUPnPDeviceInfo; /* Dummy typedef */
+typedef struct _GUPnPDeviceInfoPrivate GUPnPDeviceInfoPrivate;
 
 typedef struct {
-        GTypeInterface iface;
+        GObject parent;
+
+        GUPnPDeviceInfoPrivate *priv;
+} GUPnPDeviceInfo;
+
+typedef struct {
+        GObjectClass parent_class;
 
         /* vtable */
-        const char * (* get_location) (GUPnPDeviceInfo *info);
-        xmlNode    * (* get_element)  (GUPnPDeviceInfo *info);
+        xmlNode * (* get_element)  (GUPnPDeviceInfo *info);
 
         /* future padding */
         void (* _gupnp_reserved1) (void);
         void (* _gupnp_reserved2) (void);
         void (* _gupnp_reserved3) (void);
         void (* _gupnp_reserved4) (void);
-} GUPnPDeviceInfoIface;
+} GUPnPDeviceInfoClass;
+
+GUPnPContext *
+gupnp_device_info_get_context           (GUPnPDeviceInfo *info);
 
 const char *
 gupnp_device_info_get_location          (GUPnPDeviceInfo *info);
 
 const char *
-gupnp_device_info_get_device_type       (GUPnPDeviceInfo *info);
-
-const char *
-gupnp_device_info_get_friendly_name     (GUPnPDeviceInfo *info);
-
-const char *
-gupnp_device_info_get_manufacturer      (GUPnPDeviceInfo *info);
-
-const char *
-gupnp_device_info_get_manufacturer_url  (GUPnPDeviceInfo *info);
-
-const char *
-gupnp_device_info_get_model_description (GUPnPDeviceInfo *info);
-
-const char *
-gupnp_device_info_get_model_name        (GUPnPDeviceInfo *info);
-
-const char *
-gupnp_device_info_get_model_number      (GUPnPDeviceInfo *info);
-
-const char *
-gupnp_device_info_get_model_url         (GUPnPDeviceInfo *info);
-
-const char *
-gupnp_device_info_get_serial_number     (GUPnPDeviceInfo *info);
-
-const char *
 gupnp_device_info_get_udn               (GUPnPDeviceInfo *info);
 
-const char *
+char *
+gupnp_device_info_get_device_type       (GUPnPDeviceInfo *info);
+
+char *
+gupnp_device_info_get_friendly_name     (GUPnPDeviceInfo *info);
+
+char *
+gupnp_device_info_get_manufacturer      (GUPnPDeviceInfo *info);
+
+char *
+gupnp_device_info_get_manufacturer_url  (GUPnPDeviceInfo *info);
+
+char *
+gupnp_device_info_get_model_description (GUPnPDeviceInfo *info);
+
+char *
+gupnp_device_info_get_model_name        (GUPnPDeviceInfo *info);
+
+char *
+gupnp_device_info_get_model_number      (GUPnPDeviceInfo *info);
+
+char *
+gupnp_device_info_get_model_url         (GUPnPDeviceInfo *info);
+
+char *
+gupnp_device_info_get_serial_number     (GUPnPDeviceInfo *info);
+
+char *
 gupnp_device_info_get_upc               (GUPnPDeviceInfo *info);
 
 char *
