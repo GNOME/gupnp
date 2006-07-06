@@ -19,6 +19,9 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#include <config.h>
+#include <sys/utsname.h>
+
 #include "gupnp-context.h"
 #include "gupnp-context-private.h"
 
@@ -30,16 +33,37 @@ struct _GUPnPContextPrivate {
         SoupSession *session;
 };
 
+/**
+ * Generates the default server ID
+ **/
+static char *
+make_server_id (void)
+{
+        struct utsname sysinfo;
+
+        uname (&sysinfo);
+        
+        return g_strdup_printf ("%s/%s UPnP/1.0 GUPnP/%s",
+                                sysinfo.sysname,
+                                sysinfo.version,
+                                VERSION);
+}
+
 static void
 gupnp_context_init (GUPnPContext *context)
 {
-        /* XXX include UPnP/1.0 in server ID */
+        char *server_id;
+
         context->priv =
                 G_TYPE_INSTANCE_GET_PRIVATE (context,
                                              GUPNP_TYPE_CONTEXT,
                                              GUPnPContextPrivate);
 
         context->priv->session = soup_session_async_new ();
+
+        server_id = make_server_id ();
+        gssdp_client_set_server_id (GSSDP_CLIENT (context), server_id);
+        g_free (server_id);
 }
 
 static void
