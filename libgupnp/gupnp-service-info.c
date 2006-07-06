@@ -20,6 +20,7 @@
  */
 
 #include <libsoup/soup.h>
+#include <string.h>
 
 #include "gupnp-service-info.h"
 #include "gupnp-context-private.h"
@@ -34,8 +35,6 @@ struct _GUPnPServiceInfoPrivate {
 
         char *location;
         char *udn;
-
-        GList *pending_gets;
 };
 
 enum {
@@ -44,15 +43,6 @@ enum {
         PROP_LOCATION,
         PROP_UDN
 };
-
-typedef struct {
-        GUPnPServiceInfo *info;
-
-        GUPnPServiceInfoListActionsCallback cb;
-        gpointer user_data;
-
-        SoupMessage *message;
-} GetSCPDURLData;
 
 static void
 gupnp_service_info_init (GUPnPServiceInfo *info)
@@ -128,23 +118,6 @@ gupnp_service_info_dispose (GObject *object)
         GUPnPServiceInfo *info;
 
         info = GUPNP_SERVICE_INFO (object);
-
-        /* Cancel any pending description file GETs */
-        while (info->priv->pending_gets) {
-                GetSCPDURLData *data;
-                SoupSession *session;
-
-                data = info->priv->pending_gets->data;
-
-                session = _gupnp_context_get_session (info->priv->context);
-                soup_session_cancel_message (session, data->message);
-
-                g_slice_free (GetSCPDURLData, data);
-
-                info->priv->pending_gets =
-                        g_list_delete_link (info->priv->pending_gets,
-                                            info->priv->pending_gets);
-        }
 
         if (info->priv->context) {
                 g_object_unref (info->priv->context);
@@ -341,74 +314,4 @@ char *
 gupnp_service_info_get_event_subscription_url (GUPnPServiceInfo *info)
 {
         return get_property (info, "eventSubURL");
-}
-
-/**
- * SCPD URL downloaded.
- **/
-static void
-got_scpd_url (SoupMessage    *msg,
-              GetSCPDURLData *data)
-{
-        GList *actions;
-
-        actions = NULL;
-
-        if (SOUP_STATUS_IS_SUCCESSFUL (msg->status_code)) {
-                xmlDoc *xml_doc;
-
-                xml_doc = xmlParseMemory (msg->response.body,
-                                          msg->response.length);
-                if (xml_doc) {
-                        xmlFreeDoc (xml_doc);
-                } else
-                        g_warning ("Failed to parse %s", "XXX");
-        } else /* XXX */
-                        g_warning ("Failed to GET %s", "XXX");
-
-        data->cb (data->info, actions, data->user_data);
-
-        g_slice_free (GetSCPDURLData, data);
-}
-
-void
-gupnp_service_info_list_actions (GUPnPServiceInfo                   *info,
-                                 GUPnPServiceInfoListActionsCallback cb,
-                                 gpointer                            user_data)
-{
-        SoupSession *session;
-        char *scpd_url;
-        GetSCPDURLData *data;
-
-        g_return_if_fail (GUPNP_IS_SERVICE_INFO (info));
-        g_return_if_fail (cb);
-
-        session = _gupnp_context_get_session (info->priv->context);
-
-        data = g_slice_new (GetSCPDURLData);
-
-        data->info = info;
-
-        data->cb = cb;
-        data->user_data = user_data;
-
-        scpd_url = gupnp_service_info_get_scpd_url (info);
-        data->message = soup_message_new (SOUP_METHOD_GET, scpd_url);
-        g_free (scpd_url);
-
-        soup_session_queue_message (session,
-                                    data->message,
-                                    (SoupMessageCallbackFn) got_scpd_url,
-                                    data);
-
-        info->priv->pending_gets =
-                g_list_prepend (info->priv->pending_gets, data);
-}
-
-void
-gupnp_service_info_free_action_list (GList *list)
-{
-        while (list) {
-                list = g_list_delete_link (list, list);
-        }
 }

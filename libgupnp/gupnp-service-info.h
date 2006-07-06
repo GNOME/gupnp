@@ -98,37 +98,6 @@ gupnp_service_info_get_control_url            (GUPnPServiceInfo *info);
 char *
 gupnp_service_info_get_event_subscription_url (GUPnPServiceInfo *info);
 
-typedef struct {
-        char *name;
-
-        GList *args;
-} GUPnPServiceInfoAction;
-
-typedef struct {
-        char *name;
-        char *related_state_variable;
-
-        GType type;
-        GList *allowed_values;
-
-        gboolean retval;
-
-        gboolean evented;
-} GUPnPServiceInfoActionArgument;
-
-typedef void
-(* GUPnPServiceInfoListActionsCallback) (GUPnPServiceInfo *info,
-                                         GList            *actions,
-                                         gpointer          user_data);
-
-void
-gupnp_service_info_list_actions (GUPnPServiceInfo                   *info,
-                                 GUPnPServiceInfoListActionsCallback cb,
-                                 gpointer                            user_data);
-
-void
-gupnp_service_info_free_action_list (GList *list);
-
 G_END_DECLS
 
 #endif /* __GUPNP_SERVICE_INFO_H__ */
