@@ -19,11 +19,14 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#include <libsoup/soup-soap-message.h>
+#include <gobject/gvaluecollector.h>
 #include <string.h>
 
 #include "gupnp-service-proxy.h"
 #include "gupnp-service-proxy-private.h"
 #include "gupnp-device-proxy-private.h"
+#include "gupnp-context-private.h"
 #include "xml-util.h"
 
 G_DEFINE_TYPE (GUPnPServiceProxy,
@@ -267,6 +270,12 @@ gupnp_service_proxy_begin_action (GUPnPServiceProxy              *proxy,
         return ret;
 }
 
+static void
+got_response (SoupMessage *msg, gpointer user_data)
+{
+        g_print ("got response\n");
+}
+
 /**
  * gupnp_service_proxy_begin_action_valist
  * @proxy: A #GUPnPServiceProxy
@@ -291,9 +300,108 @@ gupnp_service_proxy_begin_action_valist
                                     gpointer                        user_data,
                                     va_list                         var_args)
 {
+        char *control_url, *service_type, *full_action;
+        const char *arg_name;
+        SoupSoapMessage *msg;
+        GUPnPContext *context;
+        SoupSession *session;
+
         g_return_val_if_fail (GUPNP_IS_SERVICE_PROXY (proxy), NULL);
         g_return_val_if_fail (action, NULL);
         g_return_val_if_fail (callback, NULL);
+
+        control_url = gupnp_service_info_get_control_url
+                                        (GUPNP_SERVICE_INFO (proxy));
+
+        msg = soup_soap_message_new ("POST",
+				     control_url,
+				     FALSE, NULL, NULL, NULL);
+
+        g_free (control_url);
+
+        service_type = gupnp_service_info_get_service_type
+                                        (GUPNP_SERVICE_INFO (proxy));
+
+        full_action = g_strdup_printf ("%s#%s", service_type, action);
+
+        soup_message_add_header (SOUP_MESSAGE (msg)->request_headers,
+				 "SOAPAction",
+                                 full_action);
+
+        g_free (full_action);
+
+	soup_soap_message_start_envelope (msg);
+	soup_soap_message_start_body (msg);
+
+        soup_soap_message_start_element (msg,
+                                         action,
+                                         "u",
+                                         service_type);
+
+        arg_name = va_arg (var_args, const char *);
+        while (arg_name) {
+                GType arg_type;
+                GValue value = { 0, }, transformed_value = { 0, };
+                char *error = NULL;
+                const char *str;
+
+                arg_type = va_arg (var_args, GType);
+                g_value_init (&value, arg_type);
+
+                G_VALUE_COLLECT (&value, var_args, 0, &error);
+                if (error) {
+                        g_warning ("%s: %s", G_STRLOC, error);
+                        g_free (error);
+                        
+                        /* we purposely leak the value here, it might not be
+	                 * in a sane state if an error condition occoured
+	                 */
+                        break;
+                }
+
+                g_value_init (&transformed_value, G_TYPE_STRING);
+                if (!g_value_transform (&value, &transformed_value)) {
+                        g_warning ("%s: Failed to transform value of type %s "
+                                   "to a string", G_STRLOC,
+                                   g_type_name (arg_type));
+                        
+                        g_value_unset (&value);
+                        g_value_unset (&transformed_value);
+
+                        break;
+                }
+
+                soup_soap_message_start_element (msg,
+                                                 arg_name,
+                                                 NULL,
+                                                 NULL);
+
+                str = g_value_get_string (&transformed_value);
+                soup_soap_message_write_string (msg, str); 
+
+                soup_soap_message_end_element (msg);
+
+                g_value_unset (&value);
+                g_value_unset (&transformed_value);
+                
+                arg_name = va_arg (var_args, const char *);
+        }
+
+        soup_soap_message_end_element (msg);
+        
+	soup_soap_message_end_body (msg);
+	soup_soap_message_end_envelope (msg);
+        soup_soap_message_persist (msg);
+
+        g_free (service_type);
+
+        context = gupnp_service_info_get_context (GUPNP_SERVICE_INFO (proxy));
+        session = _gupnp_context_get_session (context);
+
+        soup_session_queue_message (session,
+                                    SOUP_MESSAGE (msg),
+                                    got_response,
+                                    NULL);
 
         return NULL;
 }
