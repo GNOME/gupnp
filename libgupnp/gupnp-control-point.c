@@ -247,7 +247,10 @@ got_description_url (SoupMessage           *msg,
                 } else
                         g_warning ("Failed to parse %s", data->description_url);
         } else
-                        g_warning ("Failed to GET %s", data->description_url);
+                g_warning ("Failed to GET %s", data->description_url);
+
+        data->control_point->priv->pending_gets =
+                g_list_remove (data->control_point->priv->pending_gets, msg);
 
         get_description_url_data_free (data);
 }

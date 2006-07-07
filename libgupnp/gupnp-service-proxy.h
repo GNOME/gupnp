@@ -22,6 +22,7 @@
 #ifndef __GUPNP_SERVICE_PROXY_H__
 #define __GUPNP_SERVICE_PROXY_H__
 
+#include <libsoup/soup-soap-message.h>
 #include <libxml/tree.h>
 
 #include "gupnp-context.h"
@@ -76,7 +77,7 @@ typedef struct {
         void (* _gupnp_reserved4) (void);
 } GUPnPServiceProxyClass;
 
-typedef struct _GUPnPServiceProxyAction GUPnPServiceProxyAction;
+typedef SoupSoapMessage GUPnPServiceProxyAction;
 
 typedef void
 (* GUPnPServiceProxyActionCallback) (GUPnPServiceProxy       *proxy,

@@ -37,6 +37,8 @@ struct _GUPnPServiceProxyPrivate {
         xmlNode *element;
 
         gboolean subscribed;
+
+        GList *pending_actions;
 };
 
 enum {
@@ -118,7 +120,14 @@ gupnp_service_proxy_dispose (GObject *object)
 
         proxy = GUPNP_SERVICE_PROXY (object);
 
-        /* XXX */
+        /* Cancel any pending actions */
+        while (proxy->priv->pending_actions) {
+                GUPnPServiceProxyAction *action;
+
+                action = proxy->priv->pending_actions->data;
+                
+                gupnp_service_proxy_cancel_action (proxy, action);
+        }
 }
 
 static void
@@ -338,6 +347,8 @@ gupnp_service_proxy_begin_action_valist
                                          "u",
                                          service_type);
 
+        g_free (service_type);
+
         arg_name = va_arg (var_args, const char *);
         while (arg_name) {
                 GType arg_type;
@@ -356,7 +367,10 @@ gupnp_service_proxy_begin_action_valist
                         /* we purposely leak the value here, it might not be
 	                 * in a sane state if an error condition occoured
 	                 */
-                        break;
+
+                        g_object_unref (msg);
+
+                        return NULL;
                 }
 
                 g_value_init (&transformed_value, G_TYPE_STRING);
@@ -368,7 +382,9 @@ gupnp_service_proxy_begin_action_valist
                         g_value_unset (&value);
                         g_value_unset (&transformed_value);
 
-                        break;
+                        g_object_unref (msg);
+
+                        return NULL;
                 }
 
                 soup_soap_message_start_element (msg,
@@ -393,8 +409,6 @@ gupnp_service_proxy_begin_action_valist
 	soup_soap_message_end_envelope (msg);
         soup_soap_message_persist (msg);
 
-        g_free (service_type);
-
         context = gupnp_service_info_get_context (GUPNP_SERVICE_INFO (proxy));
         session = _gupnp_context_get_session (context);
 
@@ -403,7 +417,10 @@ gupnp_service_proxy_begin_action_valist
                                     got_response,
                                     NULL);
 
-        return NULL;
+        proxy->priv->pending_actions =
+                g_list_prepend (proxy->priv->pending_actions, msg);
+
+        return msg;
 }
 
 /**
@@ -458,7 +475,10 @@ gupnp_service_proxy_end_action_valist (GUPnPServiceProxy       *proxy,
                                        va_list                  var_args)
 {
         g_return_val_if_fail (GUPNP_IS_SERVICE_PROXY (proxy), FALSE);
-        g_return_val_if_fail (action, FALSE);
+        g_return_val_if_fail (SOUP_IS_SOAP_MESSAGE (action), FALSE);
+
+        proxy->priv->pending_actions =
+                g_list_remove (proxy->priv->pending_actions, action);
 
         return FALSE;
 }
@@ -474,8 +494,19 @@ void
 gupnp_service_proxy_cancel_action (GUPnPServiceProxy       *proxy,
                                    GUPnPServiceProxyAction *action)
 {
+        GUPnPContext *context;
+        SoupSession *session;
+
         g_return_if_fail (GUPNP_IS_SERVICE_PROXY (proxy));
-        g_return_if_fail (action);
+        g_return_if_fail (SOUP_IS_SOAP_MESSAGE (action));
+
+        context = gupnp_service_info_get_context (GUPNP_SERVICE_INFO (proxy));
+        session = _gupnp_context_get_session (context);
+        
+        soup_session_cancel_message (session, SOUP_MESSAGE (action));
+
+        proxy->priv->pending_actions =
+                g_list_remove (proxy->priv->pending_actions, action);
 }
 
 /**
