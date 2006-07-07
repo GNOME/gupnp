@@ -110,6 +110,6 @@ gupnp_context_new (GMainContext *main_context,
 {
         return g_object_new (GUPNP_TYPE_CONTEXT,
                              "main-context", main_context,
+                             "error", error,
                              NULL);
-        /* XXX error */
 }
