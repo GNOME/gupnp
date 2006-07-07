@@ -191,10 +191,17 @@ gupnp_service_proxy_send_action (GUPnPServiceProxy *proxy,
                                  GError           **error,
                                  ...)
 {
-        g_return_val_if_fail (GUPNP_IS_SERVICE_PROXY (proxy), FALSE);
-        g_return_val_if_fail (action, FALSE);
+        va_list var_args;
+        gboolean ret;
 
-        return FALSE;
+        va_start (var_args, error);
+        ret = gupnp_service_proxy_send_action_valist (proxy,
+                                                      action,
+                                                      error,
+                                                      var_args);
+        va_end (var_args);
+
+        return ret;
 }
 
 /**
@@ -246,11 +253,18 @@ gupnp_service_proxy_begin_action (GUPnPServiceProxy              *proxy,
                                   gpointer                        user_data,
                                   ...)
 {
-        g_return_val_if_fail (GUPNP_IS_SERVICE_PROXY (proxy), NULL);
-        g_return_val_if_fail (action, NULL);
-        g_return_val_if_fail (callback, NULL);
+        va_list var_args;
+        GUPnPServiceProxyAction *ret;
 
-        return NULL;
+        va_start (var_args, user_data);
+        ret = gupnp_service_proxy_begin_action_valist (proxy,
+                                                       action,
+                                                       callback,
+                                                       user_data,
+                                                       var_args);
+        va_end (var_args);
+
+        return ret;
 }
 
 /**
@@ -303,10 +317,17 @@ gupnp_service_proxy_end_action (GUPnPServiceProxy       *proxy,
                                 GError                 **error,
                                 ...)
 {
-        g_return_val_if_fail (GUPNP_IS_SERVICE_PROXY (proxy), FALSE);
-        g_return_val_if_fail (action, FALSE);
+        va_list var_args;
+        gboolean ret;
 
-        return FALSE;
+        va_start (var_args, error);
+        ret = gupnp_service_proxy_end_action_valist (proxy,
+                                                     action,
+                                                     error,
+                                                     var_args);
+        va_end (var_args);
+
+        return ret;
 }
 
 /**
