@@ -131,16 +131,6 @@ gupnp_service_proxy_dispose (GObject *object)
 }
 
 static void
-gupnp_service_proxy_finalize (GObject *object)
-{
-        GUPnPServiceProxy *proxy;
-
-        proxy = GUPNP_SERVICE_PROXY (object);
-
-        /* XXX */
-}
-
-static void
 gupnp_service_proxy_class_init (GUPnPServiceProxyClass *klass)
 {
         GObjectClass *object_class;
@@ -151,7 +141,6 @@ gupnp_service_proxy_class_init (GUPnPServiceProxyClass *klass)
         object_class->set_property = gupnp_service_proxy_set_property;
         object_class->get_property = gupnp_service_proxy_get_property;
         object_class->dispose      = gupnp_service_proxy_dispose;
-        object_class->finalize     = gupnp_service_proxy_finalize;
 
         info_class = GUPNP_SERVICE_INFO_CLASS (klass);
         
@@ -319,29 +308,28 @@ gupnp_service_proxy_begin_action_valist
         g_return_val_if_fail (action, NULL);
         g_return_val_if_fail (callback, NULL);
 
+        /* Create message */
         control_url = gupnp_service_info_get_control_url
                                         (GUPNP_SERVICE_INFO (proxy));
-
         msg = soup_soap_message_new ("POST",
 				     control_url,
 				     FALSE, NULL, NULL, NULL);
-
         g_free (control_url);
 
+        /* Specify action */
         service_type = gupnp_service_info_get_service_type
                                         (GUPNP_SERVICE_INFO (proxy));
-
         full_action = g_strdup_printf ("%s#%s", service_type, action);
-
         soup_message_add_header (SOUP_MESSAGE (msg)->request_headers,
 				 "SOAPAction",
                                  full_action);
-
         g_free (full_action);
 
+        /* Fill envelope */
 	soup_soap_message_start_envelope (msg);
 	soup_soap_message_start_body (msg);
 
+        /* Action element */
         soup_soap_message_start_element (msg,
                                          action,
                                          "u",
@@ -349,6 +337,7 @@ gupnp_service_proxy_begin_action_valist
 
         g_free (service_type);
 
+        /* Arguments */
         arg_name = va_arg (var_args, const char *);
         while (arg_name) {
                 GType arg_type;
@@ -409,6 +398,7 @@ gupnp_service_proxy_begin_action_valist
 	soup_soap_message_end_envelope (msg);
         soup_soap_message_persist (msg);
 
+        /* Send the message */
         context = gupnp_service_info_get_context (GUPNP_SERVICE_INFO (proxy));
         session = _gupnp_context_get_session (context);
 
