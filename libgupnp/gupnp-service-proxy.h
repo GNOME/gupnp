@@ -22,10 +22,10 @@
 #ifndef __GUPNP_SERVICE_PROXY_H__
 #define __GUPNP_SERVICE_PROXY_H__
 
-#include <libsoup/soup-soap-message.h>
 #include <libxml/tree.h>
 
 #include "gupnp-context.h"
+#include "gupnp-error.h"
 #include "gupnp-service-info.h"
 #include "gupnp-service-proxy.h"
 
@@ -77,7 +77,7 @@ typedef struct {
         void (* _gupnp_reserved4) (void);
 } GUPnPServiceProxyClass;
 
-typedef SoupSoapMessage GUPnPServiceProxyAction;
+typedef struct _GUPnPServiceProxyAction GUPnPServiceProxyAction;
 
 typedef void
 (* GUPnPServiceProxyActionCallback) (GUPnPServiceProxy       *proxy,
@@ -115,6 +115,7 @@ gupnp_service_proxy_begin_action   (GUPnPServiceProxy              *proxy,
                                     const char                     *action,
                                     GUPnPServiceProxyActionCallback callback,
                                     gpointer                        user_data,
+                                    GError                        **error,
                                     ...) G_GNUC_NULL_TERMINATED;
 
 GUPnPServiceProxyAction *
@@ -123,6 +124,7 @@ gupnp_service_proxy_begin_action_valist
                                     const char                     *action,
                                     GUPnPServiceProxyActionCallback callback,
                                     gpointer                        user_data,
+                                    GError                        **error,
                                     va_list                         var_args);
 
 gboolean

@@ -74,6 +74,9 @@ typedef struct {
 static void
 get_description_url_data_free (GetDescriptionURLData *data)
 {
+        data->control_point->priv->pending_gets =
+                g_list_remove (data->control_point->priv->pending_gets, data);
+
         g_free (data->udn);
         g_free (data->service_type);
         g_free (data->description_url);
@@ -130,10 +133,6 @@ gupnp_control_point_dispose (GObject *object)
                 soup_session_cancel_message (session, data->message);
 
                 get_description_url_data_free (data);
-
-                control_point->priv->pending_gets =
-                        g_list_delete_link (control_point->priv->pending_gets,
-                                            control_point->priv->pending_gets);
         }
 }
 
@@ -248,9 +247,6 @@ got_description_url (SoupMessage           *msg,
                         g_warning ("Failed to parse %s", data->description_url);
         } else
                 g_warning ("Failed to GET %s", data->description_url);
-
-        data->control_point->priv->pending_gets =
-                g_list_remove (data->control_point->priv->pending_gets, msg);
 
         get_description_url_data_free (data);
 }

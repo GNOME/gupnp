@@ -53,6 +53,24 @@ enum {
 
 static guint signals[LAST_SIGNAL];
 
+struct _GUPnPServiceProxyAction {
+        GUPnPServiceProxy *proxy;
+
+        SoupSoapMessage *msg;
+
+        GUPnPServiceProxyActionCallback callback;
+        gpointer user_data;
+};
+
+static void
+gupnp_service_proxy_action_free (GUPnPServiceProxyAction *action)
+{
+        action->proxy->priv->pending_actions =
+                g_list_remove (action->proxy->priv->pending_actions, action);
+
+        g_slice_free (GUPnPServiceProxyAction, action);
+}
+
 static xmlNode *
 gupnp_service_proxy_get_element (GUPnPServiceInfo *info)
 {
@@ -238,6 +256,7 @@ gupnp_service_proxy_send_action_valist (GUPnPServiceProxy *proxy,
  * @callback: The callback to call when sending the action has succeeded
  * or failed
  * @user_data: User data for @callback
+ * @error: The location where to store any error, or NULL
  * @Varargs: tuples of in parameter name, in paramater type, and in parameter
  * value, terminated with NULL
  *
@@ -252,16 +271,18 @@ gupnp_service_proxy_begin_action (GUPnPServiceProxy              *proxy,
                                   const char                     *action,
                                   GUPnPServiceProxyActionCallback callback,
                                   gpointer                        user_data,
+                                  GError                        **error,
                                   ...)
 {
         va_list var_args;
         GUPnPServiceProxyAction *ret;
 
-        va_start (var_args, user_data);
+        va_start (var_args, error);
         ret = gupnp_service_proxy_begin_action_valist (proxy,
                                                        action,
                                                        callback,
                                                        user_data,
+                                                       error,
                                                        var_args);
         va_end (var_args);
 
@@ -269,9 +290,10 @@ gupnp_service_proxy_begin_action (GUPnPServiceProxy              *proxy,
 }
 
 static void
-got_response (SoupMessage *msg, gpointer user_data)
+action_got_response (SoupMessage             *msg,
+                     GUPnPServiceProxyAction *action)
 {
-        g_print ("got response\n");
+        action->callback (action->proxy, action, action->user_data);
 }
 
 /**
@@ -281,14 +303,15 @@ got_response (SoupMessage *msg, gpointer user_data)
  * @callback: The callback to call when sending the action has succeeded
  * or failed
  * @user_data: User data for @callback
+ * @error: The location where to store any error, or NULL
  * @var_args: A va_list of tuples of in parameter name, in paramater type, and 
  * in parameter value
  *
  * See gupnp_service_proxy_begin_action(); this version takes a va_list for
  * use by language bindings.
  *
- * Return value: A #GUPnPServiceProxyAction handle. This will be freed
- * automatically on @callback calling.
+ * Return value: A #GUPnPServiceProxyAction handle, or NULL on error. This will
+ * be freed automatically on @callback calling.
  **/
 GUPnPServiceProxyAction *
 gupnp_service_proxy_begin_action_valist
@@ -296,11 +319,13 @@ gupnp_service_proxy_begin_action_valist
                                     const char                     *action,
                                     GUPnPServiceProxyActionCallback callback,
                                     gpointer                        user_data,
+                                    GError                        **error,
                                     va_list                         var_args)
 {
         char *control_url, *service_type, *full_action;
         const char *arg_name;
         SoupSoapMessage *msg;
+        GUPnPServiceProxyAction *ret;
         GUPnPContext *context;
         SoupSession *session;
 
@@ -342,16 +367,20 @@ gupnp_service_proxy_begin_action_valist
         while (arg_name) {
                 GType arg_type;
                 GValue value = { 0, }, transformed_value = { 0, };
-                char *error = NULL;
+                char *collect_error = NULL;
                 const char *str;
 
                 arg_type = va_arg (var_args, GType);
                 g_value_init (&value, arg_type);
 
-                G_VALUE_COLLECT (&value, var_args, 0, &error);
-                if (error) {
-                        g_warning ("%s: %s", G_STRLOC, error);
-                        g_free (error);
+                G_VALUE_COLLECT (&value, var_args, 0, &collect_error);
+                if (collect_error) {
+                        g_set_error (error,
+                                     GUPNP_ERROR_QUARK,
+                                     0,
+                                     collect_error);
+
+                        g_free (collect_error);
                         
                         /* we purposely leak the value here, it might not be
 	                 * in a sane state if an error condition occoured
@@ -364,9 +393,11 @@ gupnp_service_proxy_begin_action_valist
 
                 g_value_init (&transformed_value, G_TYPE_STRING);
                 if (!g_value_transform (&value, &transformed_value)) {
-                        g_warning ("%s: Failed to transform value of type %s "
-                                   "to a string", G_STRLOC,
-                                   g_type_name (arg_type));
+                        g_set_error (error,
+                                     GUPNP_ERROR_QUARK,
+                                     0,
+                                     "Failed to transform value of type %s "
+                                     "to a string", g_type_name (arg_type));
                         
                         g_value_unset (&value);
                         g_value_unset (&transformed_value);
@@ -398,19 +429,30 @@ gupnp_service_proxy_begin_action_valist
 	soup_soap_message_end_envelope (msg);
         soup_soap_message_persist (msg);
 
+        /* Create action structure */
+        ret = g_slice_new (GUPnPServiceProxyAction);
+
+        ret->proxy = proxy;
+
+        ret->msg = msg;
+
+        ret->callback = callback;
+        ret->user_data = user_data;
+
+        proxy->priv->pending_actions =
+                g_list_prepend (proxy->priv->pending_actions, ret);
+
         /* Send the message */
         context = gupnp_service_info_get_context (GUPNP_SERVICE_INFO (proxy));
         session = _gupnp_context_get_session (context);
 
         soup_session_queue_message (session,
                                     SOUP_MESSAGE (msg),
-                                    got_response,
-                                    NULL);
+                                    (SoupMessageCallbackFn)
+                                        action_got_response,
+                                    ret);
 
-        proxy->priv->pending_actions =
-                g_list_prepend (proxy->priv->pending_actions, msg);
-
-        return msg;
+        return ret;
 }
 
 /**
@@ -465,10 +507,9 @@ gupnp_service_proxy_end_action_valist (GUPnPServiceProxy       *proxy,
                                        va_list                  var_args)
 {
         g_return_val_if_fail (GUPNP_IS_SERVICE_PROXY (proxy), FALSE);
-        g_return_val_if_fail (SOUP_IS_SOAP_MESSAGE (action), FALSE);
+        g_return_val_if_fail (action, FALSE);
 
-        proxy->priv->pending_actions =
-                g_list_remove (proxy->priv->pending_actions, action);
+        gupnp_service_proxy_action_free (action);
 
         return FALSE;
 }
@@ -488,15 +529,14 @@ gupnp_service_proxy_cancel_action (GUPnPServiceProxy       *proxy,
         SoupSession *session;
 
         g_return_if_fail (GUPNP_IS_SERVICE_PROXY (proxy));
-        g_return_if_fail (SOUP_IS_SOAP_MESSAGE (action));
+        g_return_if_fail (action);
 
         context = gupnp_service_info_get_context (GUPNP_SERVICE_INFO (proxy));
         session = _gupnp_context_get_session (context);
         
-        soup_session_cancel_message (session, SOUP_MESSAGE (action));
+        soup_session_cancel_message (session, SOUP_MESSAGE (action->msg));
 
-        proxy->priv->pending_actions =
-                g_list_remove (proxy->priv->pending_actions, action);
+        gupnp_service_proxy_action_free (action);
 }
 
 /**
