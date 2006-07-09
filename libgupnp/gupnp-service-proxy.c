@@ -60,6 +60,8 @@ struct _GUPnPServiceProxyAction {
 
         GUPnPServiceProxyActionCallback callback;
         gpointer user_data;
+
+        gboolean success;
 };
 
 static void
@@ -223,6 +225,14 @@ gupnp_service_proxy_send_action (GUPnPServiceProxy *proxy,
         return ret;
 }
 
+static void
+stop_main_loop (GUPnPServiceProxy       *proxy,
+                GUPnPServiceProxyAction *action,
+                gpointer                 user_data)
+{
+        g_main_loop_quit ((GMainLoop *) user_data);
+}
+
 /**
  * gupnp_service_proxy_send_action_valist
  * @proxy: A #GUPnPServiceProxy
@@ -243,10 +253,42 @@ gupnp_service_proxy_send_action_valist (GUPnPServiceProxy *proxy,
                                         GError           **error,
                                         va_list            var_args)
 {
+        GUPnPContext *context;
+        GMainContext *main_context;
+        GMainLoop *main_loop;
+        GUPnPServiceProxyAction *handle;
+        
         g_return_val_if_fail (GUPNP_IS_SERVICE_PROXY (proxy), FALSE);
         g_return_val_if_fail (action, FALSE);
 
-        return FALSE;
+        context = gupnp_service_info_get_context (GUPNP_SERVICE_INFO (proxy));
+        main_context = gssdp_client_get_main_context (GSSDP_CLIENT (context));
+        main_loop = g_main_loop_new (main_context, FALSE);
+
+        handle = gupnp_service_proxy_begin_action_valist (proxy,
+                                                          action,
+                                                          stop_main_loop,
+                                                          main_loop,
+                                                          error,
+                                                          var_args);
+        if (!handle) {
+                g_main_loop_unref (main_loop);
+
+                return FALSE;
+        }
+
+        /* Loop till we get a reply (or time out) */
+        g_main_loop_run (main_loop);
+
+        g_main_loop_unref (main_loop);
+
+        if (!gupnp_service_proxy_end_action_valist (proxy,
+                                                    handle,
+                                                    error,
+                                                    var_args))
+                return FALSE;
+
+        return TRUE;
 }
 
 /**
@@ -293,6 +335,8 @@ static void
 action_got_response (SoupMessage             *msg,
                      GUPnPServiceProxyAction *action)
 {
+        action->success = SOUP_STATUS_IS_SUCCESSFUL (msg->status_code);
+
         action->callback (action->proxy, action, action->user_data);
 }
 
@@ -509,9 +553,22 @@ gupnp_service_proxy_end_action_valist (GUPnPServiceProxy       *proxy,
         g_return_val_if_fail (GUPNP_IS_SERVICE_PROXY (proxy), FALSE);
         g_return_val_if_fail (action, FALSE);
 
+        if (!action->success) {
+                g_set_error (error,
+                             GUPNP_ERROR_QUARK,
+                             0,
+                             "Failed to send action");
+                
+                gupnp_service_proxy_action_free (action);
+
+                return FALSE;
+        }
+
+        /* XXX */
+
         gupnp_service_proxy_action_free (action);
 
-        return FALSE;
+        return TRUE;
 }
 
 /**
