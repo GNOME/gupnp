@@ -505,7 +505,8 @@ gupnp_service_proxy_begin_action_valist
  * @action: A #GUPnPServiceProxyAction handle
  * @error: The location where to store any error, or NULL
  * @Varargs: tuples of out parameter name, out paramater type, and out parameter
- * value location, terminated with NULL
+ * value location, terminated with NULL. The out parameter values should be
+ * freed after use
  *
  * Retrieves the result of @action. The out parameters in @Varargs will be 
  * filled in, and ff an error occurred, @error will be set.
@@ -537,7 +538,8 @@ gupnp_service_proxy_end_action (GUPnPServiceProxy       *proxy,
  * @action: A #GUPnPServiceProxyAction handle
  * @error: The location where to store any error, or NULL
  * @var_args: A va_list of tuples of out parameter name, out paramater type, 
- * and out parameter value location
+ * and out parameter value location. The out parameter values should be
+ * freed after use
  *
  * See gupnp_service_proxy_end_action(); this version takes a va_list for
  * use by language bindings.
@@ -550,9 +552,15 @@ gupnp_service_proxy_end_action_valist (GUPnPServiceProxy       *proxy,
                                        GError                 **error,
                                        va_list                  var_args)
 {
+        SoupMessage *soup_msg;
+        SoupSoapResponse *response;
+	SoupSoapParameter *param;
+        const char *arg_name;
+
         g_return_val_if_fail (GUPNP_IS_SERVICE_PROXY (proxy), FALSE);
         g_return_val_if_fail (action, FALSE);
 
+        /* Check for errors */
         if (!action->success) {
                 g_set_error (error,
                              GUPNP_ERROR_QUARK,
@@ -564,9 +572,126 @@ gupnp_service_proxy_end_action_valist (GUPnPServiceProxy       *proxy,
                 return FALSE;
         }
 
-        /* XXX */
+        soup_msg = SOUP_MESSAGE (action->msg);
+	if (!SOUP_STATUS_IS_SUCCESSFUL (soup_msg->status_code)) {
+                /* XXX full error handling */
+                g_set_error (error,
+                             GUPNP_ERROR_QUARK,
+                             soup_msg->status_code,
+                             soup_msg->reason_phrase);
+                
+                gupnp_service_proxy_action_free (action);
 
+                return FALSE;
+	}
+
+        /* Parse response */
+	response = soup_soap_message_parse_response (action->msg);
+	if (!response) {
+                g_set_error (error,
+                             GUPNP_ERROR_QUARK,
+                             0,
+                             "Could not parse SOAP response");
+                
+                gupnp_service_proxy_action_free (action);
+
+                return FALSE;
+	}
+
+        /* Action element */
+	param = soup_soap_response_get_first_parameter (response);
+        if (!param) {
+                g_set_error (error,
+                             GUPNP_ERROR_QUARK,
+                             0,
+                             "Could not take first paramater of SOAP response");
+                
+                gupnp_service_proxy_action_free (action);
+
+                g_object_unref (response);
+
+                return FALSE;
+        }
+
+        /* Arguments */
+        arg_name = va_arg (var_args, const char *);
+        while (arg_name) {
+                GType arg_type;
+                GValue value = { 0, }, string_value = { 0, };
+                SoupSoapParameter *child;
+                char *copy_error = NULL;
+                char *str;
+
+                child = soup_soap_parameter_get_first_child_by_name (param,
+                                                                     arg_name);
+                if (!child) {
+                        g_set_error (error,
+                                     GUPNP_ERROR_QUARK,
+                                     0,
+                                     "Could not find variable '%s' in response",
+                                     arg_name);
+
+                        gupnp_service_proxy_action_free (action);
+
+                        g_object_unref (response);
+
+                        return FALSE;
+                }
+
+                str = soup_soap_parameter_get_string_value (child);
+
+                g_value_init (&string_value, G_TYPE_STRING);
+                g_value_set_string_take_ownership (&string_value, str);
+
+                arg_type = va_arg (var_args, GType);
+                g_value_init (&value, arg_type);
+
+                if (!g_value_transform (&string_value, &value)) {
+                        g_set_error (error,
+                                     GUPNP_ERROR_QUARK,
+                                     0,
+                                     "Failed to transform string value "
+                                     "to type %s", g_type_name (arg_type));
+
+                        g_value_unset (&string_value);
+                        g_value_unset (&value);
+
+                        gupnp_service_proxy_action_free (action);
+
+                        g_object_unref (response);
+
+                        return FALSE;
+                }
+
+                g_value_unset (&string_value);
+                
+                G_VALUE_LCOPY (&value, var_args, 0, &copy_error);
+                if (copy_error) {
+                        g_set_error (error,
+                                     GUPNP_ERROR_QUARK,
+                                     0,
+                                     copy_error);
+
+                        g_free (copy_error);
+
+                        g_value_unset (&value);
+                        
+                        gupnp_service_proxy_action_free (action);
+
+                        g_object_unref (response);
+
+                        return FALSE;
+                }
+
+                g_value_unset (&value);
+                
+                arg_name = va_arg (var_args, const char *);
+        }
+
+        /* Cleanup */
         gupnp_service_proxy_action_free (action);
+
+        g_object_unref (response);
 
         return TRUE;
 }
