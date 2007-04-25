@@ -1,4 +1,5 @@
 #include <libgupnp/gupnp-control-point.h>
+#include <string.h>
 
 /**
  *  - Resurrect Control point
@@ -24,10 +25,28 @@ device_proxy_available_cb (GUPnPControlPoint *cp,
                            GUPnPDeviceProxy  *proxy)
 {
         char *type;
+        const char *location;
+        GList *service_node;
 
         type = gupnp_device_info_get_device_type (GUPNP_DEVICE_INFO (proxy));
-        g_print ("Device available with type: %s\n", type);
+        location = gupnp_device_info_get_location (GUPNP_DEVICE_INFO (proxy));
+
+        if (strcmp (type, GUPNP_DEVICE_TYPE_MEDIA_STREAMER_1) == 0) {
+                g_print ("MediaStreamer device available at %s\n", location);
+        } else if (strcmp (type, GUPNP_DEVICE_TYPE_INTERNET_GATEWAY_1) == 0) {
+                g_print ("InternetGateway device available at %s\n", location);
+        } else
+                g_print ("Device of type %s available at %s\n", type, location);
         g_free (type);
+
+        service_node = gupnp_device_proxy_list_services (proxy);
+        for (; service_node; service_node = service_node->next) {
+                gchar *service_type;
+
+                service_type = gupnp_service_info_get_service_type (
+                                GUPNP_SERVICE_INFO (service_node->data));
+                g_print ("service of type %s available\n", service_type);
+        }
 }
 
 static void

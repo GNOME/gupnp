@@ -1,3 +1,10 @@
+2007-04-25  Zeeshan Ali  <zeenix@gstreamer.net>
+
+	* libgupnp/gupnp-device-info.h:
+	* tests/test.c: (device_proxy_available_cb):
+
+	Add some device type defines.
+
 2007-04-16  Jorn Baayen  <jorn@openedhand.com>
 
 	* libgupnp/gupnp-context-private.h:

@@ -29,6 +29,16 @@
 
 G_BEGIN_DECLS
 
+/*
+ * Known UPnP device types
+ */
+#define GUPNP_DEVICE_TYPE_INTERNET_GATEWAY_1 \
+                "urn:schemas-upnp-org:device:InternetGatewayDevice:1" 
+#define GUPNP_DEVICE_TYPE_MEDIA_RENDERER_1 \
+                "urn:schemas-upnp-org:device:MediaRenderer:1"
+#define GUPNP_DEVICE_TYPE_MEDIA_STREAMER_1 \
+                "urn:schemas-upnp-org:device:MediaServer:1" 
+
 GType
 gupnp_device_info_get_type (void) G_GNUC_CONST;
 
