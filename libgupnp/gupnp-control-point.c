@@ -26,7 +26,7 @@
 
 G_DEFINE_TYPE (GUPnPControlPoint,
                gupnp_control_point,
-               GSSDP_TYPE_SERVICE_BROWSER);
+               GSSDP_TYPE_RESOURCE_BROWSER);
 
 struct _GUPnPControlPointPrivate {
         GList *devices;
@@ -391,14 +391,14 @@ parse_usn (const char *usn,
 }
 
 static void
-gupnp_control_point_service_available (GSSDPServiceBrowser *service_browser,
-                                       const char          *usn,
-                                       const GList         *locations)
+gupnp_control_point_resource_available (GSSDPResourceBrowser *resource_browser,
+                                        const char           *usn,
+                                        const GList          *locations)
 {
         GUPnPControlPoint *control_point;
         char *udn, *service_type;
 
-        control_point = GUPNP_CONTROL_POINT (service_browser);
+        control_point = GUPNP_CONTROL_POINT (resource_browser);
 
         /* Verify we have a location */
         if (!locations) {
@@ -420,15 +420,16 @@ gupnp_control_point_service_available (GSSDPServiceBrowser *service_browser,
 }
 
 static void
-gupnp_control_point_service_unavailable (GSSDPServiceBrowser *service_browser,
-                                         const char          *usn)
+gupnp_control_point_resource_unavailable
+                                (GSSDPResourceBrowser *resource_browser,
+                                 const char           *usn)
 {
         GUPnPControlPoint *control_point;
         char *udn, *service_type;
         GList *l;
         DescriptionDoc *doc;
         
-        control_point = GUPNP_CONTROL_POINT (service_browser);
+        control_point = GUPNP_CONTROL_POINT (resource_browser);
 
         /* Parse USN */
         if (!parse_usn (usn, &udn, &service_type))
@@ -534,19 +535,19 @@ static void
 gupnp_control_point_class_init (GUPnPControlPointClass *klass)
 {
         GObjectClass *object_class;
-        GSSDPServiceBrowserClass *browser_class;
+        GSSDPResourceBrowserClass *browser_class;
 
         object_class = G_OBJECT_CLASS (klass);
 
         object_class->dispose  = gupnp_control_point_dispose;
         object_class->finalize = gupnp_control_point_finalize;
 
-        browser_class = GSSDP_SERVICE_BROWSER_CLASS (klass);
+        browser_class = GSSDP_RESOURCE_BROWSER_CLASS (klass);
 
-        browser_class->service_available =
-                gupnp_control_point_service_available;
-        browser_class->service_unavailable =
-                gupnp_control_point_service_unavailable;
+        browser_class->resource_available =
+                gupnp_control_point_resource_available;
+        browser_class->resource_unavailable =
+                gupnp_control_point_resource_unavailable;
         
         g_type_class_add_private (klass, sizeof (GUPnPControlPointPrivate));
 
@@ -635,8 +636,8 @@ gupnp_control_point_get_context (GUPnPControlPoint *control_point)
         
         g_return_val_if_fail (GUPNP_IS_CONTROL_POINT (control_point), NULL);
 
-        client = gssdp_service_browser_get_client
-                                (GSSDP_SERVICE_BROWSER (control_point));
+        client = gssdp_resource_browser_get_client
+                                (GSSDP_RESOURCE_BROWSER (control_point));
 
         return GUPNP_CONTEXT (client);
 }

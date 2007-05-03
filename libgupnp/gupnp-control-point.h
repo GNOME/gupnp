@@ -22,7 +22,7 @@
 #ifndef __GUPNP_CONTROL_POINT_H__
 #define __GUPNP_CONTROL_POINT_H__
 
-#include <libgssdp/gssdp-service-browser.h>
+#include <libgssdp/gssdp-resource-browser.h>
 
 #include "gupnp-context.h"
 #include "gupnp-device-proxy.h"
@@ -57,13 +57,13 @@ gupnp_control_point_get_type (void) G_GNUC_CONST;
 typedef struct _GUPnPControlPointPrivate GUPnPControlPointPrivate;
 
 typedef struct {
-        GSSDPServiceBrowser parent;
+        GSSDPResourceBrowser parent;
 
         GUPnPControlPointPrivate *priv;
 } GUPnPControlPoint;
 
 typedef struct {
-        GSSDPServiceBrowserClass parent_class;
+        GSSDPResourceBrowserClass parent_class;
 
         /* signals */
         void (* device_proxy_available)    (GUPnPControlPoint *control_point,

@@ -111,7 +111,7 @@ main (int argc, char **argv)
                           G_CALLBACK (service_proxy_unavailable_cb),
                           NULL);
 
-        gssdp_service_browser_set_active (GSSDP_SERVICE_BROWSER (cp), TRUE);
+        gssdp_resource_browser_set_active (GSSDP_RESOURCE_BROWSER (cp), TRUE);
 
         main_loop = g_main_loop_new (NULL, FALSE);
         g_main_loop_run (main_loop);
