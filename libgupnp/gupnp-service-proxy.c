@@ -36,6 +36,8 @@ G_DEFINE_TYPE (GUPnPServiceProxy,
 struct _GUPnPServiceProxyPrivate {
         xmlNode *element;
 
+        xmlChar *url_base;
+
         gboolean subscribed;
 
         GList *pending_actions;
@@ -62,6 +64,9 @@ struct _GUPnPServiceProxyAction {
         gpointer user_data;
 
         gboolean success;
+
+        va_list var_args; /* The va_list after begin_action_valist has
+                             gone through it. Used by send_action_valist(). */
 };
 
 static void
@@ -69,6 +74,8 @@ gupnp_service_proxy_action_free (GUPnPServiceProxyAction *action)
 {
         action->proxy->priv->pending_actions =
                 g_list_remove (action->proxy->priv->pending_actions, action);
+
+        g_object_unref (action->msg);
 
         g_slice_free (GUPnPServiceProxyAction, action);
 }
@@ -81,6 +88,16 @@ gupnp_service_proxy_get_element (GUPnPServiceInfo *info)
         proxy = GUPNP_SERVICE_PROXY (info);
 
         return proxy->priv->element;
+}
+
+static const char *
+gupnp_service_proxy_get_url_base (GUPnPServiceInfo *info)
+{
+        GUPnPServiceProxy *proxy;
+        
+        proxy = GUPNP_SERVICE_PROXY (info);
+
+        return (const char *) proxy->priv->url_base;
 }
 
 static void
@@ -151,6 +168,17 @@ gupnp_service_proxy_dispose (GObject *object)
 }
 
 static void
+gupnp_service_proxy_finalize (GObject *object)
+{
+        GUPnPServiceProxy *proxy;
+
+        proxy = GUPNP_SERVICE_PROXY (object);
+
+        if (proxy->priv->url_base)
+                xmlFree (proxy->priv->url_base);
+}
+
+static void
 gupnp_service_proxy_class_init (GUPnPServiceProxyClass *klass)
 {
         GObjectClass *object_class;
@@ -161,10 +189,12 @@ gupnp_service_proxy_class_init (GUPnPServiceProxyClass *klass)
         object_class->set_property = gupnp_service_proxy_set_property;
         object_class->get_property = gupnp_service_proxy_get_property;
         object_class->dispose      = gupnp_service_proxy_dispose;
+        object_class->finalize     = gupnp_service_proxy_finalize;
 
         info_class = GUPNP_SERVICE_INFO_CLASS (klass);
         
-        info_class->get_element = gupnp_service_proxy_get_element;
+        info_class->get_element  = gupnp_service_proxy_get_element;
+        info_class->get_url_base = gupnp_service_proxy_get_url_base;
         
         g_type_class_add_private (klass, sizeof (GUPnPServiceProxyPrivate));
 
@@ -285,7 +315,7 @@ gupnp_service_proxy_send_action_valist (GUPnPServiceProxy *proxy,
         if (!gupnp_service_proxy_end_action_valist (proxy,
                                                     handle,
                                                     error,
-                                                    var_args))
+                                                    handle->var_args))
                 return FALSE;
 
         return TRUE;
@@ -380,7 +410,7 @@ gupnp_service_proxy_begin_action_valist
         /* Create message */
         control_url = gupnp_service_info_get_control_url
                                         (GUPNP_SERVICE_INFO (proxy));
-        msg = soup_soap_message_new ("POST",
+        msg = soup_soap_message_new (SOUP_METHOD_POST,
 				     control_url,
 				     FALSE, NULL, NULL, NULL);
         g_free (control_url);
@@ -390,7 +420,7 @@ gupnp_service_proxy_begin_action_valist
         /* Specify action */
         service_type = gupnp_service_info_get_service_type
                                         (GUPNP_SERVICE_INFO (proxy));
-        full_action = g_strdup_printf ("%s#%s", service_type, action);
+        full_action = g_strdup_printf ("\"%s#%s\"", service_type, action);
         soup_message_add_header (SOUP_MESSAGE (msg)->request_headers,
 				 "SOAPAction",
                                  full_action);
@@ -488,6 +518,9 @@ gupnp_service_proxy_begin_action_valist
         proxy->priv->pending_actions =
                 g_list_prepend (proxy->priv->pending_actions, ret);
 
+        /* We keep our own reference to the message as well */
+        g_object_ref (msg);
+
         /* Send the message */
         context = gupnp_service_info_get_context (GUPNP_SERVICE_INFO (proxy));
         session = _gupnp_context_get_session (context);
@@ -497,6 +530,9 @@ gupnp_service_proxy_begin_action_valist
                                     (SoupMessageCallbackFn)
                                         action_got_response,
                                     ret);
+
+        /* Save the current position in the va_list for send_action_valist() */
+        ret->var_args = var_args;
 
         return ret;
 }
@@ -556,7 +592,6 @@ gupnp_service_proxy_end_action_valist (GUPnPServiceProxy       *proxy,
 {
         SoupMessage *soup_msg;
         SoupSoapResponse *response;
-	SoupSoapParameter *param;
         const char *arg_name;
 
         g_return_val_if_fail (GUPNP_IS_SERVICE_PROXY (proxy), FALSE);
@@ -600,33 +635,19 @@ gupnp_service_proxy_end_action_valist (GUPnPServiceProxy       *proxy,
                 return FALSE;
 	}
 
-        /* Action element */
-	param = soup_soap_response_get_first_parameter (response);
-        if (!param) {
-                g_set_error (error,
-                             GUPNP_ERROR_QUARK,
-                             0,
-                             "Could not take first paramater of SOAP response");
-                
-                gupnp_service_proxy_action_free (action);
-
-                g_object_unref (response);
-
-                return FALSE;
-        }
-
         /* Arguments */
         arg_name = va_arg (var_args, const char *);
         while (arg_name) {
                 GType arg_type;
-                GValue value = { 0, }, string_value = { 0, };
-                SoupSoapParameter *child;
+                GValue value = { 0, }, int_value = { 0, };
+                SoupSoapParameter *param;
                 char *copy_error = NULL;
                 char *str;
+                int i;
 
-                child = soup_soap_parameter_get_first_child_by_name (param,
-                                                                     arg_name);
-                if (!child) {
+                param = soup_soap_response_get_first_parameter_by_name
+                                                        (response, arg_name);
+                if (!param) {
                         g_set_error (error,
                                      GUPNP_ERROR_QUARK,
                                      0,
@@ -640,32 +661,45 @@ gupnp_service_proxy_end_action_valist (GUPnPServiceProxy       *proxy,
                         return FALSE;
                 }
 
-                str = soup_soap_parameter_get_string_value (child);
-
-                g_value_init (&string_value, G_TYPE_STRING);
-                g_value_set_string_take_ownership (&string_value, str);
-
                 arg_type = va_arg (var_args, GType);
+
                 g_value_init (&value, arg_type);
 
-                if (!g_value_transform (&string_value, &value)) {
-                        g_set_error (error,
-                                     GUPNP_ERROR_QUARK,
-                                     0,
-                                     "Failed to transform string value "
-                                     "to type %s", g_type_name (arg_type));
+                switch (arg_type) {
+                case G_TYPE_STRING:
+                        str = soup_soap_parameter_get_string_value (param);
 
-                        g_value_unset (&string_value);
-                        g_value_unset (&value);
+                        g_value_set_string_take_ownership (&value, str);
 
-                        gupnp_service_proxy_action_free (action);
+                        break;
+                default:
+                        i = soup_soap_parameter_get_int_value (param);
 
-                        g_object_unref (response);
+                        g_value_init (&int_value, G_TYPE_INT);
+                        g_value_set_int (&int_value, i);
 
-                        return FALSE;
+                        if (!g_value_transform (&int_value, &value)) {
+                                g_set_error (error,
+                                             GUPNP_ERROR_QUARK,
+                                             0,
+                                             "Failed to transform string value "
+                                             "to type %s",
+                                             g_type_name (arg_type));
+
+                                g_value_unset (&int_value);
+                                g_value_unset (&value);
+
+                                gupnp_service_proxy_action_free (action);
+
+                                g_object_unref (response);
+
+                                return FALSE;
+                        }
+
+                        g_value_unset (&int_value);
+
+                        break;
                 }
-
-                g_value_unset (&string_value);
                 
                 G_VALUE_LCOPY (&value, var_args, 0, &copy_error);
                 if (copy_error) {
@@ -854,6 +888,7 @@ gupnp_service_proxy_new (GUPnPContext *context,
                          const char   *location)
 {
         GUPnPServiceProxy *proxy;
+        xmlNode *url_base_element;
 
         g_return_val_if_fail (doc, NULL);
         g_return_val_if_fail (type, NULL);
@@ -890,6 +925,17 @@ gupnp_service_proxy_new (GUPnPContext *context,
                 proxy = NULL;
         }
 
+        /* Save the URL base, if any */
+        url_base_element =
+                xml_util_get_element ((xmlNode *) doc,
+                                      "root",
+                                      "URLBase",
+                                      NULL);
+        if (url_base_element != NULL)
+                proxy->priv->url_base = xmlNodeGetContent (url_base_element);
+        else
+                proxy->priv->url_base = NULL;
+
         return proxy;
 }
 
@@ -899,15 +945,17 @@ gupnp_service_proxy_new (GUPnPContext *context,
  * @element: The #xmlNode ponting to the right service element
  * @location: The location of the service description file
  * @udn: The UDN of the device the service is contained in
+ * @url_base: The URL base for this service, or NULL if none
  *
  * Return value: A #GUPnPServiceProxy for the service with element @element, as
  * read from the service description file specified by @location.
  **/
 GUPnPServiceProxy *
-_gupnp_service_proxy_new_from_element (GUPnPContext *context,
-                                       xmlNode      *element,
-                                       const char   *udn,
-                                       const char   *location)
+_gupnp_service_proxy_new_from_element (GUPnPContext  *context,
+                                       xmlNode       *element,
+                                       const char    *udn,
+                                       const char    *location,
+                                       const xmlChar *url_base)
 {
         GUPnPServiceProxy *proxy;
 
@@ -920,6 +968,11 @@ _gupnp_service_proxy_new_from_element (GUPnPContext *context,
                               NULL);
 
         proxy->priv->element = element;
+
+        if (url_base != NULL)
+                proxy->priv->url_base = xmlStrdup (url_base);
+        else
+                proxy->priv->url_base = NULL;
 
         return proxy;
 }

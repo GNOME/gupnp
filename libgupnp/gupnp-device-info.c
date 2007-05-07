@@ -380,13 +380,13 @@ typedef struct {
         int      width;
         int      height;
         int      depth;
-        xmlChar *url;
+        char    *url;
 
         int      weight;
 } Icon;
 
 static Icon *
-icon_parse (xmlNode *element)
+icon_parse (GUPnPDeviceInfo *info, xmlNode *element)
 {
         Icon *icon;
         xmlNode *prop;
@@ -416,8 +416,29 @@ icon_parse (xmlNode *element)
                 icon->width = -1;
         
         prop = xml_util_get_element (element, "url", NULL);
-        if (prop)
-                icon->url = xmlNodeGetContent (prop);
+        if (prop) {
+                xmlChar *url;
+
+                url = xmlNodeGetContent (prop);
+                if (url) {
+                        GUPnPDeviceInfoClass *class;
+                        const char *url_base;
+
+                        class = GUPNP_DEVICE_INFO_GET_CLASS (info);
+
+                        url_base = class->get_url_base (info);
+
+                        if (url_base != NULL) {
+                                icon->url = g_build_path ("/",
+                                                          url_base,
+                                                          (const char *) url,
+                                                          NULL);
+                        } else
+                                icon->url = g_strdup ((const char *) url);
+
+                        xmlFree (url);
+                }
+        }
 
         return icon;
 }
@@ -427,8 +448,8 @@ icon_free (Icon *icon)
 {
         if (icon->mime_type)
                 xmlFree (icon->mime_type);
-        if (icon->url)
-                xmlFree (icon->url);
+
+        g_free (icon->url);
 
         g_slice_free (Icon, icon);
 }
@@ -490,7 +511,7 @@ gupnp_device_info_get_icon_url (GUPnPDeviceInfo *info,
                 if (!strcmp ("icon", (char *) element->name)) {
                         gboolean mime_type_ok;
 
-                        icon = icon_parse (element);
+                        icon = icon_parse (info, element);
 
                         if (requested_mime_type) {
                                 mime_type_ok =

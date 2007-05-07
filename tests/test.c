@@ -62,6 +62,32 @@ service_proxy_available_cb (GUPnPControlPoint *cp,
         char *type;
 
         type = gupnp_service_info_get_service_type (GUPNP_SERVICE_INFO (proxy));
+        if (strcmp (type, "urn:schemas-upnp-org:service:ContentDirectory:1") == 0) {
+                char *result = NULL;;
+                guint count, total;
+                GError *error = NULL;
+                gupnp_service_proxy_send_action (proxy,
+                                                 "Browse",
+                                                 &error,
+                                                 "ObjectID", G_TYPE_STRING, "0",
+                                                 "BrowseFlag", G_TYPE_STRING, "BrowseDirectChildren",
+                                                 "Filter", G_TYPE_STRING, "*",
+                                                 "StartingIndex", G_TYPE_UINT, 0,
+                                                 "RequestedCount", G_TYPE_UINT, 0,
+                                                 "SortCriteria", G_TYPE_STRING, "",
+                                                 NULL,
+                                                 "Result", G_TYPE_STRING ,&result,
+                                                 "NumberReturned", G_TYPE_UINT, &count,
+                                                 "TotalMatches", G_TYPE_UINT, &total,
+                                                 NULL);
+                if (error) {
+                        g_printerr ("Error: %s\n", error->message);
+                        g_error_free (error);
+                }
+
+                                                 
+                g_print ("res: %s\n", result);
+        }
         g_print ("Service available with type: %s\n", type);
         g_free (type);
 }
@@ -92,7 +118,7 @@ main (int argc, char **argv)
                 return 1;
         }
 
-        cp = gupnp_control_point_new (context, "upnp:rootdevice");
+        cp = gupnp_control_point_new (context, "ssdp:all");
 
         g_signal_connect (cp,
                           "device-proxy-available",

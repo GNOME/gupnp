@@ -256,6 +256,36 @@ get_property (GUPnPServiceInfo *info,
                 return NULL;
 }
 
+static char *
+get_url_property (GUPnPServiceInfo *info,
+                  const char       *element_name)
+{
+        GUPnPServiceInfoClass *class;
+        const char *url_base;
+        char *prop;
+
+        class = GUPNP_SERVICE_INFO_GET_CLASS (info);
+
+        g_return_val_if_fail (class->get_element, NULL);
+        url_base = class->get_url_base (info);
+
+        prop = get_property (info, element_name);
+
+        if (url_base != NULL) {
+                char *full_url;
+
+                full_url = g_build_path ("/",
+                                         url_base,
+                                         (const char *) prop,
+                                         NULL);
+
+                g_free (prop);
+
+                return full_url;
+        } else
+                return prop;
+}
+
 /**
  * gupnp_service_info_get_service_type
  * @info: A #GUPnPServiceInfo
@@ -289,7 +319,7 @@ gupnp_service_info_get_id (GUPnPServiceInfo *info)
 char *
 gupnp_service_info_get_scpd_url (GUPnPServiceInfo *info)
 {
-        return get_property (info, "SCPDURL");
+        return get_url_property (info, "SCPDURL");
 }
 
 /**
@@ -301,7 +331,7 @@ gupnp_service_info_get_scpd_url (GUPnPServiceInfo *info)
 char *
 gupnp_service_info_get_control_url (GUPnPServiceInfo *info)
 {
-        return get_property (info, "controlURL");
+        return get_url_property (info, "controlURL");
 }
 
 /**
@@ -313,5 +343,5 @@ gupnp_service_info_get_control_url (GUPnPServiceInfo *info)
 char *
 gupnp_service_info_get_event_subscription_url (GUPnPServiceInfo *info)
 {
-        return get_property (info, "eventSubURL");
+        return get_url_property (info, "eventSubURL");
 }

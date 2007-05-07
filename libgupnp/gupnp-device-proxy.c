@@ -27,10 +27,11 @@
 #include "xml-util.h"
 
 static GUPnPDeviceProxy *
-_gupnp_device_proxy_new_from_element (GUPnPContext *context,
-                                      xmlNode      *element,
-                                      const char   *udn,
-                                      const char   *location);
+_gupnp_device_proxy_new_from_element (GUPnPContext  *context,
+                                      xmlNode       *element,
+                                      const char    *udn,
+                                      const char    *location,
+                                      const xmlChar *url_base);
 
 G_DEFINE_TYPE (GUPnPDeviceProxy,
                gupnp_device_proxy,
@@ -38,7 +39,20 @@ G_DEFINE_TYPE (GUPnPDeviceProxy,
 
 struct _GUPnPDeviceProxyPrivate {
         xmlNode *element;
+
+        xmlChar *url_base;
 };
+
+static void
+gupnp_device_proxy_finalize (GObject *object)
+{
+        GUPnPDeviceProxy *proxy;
+        
+        proxy = GUPNP_DEVICE_PROXY (object);
+
+        if (proxy->priv->element)
+                xmlFree (proxy->priv->element);
+}
 
 static xmlNode *
 gupnp_device_proxy_get_element (GUPnPDeviceInfo *info)
@@ -48,6 +62,16 @@ gupnp_device_proxy_get_element (GUPnPDeviceInfo *info)
         proxy = GUPNP_DEVICE_PROXY (info);
 
         return proxy->priv->element;
+}
+
+static const char *
+gupnp_device_proxy_get_url_base (GUPnPDeviceInfo *info)
+{
+        GUPnPDeviceProxy *proxy;
+        
+        proxy = GUPNP_DEVICE_PROXY (info);
+
+        return (const char *) proxy->priv->url_base;
 }
 
 static void
@@ -61,11 +85,17 @@ gupnp_device_proxy_init (GUPnPDeviceProxy *proxy)
 static void
 gupnp_device_proxy_class_init (GUPnPDeviceProxyClass *klass)
 {
+        GObjectClass *object_class;
         GUPnPDeviceInfoClass *info_class;
+
+        object_class = G_OBJECT_CLASS (klass);
+
+        object_class->finalize = gupnp_device_proxy_finalize;
 
         info_class = GUPNP_DEVICE_INFO_CLASS (klass);
 
-        info_class->get_element = gupnp_device_proxy_get_element;
+        info_class->get_element  = gupnp_device_proxy_get_element;
+        info_class->get_url_base = gupnp_device_proxy_get_url_base;
        
         g_type_class_add_private (klass, sizeof (GUPnPDeviceProxyPrivate));
 }
@@ -111,7 +141,8 @@ gupnp_device_proxy_list_devices (GUPnPDeviceProxy *proxy)
                                                 (context,
                                                  element,
                                                  udn,
-                                                 location);
+                                                 location,
+                                                 proxy->priv->url_base);
 
                         devices = g_list_prepend (devices, child);
                 }
@@ -225,7 +256,8 @@ gupnp_device_proxy_get_device (GUPnPDeviceProxy *proxy,
                                                        (context,
                                                         element,
                                                         udn,
-                                                        location);
+                                                        location,
+                                                        proxy->priv->url_base);
                         }
 
                         xmlFree (type_str);
@@ -279,7 +311,8 @@ gupnp_device_proxy_list_services (GUPnPDeviceProxy *proxy)
                                                 (context,
                                                  element,
                                                  udn,
-                                                 location);
+                                                 location,
+                                                 proxy->priv->url_base);
 
                         services = g_list_prepend (services, service);
                 }
@@ -394,7 +427,8 @@ gupnp_device_proxy_get_service (GUPnPDeviceProxy *proxy,
                                                         (context,
                                                          element,
                                                          udn,
-                                                         location);
+                                                         location,
+                                                         proxy->priv->url_base);
                         }
 
                         xmlFree (type_str);
@@ -469,6 +503,7 @@ gupnp_device_proxy_new (GUPnPContext *context,
                         const char   *location)
 {
         GUPnPDeviceProxy *proxy;
+        xmlNode *url_base_element;
 
         proxy = g_object_new (GUPNP_TYPE_DEVICE_PROXY,
                               "context", context,
@@ -496,6 +531,17 @@ gupnp_device_proxy_new (GUPnPContext *context,
                 proxy = NULL;
         }
 
+        /* Save the URL base, if any */
+        url_base_element =
+                xml_util_get_element ((xmlNode *) doc,
+                                      "root",
+                                      "URLBase",
+                                      NULL);
+        if (url_base_element != NULL)
+                proxy->priv->url_base = xmlNodeGetContent (url_base_element);
+        else
+                proxy->priv->url_base = NULL;
+
         return proxy;
 }
 
@@ -503,17 +549,19 @@ gupnp_device_proxy_new (GUPnPContext *context,
  * _gupnp_device_proxy_new_from_element
  * @context: A #GUPnPContext
  * @element: The #xmlNode ponting to the right device element
- * @udn: The UDN of the device to create a proxy for.
+ * @udn: The UDN of the device to create a proxy for
  * @location: The location of the device description file
+ * @url_base: The URL base for this device, or NULL if none
  *
  * Return value: A #GUPnPDeviceProxy for the device with element @element, as
  * read from the device description file specified by @location.
  **/
 static GUPnPDeviceProxy *
-_gupnp_device_proxy_new_from_element (GUPnPContext *context,
-                                      xmlNode      *element,
-                                      const char   *udn,
-                                      const char   *location)
+_gupnp_device_proxy_new_from_element (GUPnPContext  *context,
+                                      xmlNode       *element,
+                                      const char    *udn,
+                                      const char    *location,
+                                      const xmlChar *url_base)
 {
         GUPnPDeviceProxy *proxy;
 
@@ -526,6 +574,11 @@ _gupnp_device_proxy_new_from_element (GUPnPContext *context,
                               NULL);
 
         proxy->priv->element = element;
+
+        if (url_base != NULL)
+                proxy->priv->url_base = xmlStrdup (url_base);
+        else
+                proxy->priv->url_base = NULL;
 
         return proxy;
 }

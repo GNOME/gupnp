@@ -1,5 +1,44 @@
 2007-05-07  Jorn Baayen  <jorn@openedhand.com>
 
+	* libgupnp/gupnp-device-info.c: (icon_parse), (icon_free),
+	(gupnp_device_info_get_icon_url):
+	* libgupnp/gupnp-device-info.h:
+	* libgupnp/gupnp-device-proxy.c: (gupnp_device_proxy_finalize),
+	(gupnp_device_proxy_get_element),
+	(gupnp_device_proxy_get_url_base), (gupnp_device_proxy_init),
+	(gupnp_device_proxy_list_devices), (gupnp_device_proxy_get_device),
+	(gupnp_device_proxy_list_services),
+	(gupnp_device_proxy_get_service),
+	(_gupnp_device_proxy_find_element_for_udn),
+	(gupnp_device_proxy_new), (_gupnp_device_proxy_new_from_element):
+	* libgupnp/gupnp-service-info.c: (get_property),
+	(gupnp_service_info_get_service_type), (gupnp_service_info_get_id),
+	(gupnp_service_info_get_scpd_url),
+	(gupnp_service_info_get_control_url):
+	* libgupnp/gupnp-service-info.h:
+	* libgupnp/gupnp-service-proxy-private.h:
+	* libgupnp/gupnp-service-proxy.c:
+	(gupnp_service_proxy_action_free),
+	(gupnp_service_proxy_get_element),
+	(gupnp_service_proxy_get_property), (gupnp_service_proxy_dispose),
+	(gupnp_service_proxy_finalize), (gupnp_service_proxy_class_init),
+	(gupnp_service_proxy_send_action_valist),
+	(gupnp_service_proxy_begin_action_valist),
+	(gupnp_service_proxy_end_action),
+	(gupnp_service_proxy_end_action_valist),
+	(find_service_element_for_type), (gupnp_service_proxy_new),
+	(_gupnp_service_proxy_new_from_element):
+
+	Take URLBase into account.
+	Make sending actions and parsing action responses work correctly.
+
+	* tests/test.c: (service_proxy_available_cb),
+	(service_proxy_unavailable_cb), (main):
+
+	Add a little control test case for ContentDirectories.
+
+2007-05-07  Jorn Baayen  <jorn@openedhand.com>
+
 	* libgupnp/gupnp-control-point.c: (description_loaded),
 	(parse_usn):
 
