@@ -160,20 +160,17 @@ description_loaded (GUPnPControlPoint *control_point,
 {
         GUPnPContext *context;
         gboolean ret;
-        char *full_udn;
 
         context = gupnp_control_point_get_context (control_point);
 
         ret = FALSE;
-
-        full_udn = g_strdup_printf ("uuid:%s", udn);
 
         if (service_type) {
                 GUPnPServiceProxy *proxy;
 
                 proxy = gupnp_service_proxy_new (context,
                                                  doc,
-                                                 full_udn,
+                                                 udn,
                                                  service_type,
                                                  description_url);
                 if (proxy) {
@@ -193,7 +190,7 @@ description_loaded (GUPnPControlPoint *control_point,
 
                 proxy = gupnp_device_proxy_new (context,
                                                 doc,
-                                                full_udn,
+                                                udn,
                                                 description_url);
                 if (proxy) {
                         control_point->priv->devices =
@@ -208,8 +205,6 @@ description_loaded (GUPnPControlPoint *control_point,
                         ret = TRUE;
                 }
         }
-
-        g_free (full_udn);
 
         return ret;
 }
@@ -332,51 +327,50 @@ parse_usn (const char *usn,
         } 
 
         /* Parse USN */
-        bits = g_strsplit (usn, ":", -1);
+        bits = g_strsplit (usn, "::", -1);
 
         /* Count elements */
         for (count = 0; bits[count]; count++);
         
-        if (count < 1) {
-                g_warning ("Invalid USN: %s", usn);
-
-        } else if (count == 1) {
+        if (count == 1) {
                 /* uuid:device-UUID */
 
-                *udn = bits[1];
+                *udn = bits[0];
 
                 ret = TRUE;
 
-        } else if (count == 5) {
-                /* uuid:device-UUID::upnp:rootdevice */
+        } else if (count == 2) {
+                char **second_bits;
 
-                if (!strcmp (bits[3], "upnp") &&
-                    !strcmp (bits[4], "rootdevice")) {
-                        *udn = bits[1];
+                second_bits = g_strsplit (bits[1], ":", -1);
+
+                if (!strcmp (second_bits[0], "upnp") &&
+                    !strcmp (second_bits[1], "rootdevice")) {
+                        /* uuid:device-UUID::upnp:rootdevice */
+
+                        *udn = bits[0];
 
                         ret = TRUE;
-                } else
-                        g_warning ("Invalid USN: %s", usn);
+                } else if (!strcmp (second_bits[0], "urn")) {
+                        /* uuid:device-IID::urn:domain-name:service/device:
+                         * type:v */
 
-        } else if (count == 8) {
-                /* uuid:device-IID::urn:domain-name:service/device:type:v */
-                
-                if (!strcmp (bits[3], "urn")) {
-                        if (!strcmp (bits[5], "device")) {
-                                *udn = bits[1];
+                        if (!strcmp (second_bits[2], "device")) {
+                                *udn = bits[0];
 
                                 ret = TRUE;
-                        } else if (!strcmp (bits[5], "service")) {
-                                *udn = bits[1];
-                                *service_type = bits[6];
+                        } else if (!strcmp (second_bits[2], "service")) {
+                                *udn = bits[0];
+                                *service_type = bits[1];
 
                                 ret = TRUE;
-                        } else
-                                g_warning ("Invalid USN: %s", usn);
-                } else
-                        g_warning ("Invalid USN: %s", usn);
+                        } 
+                }
 
-        } else
+                g_strfreev (second_bits);
+        }
+
+        if (*udn == NULL)
                 g_warning ("Invalid USN: %s", usn);
 
         for (i = 0; i < count; i++) {

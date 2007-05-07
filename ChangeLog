@@ -1,3 +1,15 @@
+2007-05-07  Jorn Baayen  <jorn@openedhand.com>
+
+	* libgupnp/gupnp-control-point.c: (description_loaded),
+	(parse_usn):
+
+	Correct USN parsing.
+
+	* libgupnp/gupnp-service-proxy.c:
+	(gupnp_service_proxy_begin_action_valist):
+
+	Added assertion.
+
 2007-05-03  Jorn Baayen  <jorn@openedhand.com>
 
 	* libgupnp/gupnp-control-point.c: (parse_usn),

@@ -385,6 +385,8 @@ gupnp_service_proxy_begin_action_valist
 				     FALSE, NULL, NULL, NULL);
         g_free (control_url);
 
+        g_assert (msg != NULL);
+
         /* Specify action */
         service_type = gupnp_service_info_get_service_type
                                         (GUPNP_SERVICE_INFO (proxy));
