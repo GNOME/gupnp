@@ -1,5 +1,12 @@
 2007-05-08  Jorn Baayen  <jorn@openedhand.com>
 
+	* libgupnp/gupnp-service-proxy.c: (gupnp_service_proxy_dispose),
+	(subscribe), (unsubscribe), (gupnp_service_proxy_set_subscribed):
+
+	Send unsubscription message synchronised on dispose.
+
+2007-05-08  Jorn Baayen  <jorn@openedhand.com>
+
 	* libgupnp/gupnp-context.c: (gupnp_context_init),
 	(gupnp_context_set_property), (gupnp_context_get_property),
 	(gupnp_context_class_init), (_gupnp_context_get_server_url),

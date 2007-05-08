@@ -79,6 +79,8 @@ struct _GUPnPServiceProxyAction {
 static void
 subscribe_got_response (SoupMessage       *msg,
                         GUPnPServiceProxy *proxy);
+static void
+unsubscribe (GUPnPServiceProxy *proxy, gboolean sync);
 
 static void
 gupnp_service_proxy_action_free (GUPnPServiceProxyAction *action)
@@ -177,8 +179,14 @@ gupnp_service_proxy_dispose (GObject *object)
                 gupnp_service_proxy_cancel_action (proxy, action);
         }
 
-        /* Unsubscribe XXX synchronise? */
-        gupnp_service_proxy_set_subscribed (proxy, FALSE);
+        /* Unsubscribe */
+        if (proxy->priv->subscribed) {
+                /* We force unsubscribe to be sync as we want to make sure
+                 * the message is sent before the application quits. */
+                unsubscribe (proxy, TRUE);
+
+                proxy->priv->subscribed = FALSE;
+        }
 }
 
 static void
@@ -993,7 +1001,7 @@ subscribe (GUPnPServiceProxy *proxy)
  * Unsubscribe from this service.
  **/
 static void
-unsubscribe (GUPnPServiceProxy *proxy)
+unsubscribe (GUPnPServiceProxy *proxy, gboolean sync)
 {
         GUPnPContext *context;
         SoupMessage *msg;
@@ -1021,10 +1029,10 @@ unsubscribe (GUPnPServiceProxy *proxy)
         /* And send it off */
         session = _gupnp_context_get_session (context);
 
-        soup_session_queue_message (session,
-                                    msg,
-                                    NULL,
-                                    NULL);
+        if (sync)
+                soup_session_send_message (session, msg);
+        else
+                soup_session_queue_message (session, msg, NULL, NULL);
         
         /* Reset SID */
         g_free (proxy->priv->sid);
@@ -1041,6 +1049,11 @@ unsubscribe (GUPnPServiceProxy *proxy)
  * @subscribed: TRUE to subscribe to this service
  *
  * (Un)subscribes to this service.
+ *
+ * Note that the relevant messages are not immediately sent but queued.
+ * If you want to unsubcribe from this service because the application
+ * is quitting, rely on automatic synchronised unsubscription on object
+ * destruction instead.
  **/
 void
 gupnp_service_proxy_set_subscribed (GUPnPServiceProxy *proxy,
@@ -1054,7 +1067,7 @@ gupnp_service_proxy_set_subscribed (GUPnPServiceProxy *proxy,
         if (subscribed)
                 subscribe (proxy);
         else
-                unsubscribe (proxy);
+                unsubscribe (proxy, FALSE);
 
         proxy->priv->subscribed = subscribed;
 
