@@ -1,5 +1,11 @@
 2007-05-08  Jorn Baayen  <jorn@openedhand.com>
 
+	* libgupnp/gupnp-service-proxy.c: (subscribe_got_response):
+
+	Support infinite timeouts.
+
+2007-05-08  Jorn Baayen  <jorn@openedhand.com>
+
 	* libgupnp/Makefile.am:
 	* libgupnp/gupnp-device-proxy.c:
 	* libgupnp/gupnp-service-proxy.c: (gupnp_service_proxy_dispose),

@@ -907,20 +907,24 @@ subscribe_got_response (SoupMessage       *msg,
                         return;
                 }
 
-                timeout += atoi (hdr);
-                if (timeout < 0) {
-                        g_warning ("Date specified in SUBSCRIBE response is "
-                                   "too far in the past. Assuming default "
-                                   "time-out of %d.", GENA_DEFAULT_TIMEOUT);
+                if (strcmp (hdr, "infinite") != 0) {
+                        /* We have a finite timeout */
+                        timeout += atoi (hdr);
+                        if (timeout < 0) {
+                                g_warning ("Date specified in SUBSCRIBE "
+                                           "response is too far in the past. "
+                                           "Assuming default time-out of %d.",
+                                           GENA_DEFAULT_TIMEOUT);
 
-                        timeout = GENA_DEFAULT_TIMEOUT;
+                                timeout = GENA_DEFAULT_TIMEOUT;
+                        }
+
+                        /* Add actual timeout */
+                        proxy->priv->subscription_timeout_id =
+                                g_timeout_add (timeout * 1000,
+                                               subscription_expire,
+                                               proxy);
                 }
-
-                /* Add actual timeout */
-                proxy->priv->subscription_timeout_id =
-                        g_timeout_add (timeout * 1000,
-                                       subscription_expire,
-                                       proxy);
         } else {
                 /* Subscription failed. */
                 g_warning ("Subscription failed: %d", msg->status_code);
