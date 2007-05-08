@@ -1,3 +1,20 @@
+2007-05-08  Jorn Baayen  <jorn@openedhand.com>
+
+	* libgupnp/gupnp-context-private.h:
+	* libgupnp/gupnp-context.c: (make_server_id), (get_ip),
+	(get_default_host_ip), (gupnp_context_init),
+	(gupnp_context_set_property), (gupnp_context_get_property),
+	(gupnp_context_dispose), (gupnp_context_finalize),
+	(gupnp_context_class_init), (_gupnp_context_get_session):
+	* libgupnp/gupnp-context.h:
+
+	Start a SOAP server on demand, and add internal API for
+	retrieving a URL to the server itself.
+
+	* tests/test.c: (main):
+
+	Updated to use changed GUPnPContext constructor.
+
 2007-05-07  Jorn Baayen  <jorn@openedhand.com>
 
 	* libgupnp/gupnp-device-info.c: (icon_parse), (icon_free),

@@ -110,7 +110,7 @@ main (int argc, char **argv)
         g_type_init ();
 
         error = NULL;
-        context = gupnp_context_new (NULL, &error);
+        context = gupnp_context_new (NULL, NULL, 0, &error);
         if (error) {
                 g_error (error->message);
                 g_error_free (error);
