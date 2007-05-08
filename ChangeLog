@@ -1,5 +1,18 @@
 2007-05-08  Jorn Baayen  <jorn@openedhand.com>
 
+	* libgupnp/gupnp-context.c: (gupnp_context_init),
+	(gupnp_context_set_property), (gupnp_context_get_property),
+	(gupnp_context_class_init), (_gupnp_context_get_server_url),
+	(gupnp_context_new):
+	* libgupnp/gupnp-context.h:
+	* libgupnp/gupnp-service-proxy.c: (subscription_expire),
+	(subscribe_got_response), (subscribe):
+
+	Added subscription-timeout property to Context and use in
+	ServiceProxy.
+
+2007-05-08  Jorn Baayen  <jorn@openedhand.com>
+
 	* libgupnp/gupnp-service-proxy.c: (subscribe_got_response):
 
 	Support infinite timeouts.

@@ -808,7 +808,8 @@ subscription_expire (gpointer user_data)
         GUPnPContext *context;
         SoupMessage *msg;
         SoupSession *session;
-        char *sub_url, *timeout;
+        char *sub_url, *timeout_str;
+        guint timeout;
 
         proxy = GUPNP_SERVICE_PROXY (user_data);
 
@@ -831,11 +832,12 @@ subscription_expire (gpointer user_data)
                                  "SID",
                                  proxy->priv->sid);
 
-        timeout = g_strdup_printf ("%d", GENA_DEFAULT_TIMEOUT); /* XXX */
+        timeout = gupnp_context_get_subscription_timeout (context);
+        timeout_str = g_strdup_printf ("Second-%d", timeout);
         soup_message_add_header (msg->request_headers,
                                  "Timeout",
-                                 timeout);
-        g_free (timeout);
+                                 timeout_str);
+        g_free (timeout_str);
 
         /* And send it off */
         session = _gupnp_context_get_session (context);
@@ -907,9 +909,9 @@ subscribe_got_response (SoupMessage       *msg,
                         return;
                 }
 
-                if (strcmp (hdr, "infinite") != 0) {
+                if (strncmp (hdr, "Second-", strlen ("Second-")) == 0) {
                         /* We have a finite timeout */
-                        timeout += atoi (hdr);
+                        timeout += atoi (hdr + strlen ("Second-"));
                         if (timeout < 0) {
                                 g_warning ("Date specified in SUBSCRIBE "
                                            "response is too far in the past. "
@@ -945,7 +947,8 @@ subscribe (GUPnPServiceProxy *proxy)
         SoupMessage *msg;
         SoupSession *session;
         const char *server_url;
-        char *sub_url, *delivery_url, *timeout;
+        char *sub_url, *delivery_url, *timeout_str;
+        guint timeout;
 
         context = gupnp_service_info_get_context (GUPNP_SERVICE_INFO (proxy));
 
@@ -969,11 +972,12 @@ subscribe (GUPnPServiceProxy *proxy)
                                  "NT",
                                  "upnp:event");
 
-        timeout = g_strdup_printf ("%d", GENA_DEFAULT_TIMEOUT); /* XXX */
+        timeout = gupnp_context_get_subscription_timeout (context);
+        timeout_str = g_strdup_printf ("Second-%d", timeout);
         soup_message_add_header (msg->request_headers,
                                  "Timeout",
-                                 timeout);
-        g_free (timeout);
+                                 timeout_str);
+        g_free (timeout_str);
 
         /* And send it off */
         session = _gupnp_context_get_session (context);

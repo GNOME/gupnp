@@ -36,6 +36,7 @@
 
 #include "gupnp-context.h"
 #include "gupnp-context-private.h"
+#include "gena-protocol.h"
 
 G_DEFINE_TYPE (GUPnPContext,
                gupnp_context,
@@ -44,6 +45,8 @@ G_DEFINE_TYPE (GUPnPContext,
 struct _GUPnPContextPrivate {
         char        *host_ip;
         guint        port;
+
+        guint        subscription_timeout;
 
         SoupSession *session;
 
@@ -54,7 +57,8 @@ struct _GUPnPContextPrivate {
 enum {
         PROP_0,
         PROP_HOST_IP,
-        PROP_PORT
+        PROP_PORT,
+        PROP_SUBSCRIPTION_TIMEOUT
 };
 
 #define LOOPBACK_IP "127.0.0.1"
@@ -168,6 +172,8 @@ gupnp_context_init (GUPnPContext *context)
         context->priv->host_ip = NULL;
         context->priv->port    = SOUP_ADDRESS_ANY_PORT;
 
+        context->priv->subscription_timeout = GENA_DEFAULT_TIMEOUT;
+
         context->priv->session = soup_session_async_new ();
 
         context->priv->server     = NULL; /* Started on demand */
@@ -195,6 +201,9 @@ gupnp_context_set_property (GObject      *object,
         case PROP_PORT:
                 context->priv->port = g_value_get_uint (value);
                 break;
+        case PROP_SUBSCRIPTION_TIMEOUT:
+                context->priv->subscription_timeout = g_value_get_uint (value);
+                break;
         default:
                 G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
                 break;
@@ -213,13 +222,17 @@ gupnp_context_get_property (GObject    *object,
 
         switch (property_id) {
         case PROP_HOST_IP:
-                if (context->priv->host_ip == NULL)
-                        context->priv->host_ip = get_default_host_ip ();
-
-                g_value_set_string (value, context->priv->host_ip);
+                g_value_set_string (value,
+                                    gupnp_context_get_host_ip (context));
                 break;
         case PROP_PORT:
-                g_value_set_uint (value, context->priv->port);
+                g_value_set_uint (value,
+                                  gupnp_context_get_port (context));
+                break;
+        case PROP_SUBSCRIPTION_TIMEOUT:
+                g_value_set_uint (value,
+                                  gupnp_context_get_subscription_timeout
+                                                                   (context));
                 break;
         default:
                 G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -287,7 +300,17 @@ gupnp_context_class_init (GUPnPContextClass *klass)
                  g_param_spec_uint ("port",
                                     "Port",
                                     "Port to run on",
-                                    0, G_MAXINT, SOUP_ADDRESS_ANY_PORT,
+                                    0, G_MAXUINT, SOUP_ADDRESS_ANY_PORT,
+                                    G_PARAM_READWRITE |
+                                    G_PARAM_CONSTRUCT_ONLY));
+
+        g_object_class_install_property
+                (object_class,
+                 PROP_SUBSCRIPTION_TIMEOUT,
+                 g_param_spec_uint ("subscription-timeout",
+                                    "Subscription timeout",
+                                    "Subscription timeout",
+                                    0, G_MAXUINT, GENA_DEFAULT_TIMEOUT,
                                     G_PARAM_READWRITE |
                                     G_PARAM_CONSTRUCT_ONLY));
 }
@@ -363,4 +386,70 @@ gupnp_context_new (GMainContext *main_context,
                              "port", port,
                              "error", error,
                              NULL);
+}
+
+/**
+ * gupnp_context_get_host_ip
+ * @context: A #GUPnPContext
+ *
+ * Return value: The IP address we advertise ourselves as using. Do not free.
+ **/
+const char *
+gupnp_context_get_host_ip (GUPnPContext *context)
+{
+        g_return_val_if_fail (GUPNP_IS_CONTEXT (context), NULL);
+
+        if (context->priv->host_ip == NULL)
+                context->priv->host_ip = get_default_host_ip ();
+
+        return context->priv->host_ip;
+}
+
+/**
+ * gupnp_context_get_port
+ * @context: A #GUPnPContext
+ *
+ * Return value: The port the SOAP server is running on.
+ **/
+guint
+gupnp_context_get_port (GUPnPContext *context)
+{
+        SoupServer *server;
+
+        g_return_val_if_fail (GUPNP_IS_CONTEXT (context), 0);
+
+        server = _gupnp_context_get_server (context);
+        return soup_server_get_port (server);
+}
+
+/**
+ * gupnp_context_set_subscription_timeout
+ * @context: A #GUPnPContext
+ * @timeout: Event subscription timeout in seconds
+ *
+ * Sets the event subscription timeout to @timeout.
+ **/
+void
+gupnp_context_set_subscription_timeout (GUPnPContext *context,
+                                        guint         timeout)
+{
+        g_return_if_fail (GUPNP_IS_CONTEXT (context));
+
+        context->priv->subscription_timeout = timeout;
+
+        g_object_notify (G_OBJECT (context), "subscription-timeout");
+}
+
+/**
+ * gupnp_context_get_subscription_timeout
+ * @context: A #GUPnPContext
+ *
+ * Return value: The event subscription timeout in seconds.
+ **/
+guint
+gupnp_context_get_subscription_timeout (GUPnPContext *context)
+{
+        g_return_val_if_fail (GUPNP_IS_CONTEXT (context), 0);
+
+        return context->priv->subscription_timeout;
 }

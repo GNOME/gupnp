@@ -69,10 +69,23 @@ typedef struct {
 } GUPnPContextClass;
 
 GUPnPContext *
-gupnp_context_new (GMainContext *main_context,
-                   const char   *host_ip,
-                   guint         port,
-                   GError      **error);
+gupnp_context_new                      (GMainContext *main_context,
+                                        const char   *host_ip,
+                                        guint         port,
+                                        GError      **error);
+
+const char *
+gupnp_context_get_host_ip              (GUPnPContext *context);
+
+guint
+gupnp_context_get_port                 (GUPnPContext *context);
+
+void
+gupnp_context_set_subscription_timeout (GUPnPContext *context,
+                                        guint         timeout);
+
+guint
+gupnp_context_get_subscription_timeout (GUPnPContext *context);
 
 G_END_DECLS
 
