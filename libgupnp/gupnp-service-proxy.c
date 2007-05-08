@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2006 OpenedHand Ltd.
+ * Copyright (C) 2006, 2007 OpenedHand Ltd.
  *
  * Author: Jorn Baayen <jorn@openedhand.com>
  *
@@ -19,15 +19,21 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#ifndef _XOPEN_SOURCE
+#define _XOPEN_SOURCE
+#endif
+
 #include <libsoup/soup-soap-message.h>
 #include <gobject/gvaluecollector.h>
 #include <string.h>
+#include <time.h>
 
 #include "gupnp-service-proxy.h"
 #include "gupnp-service-proxy-private.h"
 #include "gupnp-device-proxy-private.h"
 #include "gupnp-context-private.h"
 #include "xml-util.h"
+#include "gena-protocol.h"
 
 G_DEFINE_TYPE (GUPnPServiceProxy,
                gupnp_service_proxy,
@@ -41,6 +47,9 @@ struct _GUPnPServiceProxyPrivate {
         gboolean subscribed;
 
         GList *pending_actions;
+
+        char *sid; /* Subscription ID */
+        guint subscription_timeout_id;
 };
 
 enum {
@@ -63,11 +72,13 @@ struct _GUPnPServiceProxyAction {
         GUPnPServiceProxyActionCallback callback;
         gpointer user_data;
 
-        gboolean success;
-
         va_list var_args; /* The va_list after begin_action_valist has
                              gone through it. Used by send_action_valist(). */
 };
+
+static void
+subscribe_got_response (SoupMessage       *msg,
+                        GUPnPServiceProxy *proxy);
 
 static void
 gupnp_service_proxy_action_free (GUPnPServiceProxyAction *action)
@@ -165,6 +176,9 @@ gupnp_service_proxy_dispose (GObject *object)
                 
                 gupnp_service_proxy_cancel_action (proxy, action);
         }
+
+        /* Unsubscribe XXX synchronise? */
+        gupnp_service_proxy_set_subscribed (proxy, FALSE);
 }
 
 static void
@@ -365,8 +379,6 @@ static void
 action_got_response (SoupMessage             *msg,
                      GUPnPServiceProxyAction *action)
 {
-        action->success = SOUP_STATUS_IS_SUCCESSFUL (msg->status_code);
-
         action->callback (action->proxy, action, action->user_data);
 }
 
@@ -598,17 +610,6 @@ gupnp_service_proxy_end_action_valist (GUPnPServiceProxy       *proxy,
         g_return_val_if_fail (action, FALSE);
 
         /* Check for errors */
-        if (!action->success) {
-                g_set_error (error,
-                             GUPNP_ERROR_QUARK,
-                             0,
-                             "Failed to send action");
-                
-                gupnp_service_proxy_action_free (action);
-
-                return FALSE;
-        }
-
         soup_msg = SOUP_MESSAGE (action->msg);
 	if (!SOUP_STATUS_IS_SUCCESSFUL (soup_msg->status_code)) {
                 /* XXX full error handling */
@@ -798,6 +799,235 @@ gupnp_service_proxy_remove_notify (GUPnPServiceProxy *proxy,
 }
 
 /**
+ * Subscription expired.
+ **/
+static gboolean
+subscription_expire (gpointer user_data)
+{
+        GUPnPServiceProxy *proxy;
+        GUPnPContext *context;
+        SoupMessage *msg;
+        SoupSession *session;
+        char *sub_url, *timeout;
+
+        proxy = GUPNP_SERVICE_PROXY (user_data);
+
+        /* Reset timeout ID */
+        proxy->priv->subscription_timeout_id = 0;
+
+        /* Send renewal message */
+        context = gupnp_service_info_get_context (GUPNP_SERVICE_INFO (proxy));
+
+        /* Create subscription message */
+        sub_url = gupnp_service_info_get_event_subscription_url
+                                                (GUPNP_SERVICE_INFO (proxy));
+        msg = soup_message_new (GENA_METHOD_SUBSCRIBE, sub_url);
+        g_free (sub_url);
+
+        g_assert (msg != NULL);
+
+        /* Add headers */
+        soup_message_add_header (msg->request_headers,
+                                 "SID",
+                                 proxy->priv->sid);
+
+        timeout = g_strdup_printf ("%d", GENA_DEFAULT_TIMEOUT); /* XXX */
+        soup_message_add_header (msg->request_headers,
+                                 "Timeout",
+                                 timeout);
+        g_free (timeout);
+
+        /* And send it off */
+        session = _gupnp_context_get_session (context);
+
+        soup_session_queue_message (session,
+                                    msg,
+                                    (SoupMessageCallbackFn)
+                                        subscribe_got_response,
+                                    proxy);
+
+        return FALSE;
+}
+
+/**
+ * Received subscription response.
+ **/
+static void
+subscribe_got_response (SoupMessage       *msg,
+                        GUPnPServiceProxy *proxy)
+{
+        /* Reset SID */
+        g_free (proxy->priv->sid);
+        proxy->priv->sid = NULL;
+
+        /* Check message status */
+        if (SOUP_STATUS_IS_SUCCESSFUL (msg->status_code)) {
+                /* Success. */
+                const char *hdr;
+                int timeout = 0;
+
+                /* Save SID. */
+                hdr = soup_message_get_header (msg->response_headers, "SID");
+                if (hdr == NULL) {
+                        g_error ("No SID in SUBSCRIBE response");
+
+                        proxy->priv->subscribed = FALSE;
+
+                        g_object_notify (G_OBJECT (proxy), "subscribed");
+
+                        return;
+                }
+
+                proxy->priv->sid = g_strdup (hdr);
+
+                /* Figure out when the subscription times out */
+                hdr = soup_message_get_header (msg->response_headers, "Date");
+                if (hdr != NULL) {
+                        struct tm gen_date;
+                        time_t gen_time, cur_time;
+
+                        /* RFC 1123 date */
+                        strptime (hdr,
+                                  "%a, %d %b %Y %T %z",
+                                  &gen_date);
+                        
+                        gen_time = mktime (&gen_date);
+                        cur_time = time (NULL);
+
+                        /* Negatively offset the timeout by the difference
+                         * in times */
+                        if (gen_time < cur_time)
+                                timeout = gen_time - cur_time;
+                }
+
+                hdr = soup_message_get_header (msg->response_headers,
+                                               "Timeout");
+                if (hdr == NULL) {
+                        g_error ("No Timeout in SUBSCRIBE response");
+                        return;
+                }
+
+                timeout += atoi (hdr);
+                if (timeout < 0) {
+                        g_warning ("Date specified in SUBSCRIBE response is "
+                                   "too far in the past. Assuming default "
+                                   "time-out of %d.", GENA_DEFAULT_TIMEOUT);
+
+                        timeout = GENA_DEFAULT_TIMEOUT;
+                }
+
+                /* Add actual timeout */
+                proxy->priv->subscription_timeout_id =
+                        g_timeout_add (timeout * 1000,
+                                       subscription_expire,
+                                       proxy);
+        } else {
+                /* Subscription failed. */
+                g_warning ("Subscription failed: %d", msg->status_code);
+
+                proxy->priv->subscribed = FALSE;
+
+                g_object_notify (G_OBJECT (proxy), "subscribed");
+        }
+}
+
+/**
+ * Subscribe to this service.
+ **/
+static void
+subscribe (GUPnPServiceProxy *proxy)
+{
+        GUPnPContext *context;
+        SoupMessage *msg;
+        SoupSession *session;
+        const char *server_url;
+        char *sub_url, *delivery_url, *timeout;
+
+        context = gupnp_service_info_get_context (GUPNP_SERVICE_INFO (proxy));
+
+        /* Create subscription message */
+        sub_url = gupnp_service_info_get_event_subscription_url
+                                                (GUPNP_SERVICE_INFO (proxy));
+        msg = soup_message_new (GENA_METHOD_SUBSCRIBE, sub_url);
+        g_free (sub_url);
+
+        g_assert (msg != NULL);
+
+        /* Add headers */
+        server_url = _gupnp_context_get_server_url (context);
+        delivery_url = g_build_path ("/", server_url, GENA_NOTIFY_PATH, NULL);
+        soup_message_add_header (msg->request_headers,
+                                 "Callback",
+                                 delivery_url);
+        g_free (delivery_url);
+
+        soup_message_add_header (msg->request_headers,
+                                 "NT",
+                                 "upnp:event");
+
+        timeout = g_strdup_printf ("%d", GENA_DEFAULT_TIMEOUT); /* XXX */
+        soup_message_add_header (msg->request_headers,
+                                 "Timeout",
+                                 timeout);
+        g_free (timeout);
+
+        /* And send it off */
+        session = _gupnp_context_get_session (context);
+
+        soup_session_queue_message (session,
+                                    msg,
+                                    (SoupMessageCallbackFn)
+                                        subscribe_got_response,
+                                    proxy);
+}
+
+/**
+ * Unsubscribe from this service.
+ **/
+static void
+unsubscribe (GUPnPServiceProxy *proxy)
+{
+        GUPnPContext *context;
+        SoupMessage *msg;
+        SoupSession *session;
+        char *sub_url;
+
+        if (proxy->priv->sid == NULL)
+                return; /* No SID: nothing to unsubscribe */
+
+        context = gupnp_service_info_get_context (GUPNP_SERVICE_INFO (proxy));
+
+        /* Create unsubscription message */
+        sub_url = gupnp_service_info_get_event_subscription_url
+                                                (GUPNP_SERVICE_INFO (proxy));
+        msg = soup_message_new (GENA_METHOD_UNSUBSCRIBE, sub_url);
+        g_free (sub_url);
+
+        g_assert (msg != NULL);
+
+        /* Add headers */
+        soup_message_add_header (msg->request_headers,
+                                 "SID",
+                                 proxy->priv->sid);
+
+        /* And send it off */
+        session = _gupnp_context_get_session (context);
+
+        soup_session_queue_message (session,
+                                    msg,
+                                    NULL,
+                                    NULL);
+        
+        /* Reset SID */
+        g_free (proxy->priv->sid);
+        proxy->priv->sid = NULL;
+
+        /* Remove subscription timeout */
+        g_source_remove (proxy->priv->subscription_timeout_id);
+        proxy->priv->subscription_timeout_id = 0;
+}
+
+/**
  * gupnp_service_proxy_set_subscribed
  * @proxy: A #GUPnPServiceProxy
  * @subscribed: TRUE to subscribe to this service
@@ -809,6 +1039,14 @@ gupnp_service_proxy_set_subscribed (GUPnPServiceProxy *proxy,
                                     gboolean           subscribed)
 {
         g_return_if_fail (GUPNP_IS_SERVICE_PROXY (proxy));
+
+        if (proxy->priv->subscribed == subscribed)
+                return;
+
+        if (subscribed)
+                subscribe (proxy);
+        else
+                unsubscribe (proxy);
 
         proxy->priv->subscribed = subscribed;
 

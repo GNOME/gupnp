@@ -66,6 +66,7 @@ service_proxy_available_cb (GUPnPControlPoint *cp,
                 char *result = NULL;;
                 guint count, total;
                 GError *error = NULL;
+                gupnp_service_proxy_set_subscribed (proxy, TRUE);
                 gupnp_service_proxy_send_action (proxy,
                                                  "Browse",
                                                  &error,

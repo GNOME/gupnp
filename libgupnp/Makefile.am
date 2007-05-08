@@ -32,6 +32,7 @@ libgupnp_1_0_la_SOURCES = gupnp-context.c		\
 			  gupnp-service-proxy-private.h \
 			  xml-util.c			\
 			  xml-util.h			\
+			  gena-protocol.h		\
 			  $(BUILT_SOURCES)
 
 libgupnp_1_0_la_LIBADD = $(LIBGUPNP_LIBS)

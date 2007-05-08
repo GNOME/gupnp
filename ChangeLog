@@ -1,5 +1,22 @@
 2007-05-08  Jorn Baayen  <jorn@openedhand.com>
 
+	* libgupnp/Makefile.am:
+	* libgupnp/gupnp-device-proxy.c:
+	* libgupnp/gupnp-service-proxy.c: (gupnp_service_proxy_dispose),
+	(gupnp_service_proxy_begin_action), (action_got_response),
+	(gupnp_service_proxy_end_action_valist),
+	(gupnp_service_proxy_remove_notify), (subscription_expire),
+	(subscribe_got_response), (subscribe), (unsubscribe),
+	(gupnp_service_proxy_set_subscribed):
+
+	Implement subscription.
+
+	* tests/test.c: (service_proxy_available_cb):
+
+	Test subscription.
+
+2007-05-08  Jorn Baayen  <jorn@openedhand.com>
+
 	* libgupnp/gupnp-context-private.h:
 	* libgupnp/gupnp-context.c: (make_server_id), (get_ip),
 	(get_default_host_ip), (gupnp_context_init),
