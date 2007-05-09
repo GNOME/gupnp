@@ -1,6 +1,19 @@
 2007-05-09  Jorn Baayen  <jorn@openedhand.com>
 
 	* libgupnp/gupnp-service-proxy.c:
+	(gupnp_service_proxy_get_element),
+	(gupnp_service_proxy_get_url_base), (notify_data_free),
+	(gupnp_service_proxy_init), (gupnp_service_proxy_dispose),
+	(gupnp_service_proxy_finalize),
+	(gupnp_service_proxy_end_action_valist),
+	(gupnp_service_proxy_cancel_action):
+	* libgupnp/gupnp-service-proxy.h:
+
+	Add notification management.
+
+2007-05-09  Jorn Baayen  <jorn@openedhand.com>
+
+	* libgupnp/gupnp-service-proxy.c:
 	(gupnp_service_proxy_end_action_valist):
 
 	Correct error message.

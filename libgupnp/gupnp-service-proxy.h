@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2006 OpenedHand Ltd.
+ * Copyright (C) 2006, 2007 OpenedHand Ltd.
  *
  * Author: Jorn Baayen <jorn@openedhand.com>
  *
@@ -144,15 +144,18 @@ void
 gupnp_service_proxy_cancel_action  (GUPnPServiceProxy              *proxy,
                                     GUPnPServiceProxyAction        *action);
 
-guint
+gboolean
 gupnp_service_proxy_add_notify     (GUPnPServiceProxy              *proxy,
                                     const char                     *variable,
+                                    GType                           type,
                                     GUPnPServiceProxyNotifyCallback callback,
                                     gpointer                        user_data);
 
-void
+gboolean
 gupnp_service_proxy_remove_notify  (GUPnPServiceProxy              *proxy,
-                                    guint                           id);
+                                    const char                     *variable,
+                                    GUPnPServiceProxyNotifyCallback callback,
+                                    gpointer                        user_data);
 
 void
 gupnp_service_proxy_set_subscribed (GUPnPServiceProxy              *proxy,

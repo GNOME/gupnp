@@ -55,6 +55,8 @@ struct _GUPnPServiceProxyPrivate {
         guint subscription_timeout_id;
 
         int seq; /* Event sequence number */
+
+        GHashTable *notify_hash;
 };
 
 enum {
@@ -80,6 +82,17 @@ struct _GUPnPServiceProxyAction {
         va_list var_args; /* The va_list after begin_action_valist has
                              gone through it. Used by send_action_valist(). */
 };
+
+typedef struct {
+        GType type;
+
+        GList *callbacks;
+} NotifyData;
+
+typedef struct {
+        GUPnPServiceProxyNotifyCallback callback;
+        gpointer user_data;
+} CallbackData;
 
 static void
 subscribe_got_response (SoupMessage       *msg,
@@ -121,6 +134,14 @@ gupnp_service_proxy_get_url_base (GUPnPServiceInfo *info)
 }
 
 static void
+notify_data_free (NotifyData *data)
+{
+        g_list_free (data->callbacks);
+
+        g_slice_free (NotifyData, data);
+}
+
+static void
 gupnp_service_proxy_init (GUPnPServiceProxy *proxy)
 {
         static int proxy_counter = 0;
@@ -132,6 +153,13 @@ gupnp_service_proxy_init (GUPnPServiceProxy *proxy)
         /* Generate unique path */
         proxy->priv->path = g_strdup_printf ("/ServiceProxy%d", proxy_counter);
         proxy_counter++;
+
+        /* Set up notify hash */
+        proxy->priv->notify_hash =
+                g_hash_table_new_full (g_str_hash,
+                                       g_str_equal,
+                                       g_free,
+                                       (GDestroyNotify) notify_data_free);
 }
 
 static void
@@ -213,6 +241,8 @@ gupnp_service_proxy_finalize (GObject *object)
                 xmlFree (proxy->priv->url_base);
 
         g_free (proxy->priv->path);
+
+        g_hash_table_destroy (proxy->priv->notify_hash);
 }
 
 static void
@@ -785,40 +815,131 @@ gupnp_service_proxy_cancel_action (GUPnPServiceProxy       *proxy,
  * gupnp_service_proxy_add_notify
  * @proxy: A #GUPnPServiceProxy
  * @variable: The variable to add notification for
+ * @type: The type of the variable
  * @callback: The callback to call when @variable changes
  * @user_data: User data for @callback
  *
  * Sets up @callback to be called whenever a change notification for 
  * @variable is recieved.
  *
- * Return value: A new notification ID.
+ * Return value: TRUE on success.
  **/
-guint
+gboolean
 gupnp_service_proxy_add_notify (GUPnPServiceProxy              *proxy,
                                 const char                     *variable,
+                                GType                           type,
                                 GUPnPServiceProxyNotifyCallback callback,
                                 gpointer                        user_data)
 {
-        g_return_val_if_fail (GUPNP_IS_SERVICE_PROXY (proxy), 0);
-        g_return_val_if_fail (variable, 0);
-        g_return_val_if_fail (callback, 0);
+        NotifyData *data;
+        CallbackData *callback_data;
 
-        return 0;
+        g_return_val_if_fail (GUPNP_IS_SERVICE_PROXY (proxy), FALSE);
+        g_return_val_if_fail (variable, FALSE);
+        g_return_val_if_fail (type, FALSE);
+        g_return_val_if_fail (callback, FALSE);
+
+        /* See if we already have notifications set up for this variable */
+        data = g_hash_table_lookup (proxy->priv->notify_hash, variable);
+        if (data == NULL) {
+                /* No, create one */
+                data = g_slice_new (NotifyData);
+
+                data->type       = type;
+                data->callbacks  = NULL;
+
+                g_hash_table_insert (proxy->priv->notify_hash,
+                                     g_strdup (variable),
+                                     data);
+        } else {
+                /* Yes, check that everything is sane .. */
+                if (data->type != type) {
+                        g_warning ("A notification already exists for %s, but "
+                                   "has type %s, not %s.",
+                                   variable,
+                                   g_type_name (data->type),
+                                   g_type_name (type));
+
+                        return FALSE;
+                }
+        }
+
+        /* Append callback */
+        callback_data = g_slice_new (CallbackData);
+
+        callback_data->callback  = callback;
+        callback_data->user_data = user_data;
+
+        data->callbacks = g_list_append (data->callbacks, callback_data);
+
+        return TRUE;
 }
 
 /**
  * gupnp_service_proxy_remove_notify
  * @proxy: A #GUPnPServiceProxy
- * @id: A notification ID
+ * @variable: The variable to add notification for
+ * @callback: The callback to call when @variable changes
+ * @user_data: User data for @callback
  *
- * Cancels the variable change notification with ID @id.
+ * Cancels the variable change notification for @callback and @user_data.
+ *
+ * Return value: TRUE on success.
  **/
-void
-gupnp_service_proxy_remove_notify (GUPnPServiceProxy *proxy,
-                                   guint              id)
+gboolean
+gupnp_service_proxy_remove_notify (GUPnPServiceProxy              *proxy,
+                                   const char                     *variable,
+                                   GUPnPServiceProxyNotifyCallback callback,
+                                   gpointer                        user_data)
 {
-        g_return_if_fail (GUPNP_IS_SERVICE_PROXY (proxy));
-        g_return_if_fail (id > 0);
+        NotifyData *data;
+        gboolean found;
+        GList *l;
+
+        g_return_val_if_fail (GUPNP_IS_SERVICE_PROXY (proxy), FALSE);
+        g_return_val_if_fail (variable, FALSE);
+        g_return_val_if_fail (callback, FALSE);
+
+        /* Look up NotifyData for variable */
+        data = g_hash_table_lookup (proxy->priv->notify_hash, variable);
+        if (data == NULL) {
+                g_warning ("No notifications found for variable %s",
+                           variable);
+
+                return FALSE;
+        }
+
+        /* Look up our callback-user_data pair */
+        found = FALSE;
+
+        for (l = data->callbacks; l; l = l->next) {
+                CallbackData *callback_data;
+
+                callback_data = l->data;
+
+                if (callback_data->callback  == callback &&
+                    callback_data->user_data == user_data) {
+                        /* Gotcha! */
+                        g_slice_free (CallbackData, callback_data);
+
+                        data->callbacks =
+                                g_list_delete_link (data->callbacks, l);
+                        if (data->callbacks == NULL) {
+                                /* No callbacks left: Remove from hash */
+                                g_hash_table_remove (proxy->priv->notify_hash,
+                                                     data);
+                        }
+
+                        found = TRUE;
+
+                        break;
+                }
+        }
+
+        if (found == FALSE)
+                g_warning ("No such callback-user_data pair was found");
+
+        return found;
 }
 
 /**
