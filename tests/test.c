@@ -86,7 +86,6 @@ service_proxy_available_cb (GUPnPControlPoint *cp,
                         g_error_free (error);
                 }
 
-                                                 
                 g_print ("res: %s\n", result);
         }
         g_print ("Service available with type: %s\n", type);

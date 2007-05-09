@@ -48,6 +48,8 @@ struct _GUPnPServiceProxyPrivate {
 
         GList *pending_actions;
 
+        gulong server_message_received_id;
+
         char *sid; /* Subscription ID */
         guint subscription_timeout_id;
 };
@@ -807,6 +809,34 @@ gupnp_service_proxy_remove_notify (GUPnPServiceProxy *proxy,
 }
 
 /**
+ * HTTP server received a message. Handle, if this was a NOTIFY
+ * message with our SID.
+ **/
+static void
+server_message_received_cb (GUPnPContext      *context,
+                            _GUPnPMethod       method,
+                            SoupMessage       *message,
+                            GUPnPServiceProxy *proxy)
+{
+        const char *sid;
+
+        if (method != _GUPNP_METHOD_NOTIFY)
+                return; /* Uninteresting */
+
+        if (proxy->priv->sid == NULL)
+                return; /* We don't have a SID  */
+
+        sid = soup_message_get_header (message->request_headers, "SID");
+        if (strcmp (sid, proxy->priv->sid) != 0)
+                return; /* Not our SID */
+
+        /* XXX do something */
+
+        /* Everything went OK */
+        soup_message_set_status (message, SOUP_STATUS_OK);
+}
+
+/**
  * Generates a timeout header for the subscription timeout specified
  * in our GUPnPContext.
  **/
@@ -887,8 +917,9 @@ subscribe_got_response (SoupMessage       *msg,
         /* Check message status */
         if (SOUP_STATUS_IS_SUCCESSFUL (msg->status_code)) {
                 /* Success. */
+                GUPnPContext *context;
                 const char *hdr;
-                int timeout = 0;
+                int timeout;
 
                 /* Save SID. */
                 hdr = soup_message_get_header (msg->response_headers, "SID");
@@ -904,25 +935,22 @@ subscribe_got_response (SoupMessage       *msg,
 
                 proxy->priv->sid = g_strdup (hdr);
 
+                /* Connect to 'server-message-received' signal */
+                context = gupnp_service_info_get_context
+                                                (GUPNP_SERVICE_INFO (proxy));
+
+                proxy->priv->server_message_received_id =
+                        g_signal_connect_object (context,
+                                                 "server-message-received",
+                                                 G_CALLBACK
+                                                   (server_message_received_cb),
+                                                 G_OBJECT (proxy),
+                                                 0);
+
                 /* Figure out when the subscription times out */
-                hdr = soup_message_get_header (msg->response_headers, "Date");
-                if (hdr != NULL) {
-                        struct tm gen_date;
-                        time_t gen_time, cur_time;
 
-                        /* RFC 1123 date */
-                        strptime (hdr,
-                                  "%a, %d %b %Y %T %z",
-                                  &gen_date);
-                        
-                        gen_time = mktime (&gen_date);
-                        cur_time = time (NULL);
-
-                        /* Negatively offset the timeout by the difference
-                         * in times */
-                        if (gen_time < cur_time)
-                                timeout = gen_time - cur_time;
-                }
+                /* XXX Date header unsupported for now as getting
+                 * a correct local time out of an RFC 1123 time is the pest */
 
                 hdr = soup_message_get_header (msg->response_headers,
                                                "Timeout");
@@ -933,7 +961,7 @@ subscribe_got_response (SoupMessage       *msg,
 
                 if (strncmp (hdr, "Second-", strlen ("Second-")) == 0) {
                         /* We have a finite timeout */
-                        timeout += atoi (hdr + strlen ("Second-"));
+                        timeout = atoi (hdr + strlen ("Second-"));
                         if (timeout < 0) {
                                 g_warning ("Date specified in SUBSCRIBE "
                                            "response is too far in the past. "
@@ -983,7 +1011,12 @@ subscribe (GUPnPServiceProxy *proxy)
 
         /* Add headers */
         server_url = _gupnp_context_get_server_url (context);
-        delivery_url = g_build_path ("/", server_url, GENA_NOTIFY_PATH, NULL);
+        delivery_url = g_strconcat ("<",
+                                    server_url,
+                                    "/",
+                                    GENA_NOTIFY_PATH,
+                                    ">",
+                                    NULL);
         soup_message_add_header (msg->request_headers,
                                  "Callback",
                                  delivery_url);
@@ -1053,6 +1086,15 @@ unsubscribe (GUPnPServiceProxy *proxy, gboolean sync)
         /* Remove subscription timeout */
         g_source_remove (proxy->priv->subscription_timeout_id);
         proxy->priv->subscription_timeout_id = 0;
+
+        /* Remove server message handler */
+        if (g_signal_handler_is_connected
+                                (context,
+                                 proxy->priv->server_message_received_id)) {
+                g_signal_handler_disconnect
+                                (context,
+                                 proxy->priv->server_message_received_id);
+        }
 }
 
 /**

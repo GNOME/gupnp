@@ -1,5 +1,16 @@
 2007-05-09  Jorn Baayen  <jorn@openedhand.com>
 
+	* libgupnp/gupnp-service-proxy.c:
+	(gupnp_service_proxy_remove_notify), (subscription_expire),
+	(subscribe_got_response), (subscribe), (unsubscribe):
+
+	Correct "Callback" URL format is subscription message.
+	Disable Date header parsing for now as getting a local time 
+	(taking into account daylight saving) out of an RFC 1123 time
+	is a total pain.
+
+2007-05-09  Jorn Baayen  <jorn@openedhand.com>
+
 	* libgupnp/gupnp-context-private.h:
 	* libgupnp/gupnp-context.c: (gupnp_context_class_init),
 	(_gupnp_context_get_session), (server_handler),
