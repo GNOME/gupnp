@@ -27,6 +27,14 @@
 
 G_BEGIN_DECLS
 
+typedef enum {
+        _GUPNP_METHOD_SUBSCRIBE,
+        _GUPNP_METHOD_UNSUBSCRIBE,
+        _GUPNP_METHOD_NOTIFY,
+        _GUPNP_METHOD_GET,
+        _GUPNP_METHOD_POST
+} _GUPnPMethod;
+
 SoupSession *
 _gupnp_context_get_session    (GUPnPContext *context);
 

@@ -1,5 +1,15 @@
 2007-05-09  Jorn Baayen  <jorn@openedhand.com>
 
+	* libgupnp/gupnp-context-private.h:
+	* libgupnp/gupnp-context.c: (gupnp_context_class_init),
+	(_gupnp_context_get_session), (server_handler),
+	(_gupnp_context_get_server):
+
+	Add hidden 'server-message-received' signal, emitted whenever
+	the SoupServer receives a message.
+
+2007-05-09  Jorn Baayen  <jorn@openedhand.com>
+
 	* libgupnp/gupnp-context.c: (_gupnp_context_get_session),
 	(default_server_handler), (_gupnp_context_get_server),
 	(gupnp_context_get_port), (gupnp_context_set_subscription_timeout):

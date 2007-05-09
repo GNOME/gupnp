@@ -36,6 +36,7 @@
 
 #include "gupnp-context.h"
 #include "gupnp-context-private.h"
+#include "gupnp-marshal.h"
 #include "gena-protocol.h"
 
 G_DEFINE_TYPE (GUPnPContext,
@@ -60,6 +61,13 @@ enum {
         PROP_PORT,
         PROP_SUBSCRIPTION_TIMEOUT
 };
+
+enum {
+        SERVER_MESSAGE_RECEIVED,
+        LAST_SIGNAL
+};
+
+static guint signals[LAST_SIGNAL];
 
 #define LOOPBACK_IP "127.0.0.1"
 
@@ -313,6 +321,18 @@ gupnp_context_class_init (GUPnPContextClass *klass)
                                     0, G_MAXUINT, GENA_DEFAULT_TIMEOUT,
                                     G_PARAM_READWRITE |
                                     G_PARAM_CONSTRUCT_ONLY));
+
+        signals[SERVER_MESSAGE_RECEIVED] =
+                g_signal_new ("server-message-received",
+                              GUPNP_TYPE_CONTEXT,
+                              G_SIGNAL_RUN_LAST,
+                              0,
+                              NULL, NULL,
+                              gupnp_marshal_VOID__INT_OBJECT,
+                              G_TYPE_NONE,
+                              2,
+                              G_TYPE_INT,
+                              SOUP_TYPE_MESSAGE);
 }
 
 SoupSession *
@@ -321,15 +341,47 @@ _gupnp_context_get_session (GUPnPContext *context)
         return context->priv->session;
 }
 
-/**
- * Our default handler just returns 501 - Not implemented.
- **/
 static void
-default_server_handler (SoupServerContext *context,
-                        SoupMessage       *msg,
-                        gpointer           user_data)
+server_handler (SoupServerContext *server_context,
+                SoupMessage       *msg,
+                gpointer           user_data)
 {
-        soup_message_set_status (msg, SOUP_STATUS_NOT_IMPLEMENTED);
+        GUPnPContext *context;
+        _GUPnPMethod method;
+
+        context = GUPNP_CONTEXT (user_data);
+
+        if (strcmp (msg->method, GENA_METHOD_SUBSCRIBE) == 0)
+                method = _GUPNP_METHOD_SUBSCRIBE;
+        else if (strcmp (msg->method, GENA_METHOD_UNSUBSCRIBE) == 0)
+                method = _GUPNP_METHOD_UNSUBSCRIBE;
+        else if (strcmp (msg->method, GENA_METHOD_NOTIFY) == 0)
+                method = _GUPNP_METHOD_NOTIFY;
+        else if (strcmp (msg->method, SOUP_METHOD_GET) == 0)
+                method = _GUPNP_METHOD_GET;
+        else if (strcmp (msg->method, SOUP_METHOD_POST) == 0)
+                method = _GUPNP_METHOD_POST;
+        else {
+                g_warning ("Unknown message type %s", msg->method);
+
+                soup_message_set_status (msg,
+                                         SOUP_STATUS_NOT_IMPLEMENTED);
+
+                return;
+        }
+
+        g_signal_emit (context,
+                       signals[SERVER_MESSAGE_RECEIVED],
+                       0,
+                       method,
+                       msg);
+
+        /* No-one touched the message. This means this method is not
+         * implemented. */
+        if (msg->status_code == SOUP_STATUS_NONE) {
+                soup_message_set_status (msg,
+                                         SOUP_STATUS_NOT_IMPLEMENTED);
+        }
 }
 
 SoupServer *
@@ -341,7 +393,7 @@ _gupnp_context_get_server (GUPnPContext *context)
                                                          NULL);
 
                 soup_server_add_handler (context->priv->server, NULL, NULL,
-                                         default_server_handler, NULL, NULL);
+                                         server_handler, NULL, context);
 
                 soup_server_run_async (context->priv->server);
         }
