@@ -1,5 +1,17 @@
 2007-05-09  Jorn Baayen  <jorn@openedhand.com>
 
+	* libgupnp/gupnp-context-private.h:
+	* libgupnp/gupnp-context.c:
+	* libgupnp/gupnp-service-proxy.c: (gupnp_service_proxy_finalize),
+	(gupnp_service_proxy_remove_notify), (subscription_expire),
+	(subscribe_got_response), (subscribe), (unsubscribe):
+
+	Generate a unique path for each proxy on the server, and use
+	soup_server_add_handler() to capture its requests instead of
+	using a 'server-message-received' signal from GUPnPContext.
+
+2007-05-09  Jorn Baayen  <jorn@openedhand.com>
+
 	* libgupnp/gupnp-service-proxy.c:
 	(gupnp_service_proxy_remove_notify), (subscription_expire),
 	(subscribe_got_response), (subscribe), (unsubscribe):

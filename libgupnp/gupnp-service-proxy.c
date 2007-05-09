@@ -48,7 +48,7 @@ struct _GUPnPServiceProxyPrivate {
 
         GList *pending_actions;
 
-        gulong server_message_received_id;
+        char *path; /* Path to this proxy */
 
         char *sid; /* Subscription ID */
         guint subscription_timeout_id;
@@ -118,9 +118,15 @@ gupnp_service_proxy_get_url_base (GUPnPServiceInfo *info)
 static void
 gupnp_service_proxy_init (GUPnPServiceProxy *proxy)
 {
+        static int proxy_counter = 0;
+
         proxy->priv = G_TYPE_INSTANCE_GET_PRIVATE (proxy,
                                                    GUPNP_TYPE_SERVICE_PROXY,
                                                    GUPnPServiceProxyPrivate);
+
+        /* Generate unique path */
+        proxy->priv->path = g_strdup_printf ("/ServiceProxy%d", proxy_counter);
+        proxy_counter++;
 }
 
 static void
@@ -200,6 +206,8 @@ gupnp_service_proxy_finalize (GObject *object)
 
         if (proxy->priv->url_base)
                 xmlFree (proxy->priv->url_base);
+
+        g_free (proxy->priv->path);
 }
 
 static void
@@ -813,27 +821,50 @@ gupnp_service_proxy_remove_notify (GUPnPServiceProxy *proxy,
  * message with our SID.
  **/
 static void
-server_message_received_cb (GUPnPContext      *context,
-                            _GUPnPMethod       method,
-                            SoupMessage       *message,
-                            GUPnPServiceProxy *proxy)
+server_handler (SoupServerContext *server_context,
+                SoupMessage       *msg,
+                gpointer           user_data)
 {
-        const char *sid;
+        GUPnPServiceProxy *proxy;
+        const char *hdr;
 
-        if (method != _GUPNP_METHOD_NOTIFY)
-                return; /* Uninteresting */
+        proxy = GUPNP_SERVICE_PROXY (user_data);
 
-        if (proxy->priv->sid == NULL)
-                return; /* We don't have a SID  */
+        if (strcmp (msg->method, GENA_METHOD_NOTIFY) != 0) {
+                /* We don't implement this method */
+                soup_message_set_status (msg, SOUP_STATUS_NOT_IMPLEMENTED);
 
-        sid = soup_message_get_header (message->request_headers, "SID");
-        if (strcmp (sid, proxy->priv->sid) != 0)
-                return; /* Not our SID */
+                return;
+        }
+
+        hdr = soup_message_get_header (msg->request_headers, "NT");
+        if (hdr == NULL || strcmp (hdr, "upnp:event") != 0) {
+                /* Proper NT header lacking */
+                soup_message_set_status (msg, SOUP_STATUS_PRECONDITION_FAILED);
+
+                return;
+        }
+
+        hdr = soup_message_get_header (msg->request_headers, "NTS");
+        if (hdr == NULL || strcmp (hdr, "upnp:propchange") != 0) {
+                /* Proper NTS header lacking */
+                soup_message_set_status (msg, SOUP_STATUS_PRECONDITION_FAILED);
+
+                return;
+        }
+
+        hdr = soup_message_get_header (msg->request_headers, "SID");
+        if (hdr == NULL || strcmp (hdr, proxy->priv->sid) != 0) {
+                /* No SID or not ours */
+                soup_message_set_status (msg, SOUP_STATUS_PRECONDITION_FAILED);
+
+                return;
+        }
 
         /* XXX do something */
 
         /* Everything went OK */
-        soup_message_set_status (message, SOUP_STATUS_OK);
+        soup_message_set_status (msg, SOUP_STATUS_OK);
 }
 
 /**
@@ -918,6 +949,7 @@ subscribe_got_response (SoupMessage       *msg,
         if (SOUP_STATUS_IS_SUCCESSFUL (msg->status_code)) {
                 /* Success. */
                 GUPnPContext *context;
+                SoupServer *server;
                 const char *hdr;
                 int timeout;
 
@@ -939,13 +971,13 @@ subscribe_got_response (SoupMessage       *msg,
                 context = gupnp_service_info_get_context
                                                 (GUPNP_SERVICE_INFO (proxy));
 
-                proxy->priv->server_message_received_id =
-                        g_signal_connect_object (context,
-                                                 "server-message-received",
-                                                 G_CALLBACK
-                                                   (server_message_received_cb),
-                                                 G_OBJECT (proxy),
-                                                 0);
+                server = _gupnp_context_get_server (context);
+                soup_server_add_handler (server,
+                                         proxy->priv->path,
+                                         NULL,
+                                         server_handler,
+                                         NULL,
+                                         proxy);
 
                 /* Figure out when the subscription times out */
 
@@ -1011,12 +1043,9 @@ subscribe (GUPnPServiceProxy *proxy)
 
         /* Add headers */
         server_url = _gupnp_context_get_server_url (context);
-        delivery_url = g_strconcat ("<",
-                                    server_url,
-                                    "/",
-                                    GENA_NOTIFY_PATH,
-                                    ">",
-                                    NULL);
+        delivery_url = g_strdup_printf ("<%s%s>",
+                                        server_url,
+                                        proxy->priv->path);
         soup_message_add_header (msg->request_headers,
                                  "Callback",
                                  delivery_url);
@@ -1051,6 +1080,7 @@ unsubscribe (GUPnPServiceProxy *proxy, gboolean sync)
         GUPnPContext *context;
         SoupMessage *msg;
         SoupSession *session;
+        SoupServer *server;
         char *sub_url;
 
         if (proxy->priv->sid == NULL)
@@ -1087,14 +1117,9 @@ unsubscribe (GUPnPServiceProxy *proxy, gboolean sync)
         g_source_remove (proxy->priv->subscription_timeout_id);
         proxy->priv->subscription_timeout_id = 0;
 
-        /* Remove server message handler */
-        if (g_signal_handler_is_connected
-                                (context,
-                                 proxy->priv->server_message_received_id)) {
-                g_signal_handler_disconnect
-                                (context,
-                                 proxy->priv->server_message_received_id);
-        }
+        /* Remove server handler */
+        server = _gupnp_context_get_server (context);
+        soup_server_remove_handler (server, proxy->priv->path);
 }
 
 /**
