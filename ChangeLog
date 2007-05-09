@@ -1,5 +1,16 @@
 2007-05-09  Jorn Baayen  <jorn@openedhand.com>
 
+	* libgupnp/gupnp-service-proxy.c: (server_handler),
+	(subscription_expire), (subscribe_got_response), (subscribe),
+	(unsubscribe):
+
+	Emit 'subscription-lost' when appropriate.
+
+	Keep track of notify sequence numbers and resubscribe when
+	we notice dropped notifications.
+
+2007-05-09  Jorn Baayen  <jorn@openedhand.com>
+
 	* libgupnp/gupnp-context-private.h:
 	* libgupnp/gupnp-context.c:
 	* libgupnp/gupnp-service-proxy.c: (gupnp_service_proxy_finalize),

@@ -32,6 +32,7 @@
 #include "gupnp-service-proxy-private.h"
 #include "gupnp-device-proxy-private.h"
 #include "gupnp-context-private.h"
+#include "gupnp-error.h"
 #include "xml-util.h"
 #include "gena-protocol.h"
 
@@ -52,6 +53,8 @@ struct _GUPnPServiceProxyPrivate {
 
         char *sid; /* Subscription ID */
         guint subscription_timeout_id;
+
+        int seq; /* Event sequence number */
 };
 
 enum {
@@ -81,6 +84,8 @@ struct _GUPnPServiceProxyAction {
 static void
 subscribe_got_response (SoupMessage       *msg,
                         GUPnPServiceProxy *proxy);
+static void
+subscribe (GUPnPServiceProxy *proxy);
 static void
 unsubscribe (GUPnPServiceProxy *proxy, gboolean sync);
 
@@ -827,6 +832,7 @@ server_handler (SoupServerContext *server_context,
 {
         GUPnPServiceProxy *proxy;
         const char *hdr;
+        int seq;
 
         proxy = GUPNP_SERVICE_PROXY (user_data);
 
@@ -860,6 +866,32 @@ server_handler (SoupServerContext *server_context,
 
                 return;
         }
+
+        hdr = soup_message_get_header (msg->request_headers, "SEQ");
+        if (hdr == NULL) {
+                /* No SEQ header */
+                soup_message_set_status (msg, SOUP_STATUS_PRECONDITION_FAILED);
+
+                return;
+        }
+
+        seq = atoi (hdr);
+        if (seq > proxy->priv->seq) {
+                /* Oops, we missed a notify. Resubscribe .. */
+                unsubscribe (proxy, FALSE);
+                subscribe (proxy);
+
+                /* Message was OK otherwise */
+                soup_message_set_status (msg, SOUP_STATUS_OK);
+
+                return;
+        }
+
+        /* Increment our own event sequence number */
+        if (proxy->priv->seq < G_MAXINT32)
+                proxy->priv->seq++;
+        else
+                proxy->priv->seq = 1;
 
         /* XXX do something */
 
@@ -956,11 +988,23 @@ subscribe_got_response (SoupMessage       *msg,
                 /* Save SID. */
                 hdr = soup_message_get_header (msg->response_headers, "SID");
                 if (hdr == NULL) {
-                        g_error ("No SID in SUBSCRIBE response");
+                        GError *error;
 
                         proxy->priv->subscribed = FALSE;
 
                         g_object_notify (G_OBJECT (proxy), "subscribed");
+
+                        /* Emit subscription-lost */
+                        error = g_error_new (GUPNP_ERROR_QUARK,
+                                             0,
+                                             "No SID in SUBSCRIBE response");
+
+                        g_signal_emit (proxy,
+                                       signals[SUBSCRIPTION_LOST],
+                                       0,
+                                       error);
+
+                        g_error_free (error);
 
                         return;
                 }
@@ -987,7 +1031,8 @@ subscribe_got_response (SoupMessage       *msg,
                 hdr = soup_message_get_header (msg->response_headers,
                                                "Timeout");
                 if (hdr == NULL) {
-                        g_error ("No Timeout in SUBSCRIBE response");
+                        g_warning ("No Timeout in SUBSCRIBE response.");
+
                         return;
                 }
 
@@ -1010,12 +1055,25 @@ subscribe_got_response (SoupMessage       *msg,
                                                proxy);
                 }
         } else {
-                /* Subscription failed. */
-                g_warning ("Subscription failed: %d", msg->status_code);
+                GError *error;
 
+                /* Subscription failed. */
                 proxy->priv->subscribed = FALSE;
 
                 g_object_notify (G_OBJECT (proxy), "subscribed");
+
+                /* Emit subscription-lost */
+                error = g_error_new (GUPNP_ERROR_QUARK,
+                                     msg->status_code,
+                                     "(Re)subscription failed: %d",
+                                     msg->status_code);
+
+                g_signal_emit (proxy,
+                               signals[SUBSCRIPTION_LOST],
+                               0,
+                               error);
+
+                g_error_free (error);
         }
 }
 
@@ -1112,6 +1170,9 @@ unsubscribe (GUPnPServiceProxy *proxy, gboolean sync)
         /* Reset SID */
         g_free (proxy->priv->sid);
         proxy->priv->sid = NULL;
+
+        /* Reset sequence number */
+        proxy->priv->seq = 0;
 
         /* Remove subscription timeout */
         g_source_remove (proxy->priv->subscription_timeout_id);
