@@ -954,6 +954,8 @@ server_handler (SoupServerContext *server_context,
         GUPnPServiceProxy *proxy;
         const char *hdr;
         int seq;
+        xmlDoc *doc;
+        xmlNode *node;
 
         proxy = GUPNP_SERVICE_PROXY (user_data);
 
@@ -1014,7 +1016,105 @@ server_handler (SoupServerContext *server_context,
         else
                 proxy->priv->seq = 1;
 
-        /* XXX do something */
+        /* Parse the actual XML message content */
+        doc = xmlParseMemory (msg->request.body,
+                              msg->request.length);
+        if (doc == NULL) {
+                /* Failed */
+                g_warning ("Failed to parse NOTIFY message body");
+
+                soup_message_set_status (msg,
+                                         SOUP_STATUS_INTERNAL_SERVER_ERROR);
+
+                return;
+        }
+
+        /* Get root propertyset element */
+        node = xmlDocGetRootElement (doc);
+        if (node == NULL || strcmp ((char *) node->name, "propertyset")) {
+                /* Empty or unsupported */
+                xmlFreeDoc (doc);
+
+                soup_message_set_status (msg, SOUP_STATUS_OK);
+
+                return;
+        }
+
+        /* Iterate over all provided properties */
+        for (node = node->children; node; node = node->next) {
+                xmlNode *var_node;
+
+                if (strcmp ((char *) node->name, "property") != 0)
+                        continue;
+
+                /* property */
+                for (var_node = node->children; var_node;
+                     var_node = var_node->next) {
+                        NotifyData *data;
+                        xmlChar *val;
+                        GValue value = {0, }, int_value = {0, };
+                        GList *l;
+                        int i;
+
+                        data = g_hash_table_lookup (proxy->priv->notify_hash,
+                                                    var_node->name);
+                        if (data == NULL)
+                                continue;
+
+                        /* We have a notify struct for this variable */
+                        val = xmlNodeGetContent (var_node);
+
+                        /* Make a GValue of the desired type */
+                        g_value_init (&value, data->type);
+
+                        switch (data->type) {
+                        case G_TYPE_STRING:
+                                g_value_set_string (&value, (char *) val); 
+                                break;
+                        default:
+                                i = atoi ((char *) val);
+
+                                g_value_init (&int_value, G_TYPE_INT);
+                                g_value_set_int (&int_value, i);
+
+                                if (!g_value_transform (&int_value, &value)) {
+                                        g_warning ("Failed to transform "
+                                                   "integer value to type %s",
+                                                   g_type_name (data->type));
+
+                                        g_value_unset (&int_value);
+                                        g_value_unset (&value);
+
+                                        xmlFree (val);
+
+                                        continue;
+                                }
+
+                                g_value_unset (&int_value);
+                                break;
+                        }
+
+                        /* Call callbacks */
+                        for (l = data->callbacks; l; l = l->next) {
+                                CallbackData *callback_data;
+
+                                callback_data = l->data;
+
+                                callback_data->callback
+                                        (proxy,
+                                         (const char *) var_node->name,
+                                         &value,
+                                         callback_data->user_data);
+                        }
+
+                        /* Cleanup */
+                        g_value_unset (&value);
+
+                        xmlFree (val);
+                }
+        }
+
+        xmlFreeDoc (doc);
 
         /* Everything went OK */
         soup_message_set_status (msg, SOUP_STATUS_OK);

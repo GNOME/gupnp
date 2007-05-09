@@ -1,25 +1,6 @@
 #include <libgupnp/gupnp-control-point.h>
 #include <string.h>
 
-/**
- *  - Resurrect Control point
- *  - Control point asynchronously parses device descriptions (and caches them),
- *    and when read signals availability.
- *  - Different proxy constructors
- *  - On service-available:
- *        if uuid:device-UUID::urn:domain-name:service:serviceType:v,
- *        then do serviceProxy(xmlDoc, serviceType(urn..v))
- *        else do deviceProxy(xmlDoc, UDN(until ::))
- *  - Four signals: device-(un)available and service-(un)available
- *
- *
- *  After that:
- *  - GUPnPContext, which is a subclass of GSSDPClient, with port prop
- *    pass this to all constructors (control point being the only public one)
- *        SoupSession
- *        SoupServer
-*/
-
 static void
 device_proxy_available_cb (GUPnPControlPoint *cp,
                            GUPnPDeviceProxy  *proxy)

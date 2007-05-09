@@ -1,5 +1,18 @@
 2007-05-09  Jorn Baayen  <jorn@openedhand.com>
 
+	* libgupnp/gupnp-service-proxy.c: (server_handler):
+
+	Parse XML part of NOTIFY messages and call notify callbacks.
+
+	This means that now the client side of GUPnP is feature complete.
+	Yay!
+
+	* tests/test.c:
+	
+	Remove old comments.
+
+2007-05-09  Jorn Baayen  <jorn@openedhand.com>
+
 	* libgupnp/gupnp-service-proxy.c:
 	(gupnp_service_proxy_get_element),
 	(gupnp_service_proxy_get_url_base), (notify_data_free),
