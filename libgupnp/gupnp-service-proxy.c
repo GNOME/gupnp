@@ -706,8 +706,8 @@ gupnp_service_proxy_end_action_valist (GUPnPServiceProxy       *proxy,
                                 g_set_error (error,
                                              GUPNP_ERROR_QUARK,
                                              0,
-                                             "Failed to transform string value "
-                                             "to type %s",
+                                             "Failed to transform integer "
+                                             "value to type %s",
                                              g_type_name (arg_type));
 
                                 g_value_unset (&int_value);
