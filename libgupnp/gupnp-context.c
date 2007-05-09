@@ -321,6 +321,17 @@ _gupnp_context_get_session (GUPnPContext *context)
         return context->priv->session;
 }
 
+/**
+ * Our default handler just returns 501 - Not implemented.
+ **/
+static void
+default_server_handler (SoupServerContext *context,
+                        SoupMessage       *msg,
+                        gpointer           user_data)
+{
+        soup_message_set_status (msg, SOUP_STATUS_NOT_IMPLEMENTED);
+}
+
 SoupServer *
 _gupnp_context_get_server (GUPnPContext *context)
 {
@@ -328,6 +339,9 @@ _gupnp_context_get_server (GUPnPContext *context)
                 context->priv->server = soup_server_new (SOUP_SERVER_PORT,
                                                          context->priv->port,
                                                          NULL);
+
+                soup_server_add_handler (context->priv->server, NULL, NULL,
+                                         default_server_handler, NULL, NULL);
 
                 soup_server_run_async (context->priv->server);
         }
@@ -427,7 +441,9 @@ gupnp_context_get_port (GUPnPContext *context)
  * @context: A #GUPnPContext
  * @timeout: Event subscription timeout in seconds
  *
- * Sets the event subscription timeout to @timeout.
+ * Sets the event subscription timeout to @timeout. Use 0 if you don't
+ * want subscriptions to time out. Note that any client side subscriptions
+ * will automatically be renewed.
  **/
 void
 gupnp_context_set_subscription_timeout (GUPnPContext *context,
@@ -444,7 +460,8 @@ gupnp_context_set_subscription_timeout (GUPnPContext *context,
  * gupnp_context_get_subscription_timeout
  * @context: A #GUPnPContext
  *
- * Return value: The event subscription timeout in seconds.
+ * Return value: The event subscription timeout in seconds, or 0, meaning
+ * no timeout.
  **/
 guint
 gupnp_context_get_subscription_timeout (GUPnPContext *context)

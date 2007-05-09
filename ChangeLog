@@ -1,3 +1,16 @@
+2007-05-09  Jorn Baayen  <jorn@openedhand.com>
+
+	* libgupnp/gupnp-context.c: (_gupnp_context_get_session),
+	(default_server_handler), (_gupnp_context_get_server),
+	(gupnp_context_get_port), (gupnp_context_set_subscription_timeout):
+	* libgupnp/gupnp-service-proxy.c:
+	(gupnp_service_proxy_remove_notify), (make_timeout_header),
+	(subscription_expire), (subscribe_got_response), (subscribe):
+
+	Support infinite timeout locally.
+
+	Add a default server handler returning 501.
+
 2007-05-08  Jorn Baayen  <jorn@openedhand.com>
 
 	* libgupnp/gupnp-service-proxy.c: (gupnp_service_proxy_dispose),

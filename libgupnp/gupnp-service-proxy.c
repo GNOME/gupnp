@@ -807,6 +807,22 @@ gupnp_service_proxy_remove_notify (GUPnPServiceProxy *proxy,
 }
 
 /**
+ * Generates a timeout header for the subscription timeout specified
+ * in our GUPnPContext.
+ **/
+static char *
+make_timeout_header (GUPnPContext *context)
+{
+        guint timeout;
+
+        timeout = gupnp_context_get_subscription_timeout (context);
+        if (timeout > 0)
+                return g_strdup_printf ("Second-%d", timeout);
+        else
+                return g_strdup ("infinite");
+}
+
+/**
  * Subscription expired.
  **/
 static gboolean
@@ -816,8 +832,7 @@ subscription_expire (gpointer user_data)
         GUPnPContext *context;
         SoupMessage *msg;
         SoupSession *session;
-        char *sub_url, *timeout_str;
-        guint timeout;
+        char *sub_url, *timeout;
 
         proxy = GUPNP_SERVICE_PROXY (user_data);
 
@@ -840,12 +855,11 @@ subscription_expire (gpointer user_data)
                                  "SID",
                                  proxy->priv->sid);
 
-        timeout = gupnp_context_get_subscription_timeout (context);
-        timeout_str = g_strdup_printf ("Second-%d", timeout);
+        timeout = make_timeout_header (context);
         soup_message_add_header (msg->request_headers,
                                  "Timeout",
-                                 timeout_str);
-        g_free (timeout_str);
+                                 timeout);
+        g_free (timeout);
 
         /* And send it off */
         session = _gupnp_context_get_session (context);
@@ -955,8 +969,7 @@ subscribe (GUPnPServiceProxy *proxy)
         SoupMessage *msg;
         SoupSession *session;
         const char *server_url;
-        char *sub_url, *delivery_url, *timeout_str;
-        guint timeout;
+        char *sub_url, *delivery_url, *timeout;
 
         context = gupnp_service_info_get_context (GUPNP_SERVICE_INFO (proxy));
 
@@ -980,12 +993,11 @@ subscribe (GUPnPServiceProxy *proxy)
                                  "NT",
                                  "upnp:event");
 
-        timeout = gupnp_context_get_subscription_timeout (context);
-        timeout_str = g_strdup_printf ("Second-%d", timeout);
+        timeout = make_timeout_header (context);
         soup_message_add_header (msg->request_headers,
                                  "Timeout",
-                                 timeout_str);
-        g_free (timeout_str);
+                                 timeout);
+        g_free (timeout);
 
         /* And send it off */
         session = _gupnp_context_get_session (context);
