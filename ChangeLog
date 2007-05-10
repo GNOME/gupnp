@@ -1,3 +1,21 @@
+2007-05-10  Jorn Baayen  <jorn@openedhand.com>
+
+	* NEWS:
+	* README:
+
+	Added some text.
+
+	* libgupnp/gupnp-device-info.h:
+
+	Removed device type defines. These belong in any higher level
+	libs now.
+
+	* tests/test.c: (device_proxy_available_cb),
+	(service_proxy_available_cb), (service_proxy_unavailable_cb),
+	(main):
+
+	Added notification test and cleaned up.
+
 2007-05-09  Jorn Baayen  <jorn@openedhand.com>
 
 	* libgupnp/gupnp-service-proxy.c: (server_handler):

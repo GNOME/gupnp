@@ -1,3 +1,24 @@
+/* 
+ * Copyright (C) 2007 OpenedHand Ltd.
+ *
+ * Author: Jorn Baayen <jorn@openedhand.com>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Library General Public
+ * License as published by the Free Software Foundation; either
+ * version 2 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Library General Public License for more details.
+ *
+ * You should have received a copy of the GNU Library General Public
+ * License along with this library; if not, write to the
+ * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+ * Boston, MA 02111-1307, USA.
+ */
+
 #include <libgupnp/gupnp-control-point.h>
 #include <string.h>
 
@@ -7,33 +28,43 @@ device_proxy_available_cb (GUPnPControlPoint *cp,
 {
         char *type;
         const char *location;
-        GList *service_node;
 
         type = gupnp_device_info_get_device_type (GUPNP_DEVICE_INFO (proxy));
         location = gupnp_device_info_get_location (GUPNP_DEVICE_INFO (proxy));
 
-        if (strcmp (type, GUPNP_DEVICE_TYPE_MEDIA_STREAMER_1) == 0) {
-                g_print ("MediaStreamer device available at %s\n", location);
-        } else if (strcmp (type, GUPNP_DEVICE_TYPE_INTERNET_GATEWAY_1) == 0) {
-                g_print ("InternetGateway device available at %s\n", location);
-        } else
-                g_print ("Device of type %s available at %s\n", type, location);
+        g_print ("Device available:\n");
+        g_print ("\ttype:     %s\n", type);
+        g_print ("\tlocation: %s\n", location);
+
         g_free (type);
-
-        service_node = gupnp_device_proxy_list_services (proxy);
-        for (; service_node; service_node = service_node->next) {
-                gchar *service_type;
-
-                service_type = gupnp_service_info_get_service_type (
-                                GUPNP_SERVICE_INFO (service_node->data));
-                g_print ("service of type %s available\n", service_type);
-        }
 }
 
 static void
 device_proxy_unavailable_cb (GUPnPControlPoint *cp,
                              GUPnPDeviceProxy  *proxy)
 {
+        char *type;
+        const char *location;
+
+        type = gupnp_device_info_get_device_type (GUPNP_DEVICE_INFO (proxy));
+        location = gupnp_device_info_get_location (GUPNP_DEVICE_INFO (proxy));
+
+        g_print ("Device unavailable:\n");
+        g_print ("\ttype:     %s\n", type);
+        g_print ("\tlocation: %s\n", location);
+
+        g_free (type);
+}
+
+static void
+notify_cb (GUPnPServiceProxy *proxy,
+           const char        *variable,
+           GValue            *value,
+           gpointer           user_data)
+{
+        g_print ("Received a notification for variable '%s':\n", variable);
+        g_print ("\tvalue:     %d\n", g_value_get_int (value));
+        g_print ("\tuser_data: %s\n", (const char *) user_data);
 }
 
 static void
@@ -41,35 +72,82 @@ service_proxy_available_cb (GUPnPControlPoint *cp,
                             GUPnPServiceProxy *proxy)
 {
         char *type;
+        const char *location;
 
         type = gupnp_service_info_get_service_type (GUPNP_SERVICE_INFO (proxy));
-        if (strcmp (type, "urn:schemas-upnp-org:service:ContentDirectory:1") == 0) {
+        location = gupnp_service_info_get_location (GUPNP_SERVICE_INFO (proxy));
+
+        g_print ("Service available:\n");
+        g_print ("\ttype:     %s\n", type);
+        g_print ("\tlocation: %s\n", location);
+
+        if (strcmp (type,
+                    "urn:schemas-upnp-org:service:ContentDirectory:1") == 0) {
+                /* We have a ContentDirectory - yay! Run some tests. */
                 char *result = NULL;;
                 guint count, total;
                 GError *error = NULL;
+
+                /* We want to be notified whenever SystemUpdateID (of type int)
+                 * changes */
+                gupnp_service_proxy_add_notify (proxy,
+                                                "SystemUpdateID",
+                                                G_TYPE_INT,
+                                                notify_cb,
+                                                "Test");
+
+                /* Subscribe */
                 gupnp_service_proxy_set_subscribed (proxy, TRUE);
+
+                /* And test action IO */
                 gupnp_service_proxy_send_action (proxy,
                                                  "Browse",
                                                  &error,
-                                                 "ObjectID", G_TYPE_STRING, "0",
-                                                 "BrowseFlag", G_TYPE_STRING, "BrowseDirectChildren",
-                                                 "Filter", G_TYPE_STRING, "*",
-                                                 "StartingIndex", G_TYPE_UINT, 0,
-                                                 "RequestedCount", G_TYPE_UINT, 0,
-                                                 "SortCriteria", G_TYPE_STRING, "",
+                                                 /* IN args */
+                                                 "ObjectID",
+                                                        G_TYPE_STRING,
+                                                        "0",
+                                                 "BrowseFlag",
+                                                        G_TYPE_STRING,
+                                                        "BrowseDirectChildren",
+                                                 "Filter",
+                                                        G_TYPE_STRING,
+                                                        "*",
+                                                 "StartingIndex",
+                                                        G_TYPE_UINT,
+                                                        0,
+                                                 "RequestedCount",
+                                                        G_TYPE_UINT,
+                                                        0,
+                                                 "SortCriteria",
+                                                        G_TYPE_STRING,
+                                                        "",
                                                  NULL,
-                                                 "Result", G_TYPE_STRING ,&result,
-                                                 "NumberReturned", G_TYPE_UINT, &count,
-                                                 "TotalMatches", G_TYPE_UINT, &total,
+                                                 /* OUT args */
+                                                 "Result",
+                                                        G_TYPE_STRING,
+                                                        &result,
+                                                 "NumberReturned",
+                                                        G_TYPE_UINT,
+                                                        &count,
+                                                 "TotalMatches",
+                                                        G_TYPE_UINT,
+                                                        &total,
                                                  NULL);
+
                 if (error) {
                         g_printerr ("Error: %s\n", error->message);
                         g_error_free (error);
                 }
 
-                g_print ("res: %s\n", result);
+                g_print ("Browse returned:\n");
+                g_print ("\tResult:         %s\n", result);
+                g_print ("\tNumberReturned: %u\n", count);
+                g_print ("\tTotalMatches:   %u\n", total);
+
+                g_free (result);
         }
-        g_print ("Service available with type: %s\n", type);
+
         g_free (type);
 }
 
@@ -77,6 +155,17 @@ static void
 service_proxy_unavailable_cb (GUPnPControlPoint *cp,
                               GUPnPServiceProxy *proxy)
 {
+        char *type;
+        const char *location;
+
+        type = gupnp_service_info_get_service_type (GUPNP_SERVICE_INFO (proxy));
+        location = gupnp_service_info_get_location (GUPNP_SERVICE_INFO (proxy));
+
+        g_print ("Service unavailable:\n");
+        g_print ("\ttype:     %s\n", type);
+        g_print ("\tlocation: %s\n", location);
+
+        g_free (type);
 }
 
 int
@@ -99,6 +188,7 @@ main (int argc, char **argv)
                 return 1;
         }
 
+        /* We're interested in everything */
         cp = gupnp_control_point_new (context, "ssdp:all");
 
         g_signal_connect (cp,
