@@ -1,3 +1,10 @@
+2007-05-22  Jorn Baayen  <jorn@openedhand.com>
+
+	* libgupnp/gupnp-device-proxy.h:
+	* libgupnp/gupnp-service-proxy.h:
+
+	Doc coverage to 100%.
+
 2007-05-21  Jorn Baayen  <jorn@openedhand.com>
 
 	* libgupnp/Makefile.am:
