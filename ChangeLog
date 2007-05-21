@@ -1,3 +1,13 @@
+2007-05-21  Jorn Baayen  <jorn@openedhand.com>
+
+	* configure.ac:
+
+	Point to gupnp.org.
+
+	* po/*: 
+
+	Added missing files.
+
 2007-05-10  Jorn Baayen  <jorn@openedhand.com>
 
 	* NEWS:
