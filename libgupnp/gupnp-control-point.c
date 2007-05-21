@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2006 OpenedHand Ltd.
+ * Copyright (C) 2006, 2007 OpenedHand Ltd.
  *
  * Author: Jorn Baayen <jorn@openedhand.com>
  *
@@ -545,6 +545,14 @@ gupnp_control_point_class_init (GUPnPControlPointClass *klass)
         
         g_type_class_add_private (klass, sizeof (GUPnPControlPointPrivate));
 
+        /**
+         * GUPnPControlPoint::device-proxy-available
+         * @control_point: The #GUPnPControlPoint that received the signal
+         * @proxy: The now available #GUPnPDeviceProxy
+         *
+         * The ::device-proxy-available signal is emitted whenever a new
+         * device has become available.
+         **/
         signals[DEVICE_PROXY_AVAILABLE] =
                 g_signal_new ("device-proxy-available",
                               GUPNP_TYPE_CONTROL_POINT,
@@ -558,6 +566,14 @@ gupnp_control_point_class_init (GUPnPControlPointClass *klass)
                               1,
                               GUPNP_TYPE_DEVICE_PROXY);
 
+        /**
+         * GUPnPControlPoint::device-proxy-unavailable
+         * @control_point: The #GUPnPControlPoint that received the signal
+         * @proxy: The now unavailable #GUPnPDeviceProxy
+         *
+         * The ::device-proxy-unavailable signal is emitted whenever a 
+         * device is not available any more.
+         **/
         signals[DEVICE_PROXY_UNAVAILABLE] =
                 g_signal_new ("device-proxy-unavailable",
                               GUPNP_TYPE_CONTROL_POINT,
@@ -571,6 +587,14 @@ gupnp_control_point_class_init (GUPnPControlPointClass *klass)
                               1,
                               GUPNP_TYPE_DEVICE_PROXY);
 
+        /**
+         * GUPnPControlPoint::service-proxy-available
+         * @control_point: The #GUPnPControlPoint that received the signal
+         * @proxy: The now available #GUPnPServiceProxy
+         *
+         * The ::service-proxy-available signal is emitted whenever a new
+         * service has become available.
+         **/
         signals[SERVICE_PROXY_AVAILABLE] =
                 g_signal_new ("service-proxy-available",
                               GUPNP_TYPE_CONTROL_POINT,
@@ -584,6 +608,14 @@ gupnp_control_point_class_init (GUPnPControlPointClass *klass)
                               1,
                               GUPNP_TYPE_SERVICE_PROXY);
 
+        /**
+         * GUPnPControlPoint::service-proxy-unavailable
+         * @control_point: The #GUPnPControlPoint that received the signal
+         * @proxy: The now unavailable #GUPnPServiceProxy
+         *
+         * The ::service-proxy-unavailable signal is emitted whenever a 
+         * service is not available any more.
+         **/
         signals[SERVICE_PROXY_UNAVAILABLE] =
                 g_signal_new ("service-proxy-unavailable",
                               GUPNP_TYPE_CONTROL_POINT,
@@ -600,7 +632,7 @@ gupnp_control_point_class_init (GUPnPControlPointClass *klass)
 
 /**
  * gupnp_control_point_new
- * @ssdp_client: A #GSSDPClient
+ * @context: A #GUPnPContext
  * @target: The search target
  *
  * Return value: A new #GUPnPControlPoint object.

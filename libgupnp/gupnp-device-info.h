@@ -55,6 +55,12 @@ gupnp_device_info_get_type (void) G_GNUC_CONST;
 
 typedef struct _GUPnPDeviceInfoPrivate GUPnPDeviceInfoPrivate;
 
+/**
+ * GUPnPDeviceInfo
+ *
+ * The #GUPnPDeviceInfo interface provides methods for querying device
+ * information.
+ **/
 typedef struct {
         GObject parent;
 

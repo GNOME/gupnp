@@ -285,16 +285,26 @@ gupnp_context_class_init (GUPnPContextClass *klass)
 
         g_type_class_add_private (klass, sizeof (GUPnPContextPrivate));
 
+        /**
+         * GUPnPContext:host-ip
+         *
+         * The local host's IP address. Set to NULL to autodetect.
+         **/
         g_object_class_install_property
                 (object_class,
                  PROP_HOST_IP,
                  g_param_spec_string ("host-ip",
                                       "Host IP",
-                                      "Local host IP address",
+                                      "The local host's IP address",
                                       NULL,
                                       G_PARAM_READWRITE |
                                       G_PARAM_CONSTRUCT_ONLY));
 
+        /**
+         * GUPnPContext:port
+         *
+         * The port to run on. Set to 0 if you don't care what port to run on.
+         **/
         g_object_class_install_property
                 (object_class,
                  PROP_PORT,
@@ -305,6 +315,12 @@ gupnp_context_class_init (GUPnPContextClass *klass)
                                     G_PARAM_READWRITE |
                                     G_PARAM_CONSTRUCT_ONLY));
 
+        /**
+         * GUPnPContext:subscription-timeout
+         *
+         * The preferred subscription timeout: the number of seconds after
+         * which subscriptions are renewed.
+         **/
         g_object_class_install_property
                 (object_class,
                  PROP_SUBSCRIPTION_TIMEOUT,

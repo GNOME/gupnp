@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2006 OpenedHand Ltd.
+ * Copyright (C) 2006, 2007 OpenedHand Ltd.
  *
  * Author: Jorn Baayen <jorn@openedhand.com>
  *
@@ -148,16 +148,26 @@ gupnp_device_info_class_init (GUPnPDeviceInfoClass *klass)
 
         g_type_class_add_private (klass, sizeof (GUPnPDeviceInfoPrivate));
 
+        /**
+         * GUPnPDeviceInfo:context
+         *
+         * The #GUPnPContext to use.
+         **/
         g_object_class_install_property
                 (object_class,
                  PROP_CONTEXT,
                  g_param_spec_object ("context",
                                       "Context",
-                                      "GUPnPContext",
+                                      "The GUPnPContext",
                                       GUPNP_TYPE_CONTEXT,
                                       G_PARAM_READWRITE |
                                       G_PARAM_CONSTRUCT_ONLY));
 
+        /**
+         * GUPnPDeviceInfo:location
+         *
+         * The location of the device description file.
+         **/
         g_object_class_install_property
                 (object_class,
                  PROP_LOCATION,
@@ -169,6 +179,11 @@ gupnp_device_info_class_init (GUPnPDeviceInfoClass *klass)
                                       G_PARAM_READWRITE |
                                       G_PARAM_CONSTRUCT_ONLY));
 
+        /**
+         * GUPnPDeviceInfo:udn
+         *
+         * The UDN of this device.
+         **/
         g_object_class_install_property
                 (object_class,
                  PROP_UDN,
@@ -459,7 +474,7 @@ icon_free (Icon *icon)
  * @info: A #GUPnPDeviceInfo
  * @requested_mime_type: The requested file format, or NULL for any
  * @requested_depth: The requested color depth, or -1 for any
- * @cequested_width: The requested width, or -1 for any
+ * @requested_width: The requested width, or -1 for any
  * @requested_height: The requested height, or -1 for any
  * @prefer_bigger: TRUE if a bigger, rather than a smaller icon should be
  * returned if no exact match could be found

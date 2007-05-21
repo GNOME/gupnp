@@ -22,6 +22,7 @@ gupnp-marshal.h: gupnp-marshal.list
 BUILT_SOURCES = gupnp-marshal.c gupnp-marshal.h
 
 libgupnp_1_0_la_SOURCES = gupnp-context.c		\
+			  gupnp-context-private.h	\
 			  gupnp-control-point.c		\
 			  gupnp-device-info.c		\
 			  gupnp-device-proxy.c		\
@@ -36,6 +37,8 @@ libgupnp_1_0_la_SOURCES = gupnp-context.c		\
 			  $(BUILT_SOURCES)
 
 libgupnp_1_0_la_LIBADD = $(LIBGUPNP_LIBS)
+
+EXTRA_DIST = gupnp-marshal.list
 
 CLEANFILES = $(BUILT_SOURCES)
 DISTCLEANFILES = $(BUILT_SOURCES)

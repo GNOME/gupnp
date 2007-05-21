@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2006 OpenedHand Ltd.
+ * Copyright (C) 2006, 2007 OpenedHand Ltd.
  *
  * Author: Jorn Baayen <jorn@openedhand.com>
  *
@@ -150,16 +150,26 @@ gupnp_service_info_class_init (GUPnPServiceInfoClass *klass)
 
         g_type_class_add_private (klass, sizeof (GUPnPServiceInfoPrivate));
 
+        /**
+         * GUPnPServiceInfo:context
+         *
+         * The #GUPnPContext to use.
+         **/
         g_object_class_install_property
                 (object_class,
                  PROP_CONTEXT,
                  g_param_spec_object ("context",
                                       "Context",
-                                      "GUPnPContext",
+                                      "The GUPnPContext.",
                                       GUPNP_TYPE_CONTEXT,
                                       G_PARAM_READWRITE |
                                       G_PARAM_CONSTRUCT_ONLY));
 
+        /**
+         * GUPnPServiceInfo:location
+         *
+         * The location of the device description file.
+         **/
         g_object_class_install_property
                 (object_class,
                  PROP_LOCATION,
@@ -171,6 +181,11 @@ gupnp_service_info_class_init (GUPnPServiceInfoClass *klass)
                                       G_PARAM_READWRITE |
                                       G_PARAM_CONSTRUCT_ONLY));
 
+        /**
+         * GUPnPServiceInfo:udn
+         *
+         * The UDN of the containing device.
+         **/
         g_object_class_install_property
                 (object_class,
                  PROP_UDN,
@@ -299,7 +314,7 @@ gupnp_service_info_get_service_type (GUPnPServiceInfo *info)
 }
 
 /**
- * gupnp_service_info_get_type
+ * gupnp_service_info_get_id
  * @info: A #GUPnPServiceInfo
  *
  * Return value: The ID, or NULL. g_free() after use.
@@ -311,7 +326,7 @@ gupnp_service_info_get_id (GUPnPServiceInfo *info)
 }
 
 /**
- * gupnp_service_info_get_type
+ * gupnp_service_info_get_scpd_url
  * @info: A #GUPnPServiceInfo
  *
  * Return value: The SCPD URL, or NULL. g_free() after use.
@@ -323,7 +338,7 @@ gupnp_service_info_get_scpd_url (GUPnPServiceInfo *info)
 }
 
 /**
- * gupnp_service_info_get_type
+ * gupnp_service_info_get_control_url
  * @info: A #GUPnPServiceInfo
  *
  * Return value: The control URL, or NULL. g_free() after use.
@@ -335,7 +350,7 @@ gupnp_service_info_get_control_url (GUPnPServiceInfo *info)
 }
 
 /**
- * gupnp_service_info_get_type
+ * gupnp_service_info_get_event_subscription_url
  * @info: A #GUPnPServiceInfo
  *
  * Return value: The event subscription URL, or NULL. g_free() after use.

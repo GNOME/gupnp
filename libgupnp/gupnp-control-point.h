@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2006 OpenedHand Ltd.
+ * Copyright (C) 2006, 2007 OpenedHand Ltd.
  *
  * Author: Jorn Baayen <jorn@openedhand.com>
  *
@@ -56,6 +56,16 @@ gupnp_control_point_get_type (void) G_GNUC_CONST;
 
 typedef struct _GUPnPControlPointPrivate GUPnPControlPointPrivate;
 
+/**
+ * GUPnPControlPoint
+ *
+ * A control point abstracts device and service discovery. After creating
+ * a control point and activating it using gssdp_resource_browser_set_active(),
+ * the ::device-proxy-available, ::service-proxy-available,
+ * ::device-proxy-unavailable and ::service-proxy-unavailable signals will
+ * be emitted whenever the availability of a device or service matching
+ * the specified discovery target changes.
+ **/
 typedef struct {
         GSSDPResourceBrowser parent;
 

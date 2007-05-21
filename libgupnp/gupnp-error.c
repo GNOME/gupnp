@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2006 OpenedHand Ltd.
+ * Copyright (C) 2006, 2007 OpenedHand Ltd.
  *
  * Author: Jorn Baayen <jorn@openedhand.com>
  *
@@ -21,6 +21,11 @@
 
 #include "gupnp-error.h"
 
+/**
+ * gupnp_error_quark
+ *
+ * Returns a #GQuark uniquely used by GUPnP's errors.
+ **/
 GQuark
 gupnp_error_quark (void)
 {

@@ -52,6 +52,12 @@ gupnp_context_get_type (void) G_GNUC_CONST;
 
 typedef struct _GUPnPContextPrivate GUPnPContextPrivate;
 
+/**
+ * GUPnPContext
+ *
+ * #GUPnPContext wraps the networking bits that are used by the various
+ * GUPnP classes. It automatically starts a web server as necessary.
+ **/
 typedef struct {
         GSSDPClient parent;
 

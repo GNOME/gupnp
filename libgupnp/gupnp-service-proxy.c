@@ -265,16 +265,30 @@ gupnp_service_proxy_class_init (GUPnPServiceProxyClass *klass)
         
         g_type_class_add_private (klass, sizeof (GUPnPServiceProxyPrivate));
 
+        /**
+         * GUPnPServiceProxy:subscribed
+         *
+         * Whether we are subscribed to this service.
+         **/
         g_object_class_install_property
                 (object_class,
                  PROP_SUBSCRIBED,
                  g_param_spec_boolean ("subscribed",
                                        "Subscribed",
-                                       "TRUE if we are subscribed to the "
+                                       "Whether we are subscribed to this "
                                        "service",
                                        FALSE,
                                        G_PARAM_READWRITE));
                                        
+        /**
+         * GUPnPServiceProxy::subscription-lost
+         * @proxy: The #GUPnPServiceProxy that received the signal
+         * @error: A pointer to a #GError describing why the subscription has
+         * been lost
+         *
+         * Emitted whenever the subscription to this service has been lost due
+         * to an error condition.
+         **/
         signals[SUBSCRIPTION_LOST] =
                 g_signal_new ("subscription-lost",
                               GUPNP_TYPE_SERVICE_PROXY,

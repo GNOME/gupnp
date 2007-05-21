@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2006 OpenedHand Ltd.
+ * Copyright (C) 2006, 2007 OpenedHand Ltd.
  *
  * Author: Jorn Baayen <jorn@openedhand.com>
  *
@@ -55,6 +55,12 @@ gupnp_service_info_get_type (void) G_GNUC_CONST;
 
 typedef struct _GUPnPServiceInfoPrivate GUPnPServiceInfoPrivate;
 
+/**
+ * GUPnPServiceInfo
+ *
+ * The #GUPnPServiceInfo interface provides methods for querying service
+ * information.
+ **/
 typedef struct {
         GObject parent;
         
