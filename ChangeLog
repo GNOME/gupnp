@@ -1,5 +1,15 @@
 2007-05-21  Jorn Baayen  <jorn@openedhand.com>
 
+	* doc/Makefile.am:
+
+	Hide private bits.
+
+	* doc/gupnp-docs.sgml:
+
+	Added.
+
+2007-05-21  Jorn Baayen  <jorn@openedhand.com>
+
 	* configure.ac:
 
 	Point to gupnp.org.
