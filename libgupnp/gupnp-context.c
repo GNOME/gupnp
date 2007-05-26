@@ -19,6 +19,14 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:gupnp-context
+ * @short_description: Context object wrapping shared networking bits.
+ *
+ * #GUPnPContext wraps the networking bits that are used by the various
+ * GUPnP classes. It automatically starts a web server on demand.
+ */
+
 #include <config.h>
 #include <errno.h>
 #include <string.h>

@@ -57,13 +57,6 @@ gupnp_service_proxy_get_type (void) G_GNUC_CONST;
 
 typedef struct _GUPnPServiceProxyPrivate GUPnPServiceProxyPrivate;
 
-/**
- * GUPnPServiceProxy
- *
- * A service proxy sends commands to a remote UPnP service and handles
- * incoming event notifications. Service proxies also implement the
- * #GUPnPServiceInfo interface.
- **/
 typedef struct {
         GUPnPServiceInfo parent;
 

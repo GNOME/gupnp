@@ -19,6 +19,15 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:gupnp-service-proxy
+ * @short_description: Proxy class for remote services.
+ *
+ * #GUPnPServiceProxy sends commands to a remote UPnP service and handles
+ * incoming event notifications. Service proxies also implement the
+ * #GUPnPServiceInfo interface.
+ */
+
 #ifndef _XOPEN_SOURCE
 #define _XOPEN_SOURCE
 #endif

@@ -55,12 +55,6 @@ gupnp_service_info_get_type (void) G_GNUC_CONST;
 
 typedef struct _GUPnPServiceInfoPrivate GUPnPServiceInfoPrivate;
 
-/**
- * GUPnPServiceInfo
- *
- * The #GUPnPServiceInfo interface provides methods for querying service
- * information.
- **/
 typedef struct {
         GObject parent;
         

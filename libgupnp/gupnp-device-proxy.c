@@ -19,6 +19,15 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:gupnp-device-proxy
+ * @short_description: Proxy class for remote devices.
+ *
+ * #GUPnPServiceProxy allows for retrieving proxies for a device's subdevices
+ * and services. Device proxies also implement the #GUPnPDeviceInfo
+ * interface.
+ */
+
 #include <string.h>
 
 #include "gupnp-device-proxy.h"

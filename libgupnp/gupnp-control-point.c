@@ -19,6 +19,18 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:gupnp-control-point
+ * @short_description: Class handling device and service discovery.
+ *
+ * #GUPnPControlPoint handles device and service discovery. After creating
+ * a control point and activating it using gssdp_resource_browser_set_active(),
+ * the ::device-proxy-available, ::service-proxy-available,
+ * ::device-proxy-unavailable and ::service-proxy-unavailable signals will
+ * be emitted whenever the availability of a device or service matching
+ * the specified discovery target changes.
+ */
+
 #include <string.h>
 
 #include "gupnp-control-point.h"

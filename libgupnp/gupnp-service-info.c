@@ -19,6 +19,14 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:gupnp-service-info
+ * @short_description: Interface for querying service information.
+ *
+ * The #GUPnPDeviceInfo interface provides methods for querying service
+ * information.
+ */
+
 #include <libsoup/soup.h>
 #include <string.h>
 

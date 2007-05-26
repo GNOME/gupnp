@@ -1,5 +1,23 @@
 2007-05-26  Jorn Baayen  <jorn@openedhand.com>
 
+	* libgupnp/gupnp-context.c:
+	* libgupnp/gupnp-context.h:
+	* libgupnp/gupnp-control-point.c:
+	* libgupnp/gupnp-control-point.h:
+	* libgupnp/gupnp-device-info.c:
+	* libgupnp/gupnp-device-info.h:
+	* libgupnp/gupnp-device-proxy.c:
+	* libgupnp/gupnp-device-proxy.h:
+	* libgupnp/gupnp-error.c:
+	* libgupnp/gupnp-service-info.c:
+	* libgupnp/gupnp-service-info.h:
+	* libgupnp/gupnp-service-proxy.c:
+	* libgupnp/gupnp-service-proxy.h:
+
+	More gtkdoc-fu.
+
+2007-05-26  Jorn Baayen  <jorn@openedhand.com>
+
 	* configure.ac:
 	* doc/Makefile.am:
 	* doc/gupnp-docs.sgml:

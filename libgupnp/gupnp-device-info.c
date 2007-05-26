@@ -19,6 +19,14 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:gupnp-device-info
+ * @short_description: Interface for querying device information.
+ *
+ * The #GUPnPDeviceInfo interface provides methods for querying device
+ * information.
+ */
+
 #include <string.h>
 
 #include "gupnp-device-info.h"

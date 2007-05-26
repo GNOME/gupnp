@@ -56,13 +56,6 @@ gupnp_device_proxy_get_type (void) G_GNUC_CONST;
 
 typedef struct _GUPnPDeviceProxyPrivate GUPnPDeviceProxyPrivate;
 
-/**
- * GUPnPDeviceProxy
- *
- * A device proxy allows for retrieving proxies for a device's subdevices
- * and services. Device proxies also implement the #GUPnPDeviceInfo
- * interface.
- **/
 typedef struct {
         GUPnPDeviceInfo parent;
 
