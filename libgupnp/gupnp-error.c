@@ -21,7 +21,7 @@
 
 /**
  * SECTION:gupnp-error
- * @short_description: Error information
+ * @short_description: Error information.
  */
 
 #include "gupnp-error.h"
