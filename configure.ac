@@ -46,5 +46,6 @@ tests/Makefile
 po/Makefile.in
 po/Makefile
 doc/Makefile
+doc/version.xml
 gupnp-1.0.pc
 ])

@@ -1,3 +1,11 @@
+2007-05-26  Jorn Baayen  <jorn@openedhand.com>
+
+	* configure.ac:
+	* doc/Makefile.am:
+	* doc/gupnp-docs.sgml:
+
+	Added doc preamble.
+
 2007-05-22  Jorn Baayen  <jorn@openedhand.com>
 
 	* libgupnp/gupnp-device-proxy.h:
