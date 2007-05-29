@@ -633,3 +633,325 @@ gupnp_device_info_get_icon_url (GUPnPDeviceInfo *info,
 
         return ret;
 }
+
+/**
+ * gupnp_device_info_list_devices
+ * @info: A #GUPnPDeviceInfo
+ *
+ * Return value: A #GList of objects implementing #GUPnPDeviceInfo representing
+ * the devices directly contained in @info. The returned list should be
+ * g_list_free()'d and the elements should be g_object_unref()'d.
+ **/
+GList *
+gupnp_device_info_list_devices (GUPnPDeviceInfo *info)
+{
+        GUPnPDeviceInfoClass *class;
+        GList *devices;
+        xmlNode *element;
+
+        g_return_val_if_fail (GUPNP_IS_DEVICE_INFO (info), NULL);
+
+        class = GUPNP_DEVICE_INFO_GET_CLASS (info);
+
+        g_return_val_if_fail (class->get_device, NULL);
+
+        g_return_val_if_fail (class->get_element, NULL);
+        element = class->get_element (info);
+
+        devices = NULL;
+
+        element = xml_util_get_element (element,
+                                        "deviceList",
+                                        NULL);
+        if (!element)
+                return NULL;
+
+        for (element = element->children; element; element = element->next) {
+                if (!strcmp ("device", (char *) element->name)) {
+                        GUPnPDeviceInfo *child;
+
+                        child = class->get_device (info, element);
+                        devices = g_list_prepend (devices, child);
+                }
+        }
+
+        return devices;
+}
+
+/**
+ * gupnp_device_info_list_device_types
+ * @info: A #GUPnPDeviceInfo
+ *
+ * Return value: A #GList of strings representing the types of the devices
+ * directly contained in @info. The returned list should be g_list_free()'d
+ * and the elements should be g_free()'d.
+ **/
+GList *
+gupnp_device_info_list_device_types (GUPnPDeviceInfo *info)
+{
+        GUPnPDeviceInfoClass *class;
+        GList *device_types;
+        xmlNode *element;
+
+        g_return_val_if_fail (GUPNP_IS_DEVICE_INFO (info), NULL);
+
+        class = GUPNP_DEVICE_INFO_GET_CLASS (info);
+
+        g_return_val_if_fail (class->get_element, NULL);
+        element = class->get_element (info);
+
+        device_types = NULL;
+
+        element = xml_util_get_element (element,
+                                        "deviceList",
+                                        NULL);
+        if (!element)
+                return NULL;
+
+        for (element = element->children; element; element = element->next) {
+                if (!strcmp ("device", (char *) element->name)) {
+                        xmlNode *type_element;
+                        xmlChar *type;
+
+                        type_element = xml_util_get_element (element,
+                                                             "deviceType",
+                                                             NULL);
+                        if (!type_element)
+                                continue;
+
+                        type = xmlNodeGetContent (type_element);
+                        if (!type)
+                                continue;
+
+                        device_types =
+                                g_list_prepend (device_types,
+                                                g_strdup ((char *) type));
+                        xmlFree (type);
+                }
+        }
+
+        return device_types;
+}
+
+/**
+ * gupnp_device_info_get_device
+ * @info: A #GUPnPDeviceInfo
+ * @type: The type of the device to be retrieved.
+ *
+ * Return value: The service with type @type directly contained in @info as
+ * an object implementing #GUPnPDeviceInfo object, or NULL if no such device
+ * was found. The returned object should be unreffed when done.
+ **/
+GUPnPDeviceInfo *
+gupnp_device_info_get_device (GUPnPDeviceInfo *info,
+                              const char      *type)
+{
+        GUPnPDeviceInfoClass *class;
+        GUPnPDeviceInfo *device;
+        xmlNode *element;
+
+        g_return_val_if_fail (GUPNP_IS_DEVICE_INFO (info), NULL);
+
+        class = GUPNP_DEVICE_INFO_GET_CLASS (info);
+
+        g_return_val_if_fail (class->get_device, NULL);
+
+        g_return_val_if_fail (class->get_element, NULL);
+        element = class->get_element (info);
+
+        device = NULL;
+
+        element = xml_util_get_element (element,
+                                        "deviceList",
+                                        NULL);
+        if (!element)
+                return NULL;
+
+        for (element = element->children; element; element = element->next) {
+                if (!strcmp ("device", (char *) element->name)) {
+                        xmlNode *type_element;
+                        xmlChar *type_str;
+
+                        type_element = xml_util_get_element (element,
+                                                             "deviceType",
+                                                             NULL);
+                        if (!type_element)
+                                continue;
+
+                        type_str = xmlNodeGetContent (type_element);
+                        if (!type_str)
+                                continue;
+
+                        if (!strcmp (type, (char *) type_str))
+                                device = class->get_device (info, element);
+
+                        xmlFree (type_str);
+
+                        if (device)
+                                break;
+                }
+        }
+
+        return device;
+}
+
+/**
+ * gupnp_device_info_list_services
+ * @info: A #GUPnPDeviceInfo
+ *
+ * Return value: A #GList of objects implementing #GUPnPServiceInfo representing
+ * the services directly contained in @info. The returned list should be
+ * g_list_free()'d and the elements should be g_object_unref()'d.
+ **/
+GList *
+gupnp_device_info_list_services (GUPnPDeviceInfo *info)
+{
+        GUPnPDeviceInfoClass *class;
+        GList *services;
+        xmlNode *element;
+
+        g_return_val_if_fail (GUPNP_IS_DEVICE_INFO (info), NULL);
+
+        class = GUPNP_DEVICE_INFO_GET_CLASS (info);
+
+        g_return_val_if_fail (class->get_service, NULL);
+
+        g_return_val_if_fail (class->get_element, NULL);
+        element = class->get_element (info);
+
+        services = NULL;
+
+        element = xml_util_get_element (element,
+                                        "serviceList",
+                                        NULL);
+        if (!element)
+                return NULL;
+
+        for (element = element->children; element; element = element->next) {
+                if (!strcmp ("service", (char *) element->name)) {
+                        GUPnPServiceInfo *service;
+
+                        service = class->get_service (info, element);
+                        services = g_list_prepend (services, service);
+                }
+        }
+
+        return services;
+}
+
+/**
+ * gupnp_device_info_list_service_types
+ * @info: A #GUPnPDeviceInfo
+ *
+ * Return value: A #GList of strings representing the types of the services
+ * directly contained in @info. The returned list should be g_list_free()'d
+ * and the elements should be g_free()'d.
+ **/
+GList *
+gupnp_device_info_list_service_types (GUPnPDeviceInfo *info)
+{
+        GUPnPDeviceInfoClass *class;
+        GList *service_types;
+        xmlNode *element;
+
+        g_return_val_if_fail (GUPNP_IS_DEVICE_INFO (info), NULL);
+
+        class = GUPNP_DEVICE_INFO_GET_CLASS (info);
+
+        g_return_val_if_fail (class->get_element, NULL);
+        element = class->get_element (info);
+
+        service_types = NULL;
+
+        element = xml_util_get_element (element,
+                                        "serviceList",
+                                        NULL);
+        if (!element)
+                return NULL;
+
+        for (element = element->children; element; element = element->next) {
+                if (!strcmp ("service", (char *) element->name)) {
+                        xmlNode *type_element;
+                        xmlChar *type;
+
+                        type_element = xml_util_get_element (element,
+                                                             "serviceType",
+                                                             NULL);
+                        if (!type_element)
+                                continue;
+
+                        type = xmlNodeGetContent (type_element);
+                        if (!type)
+                                continue;
+
+                        service_types =
+                                g_list_prepend (service_types,
+                                                g_strdup ((char *) type));
+                        xmlFree (type);
+                }
+        }
+
+        return service_types;
+}
+
+/**
+ * gupnp_device_info_get_service
+ * @info: A #GUPnPDeviceInfo
+ * @type: The type of the service to be retrieved.
+ *
+ * Return value: The service with type @type directly contained in @info as
+ * an object implementing #GUPnPServiceInfo object, or NULL if no such device
+ * was found. The returned object should be unreffed when done.
+ **/
+GUPnPServiceInfo *
+gupnp_device_info_get_service (GUPnPDeviceInfo *info,
+                               const char      *type)
+{
+        GUPnPDeviceInfoClass *class;
+        GUPnPServiceInfo *service;
+        xmlNode *element;
+
+        g_return_val_if_fail (GUPNP_IS_DEVICE_INFO (info), NULL);
+
+        class = GUPNP_DEVICE_INFO_GET_CLASS (info);
+
+        g_return_val_if_fail (class->get_service, NULL);
+
+        g_return_val_if_fail (class->get_element, NULL);
+        element = class->get_element (info);
+
+        service = NULL;
+
+        element = xml_util_get_element (element,
+                                        "serviceList",
+                                        NULL);
+        if (!element)
+                return NULL;
+
+        for (element = element->children; element; element = element->next) {
+                if (!strcmp ("service", (char *) element->name)) {
+                        xmlNode *type_element;
+                        xmlChar *type_str;
+
+                        type_element = xml_util_get_element (element,
+                                                             "serviceType",
+                                                             NULL);
+                        if (!type_element)
+                                continue;
+
+                        type_str = xmlNodeGetContent (type_element);
+                        if (!type_str)
+                                continue;
+
+                        if (!strcmp (type, (char *) type_str))
+                                service = class->get_service (info, element);
+
+                        xmlFree (type_str);
+
+                        if (service)
+                                break;
+                }
+        }
+
+        return service;
+}

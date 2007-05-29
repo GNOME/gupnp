@@ -21,6 +21,7 @@
 
 #include <libgupnp/gupnp-control-point.h>
 #include <string.h>
+#include <locale.h>
 
 static void
 device_proxy_available_cb (GUPnPControlPoint *cp,
@@ -178,6 +179,7 @@ main (int argc, char **argv)
         
         g_thread_init (NULL);
         g_type_init ();
+        setlocale (LC_ALL, "");
 
         error = NULL;
         context = gupnp_context_new (NULL, NULL, 0, &error);

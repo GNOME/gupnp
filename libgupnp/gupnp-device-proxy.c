@@ -83,6 +83,53 @@ gupnp_device_proxy_get_url_base (GUPnPDeviceInfo *info)
         return (const char *) proxy->priv->url_base;
 }
 
+static GUPnPDeviceInfo *
+gupnp_device_proxy_get_device (GUPnPDeviceInfo *info,
+                               xmlNode         *element)
+{
+        GUPnPDeviceProxy *proxy, *device;
+        GUPnPContext *context;
+        const char *location, *udn;
+
+        proxy = GUPNP_DEVICE_PROXY (info);
+                                
+        context = gupnp_device_info_get_context (info);
+        udn = gupnp_device_info_get_udn (info);
+        location = gupnp_device_info_get_location (info);
+
+        device = _gupnp_device_proxy_new_from_element (context,
+                                                       element,
+                                                       udn,
+                                                       location,
+                                                       proxy->priv->url_base);
+
+        return GUPNP_DEVICE_INFO (device);
+}
+
+static GUPnPServiceInfo *
+gupnp_device_proxy_get_service (GUPnPDeviceInfo *info,
+                                xmlNode         *element)
+{
+        GUPnPDeviceProxy *proxy;
+        GUPnPServiceProxy *service;
+        GUPnPContext *context;
+        const char *location, *udn;
+
+        proxy = GUPNP_DEVICE_PROXY (info);
+                                
+        context = gupnp_device_info_get_context (info);
+        udn = gupnp_device_info_get_udn (info);
+        location = gupnp_device_info_get_location (info);
+
+        service = _gupnp_service_proxy_new_from_element (context,
+                                                         element,
+                                                         udn,
+                                                         location,
+                                                         proxy->priv->url_base);
+
+        return GUPNP_SERVICE_INFO (service);
+}
+
 static void
 gupnp_device_proxy_init (GUPnPDeviceProxy *proxy)
 {
@@ -105,349 +152,10 @@ gupnp_device_proxy_class_init (GUPnPDeviceProxyClass *klass)
 
         info_class->get_element  = gupnp_device_proxy_get_element;
         info_class->get_url_base = gupnp_device_proxy_get_url_base;
+        info_class->get_device   = gupnp_device_proxy_get_device;
+        info_class->get_service  = gupnp_device_proxy_get_service;
        
         g_type_class_add_private (klass, sizeof (GUPnPDeviceProxyPrivate));
-}
-
-/**
- * gupnp_device_proxy_list_devices
- * @proxy: A #GUPnPDeviceProxy
- *
- * Return value: A #GList of #GUPnPDeviceProxy objects representing the
- * devices directly contained in @proxy. The returned list should be
- * g_list_free()'d and the elements should be g_object_unref()'d.
- **/
-GList *
-gupnp_device_proxy_list_devices (GUPnPDeviceProxy *proxy)
-{
-        GList *devices;
-        xmlNode *element;
-
-        g_return_val_if_fail (GUPNP_IS_DEVICE_PROXY (proxy), NULL);
-
-        devices = NULL;
-
-        element = xml_util_get_element (proxy->priv->element,
-                                        "deviceList",
-                                        NULL);
-        if (!element)
-                return NULL;
-
-        for (element = element->children; element; element = element->next) {
-                if (!strcmp ("device", (char *) element->name)) {
-                        GUPnPContext *context;
-                        const char *location, *udn;
-                        GUPnPDeviceProxy *child;
-                                
-                        context = gupnp_device_info_get_context
-                                                (GUPNP_DEVICE_INFO (proxy));
-                        location = gupnp_device_info_get_location
-                                                (GUPNP_DEVICE_INFO (proxy));
-                        udn = gupnp_device_info_get_udn
-                                                (GUPNP_DEVICE_INFO (proxy));
-
-                        child = _gupnp_device_proxy_new_from_element
-                                                (context,
-                                                 element,
-                                                 udn,
-                                                 location,
-                                                 proxy->priv->url_base);
-
-                        devices = g_list_prepend (devices, child);
-                }
-        }
-
-        return devices;
-}
-
-/**
- * gupnp_device_proxy_list_device_types
- * @proxy: A #GUPnPDeviceProxy
- *
- * Return value: A #GList of strings representing the types of the devices
- * directly contained in @proxy. The returned list should be g_list_free()'d
- * and the elements should be g_free()'d.
- **/
-GList *
-gupnp_device_proxy_list_device_types (GUPnPDeviceProxy *proxy)
-{
-        GList *device_types;
-        xmlNode *element;
-
-        g_return_val_if_fail (GUPNP_IS_DEVICE_PROXY (proxy), NULL);
-
-        device_types = NULL;
-
-        element = xml_util_get_element (proxy->priv->element,
-                                        "deviceList",
-                                        NULL);
-        if (!element)
-                return NULL;
-
-        for (element = element->children; element; element = element->next) {
-                if (!strcmp ("device", (char *) element->name)) {
-                        xmlNode *type_element;
-                        xmlChar *type;
-
-                        type_element = xml_util_get_element (element,
-                                                             "deviceType",
-                                                             NULL);
-                        if (!type_element)
-                                continue;
-
-                        type = xmlNodeGetContent (type_element);
-                        if (!type)
-                                continue;
-
-                        device_types =
-                                g_list_prepend (device_types,
-                                                g_strdup ((char *) type));
-                        xmlFree (type);
-                }
-        }
-
-        return device_types;
-}
-
-/**
- * gupnp_device_proxy_get_device
- * @proxy: A #GUPnPDeviceProxy
- * @type: The type of the device to be retrieved.
- *
- * Return value: The device with type @type directly contained in @proxy as
- * a #GUPnPDeviceProxy object, or NULL if no such device was found.
- **/
-GUPnPDeviceProxy *
-gupnp_device_proxy_get_device (GUPnPDeviceProxy *proxy,
-                               const char       *type)
-{
-        GUPnPDeviceProxy *child;
-        xmlNode *element;
-
-        g_return_val_if_fail (GUPNP_IS_DEVICE_PROXY (proxy), NULL);
-        g_return_val_if_fail (type, NULL);
-
-        child = NULL;
-
-        element = xml_util_get_element (proxy->priv->element,
-                                        "deviceList",
-                                        NULL);
-        if (!element)
-                return NULL;
-
-        for (element = element->children; element; element = element->next) {
-                if (!strcmp ("device", (char *) element->name)) {
-                        xmlNode *type_element;
-                        xmlChar *type_str;
-
-                        type_element = xml_util_get_element (element,
-                                                             "deviceType",
-                                                             NULL);
-                        if (!type_element)
-                                continue;
-
-                        type_str = xmlNodeGetContent (type_element);
-                        if (!type_str)
-                                continue;
-
-                        if (!strcmp (type, (char *) type_str)) {
-                                GUPnPContext *context;
-                                const char *location, *udn;
-                                
-                                context = gupnp_device_info_get_context
-                                                (GUPNP_DEVICE_INFO (proxy));
-                                location = gupnp_device_info_get_location
-                                                (GUPNP_DEVICE_INFO (proxy));
-                                udn = gupnp_device_info_get_udn
-                                                (GUPNP_DEVICE_INFO (proxy));
-
-                                child = _gupnp_device_proxy_new_from_element
-                                                       (context,
-                                                        element,
-                                                        udn,
-                                                        location,
-                                                        proxy->priv->url_base);
-                        }
-
-                        xmlFree (type_str);
-
-                        if (child)
-                                break;
-                }
-        }
-
-        return child;
-}
-
-/**
- * gupnp_device_proxy_list_services
- * @proxy: A #GUPnPDeviceProxy
- *
- * Return value: A #GList of #GUPnPServiceProxy objects representing the
- * services directly contained in @proxy. The returned list should be
- * g_list_free()'d and the elements should be g_object_unref()'d.
- **/
-GList *
-gupnp_device_proxy_list_services (GUPnPDeviceProxy *proxy)
-{
-        GList *services;
-        xmlNode *element;
-
-        g_return_val_if_fail (GUPNP_IS_DEVICE_PROXY (proxy), NULL);
-
-        services = NULL;
-
-        element = xml_util_get_element (proxy->priv->element,
-                                        "serviceList",
-                                        NULL);
-        if (!element)
-                return NULL;
-
-        for (element = element->children; element; element = element->next) {
-                if (!strcmp ("service", (char *) element->name)) {
-                        GUPnPContext *context;
-                        const char *location, *udn;
-                        GUPnPServiceProxy *service;
-
-                        context = gupnp_device_info_get_context
-                                                (GUPNP_DEVICE_INFO (proxy));
-                        location = gupnp_device_info_get_location
-                                                (GUPNP_DEVICE_INFO (proxy));
-                        udn = gupnp_device_info_get_udn
-                                                (GUPNP_DEVICE_INFO (proxy));
-
-                        service = _gupnp_service_proxy_new_from_element
-                                                (context,
-                                                 element,
-                                                 udn,
-                                                 location,
-                                                 proxy->priv->url_base);
-
-                        services = g_list_prepend (services, service);
-                }
-        }
-
-        return services;
-}
-
-/**
- * gupnp_device_proxy_list_service_types
- * @proxy: A #GUPnPDeviceProxy
- *
- * Return value: A #GList of strings representing the types of the services
- * directly contained in @proxy. The returned list should be g_list_free()'d
- * and the elements should be g_free()'d.
- **/
-GList *
-gupnp_device_proxy_list_service_types (GUPnPDeviceProxy *proxy)
-{
-        GList *service_types;
-        xmlNode *element;
-
-        g_return_val_if_fail (GUPNP_IS_DEVICE_PROXY (proxy), NULL);
-
-        service_types = NULL;
-
-        element = xml_util_get_element (proxy->priv->element,
-                                        "serviceList",
-                                        NULL);
-        if (!element)
-                return NULL;
-
-        for (element = element->children; element; element = element->next) {
-                if (!strcmp ("service", (char *) element->name)) {
-                        xmlNode *type_element;
-                        xmlChar *type;
-
-                        type_element = xml_util_get_element (element,
-                                                             "serviceType",
-                                                             NULL);
-                        if (!type_element)
-                                continue;
-
-                        type = xmlNodeGetContent (type_element);
-                        if (!type)
-                                continue;
-
-                        service_types =
-                                g_list_prepend (service_types,
-                                                g_strdup ((char *) type));
-                        xmlFree (type);
-                }
-        }
-
-        return service_types;
-}
-
-/**
- * gupnp_device_proxy_get_service
- * @proxy: A #GUPnPDeviceProxy
- * @type: The type of the service to be retrieved.
- *
- * Return value: The service with type @type directly contained in @proxy as
- * a #GUPnPServiceProxy object, or NULL if no such service was found.
- **/
-GUPnPServiceProxy *
-gupnp_device_proxy_get_service (GUPnPDeviceProxy *proxy,
-                                const char       *type)
-{
-        GUPnPServiceProxy *service;
-        xmlNode *element;
-
-        g_return_val_if_fail (GUPNP_IS_DEVICE_PROXY (proxy), NULL);
-        g_return_val_if_fail (type, NULL);
-
-        service = NULL;
-
-        element = xml_util_get_element (proxy->priv->element,
-                                        "serviceList",
-                                        NULL);
-        if (!element)
-                return NULL;
-
-        for (element = element->children; element; element = element->next) {
-                if (!strcmp ("service", (char *) element->name)) {
-                        xmlNode *type_element;
-                        xmlChar *type_str;
-
-                        type_element = xml_util_get_element (element,
-                                                             "serviceType",
-                                                             NULL);
-                        if (!type_element)
-                                continue;
-
-                        type_str = xmlNodeGetContent (type_element);
-                        if (!type_str)
-                                continue;
-
-                        if (!strcmp (type, (char *) type_str)) {
-                                GUPnPContext *context;
-                                const char *location, *udn;
-                                GUPnPServiceProxy *service;
-
-                                context = gupnp_device_info_get_context
-                                                (GUPNP_DEVICE_INFO (proxy));
-                                location = gupnp_device_info_get_location
-                                                (GUPNP_DEVICE_INFO (proxy));
-                                udn = gupnp_device_info_get_udn
-                                                (GUPNP_DEVICE_INFO (proxy));
-
-                                service = _gupnp_service_proxy_new_from_element
-                                                        (context,
-                                                         element,
-                                                         udn,
-                                                         location,
-                                                         proxy->priv->url_base);
-                        }
-
-                        xmlFree (type_str);
-
-                        if (service)
-                                break;
-                }
-        }
-
-        return service;
 }
 
 /**

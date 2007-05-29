@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2006 OpenedHand Ltd.
+ * Copyright (C) 2006, 2007 OpenedHand Ltd.
  *
  * Author: Jorn Baayen <jorn@openedhand.com>
  *
@@ -26,6 +26,7 @@
 #include <libxml/tree.h>
 
 #include "gupnp-context.h"
+#include "gupnp-service-info.h"
 
 G_BEGIN_DECLS
 
@@ -65,8 +66,12 @@ typedef struct {
         GObjectClass parent_class;
 
         /* vtable */
-        xmlNode    * (* get_element)  (GUPnPDeviceInfo *info);
-        const char * (* get_url_base) (GUPnPDeviceInfo *info);
+        xmlNode          * (* get_element)   (GUPnPDeviceInfo *info);
+        const char       * (* get_url_base)  (GUPnPDeviceInfo *info);
+        GUPnPDeviceInfo  * (* get_device)    (GUPnPDeviceInfo *info,
+                                              xmlNode         *element);
+        GUPnPServiceInfo * (* get_service)   (GUPnPDeviceInfo *info,
+                                              xmlNode         *element);
 
         /* future padding */
         void (* _gupnp_reserved1) (void);
@@ -125,6 +130,26 @@ gupnp_device_info_get_icon_url          (GUPnPDeviceInfo *info,
                                          int             *depth,
                                          int             *width,
                                          int             *height);
+
+GList *
+gupnp_device_info_list_devices          (GUPnPDeviceInfo *info);
+
+GList *
+gupnp_device_info_list_device_types     (GUPnPDeviceInfo *info);
+
+GUPnPDeviceInfo *
+gupnp_device_info_get_device            (GUPnPDeviceInfo *info,
+                                         const char      *type);
+
+GList *
+gupnp_device_info_list_services         (GUPnPDeviceInfo *info);
+
+GList *
+gupnp_device_info_list_service_types    (GUPnPDeviceInfo *info);
+
+GUPnPServiceInfo *
+gupnp_device_info_get_service           (GUPnPDeviceInfo *info,
+                                         const char      *type);
 
 G_END_DECLS
 

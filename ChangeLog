@@ -1,3 +1,27 @@
+2007-05-29  Jorn Baayen  <jorn@openedhand.com>
+
+	* configure.ac:
+
+	Bump version to 0.1.99.
+
+	* libgupnp/gupnp-device-info.c: (gupnp_device_info_get_icon_url):
+	* libgupnp/gupnp-device-info.h:
+	* libgupnp/gupnp-device-proxy.c: (gupnp_device_proxy_get_url_base),
+	(gupnp_device_proxy_get_device), (gupnp_device_proxy_get_service),
+	(gupnp_device_proxy_init), (gupnp_device_proxy_class_init):
+	* libgupnp/gupnp-device-proxy.h:
+
+	Move device subdevice and service retreival from DeviceProxy to
+	DeviceInfo. This so that client and server side code can expose
+	identical info API.
+
+	* libgupnp/gupnp-service-proxy.c:
+	(gupnp_service_proxy_begin_action), (get_current_language),
+	(action_got_response), (gupnp_service_proxy_begin_action_valist):
+	* tests/test.c: (main):
+
+	Set Accept-Language header on action requests.
+
 2007-05-26  Jorn Baayen  <jorn@openedhand.com>
 
 	* libgupnp/gupnp-context.c:

@@ -26,7 +26,6 @@
 
 #include "gupnp-context.h"
 #include "gupnp-device-info.h"
-#include "gupnp-service-proxy.h"
 
 G_BEGIN_DECLS
 
@@ -73,30 +72,10 @@ typedef struct {
 } GUPnPDeviceProxyClass;
 
 GUPnPDeviceProxy *
-gupnp_device_proxy_new                (GUPnPContext     *context,
-                                       xmlDoc           *doc,
-                                       const char       *udn,
-                                       const char       *location);
-
-GList *
-gupnp_device_proxy_list_devices       (GUPnPDeviceProxy *proxy);
-
-GList *
-gupnp_device_proxy_list_device_types  (GUPnPDeviceProxy *proxy);
-
-GUPnPDeviceProxy *
-gupnp_device_proxy_get_device         (GUPnPDeviceProxy *proxy,
-                                       const char       *type);
-
-GList *
-gupnp_device_proxy_list_services      (GUPnPDeviceProxy *proxy);
-
-GList *
-gupnp_device_proxy_list_service_types (GUPnPDeviceProxy *proxy);
-
-GUPnPServiceProxy *
-gupnp_device_proxy_get_service        (GUPnPDeviceProxy *proxy,
-                                       const char       *type);
+gupnp_device_proxy_new (GUPnPContext     *context,
+                        xmlDoc           *doc,
+                        const char       *udn,
+                        const char       *location);
 
 G_END_DECLS
 

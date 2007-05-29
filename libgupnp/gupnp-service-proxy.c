@@ -36,6 +36,7 @@
 #include <gobject/gvaluecollector.h>
 #include <string.h>
 #include <time.h>
+#include <locale.h>
 
 #include "gupnp-service-proxy.h"
 #include "gupnp-service-proxy-private.h"
@@ -324,7 +325,7 @@ gupnp_service_proxy_class_init (GUPnPServiceProxyClass *klass)
  * Sends action @action with parameters @Varargs to the service exposed by
  * @proxy synchronously.
  *
- * Return value: TRUE if sending the action was succesfull.
+ * Return value: TRUE if sending the action was succesful.
  **/
 gboolean
 gupnp_service_proxy_send_action (GUPnPServiceProxy *proxy,
@@ -365,7 +366,7 @@ stop_main_loop (GUPnPServiceProxy       *proxy,
  * See gupnp_service_proxy_send_action(); this version takes a va_list for
  * use by language bindings.
  *
- * Return value: TRUE if sending the action was succesfull.
+ * Return value: TRUE if sending the action was succesful.
  **/
 gboolean
 gupnp_service_proxy_send_action_valist (GUPnPServiceProxy *proxy,
@@ -451,6 +452,46 @@ gupnp_service_proxy_begin_action (GUPnPServiceProxy              *proxy,
         return ret;
 }
 
+/* Returns the language taken from the current locale, in a format
+ * suitable for the HTTP Accept-Language header. */
+static char *
+get_current_language (void)
+{
+        char *locale, *lang;
+        int i;
+        
+        locale = setlocale (LC_ALL, NULL);
+        if (locale == NULL)
+                return NULL;
+
+        if (strcmp (locale, "C") == 0)
+                return NULL;
+
+        lang = g_strdup (locale);
+
+        i = 0;
+        while (lang[i] != '\0') {
+                switch (lang[i]) {
+                case '_':
+                        lang[i] = '-';
+                        break;
+                case '.':
+                case '@':
+                        lang[i] = '\0';
+                        break;
+                default:
+                        break;
+                }
+
+                if (lang[i] == '\0')
+                        break;
+
+                i++;
+        }
+
+        return lang;
+}
+
 static void
 action_got_response (SoupMessage             *msg,
                      GUPnPServiceProxyAction *action)
@@ -484,7 +525,7 @@ gupnp_service_proxy_begin_action_valist
                                     GError                        **error,
                                     va_list                         var_args)
 {
-        char *control_url, *service_type, *full_action;
+        char *control_url, *service_type, *full_action, *lang;
         const char *arg_name;
         SoupSoapMessage *msg;
         GUPnPServiceProxyAction *ret;
@@ -513,6 +554,16 @@ gupnp_service_proxy_begin_action_valist
 				 "SOAPAction",
                                  full_action);
         g_free (full_action);
+
+        /* Specify language */
+        lang = get_current_language ();
+        if (lang) {
+                soup_message_add_header (SOUP_MESSAGE (msg)->request_headers,
+                                         "Accept-Language",
+                                         lang);
+
+                g_free (lang);
+        }
 
         /* Fill envelope */
 	soup_soap_message_start_envelope (msg);
