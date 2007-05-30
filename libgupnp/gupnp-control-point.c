@@ -458,6 +458,11 @@ gupnp_control_point_resource_unavailable
                                                                  (info)))) {
                                 proxy = GUPNP_SERVICE_PROXY (l->data);
 
+                                control_point->priv->services =
+                                        g_list_delete_link
+                                                (control_point->priv->services,
+                                                 l);
+
                                 break;
                         }
                 }
@@ -500,6 +505,11 @@ gupnp_control_point_resource_unavailable
                         if (!strcmp (udn,
                                      gupnp_device_info_get_udn (info))) {
                                 proxy = GUPNP_DEVICE_PROXY (l->data);
+
+                                control_point->priv->devices =
+                                        g_list_delete_link
+                                                (control_point->priv->services,
+                                                 l);
 
                                 break;
                         }
