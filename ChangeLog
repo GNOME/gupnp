@@ -1,3 +1,13 @@
+2007-06-11  Jorn Baayen  <jorn@openedhand.com>
+
+	* libgupnp/Makefile.am:
+	* libgupnp/gupnp-device.h:
+	* libgupnp/gupnp-root-device.h:
+	* libgupnp/gupnp-service.h:
+	* libgupnp/gupnp.h:
+
+	Headers for server side. These are not final yet.
+
 2007-05-30  Jorn Baayen  <jorn@openedhand.com>
 
 	* libgupnp/gupnp-control-point.c:

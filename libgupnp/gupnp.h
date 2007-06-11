@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2006 OpenedHand Ltd.
+ * Copyright (C) 2006, 2007 OpenedHand Ltd.
  *
  * Author: Jorn Baayen <jorn@openedhand.com>
  *
@@ -22,7 +22,10 @@
 #include "gupnp-context.h"
 #include "gupnp-control-point.h"
 #include "gupnp-error.h"
+#include "gupnp-device.h"
 #include "gupnp-device-info.h"
 #include "gupnp-device-proxy.h"
+#include "gupnp-root-device.h"
+#include "gupnp-service.h"
 #include "gupnp-service-info.h"
 #include "gupnp-service-proxy.h"
