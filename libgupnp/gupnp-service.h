@@ -112,32 +112,32 @@ typedef void
                                 GUPnPServiceAction *action);
 
 void
-gupnp_service_class_install_action        (GUPnPServiceClass         *class,
-                                           const char                *action,
-                                           GUPnPServiceActionCallback cb);
+gupnp_service_action_connect    (GUPnPService              *service,
+                                 const char                *action,
+                                 GUPnPServiceActionCallback cb);
 
 void
-gupnp_service_class_install_static_action (GUPnPServiceClass         *class,
-                                           const char                *action,
-                                           GUPnPServiceActionCallback cb);
-
+gupnp_service_action_disconnect (GUPnPService              *service,
+                                 const char                *action);
 
 void
-gupnp_service_class_set_property_is_state_variable
-                                          (GUPnPServiceClass *class,
-                                           const char        *property_name,
-                                           gboolean           is_state_var);
-
-gboolean
-gupnp_service_class_get_property_is_state_variable
-                                          (GUPnPServiceClass *class,
-                                           const char        *property_name);
+gupnp_service_notify            (GUPnPService              *service,
+                                 ...);
 
 void
-gupnp_service_freeze_notify (GUPnPService *service);
+gupnp_service_notify_valist     (GUPnPService              *service,
+                                 va_list                    var_args);
 
 void
-gupnp_service_thaw_notify   (GUPnPService *service);
+gupnp_service_notify_value      (GUPnPService              *service,
+                                 const char                *property,
+                                 const GValue              *value);
+
+void
+gupnp_service_freeze_notify     (GUPnPService              *service);
+
+void
+gupnp_service_thaw_notify       (GUPnPService              *service);
 
 G_END_DECLS
 

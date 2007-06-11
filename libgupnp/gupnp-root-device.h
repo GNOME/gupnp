@@ -22,6 +22,8 @@
 #ifndef __GUPNP_ROOT_DEVICE_H__
 #define __GUPNP_ROOT_DEVICE_H__
 
+#include <libxml/tree.h>
+
 #include "gupnp-context.h"
 #include "gupnp-device.h"
 
@@ -71,7 +73,7 @@ typedef struct {
 
 GUPnPRootDevice *
 gupnp_root_device_new           (GUPnPContext    *context,
-                                 const char      *description_file
+                                 xmlDoc          *description_doc,
                                  GError         **error);
 
 GUPnPContext *

@@ -1,5 +1,12 @@
 2007-06-11  Jorn Baayen  <jorn@openedhand.com>
 
+	* libgupnp/gupnp-root-device.h:
+	* libgupnp/gupnp-service.h:
+	
+	API tweaks.
+
+2007-06-11  Jorn Baayen  <jorn@openedhand.com>
+
 	* libgupnp/Makefile.am:
 	* libgupnp/gupnp-device.h:
 	* libgupnp/gupnp-root-device.h:
