@@ -41,13 +41,18 @@ struct _GUPnPDeviceInfoPrivate {
 
         char *location;
         char *udn;
+        char *url_base;
+
+        xmlNode *element;
 };
 
 enum {
         PROP_0,
         PROP_CONTEXT,
         PROP_LOCATION,
-        PROP_UDN
+        PROP_UDN,
+        PROP_URL_BASE,
+        PROP_ELEMENT
 };
 
 static void
@@ -83,6 +88,15 @@ gupnp_device_info_set_property (GObject      *object,
                 info->priv->udn =
                         g_value_dup_string (value);
                 break;
+        case PROP_URL_BASE:
+                g_free (info->priv->url_base);
+                info->priv->url_base =
+                        g_value_dup_string (value);
+                break;
+        case PROP_ELEMENT:
+                info->priv->element =
+                        g_value_get_pointer (value);
+                break;
         default:
                 G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
                 break;
@@ -112,6 +126,14 @@ gupnp_device_info_get_property (GObject    *object,
                 g_value_set_string (value,
                                     info->priv->udn);
                 break;
+        case PROP_URL_BASE:
+                g_value_set_string (value,
+                                    info->priv->url_base);
+                break;
+        case PROP_ELEMENT:
+                g_value_set_pointer (value,
+                                     info->priv->element);
+                break;
         default:
                 G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
                 break;
@@ -140,6 +162,7 @@ gupnp_device_info_finalize (GObject *object)
 
         g_free (info->priv->location);
         g_free (info->priv->udn);
+        g_free (info->priv->url_base);
 }
 
 static void
@@ -201,6 +224,37 @@ gupnp_device_info_class_init (GUPnPDeviceInfoClass *klass)
                                       NULL,
                                       G_PARAM_READWRITE |
                                       G_PARAM_CONSTRUCT_ONLY));
+
+        /**
+         * GUPnPDeviceInfo:url-base
+         *
+         * The URL base.
+         **/
+        g_object_class_install_property
+                (object_class,
+                 PROP_URL_BASE,
+                 g_param_spec_string ("url-base",
+                                      "URL base",
+                                      "The URL base",
+                                      NULL,
+                                      G_PARAM_READWRITE |
+                                      G_PARAM_CONSTRUCT_ONLY));
+
+        /**
+         * GUPnPDeviceInfo:element
+         *
+         * Private property.
+         *
+         * Stability: Private
+         **/
+        g_object_class_install_property
+                (object_class,
+                 PROP_ELEMENT,
+                 g_param_spec_pointer ("element",
+                                       "Element",
+                                       "The XML element related to this device",
+                                       G_PARAM_READWRITE |
+                                       G_PARAM_CONSTRUCT_ONLY));
 }
 
 /**
@@ -232,6 +286,20 @@ gupnp_device_info_get_location (GUPnPDeviceInfo *info)
 }
 
 /**
+ * gupnp_device_info_get_url_base
+ * @info: A #GUPnPDeviceInfo
+ *
+ * Return value: The URL base.
+ **/
+const char *
+gupnp_device_info_get_url_base (GUPnPDeviceInfo *info)
+{
+        g_return_val_if_fail (GUPNP_IS_DEVICE_INFO (info), NULL);
+
+        return info->priv->url_base;
+}
+
+/**
  * gupnp_device_info_get_udn
  * @info: A #GUPnPDeviceInfo
  *
@@ -249,17 +317,13 @@ static char *
 get_property (GUPnPDeviceInfo *info,
               const char      *element_name)
 {
-        GUPnPDeviceInfoClass *class;
         xmlNode *element;
 
         g_return_val_if_fail (GUPNP_IS_DEVICE_INFO (info), NULL);
 
-        class = GUPNP_DEVICE_INFO_GET_CLASS (info);
-
-        g_return_val_if_fail (class->get_element, NULL);
-        element = class->get_element (info);
-
-        element = xml_util_get_element (element, element_name, NULL);
+        element = xml_util_get_element (info->priv->element,
+                                        element_name,
+                                        NULL);
 
         if (element) {
                 xmlChar *value;
@@ -444,16 +508,9 @@ icon_parse (GUPnPDeviceInfo *info, xmlNode *element)
 
                 url = xmlNodeGetContent (prop);
                 if (url) {
-                        GUPnPDeviceInfoClass *class;
-                        const char *url_base;
-
-                        class = GUPNP_DEVICE_INFO_GET_CLASS (info);
-
-                        url_base = class->get_url_base (info);
-
-                        if (url_base != NULL) {
+                        if (info->priv->url_base != NULL) {
                                 icon->url = g_build_path ("/",
-                                                          url_base,
+                                                          info->priv->url_base,
                                                           (const char *) url,
                                                           NULL);
                         } else
@@ -512,23 +569,19 @@ gupnp_device_info_get_icon_url (GUPnPDeviceInfo *info,
                                 int             *width,
                                 int             *height)
 {
-        GUPnPDeviceInfoClass *class;
-        xmlNode *element;
         GList *icons, *l;
+        xmlNode *element;
         Icon *icon, *closest;
         char *ret;
 
         g_return_val_if_fail (GUPNP_IS_DEVICE_INFO (info), NULL);
                 
-        class = GUPNP_DEVICE_INFO_GET_CLASS (info);
-
-        g_return_val_if_fail (class->get_element, NULL);
-        element = class->get_element (info);
-
         /* List available icons */
         icons = NULL;
 
-        element = xml_util_get_element (element, "iconList", NULL);
+        element = xml_util_get_element (info->priv->element,
+                                        "iconList",
+                                        NULL);
 
         for (element = element->children; element; element = element->next) {
                 if (!strcmp ("icon", (char *) element->name)) {
@@ -655,12 +708,9 @@ gupnp_device_info_list_devices (GUPnPDeviceInfo *info)
 
         g_return_val_if_fail (class->get_device, NULL);
 
-        g_return_val_if_fail (class->get_element, NULL);
-        element = class->get_element (info);
-
         devices = NULL;
 
-        element = xml_util_get_element (element,
+        element = xml_util_get_element (info->priv->element,
                                         "deviceList",
                                         NULL);
         if (!element)
@@ -689,20 +739,14 @@ gupnp_device_info_list_devices (GUPnPDeviceInfo *info)
 GList *
 gupnp_device_info_list_device_types (GUPnPDeviceInfo *info)
 {
-        GUPnPDeviceInfoClass *class;
         GList *device_types;
         xmlNode *element;
 
         g_return_val_if_fail (GUPNP_IS_DEVICE_INFO (info), NULL);
 
-        class = GUPNP_DEVICE_INFO_GET_CLASS (info);
-
-        g_return_val_if_fail (class->get_element, NULL);
-        element = class->get_element (info);
-
         device_types = NULL;
 
-        element = xml_util_get_element (element,
+        element = xml_util_get_element (info->priv->element,
                                         "deviceList",
                                         NULL);
         if (!element)
@@ -756,12 +800,9 @@ gupnp_device_info_get_device (GUPnPDeviceInfo *info,
 
         g_return_val_if_fail (class->get_device, NULL);
 
-        g_return_val_if_fail (class->get_element, NULL);
-        element = class->get_element (info);
-
         device = NULL;
 
-        element = xml_util_get_element (element,
+        element = xml_util_get_element (info->priv->element,
                                         "deviceList",
                                         NULL);
         if (!element)
@@ -816,12 +857,9 @@ gupnp_device_info_list_services (GUPnPDeviceInfo *info)
 
         g_return_val_if_fail (class->get_service, NULL);
 
-        g_return_val_if_fail (class->get_element, NULL);
-        element = class->get_element (info);
-
         services = NULL;
 
-        element = xml_util_get_element (element,
+        element = xml_util_get_element (info->priv->element,
                                         "serviceList",
                                         NULL);
         if (!element)
@@ -850,20 +888,14 @@ gupnp_device_info_list_services (GUPnPDeviceInfo *info)
 GList *
 gupnp_device_info_list_service_types (GUPnPDeviceInfo *info)
 {
-        GUPnPDeviceInfoClass *class;
         GList *service_types;
         xmlNode *element;
 
         g_return_val_if_fail (GUPNP_IS_DEVICE_INFO (info), NULL);
 
-        class = GUPNP_DEVICE_INFO_GET_CLASS (info);
-
-        g_return_val_if_fail (class->get_element, NULL);
-        element = class->get_element (info);
-
         service_types = NULL;
 
-        element = xml_util_get_element (element,
+        element = xml_util_get_element (info->priv->element,
                                         "serviceList",
                                         NULL);
         if (!element)
@@ -917,12 +949,9 @@ gupnp_device_info_get_service (GUPnPDeviceInfo *info,
 
         g_return_val_if_fail (class->get_service, NULL);
 
-        g_return_val_if_fail (class->get_element, NULL);
-        element = class->get_element (info);
-
         service = NULL;
 
-        element = xml_util_get_element (element,
+        element = xml_util_get_element (info->priv->element,
                                         "serviceList",
                                         NULL);
         if (!element)

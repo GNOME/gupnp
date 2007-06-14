@@ -75,37 +75,37 @@ typedef struct {
 typedef struct _GUPnPServiceAction GUPNPServiceAction;
 
 void
-gupnp_service_action_get           (GUPnPServiceAction *action,
-                                    ...);
+gupnp_service_action_get          (GUPnPServiceAction *action,
+                                   ...);
 
 void
-gupnp_service_action_get_valist    (GUPnPServiceAction *action,
-                                    va_list             var_args);
+gupnp_service_action_get_valist   (GUPnPServiceAction *action,
+                                   va_list             var_args);
 
 void
-gupnp_service_action_get_value     (GUPnPServiceAction *action,
-                                    const char         *argument,
-                                    GValue             *value);
+gupnp_service_action_get_value    (GUPnPServiceAction *action,
+                                   const char         *argument,
+                                   GValue             *value);
 
 void
-gupnp_service_action_set           (GUPnPServiceAction *action,
-                                    ...);
+gupnp_service_action_set          (GUPnPServiceAction *action,
+                                   ...);
 
 void
-gupnp_service_action_set_valist    (GUPnPServiceAction *action,
-                                    va_list             var_args);
+gupnp_service_action_set_valist   (GUPnPServiceAction *action,
+                                   va_list             var_args);
 
 void
-gupnp_service_action_set_value     (GUPnPServiceAction *action,
-                                    const char         *argument,
-                                    const GValue       *value);
+gupnp_service_action_set_value    (GUPnPServiceAction *action,
+                                   const char         *argument,
+                                   const GValue       *value);
 
 void
-gupnp_service_action_return        (GUPnPServiceAction *action);
+gupnp_service_action_return       (GUPnPServiceAction *action);
 
 void
-gupnp_service_action_return_error  (GUPnPServiceAction *action,
-                                    GError             *error);
+gupnp_service_action_return_error (GUPnPServiceAction *action,
+                                   GError             *error);
 
 typedef void
 (* GUPnPServiceActionCallback) (GUPnPService       *service,

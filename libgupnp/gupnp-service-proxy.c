@@ -51,10 +51,6 @@ G_DEFINE_TYPE (GUPnPServiceProxy,
                GUPNP_TYPE_SERVICE_INFO);
 
 struct _GUPnPServiceProxyPrivate {
-        xmlNode *element;
-
-        xmlChar *url_base;
-
         gboolean subscribed;
 
         GList *pending_actions;
@@ -121,26 +117,6 @@ gupnp_service_proxy_action_free (GUPnPServiceProxyAction *action)
         g_object_unref (action->msg);
 
         g_slice_free (GUPnPServiceProxyAction, action);
-}
-
-static xmlNode *
-gupnp_service_proxy_get_element (GUPnPServiceInfo *info)
-{
-        GUPnPServiceProxy *proxy;
-        
-        proxy = GUPNP_SERVICE_PROXY (info);
-
-        return proxy->priv->element;
-}
-
-static const char *
-gupnp_service_proxy_get_url_base (GUPnPServiceInfo *info)
-{
-        GUPnPServiceProxy *proxy;
-        
-        proxy = GUPNP_SERVICE_PROXY (info);
-
-        return (const char *) proxy->priv->url_base;
 }
 
 static void
@@ -247,9 +223,6 @@ gupnp_service_proxy_finalize (GObject *object)
 
         proxy = GUPNP_SERVICE_PROXY (object);
 
-        if (proxy->priv->url_base)
-                xmlFree (proxy->priv->url_base);
-
         g_free (proxy->priv->path);
 
         g_hash_table_destroy (proxy->priv->notify_hash);
@@ -269,9 +242,6 @@ gupnp_service_proxy_class_init (GUPnPServiceProxyClass *klass)
         object_class->finalize     = gupnp_service_proxy_finalize;
 
         info_class = GUPNP_SERVICE_INFO_CLASS (klass);
-        
-        info_class->get_element  = gupnp_service_proxy_get_element;
-        info_class->get_url_base = gupnp_service_proxy_get_url_base;
         
         g_type_class_add_private (klass, sizeof (GUPnPServiceProxyPrivate));
 
@@ -1582,41 +1552,32 @@ gupnp_service_proxy_new (GUPnPContext *context,
                          const char   *location)
 {
         GUPnPServiceProxy *proxy;
-        xmlNode *url_base_element;
+        xmlNode *element, *url_base_element;
+        xmlChar *url_base = NULL;
 
         g_return_val_if_fail (doc, NULL);
         g_return_val_if_fail (type, NULL);
 
-        proxy = g_object_new (GUPNP_TYPE_SERVICE_PROXY,
-                              "context", context,
-                              "location", location,
-                              "udn", udn,
-                              NULL);
-
-        proxy->priv->element =
-                xml_util_get_element ((xmlNode *) doc,
-                                      "root",
-                                      "device",
-                                      NULL);
+        element = xml_util_get_element ((xmlNode *) doc,
+                                        "root",
+                                        "device",
+                                        NULL);
         
-        if (proxy->priv->element) {
-                proxy->priv->element =
-                        _gupnp_device_proxy_find_element_for_udn
-                                (proxy->priv->element, udn);
+        if (element) {
+                element = _gupnp_device_proxy_find_element_for_udn (element,
+                                                                    udn);
 
-                if (proxy->priv->element) {
-                        proxy->priv->element = 
-                                find_service_element_for_type
-                                        (proxy->priv->element, type);
+                if (element) {
+                        element = find_service_element_for_type (element,
+                                                                 type);
                 }
         }
 
-        if (!proxy->priv->element) {
+        if (!element) {
                 g_warning ("Device description does not contain service "
                            "with type \"%s\".", type);
 
-                g_object_unref (proxy);
-                proxy = NULL;
+                return NULL;
         }
 
         /* Save the URL base, if any */
@@ -1625,10 +1586,19 @@ gupnp_service_proxy_new (GUPnPContext *context,
                                       "root",
                                       "URLBase",
                                       NULL);
-        if (url_base_element != NULL)
-                proxy->priv->url_base = xmlNodeGetContent (url_base_element);
-        else
-                proxy->priv->url_base = NULL;
+        if (url_base_element)
+               url_base = xmlNodeGetContent (url_base_element);
+
+        proxy = g_object_new (GUPNP_TYPE_SERVICE_PROXY,
+                              "context", context,
+                              "location", location,
+                              "udn", udn,
+                              "url-base", (const char *) url_base,
+                              "element", element,
+                              NULL);
+
+        if (url_base)
+                xmlFree (url_base);
 
         return proxy;
 }
@@ -1645,11 +1615,11 @@ gupnp_service_proxy_new (GUPnPContext *context,
  * read from the service description file specified by @location.
  **/
 GUPnPServiceProxy *
-_gupnp_service_proxy_new_from_element (GUPnPContext  *context,
-                                       xmlNode       *element,
-                                       const char    *udn,
-                                       const char    *location,
-                                       const xmlChar *url_base)
+_gupnp_service_proxy_new_from_element (GUPnPContext *context,
+                                       xmlNode      *element,
+                                       const char   *udn,
+                                       const char   *location,
+                                       const char   *url_base)
 {
         GUPnPServiceProxy *proxy;
 
@@ -1659,14 +1629,9 @@ _gupnp_service_proxy_new_from_element (GUPnPContext  *context,
                               "context", context,
                               "location", location,
                               "udn", udn,
+                              "url-base", url_base,
+                              "element", element,
                               NULL);
-
-        proxy->priv->element = element;
-
-        if (url_base != NULL)
-                proxy->priv->url_base = xmlStrdup (url_base);
-        else
-                proxy->priv->url_base = NULL;
 
         return proxy;
 }

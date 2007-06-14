@@ -66,12 +66,11 @@ typedef struct {
         GObjectClass parent_class;
 
         /* vtable */
-        xmlNode          * (* get_element)   (GUPnPDeviceInfo *info);
-        const char       * (* get_url_base)  (GUPnPDeviceInfo *info);
-        GUPnPDeviceInfo  * (* get_device)    (GUPnPDeviceInfo *info,
-                                              xmlNode         *element);
-        GUPnPServiceInfo * (* get_service)   (GUPnPDeviceInfo *info,
-                                              xmlNode         *element);
+        xmlNode          * (* get_element) (GUPnPDeviceInfo *info);
+        GUPnPDeviceInfo  * (* get_device)  (GUPnPDeviceInfo *info,
+                                            xmlNode         *element);
+        GUPnPServiceInfo * (* get_service) (GUPnPDeviceInfo *info,
+                                            xmlNode         *element);
 
         /* future padding */
         void (* _gupnp_reserved1) (void);
@@ -85,6 +84,9 @@ gupnp_device_info_get_context           (GUPnPDeviceInfo *info);
 
 const char *
 gupnp_device_info_get_location          (GUPnPDeviceInfo *info);
+
+const char *
+gupnp_device_info_get_url_base          (GUPnPDeviceInfo *info);
 
 const char *
 gupnp_device_info_get_udn               (GUPnPDeviceInfo *info);

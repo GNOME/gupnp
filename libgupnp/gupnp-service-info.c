@@ -43,13 +43,18 @@ struct _GUPnPServiceInfoPrivate {
 
         char *location;
         char *udn;
+        char *url_base;
+
+        xmlNode *element;
 };
 
 enum {
         PROP_0,
         PROP_CONTEXT,
         PROP_LOCATION,
-        PROP_UDN
+        PROP_UDN,
+        PROP_URL_BASE,
+        PROP_ELEMENT
 };
 
 static void
@@ -85,6 +90,15 @@ gupnp_service_info_set_property (GObject      *object,
                 info->priv->udn =
                         g_value_dup_string (value);
                 break;
+        case PROP_URL_BASE:
+                g_free (info->priv->url_base);
+                info->priv->url_base =
+                        g_value_dup_string (value);
+                break;
+        case PROP_ELEMENT:
+                info->priv->element =
+                        g_value_get_pointer (value);
+                break;
         default:
                 G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
                 break;
@@ -114,6 +128,14 @@ gupnp_service_info_get_property (GObject    *object,
                 g_value_set_string (value,
                                     info->priv->udn);
                 break;
+        case PROP_URL_BASE:
+                g_value_set_string (value,
+                                    info->priv->url_base);
+                break;
+        case PROP_ELEMENT:
+                g_value_set_pointer (value,
+                                     info->priv->element);
+                break;
         default:
                 G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
                 break;
@@ -142,6 +164,7 @@ gupnp_service_info_finalize (GObject *object)
 
         g_free (info->priv->location);
         g_free (info->priv->udn);
+        g_free (info->priv->url_base);
 }
 
 static void
@@ -203,6 +226,37 @@ gupnp_service_info_class_init (GUPnPServiceInfoClass *klass)
                                       NULL,
                                       G_PARAM_READWRITE |
                                       G_PARAM_CONSTRUCT_ONLY));
+
+        /**
+         * GUPnPServiceInfo:url-base
+         *
+         * The URL base.
+         **/
+        g_object_class_install_property
+                (object_class,
+                 PROP_URL_BASE,
+                 g_param_spec_string ("url-base",
+                                      "URL base",
+                                      "The URL base",
+                                      NULL,
+                                      G_PARAM_READWRITE |
+                                      G_PARAM_CONSTRUCT_ONLY));
+
+        /**
+         * GUPnPServiceInfo:element
+         *
+         * Private property.
+         *
+         * Stability: Private
+         **/
+        g_object_class_install_property
+                (object_class,
+                 PROP_ELEMENT,
+                 g_param_spec_pointer ("element",
+                                       "Element",
+                                       "The XML element related to this device",
+                                       G_PARAM_READWRITE |
+                                       G_PARAM_CONSTRUCT_ONLY));
 }
 
 /**
@@ -234,6 +288,20 @@ gupnp_service_info_get_location (GUPnPServiceInfo *info)
 }
 
 /**
+ * gupnp_service_info_get_url_base
+ * @info: A #GUPnPServiceInfo
+ *
+ * Return value: The URL base.
+ **/
+const char *
+gupnp_service_info_get_url_base (GUPnPServiceInfo *info)
+{
+        g_return_val_if_fail (GUPNP_IS_SERVICE_INFO (info), NULL);
+
+        return info->priv->url_base;
+}
+
+/**
  * gupnp_service_info_get_udn
  * @info: A #GUPnPServiceInfo
  *
@@ -251,17 +319,11 @@ static char *
 get_property (GUPnPServiceInfo *info,
               const char       *element_name)
 {
-        GUPnPServiceInfoClass *class;
         xmlNode *element;
 
         g_return_val_if_fail (GUPNP_IS_SERVICE_INFO (info), NULL);
 
-        class = GUPNP_SERVICE_INFO_GET_CLASS (info);
-
-        g_return_val_if_fail (class->get_element, NULL);
-        element = class->get_element (info);
-
-        element = xml_util_get_element (element,
+        element = xml_util_get_element (info->priv->element,
                                         element_name,
                                         NULL);
 
@@ -283,22 +345,15 @@ static char *
 get_url_property (GUPnPServiceInfo *info,
                   const char       *element_name)
 {
-        GUPnPServiceInfoClass *class;
-        const char *url_base;
         char *prop;
-
-        class = GUPNP_SERVICE_INFO_GET_CLASS (info);
-
-        g_return_val_if_fail (class->get_element, NULL);
-        url_base = class->get_url_base (info);
 
         prop = get_property (info, element_name);
 
-        if (url_base != NULL) {
+        if (info->priv->url_base != NULL) {
                 char *full_url;
 
                 full_url = g_build_path ("/",
-                                         url_base,
+                                         info->priv->url_base,
                                          (const char *) prop,
                                          NULL);
 

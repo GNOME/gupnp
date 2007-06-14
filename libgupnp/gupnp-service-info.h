@@ -64,10 +64,6 @@ typedef struct {
 typedef struct {
         GObjectClass parent_class;
 
-        /* vtable */
-        xmlNode    * (* get_element)  (GUPnPServiceInfo *info);
-        const char * (* get_url_base) (GUPnPServiceInfo *info);
-
         /* future padding */
         void (* _gupnp_reserved1) (void);
         void (* _gupnp_reserved2) (void);
@@ -80,6 +76,9 @@ gupnp_service_info_get_context                (GUPnPServiceInfo *info);
 
 const char *
 gupnp_service_info_get_location               (GUPnPServiceInfo *info);
+
+const char *
+gupnp_service_info_get_url_base               (GUPnPServiceInfo *info);
 
 const char *
 gupnp_service_info_get_udn                    (GUPnPServiceInfo *info);

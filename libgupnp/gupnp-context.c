@@ -165,6 +165,11 @@ get_default_host_ip (void)
 
         if_freenameindex (ifs);
 
+        if (!ret) {
+                /* Didn't find anything. Let's take the loopback IP. */
+                ret = g_strdup (LOOPBACK_IP);
+        }
+
         return ret;
 }
 
