@@ -1,3 +1,27 @@
+2007-06-18  Jorn Baayen  <jorn@openedhand.com>
+
+	* libgupnp/Makefile.am:
+	* libgupnp/gupnp-device.c:
+	* libgupnp/gupnp-root-device.c:
+	* libgupnp/gupnp-root-device.h:
+
+	Implement Device and RootDevice.
+
+	* libgupnp/gupnp-device-info.c: (gupnp_device_info_set_property),
+	(gupnp_device_info_class_init):
+
+	Detect UDN if not explicitly specified.
+
+	* libgupnp/gupnp-control-point.c: (parse_usn):
+	* libgupnp/gupnp-service.h:
+
+	Fix typos.
+
+	* libgupnp/gupnp-device-proxy.c:
+	* libgupnp/gupnp-device-proxy.h:
+
+	No need for a private structure any more.
+
 2007-06-14  Jorn Baayen  <jorn@openedhand.com>
 
 	* libgupnp/gupnp-context.c: (get_default_host_ip):

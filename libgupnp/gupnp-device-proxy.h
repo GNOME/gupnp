@@ -53,12 +53,10 @@ gupnp_device_proxy_get_type (void) G_GNUC_CONST;
                  GUPNP_TYPE_DEVICE_PROXY, \
                  GUPnPDeviceProxyClass))
 
-typedef struct _GUPnPDeviceProxyPrivate GUPnPDeviceProxyPrivate;
-
 typedef struct {
         GUPnPDeviceInfo parent;
 
-        GUPnPDeviceProxyPrivate *priv;
+        gpointer _gupnp_reserved;
 } GUPnPDeviceProxy;
 
 typedef struct {

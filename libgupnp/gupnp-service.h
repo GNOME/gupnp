@@ -22,6 +22,8 @@
 #ifndef __GUPNP_SERVICE_H__
 #define __GUPNP_SERVICE_H__
 
+#include <stdarg.h>
+
 #include "gupnp-service-info.h"
 
 G_BEGIN_DECLS
@@ -72,7 +74,7 @@ typedef struct {
         void (* _gupnp_reserved4) (void);
 } GUPnPServiceClass;
 
-typedef struct _GUPnPServiceAction GUPNPServiceAction;
+typedef struct _GUPnPServiceAction GUPnPServiceAction;
 
 void
 gupnp_service_action_get          (GUPnPServiceAction *action,

@@ -364,7 +364,7 @@ parse_usn (const char *usn,
 
                         ret = TRUE;
                 } else if (!strcmp (second_bits[0], "urn")) {
-                        /* uuid:device-IID::urn:domain-name:service/device:
+                        /* uuid:device-UIID::urn:domain-name:service/device:
                          * type:v */
 
                         if (!strcmp (second_bits[2], "device")) {

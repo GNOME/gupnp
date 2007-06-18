@@ -79,23 +79,40 @@ gupnp_device_info_set_property (GObject      *object,
                         g_object_ref (g_value_get_object (value));
                 break;
         case PROP_LOCATION:
-                g_free (info->priv->location);
                 info->priv->location =
                         g_value_dup_string (value);
                 break;
         case PROP_UDN:
-                g_free (info->priv->udn);
                 info->priv->udn =
                         g_value_dup_string (value);
                 break;
         case PROP_URL_BASE:
-                g_free (info->priv->url_base);
                 info->priv->url_base =
                         g_value_dup_string (value);
                 break;
         case PROP_ELEMENT:
                 info->priv->element =
                         g_value_get_pointer (value);
+
+                if (!info->priv->udn) {
+                        /* No UDN specified manually. Take it off the 
+                         * element. */
+                        xmlNode *tmp;
+
+                        tmp = xml_util_get_element (info->priv->element,
+                                                    "UDN",
+                                                    NULL);
+                        if (tmp) {
+                                xmlChar *content;
+
+                                content = xmlNodeGetContent (tmp);
+
+                                info->priv->udn = g_strdup ((char *) content);
+                
+                                xmlFree (content);
+                        }
+                }
+
                 break;
         default:
                 G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -252,7 +269,8 @@ gupnp_device_info_class_init (GUPnPDeviceInfoClass *klass)
                  PROP_ELEMENT,
                  g_param_spec_pointer ("element",
                                        "Element",
-                                       "The XML element related to this device",
+                                       "The XML element related to this "
+                                       "device",
                                        G_PARAM_READWRITE |
                                        G_PARAM_CONSTRUCT_ONLY));
 }

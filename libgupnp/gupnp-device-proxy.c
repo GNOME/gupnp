@@ -98,9 +98,6 @@ gupnp_device_proxy_get_service (GUPnPDeviceInfo *info,
 static void
 gupnp_device_proxy_init (GUPnPDeviceProxy *proxy)
 {
-        proxy->priv = G_TYPE_INSTANCE_GET_PRIVATE (proxy,
-                                                   GUPNP_TYPE_DEVICE_PROXY,
-                                                   GUPnPDeviceProxyPrivate);
 }
 
 static void

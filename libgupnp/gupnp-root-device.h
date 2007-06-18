@@ -74,6 +74,7 @@ typedef struct {
 GUPnPRootDevice *
 gupnp_root_device_new                   (GUPnPContext    *context,
                                          xmlDoc          *description_doc,
+                                         const char      *relative_location,
                                          const char      *relative_url_base);
 
 void
@@ -85,6 +86,9 @@ gupnp_root_device_get_available         (GUPnPRootDevice *root_device);
 
 const char *
 gupnp_root_device_get_relative_url_base (GUPnPRootDevice *root_device);
+
+const char *
+gupnp_root_device_get_relative_location (GUPnPRootDevice *root_device);
 
 G_END_DECLS
 
