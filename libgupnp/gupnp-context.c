@@ -31,12 +31,14 @@
 #include <errno.h>
 #include <string.h>
 #include <unistd.h>
+#include <fcntl.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <sys/utsname.h>
 #include <sys/ioctl.h> 
 #include <sys/socket.h>
 #include <sys/types.h>
+#include <sys/stat.h>
 #include <net/if.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
@@ -101,29 +103,29 @@ make_server_id (void)
 gboolean
 get_ip (const char *iface, ip_address ip)
 {
-	struct ifreq *ifr;
-	struct ifreq ifrr;
-	struct sockaddr_in sa;
-	struct sockaddr ifaddr;
-	int sockfd;
+        struct ifreq *ifr;
+        struct ifreq ifrr;
+        struct sockaddr_in sa;
+        struct sockaddr ifaddr;
+        int sockfd;
 
-	if ((sockfd = socket (AF_INET, SOCK_DGRAM, IPPROTO_UDP)) == -1)
-	        return FALSE;
+        if ((sockfd = socket (AF_INET, SOCK_DGRAM, IPPROTO_UDP)) == -1)
+                return FALSE;
 
-	ifr = &ifrr;
+        ifr = &ifrr;
 
-	ifrr.ifr_addr.sa_family = AF_INET;
+        ifrr.ifr_addr.sa_family = AF_INET;
 
-	strncpy (ifrr.ifr_name, iface, sizeof (ifrr.ifr_name));
+        strncpy (ifrr.ifr_name, iface, sizeof (ifrr.ifr_name));
 
-	if (ioctl (sockfd, SIOCGIFADDR, ifr) < 0)
-		return FALSE;
+        if (ioctl (sockfd, SIOCGIFADDR, ifr) < 0)
+                return FALSE;
 
-	ifaddr = ifrr.ifr_addr;
-	strncpy (ip, inet_ntoa (inaddrr (ifr_addr.sa_data)),
+        ifaddr = ifrr.ifr_addr;
+        strncpy (ip, inet_ntoa (inaddrr (ifr_addr.sa_data)),
                  sizeof (ip_address));
 
-	return TRUE;
+        return TRUE;
 }
 
 /**
@@ -363,14 +365,14 @@ _gupnp_context_get_session (GUPnPContext *context)
 }
 
 /**
- * Default server handler: Return 501 not implemented.
+ * Default server handler: Return 404 not found.
  **/
 static void
 default_server_handler (SoupServerContext *server_context,
                         SoupMessage       *msg,
                         gpointer           user_data)
 {
-        soup_message_set_status (msg, SOUP_STATUS_NOT_IMPLEMENTED);
+        soup_message_set_status (msg, SOUP_STATUS_NOT_FOUND);
 }
 
 SoupServer *
@@ -510,4 +512,167 @@ gupnp_context_get_subscription_timeout (GUPnPContext *context)
         g_return_val_if_fail (GUPNP_IS_CONTEXT (context), 0);
 
         return context->priv->subscription_timeout;
+}
+
+/* Taken from libsoup simple-httpd.c (Modified) */
+static void
+hosting_server_handler (SoupServerContext *server_context,
+                        SoupMessage       *msg,
+                        gpointer           user_data)
+{
+        const char *local_path;
+        char *path, *path_to_open, *slash;
+        SoupMethodId method;
+        struct stat st;
+        int fd, path_offset;
+
+        local_path = (const char *) user_data;
+
+        path = soup_uri_to_string (soup_message_get_uri (msg), TRUE);
+
+        method = soup_method_get_id (msg->method);
+        if (method != SOUP_METHOD_ID_GET && method != SOUP_METHOD_ID_HEAD) {
+                soup_message_set_status (msg, SOUP_STATUS_NOT_IMPLEMENTED);
+                goto DONE;
+        }
+
+        if (path) {
+                if (*path != '/') {
+                        soup_message_set_status (msg, SOUP_STATUS_BAD_REQUEST);
+                        goto DONE;
+                }
+
+                /* Skip the server path */
+                path_offset = strlen (server_context->handler->path);
+        } else {
+                path = g_strdup ("");
+
+                path_offset = 0;
+        }
+
+        path_to_open = g_build_filename (local_path, path + path_offset, NULL);
+
+ AGAIN:
+        if (stat (path_to_open, &st) == -1) {
+                g_free (path_to_open);
+                if (errno == EPERM)
+                        soup_message_set_status (msg, SOUP_STATUS_FORBIDDEN);
+                else if (errno == ENOENT)
+                        soup_message_set_status (msg, SOUP_STATUS_NOT_FOUND);
+                else
+                        soup_message_set_status
+                                (msg, SOUP_STATUS_INTERNAL_SERVER_ERROR);
+                goto DONE;
+        }
+
+        if (S_ISDIR (st.st_mode)) {
+                slash = strrchr (path_to_open, '/');
+                if (!slash || slash[1]) {
+                        char *uri, *redir_uri;
+
+                        uri = soup_uri_to_string (soup_message_get_uri (msg),
+                                                  FALSE);
+                        redir_uri = g_strdup_printf ("%s/", uri);
+                        soup_message_add_header (msg->response_headers,
+                                                 "Location", redir_uri);
+                        soup_message_set_status (msg,
+                                                 SOUP_STATUS_MOVED_PERMANENTLY);
+                        g_free (redir_uri);
+                        g_free (uri);
+                        g_free (path_to_open);
+                        goto DONE;
+                }
+
+                g_free (path_to_open);
+                path_to_open = g_build_filename (local_path,
+                                                 path + path_offset,
+                                                 "index.html", NULL);
+                goto AGAIN;
+        }
+
+        fd = open (path_to_open, O_RDONLY);
+        g_free (path_to_open);
+        if (fd == -1) {
+                soup_message_set_status (msg,
+                                         SOUP_STATUS_INTERNAL_SERVER_ERROR);
+                goto DONE;
+        }
+
+        msg->response.owner = SOUP_BUFFER_SYSTEM_OWNED;
+        msg->response.length = st.st_size;
+
+        if (method == SOUP_METHOD_ID_GET) {
+                msg->response.body = g_malloc (msg->response.length);
+                read (fd, msg->response.body, msg->response.length);
+        } else /* method == SOUP_METHOD_ID_HEAD */ {
+                /* SoupServer will ignore response.body and only use
+                 * response.length when responding to HEAD, so we
+                 * could just use the same code for both GET and HEAD.
+                 * But we'll optimize and avoid the extra malloc.
+                 */
+                msg->response.body = NULL;
+        }
+
+        close (fd);
+
+        soup_message_set_status (msg, SOUP_STATUS_OK);
+
+ DONE:
+        g_free (path);
+}
+
+static void
+unregister_hosting_server_handler (SoupServer        *server,
+                                   SoupServerHandler *handler,
+                                   gpointer           user_data)
+{
+        g_free (user_data);
+}
+
+/**
+ * gupnp_context_host_path
+ * @context: A #GUPnPContext
+ * @local_path: Path to the local file or folder to be hosted
+ * @server_path: Web server path where @local_path should be hosted
+ *
+ * Start hosting @local_path at @server_path.
+ **/
+void
+gupnp_context_host_path (GUPnPContext *context,
+                         const char   *local_path,
+                         const char   *server_path)
+{
+        SoupServer *server;
+
+        g_return_if_fail (GUPNP_IS_CONTEXT (context));
+        g_return_if_fail (local_path != NULL);
+        g_return_if_fail (server_path != NULL);
+
+        server = _gupnp_context_get_server (context);
+
+        soup_server_add_handler (server, server_path, NULL,
+                                 hosting_server_handler,
+                                 unregister_hosting_server_handler,
+                                 g_strdup (local_path));
+}
+
+/**
+ * gupnp_context_unhost_path
+ * @context: A #GUPnPContext
+ * @server_path: Web server path where the file or folder is hosted
+ *
+ * Stop hosting the file or folder at @server_path.
+ **/
+void
+gupnp_context_unhost_path (GUPnPContext *context,
+                           const char   *server_path)
+{
+        SoupServer *server;
+
+        g_return_if_fail (GUPNP_IS_CONTEXT (context));
+        g_return_if_fail (server_path != NULL);
+
+        server = _gupnp_context_get_server (context);
+
+        soup_server_remove_handler (server, server_path);
 }

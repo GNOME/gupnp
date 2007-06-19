@@ -1,5 +1,14 @@
 2007-06-19  Jorn Baayen  <jorn@openedhand.com>
 
+	* libgupnp/gupnp-context.c: (_gupnp_context_get_session),
+	(gupnp_context_get_subscription_timeout):
+	* libgupnp/gupnp-context.h:
+	* tests/test-server.c: (main):
+
+	Add regular web server functionality.
+
+2007-06-19  Jorn Baayen  <jorn@openedhand.com>
+
 	* libgupnp/gupnp-control-point.c: (description_loaded):
 	* libgupnp/gupnp-device-proxy-private.h:
 	* libgupnp/gupnp-device-proxy.c:

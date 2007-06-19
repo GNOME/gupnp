@@ -87,6 +87,15 @@ gupnp_context_set_subscription_timeout (GUPnPContext *context,
 guint
 gupnp_context_get_subscription_timeout (GUPnPContext *context);
 
+void
+gupnp_context_host_path                (GUPnPContext *context,
+                                        const char   *local_path,
+                                        const char   *server_path);
+
+void
+gupnp_context_unhost_path              (GUPnPContext *context,
+                                        const char   *server_path);
+
 G_END_DECLS
 
 #endif /* __GUPNP_CONTEXT_H__ */

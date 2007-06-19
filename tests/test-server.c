@@ -51,6 +51,9 @@ main (int argc, char **argv)
                 return 1;
         }
 
+        /* Host current directory */
+        gupnp_context_host_path (context, ".", "");
+
         /* Parse device description file */
         doc = xmlParseFile (argv[1]);
 
