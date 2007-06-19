@@ -1,3 +1,17 @@
+2007-06-19  Jorn Baayen  <jorn@openedhand.com>
+
+	* libgupnp/gupnp-root-device.c: (fill_resource_group):
+
+	Do not overwrite 'element' with child elements as it is still
+	needed later.
+
+	* tests/Makefile.am:
+	* tests/test-server.c:
+	D tests/test.c:
+	A tests/test-client.c:
+
+	Added server test case.
+
 2007-06-18  Jorn Baayen  <jorn@openedhand.com>
 
 	* libgupnp/Makefile.am:

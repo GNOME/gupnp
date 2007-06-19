@@ -217,6 +217,7 @@ fill_resource_group (xmlNode            *element,
                      const char         *location,
                      GSSDPResourceGroup *group)
 {
+        xmlNode *child;
         xmlChar *udn, *device_type;
         char *usn;
 
@@ -250,19 +251,18 @@ fill_resource_group (xmlNode            *element,
         xmlFree (device_type);
 
         /* Add embedded services */
-        element = xml_util_get_element (element,
-                                        "serviceList",
-                                        NULL);
-        if (element) {
-                for (element = element->children;
-                     element; element = element->next) {
+        child = xml_util_get_element (element,
+                                      "serviceList",
+                                      NULL);
+        if (child) {
+                for (child = child->children; child; child = child->next) {
                         xmlChar *service_type;
 
-                        if (strcmp ("service", (char *) element->name))
+                        if (strcmp ("service", (char *) child->name))
                                 continue;
 
                         service_type = get_child_element_content
-                                                (element, "serviceType");
+                                                (child, "serviceType");
                         if (!service_type)
                                 continue;
 
@@ -284,14 +284,13 @@ fill_resource_group (xmlNode            *element,
         xmlFree (udn);
 
         /* Add embedded devices */
-        element = xml_util_get_element (element,
-                                        "deviceList",
-                                        NULL);
-        if (element) {
-                for (element = element->children;
-                     element; element = element->next)
-                        if (!strcmp ("device", (char *) element->name))
-                                fill_resource_group (element, location, group);
+        child = xml_util_get_element (element,
+                                      "deviceList",
+                                      NULL);
+        if (child) {
+                for (child = child->children; child; child = child->next)
+                        if (!strcmp ("device", (char *) child->name))
+                                fill_resource_group (child, location, group);
         }
 }
 
