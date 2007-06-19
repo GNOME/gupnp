@@ -1,5 +1,12 @@
 2007-06-19  Jorn Baayen  <jorn@openedhand.com>
 
+	* tests/test-server.c: (main):
+
+	Use g_object_weak_ref() to destroy the description document when
+	the root device is finalized.
+
+2007-06-19  Jorn Baayen  <jorn@openedhand.com>
+
 	* libgupnp/gupnp-root-device.c: (fill_resource_group):
 
 	Do not overwrite 'element' with child elements as it is still

@@ -534,9 +534,9 @@ gupnp_root_device_class_init (GUPnPRootDeviceClass *klass)
  * @context: The #GUPnPContext
  * @description_doc: Pointer to the device description document
  * @relative_url_base: The URL base to use for this device, relative to the
- * URL root path.
+ * URL root path
  * @relative_url_location: The location to use for this device, relative to the
- * URL root path.
+ * URL root path
  *
  * Return value: A new @GUPnPRootDevice object.
  **/

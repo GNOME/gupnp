@@ -51,7 +51,7 @@ main (int argc, char **argv)
                 return 1;
         }
 
-        /* Parse device description file XXX */
+        /* Parse device description file */
         doc = xmlParseFile (argv[1]);
 
         /* Create root device */
@@ -59,6 +59,9 @@ main (int argc, char **argv)
                                      doc,
                                      "/description.xml",
                                      "/");
+
+        /* Free doc when root device is destroyed */
+        g_object_weak_ref (G_OBJECT (dev), (GWeakNotify) xmlFreeDoc, doc);
 
         gupnp_root_device_set_available (dev, TRUE);
 
@@ -68,8 +71,6 @@ main (int argc, char **argv)
 
         g_object_unref (dev);
         g_object_unref (context);
-
-        xmlFreeDoc (doc);
 
         return 0;
 }
