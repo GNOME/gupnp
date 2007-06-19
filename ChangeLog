@@ -1,5 +1,11 @@
 2007-06-19  Jorn Baayen  <jorn@openedhand.com>
 
+	* libgupnp/gupnp-context.c: (gupnp_context_init):
+
+	Remove unnecessary initialisations.
+
+2007-06-19  Jorn Baayen  <jorn@openedhand.com>
+
 	* libgupnp/gupnp-context.c: (gupnp_context_class_init):
 	* libgupnp/gupnp-device-info.c: (gupnp_device_info_class_init):
 	* libgupnp/gupnp-service-info.c: (gupnp_service_info_class_init):

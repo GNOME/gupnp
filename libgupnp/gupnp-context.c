@@ -183,15 +183,7 @@ gupnp_context_init (GUPnPContext *context)
                                              GUPNP_TYPE_CONTEXT,
                                              GUPnPContextPrivate);
 
-        context->priv->host_ip = NULL;
-        context->priv->port    = SOUP_ADDRESS_ANY_PORT;
-
-        context->priv->subscription_timeout = GENA_DEFAULT_TIMEOUT;
-
         context->priv->session = soup_session_async_new ();
-
-        context->priv->server     = NULL; /* Started on demand */
-        context->priv->server_url = NULL;
 
         server_id = make_server_id ();
         gssdp_client_set_server_id (GSSDP_CLIENT (context), server_id);
