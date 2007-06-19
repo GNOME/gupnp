@@ -52,6 +52,8 @@ gupnp_service_get_type (void) G_GNUC_CONST;
                  GUPNP_TYPE_SERVICE, \
                  GUPnPServiceClass))
 
+typedef struct _GUPnPServiceAction GUPnPServiceAction;
+
 typedef struct _GUPnPServicePrivate GUPnPServicePrivate;
 
 typedef struct {
@@ -63,9 +65,16 @@ typedef struct {
 typedef struct {
         GUPnPServiceInfoClass parent_class;
 
-        void (* notify_failed) (GUPnPService *service,
-                                const char   *notify_url,
-                                GError       *reason);
+        void (* action_invoked) (GUPnPService       *service,
+                                 GUPnPServiceAction *action);
+
+        void (* query_property) (GUPnPService       *service,
+                                 const char         *property,
+                                 GValue             *value);
+
+        void (* notify_failed)  (GUPnPService       *service,
+                                 const char         *notify_url,
+                                 GError             *reason);
 
         /* future padding */
         void (* _gupnp_reserved1) (void);
@@ -74,7 +83,11 @@ typedef struct {
         void (* _gupnp_reserved4) (void);
 } GUPnPServiceClass;
 
-typedef struct _GUPnPServiceAction GUPnPServiceAction;
+const char *
+gupnp_service_action_get_name     (GUPnPServiceAction *action);
+
+const char *
+gupnp_service_action_get_locale   (GUPnPServiceAction *action);
 
 void
 gupnp_service_action_get          (GUPnPServiceAction *action,
@@ -109,37 +122,24 @@ void
 gupnp_service_action_return_error (GUPnPServiceAction *action,
                                    GError             *error);
 
-typedef void
-(* GUPnPServiceActionCallback) (GUPnPService       *service,
-                                GUPnPServiceAction *action);
+void
+gupnp_service_notify        (GUPnPService *service,
+                             ...);
 
 void
-gupnp_service_action_connect    (GUPnPService              *service,
-                                 const char                *action,
-                                 GUPnPServiceActionCallback cb);
+gupnp_service_notify_valist (GUPnPService *service,
+                             va_list       var_args);
 
 void
-gupnp_service_action_disconnect (GUPnPService              *service,
-                                 const char                *action);
+gupnp_service_notify_value  (GUPnPService *service,
+                             const char   *property,
+                             const GValue *value);
 
 void
-gupnp_service_notify            (GUPnPService              *service,
-                                 ...);
+gupnp_service_freeze_notify (GUPnPService *service);
 
 void
-gupnp_service_notify_valist     (GUPnPService              *service,
-                                 va_list                    var_args);
-
-void
-gupnp_service_notify_value      (GUPnPService              *service,
-                                 const char                *property,
-                                 const GValue              *value);
-
-void
-gupnp_service_freeze_notify     (GUPnPService              *service);
-
-void
-gupnp_service_thaw_notify       (GUPnPService              *service);
+gupnp_service_thaw_notify   (GUPnPService *service);
 
 G_END_DECLS
 

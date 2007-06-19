@@ -242,7 +242,6 @@ static void
 gupnp_service_proxy_class_init (GUPnPServiceProxyClass *klass)
 {
         GObjectClass *object_class;
-        GUPnPServiceInfoClass *info_class;
 
         object_class = G_OBJECT_CLASS (klass);
 
@@ -251,8 +250,6 @@ gupnp_service_proxy_class_init (GUPnPServiceProxyClass *klass)
         object_class->dispose      = gupnp_service_proxy_dispose;
         object_class->finalize     = gupnp_service_proxy_finalize;
 
-        info_class = GUPNP_SERVICE_INFO_CLASS (klass);
-        
         g_type_class_add_private (klass, sizeof (GUPnPServiceProxyPrivate));
 
         /**

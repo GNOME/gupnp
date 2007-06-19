@@ -33,6 +33,7 @@ libgupnp_1_0_la_SOURCES = gupnp-context.c		\
 			  gupnp-device-proxy-private.h	\
 			  gupnp-error.c			\
 			  gupnp-root-device.c		\
+		          gupnp-service.c		\
 			  gupnp-service-info.c		\
 			  gupnp-service-proxy.c		\
 			  gupnp-service-proxy-private.h \

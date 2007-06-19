@@ -23,8 +23,8 @@
  * SECTION:gupnp-device
  * @short_description: Class for device implementations.
  *
- * #GUPnPDevice allows for retrieving proxies for a device's subdevices
- * and services. Device proxies also implement the #GUPnPDeviceInfo
+ * #GUPnPDevice allows for retrieving a device's subdevices
+ * and services. #GUPnPDevice also implements the #GUPnPDeviceInfo
  * interface.
  */
 

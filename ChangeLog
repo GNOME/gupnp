@@ -1,5 +1,26 @@
 2007-06-19  Jorn Baayen  <jorn@openedhand.com>
 
+	* doc/Makefile.am:
+	* doc/api-design.txt:
+
+	Remove obsolete API design document.
+
+	* libgupnp/gupnp-device.c:
+
+	Small doc correction.
+
+	* libgupnp/Makefile.am:
+	* libgupnp/gupnp-service.c:
+	* libgupnp/gupnp-service.h:
+
+	Added Service skels.
+
+	* libgupnp/gupnp-service-proxy.c: (gupnp_service_proxy_class_init):
+
+	Delete obsolete code.
+
+2007-06-19  Jorn Baayen  <jorn@openedhand.com>
+
 	* libgupnp/gupnp-context.c: (_gupnp_context_get_session),
 	(gupnp_context_get_subscription_timeout):
 	* libgupnp/gupnp-context.h:
