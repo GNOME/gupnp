@@ -1546,7 +1546,7 @@ find_service_element_for_type (xmlNode    *element,
 }
 
 /**
- * gupnp_service_proxy_new
+ * _gupnp_service_proxy_new_from_doc
  * @context: A #GUPnPContext
  * @doc: A device description document
  * @udn: The UDN of the device the service is contained in
@@ -1558,11 +1558,11 @@ find_service_element_for_type (xmlNode    *element,
  * by @doc.
  **/
 GUPnPServiceProxy *
-gupnp_service_proxy_new (GUPnPContext *context,
-                         xmlDoc       *doc,
-                         const char   *udn,
-                         const char   *type,
-                         const char   *location)
+_gupnp_service_proxy_new_from_doc (GUPnPContext *context,
+                                   xmlDoc       *doc,
+                                   const char   *udn,
+                                   const char   *type,
+                                   const char   *location)
 {
         GUPnPServiceProxy *proxy;
         xmlNode *element, *url_base_element;

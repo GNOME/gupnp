@@ -35,6 +35,8 @@
 
 #include "gupnp-control-point.h"
 #include "gupnp-context-private.h"
+#include "gupnp-device-proxy-private.h"
+#include "gupnp-service-proxy-private.h"
 
 G_DEFINE_TYPE (GUPnPControlPoint,
                gupnp_control_point,
@@ -190,11 +192,11 @@ description_loaded (GUPnPControlPoint *control_point,
         if (service_type) {
                 GUPnPServiceProxy *proxy;
 
-                proxy = gupnp_service_proxy_new (context,
-                                                 doc,
-                                                 udn,
-                                                 service_type,
-                                                 description_url);
+                proxy = _gupnp_service_proxy_new_from_doc (context,
+                                                           doc,
+                                                           udn,
+                                                           service_type,
+                                                           description_url);
                 if (proxy) {
                         control_point->priv->services =
                                 g_list_prepend (control_point->priv->services,
@@ -210,10 +212,10 @@ description_loaded (GUPnPControlPoint *control_point,
         } else {
                 GUPnPDeviceProxy *proxy;
 
-                proxy = gupnp_device_proxy_new (context,
-                                                doc,
-                                                udn,
-                                                description_url);
+                proxy = _gupnp_device_proxy_new_from_doc (context,
+                                                          doc,
+                                                          udn,
+                                                          description_url);
                 if (proxy) {
                         control_point->priv->devices =
                                 g_list_prepend (control_point->priv->devices,

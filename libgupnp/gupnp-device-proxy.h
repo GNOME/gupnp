@@ -22,9 +22,6 @@
 #ifndef __GUPNP_DEVICE_PROXY_H__
 #define __GUPNP_DEVICE_PROXY_H__
 
-#include <libxml/tree.h>
-
-#include "gupnp-context.h"
 #include "gupnp-device-info.h"
 
 G_BEGIN_DECLS
@@ -68,12 +65,6 @@ typedef struct {
         void (* _gupnp_reserved3) (void);
         void (* _gupnp_reserved4) (void);
 } GUPnPDeviceProxyClass;
-
-GUPnPDeviceProxy *
-gupnp_device_proxy_new (GUPnPContext     *context,
-                        xmlDoc           *doc,
-                        const char       *udn,
-                        const char       *location);
 
 G_END_DECLS
 

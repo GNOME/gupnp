@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2006 OpenedHand Ltd.
+ * Copyright (C) 2006, 2007 OpenedHand Ltd.
  *
  * Author: Jorn Baayen <jorn@openedhand.com>
  *
@@ -22,7 +22,16 @@
 #ifndef __GUPNP_DEVICE_PROXY_PRIVATE_H__
 #define __GUPNP_DEVICE_PROXY_PRIVATE_H__
 
+#include <libxml/tree.h>
+
+#include "gupnp-context.h"
 #include "gupnp-device-proxy.h"
+
+GUPnPDeviceProxy *
+_gupnp_device_proxy_new_from_doc (GUPnPContext *context,
+                                  xmlDoc       *doc,
+                                  const char   *udn,
+                                  const char   *location);
 
 xmlNode *
 _gupnp_device_proxy_find_element_for_udn (xmlNode    *element,

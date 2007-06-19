@@ -22,12 +22,8 @@
 #ifndef __GUPNP_SERVICE_PROXY_H__
 #define __GUPNP_SERVICE_PROXY_H__
 
-#include <libxml/tree.h>
-
-#include "gupnp-context.h"
 #include "gupnp-error.h"
 #include "gupnp-service-info.h"
-#include "gupnp-service-proxy.h"
 
 G_BEGIN_DECLS
 
@@ -94,13 +90,6 @@ typedef void
                                      const char              *variable,
                                      GValue                  *value,
                                      gpointer                 user_data);
-
-GUPnPServiceProxy *
-gupnp_service_proxy_new            (GUPnPContext                   *context,
-                                    xmlDoc                         *doc,
-                                    const char                     *udn,
-                                    const char                     *type,
-                                    const char                     *location);
 
 gboolean
 gupnp_service_proxy_send_action    (GUPnPServiceProxy              *proxy,

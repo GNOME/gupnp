@@ -1,5 +1,18 @@
 2007-06-19  Jorn Baayen  <jorn@openedhand.com>
 
+	* libgupnp/gupnp-control-point.c: (description_loaded):
+	* libgupnp/gupnp-device-proxy-private.h:
+	* libgupnp/gupnp-device-proxy.c:
+	(_gupnp_device_proxy_find_element_for_udn):
+	* libgupnp/gupnp-device-proxy.h:
+	* libgupnp/gupnp-service-proxy-private.h:
+	* libgupnp/gupnp-service-proxy.c: (find_service_element_for_type):
+	* libgupnp/gupnp-service-proxy.h:
+
+	Make ServiceProxy and DeviceProxy constructors private.
+
+2007-06-19  Jorn Baayen  <jorn@openedhand.com>
+
 	* libgupnp/gupnp-context.c: (gupnp_context_dispose):
 	* libgupnp/gupnp-control-point.c: (gupnp_control_point_dispose):
 	* libgupnp/gupnp-root-device.c: (gupnp_root_device_finalize),
