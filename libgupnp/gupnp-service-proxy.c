@@ -258,7 +258,10 @@ gupnp_service_proxy_class_init (GUPnPServiceProxyClass *klass)
                                        "Whether we are subscribed to this "
                                        "service",
                                        FALSE,
-                                       G_PARAM_READWRITE));
+                                       G_PARAM_READWRITE |
+                                       G_PARAM_STATIC_NAME |
+                                       G_PARAM_STATIC_NICK |
+                                       G_PARAM_STATIC_BLURB));
                                        
         /**
          * GUPnPServiceProxy::subscription-lost

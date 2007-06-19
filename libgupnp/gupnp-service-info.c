@@ -194,7 +194,10 @@ gupnp_service_info_class_init (GUPnPServiceInfoClass *klass)
                                       "The GUPnPContext.",
                                       GUPNP_TYPE_CONTEXT,
                                       G_PARAM_READWRITE |
-                                      G_PARAM_CONSTRUCT_ONLY));
+                                      G_PARAM_CONSTRUCT_ONLY |
+                                      G_PARAM_STATIC_NAME |
+                                      G_PARAM_STATIC_NICK |
+                                      G_PARAM_STATIC_BLURB));
 
         /**
          * GUPnPServiceInfo:location
@@ -210,7 +213,10 @@ gupnp_service_info_class_init (GUPnPServiceInfoClass *klass)
                                       "file",
                                       NULL,
                                       G_PARAM_READWRITE |
-                                      G_PARAM_CONSTRUCT_ONLY));
+                                      G_PARAM_CONSTRUCT_ONLY |
+                                      G_PARAM_STATIC_NAME |
+                                      G_PARAM_STATIC_NICK |
+                                      G_PARAM_STATIC_BLURB));
 
         /**
          * GUPnPServiceInfo:udn
@@ -225,7 +231,10 @@ gupnp_service_info_class_init (GUPnPServiceInfoClass *klass)
                                       "The UDN of the containing device",
                                       NULL,
                                       G_PARAM_READWRITE |
-                                      G_PARAM_CONSTRUCT_ONLY));
+                                      G_PARAM_CONSTRUCT_ONLY |
+                                      G_PARAM_STATIC_NAME |
+                                      G_PARAM_STATIC_NICK |
+                                      G_PARAM_STATIC_BLURB));
 
         /**
          * GUPnPServiceInfo:url-base
@@ -240,7 +249,10 @@ gupnp_service_info_class_init (GUPnPServiceInfoClass *klass)
                                       "The URL base",
                                       NULL,
                                       G_PARAM_READWRITE |
-                                      G_PARAM_CONSTRUCT_ONLY));
+                                      G_PARAM_CONSTRUCT_ONLY |
+                                      G_PARAM_STATIC_NAME |
+                                      G_PARAM_STATIC_NICK |
+                                      G_PARAM_STATIC_BLURB));
 
         /**
          * GUPnPServiceInfo:element
@@ -256,7 +268,10 @@ gupnp_service_info_class_init (GUPnPServiceInfoClass *klass)
                                        "Element",
                                        "The XML element related to this device",
                                        G_PARAM_READWRITE |
-                                       G_PARAM_CONSTRUCT_ONLY));
+                                       G_PARAM_CONSTRUCT_ONLY |
+                                       G_PARAM_STATIC_NAME |
+                                       G_PARAM_STATIC_NICK |
+                                       G_PARAM_STATIC_BLURB));
 }
 
 /**

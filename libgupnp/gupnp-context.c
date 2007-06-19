@@ -311,7 +311,10 @@ gupnp_context_class_init (GUPnPContextClass *klass)
                                       "The local host's IP address",
                                       NULL,
                                       G_PARAM_READWRITE |
-                                      G_PARAM_CONSTRUCT_ONLY));
+                                      G_PARAM_CONSTRUCT_ONLY |
+                                      G_PARAM_STATIC_NAME |
+                                      G_PARAM_STATIC_NICK |
+                                      G_PARAM_STATIC_BLURB));
 
         /**
          * GUPnPContext:port
@@ -326,7 +329,10 @@ gupnp_context_class_init (GUPnPContextClass *klass)
                                     "Port to run on",
                                     0, G_MAXUINT, SOUP_ADDRESS_ANY_PORT,
                                     G_PARAM_READWRITE |
-                                    G_PARAM_CONSTRUCT_ONLY));
+                                    G_PARAM_CONSTRUCT_ONLY |
+                                    G_PARAM_STATIC_NAME |
+                                    G_PARAM_STATIC_NICK |
+                                    G_PARAM_STATIC_BLURB));
 
         /**
          * GUPnPContext:subscription-timeout
@@ -342,7 +348,10 @@ gupnp_context_class_init (GUPnPContextClass *klass)
                                     "Subscription timeout",
                                     0, G_MAXUINT, GENA_DEFAULT_TIMEOUT,
                                     G_PARAM_READWRITE |
-                                    G_PARAM_CONSTRUCT_ONLY));
+                                    G_PARAM_CONSTRUCT_ONLY |
+                                    G_PARAM_STATIC_NAME |
+                                    G_PARAM_STATIC_NICK |
+                                    G_PARAM_STATIC_BLURB));
 }
 
 SoupSession *

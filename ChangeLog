@@ -1,5 +1,14 @@
 2007-06-19  Jorn Baayen  <jorn@openedhand.com>
 
+	* libgupnp/gupnp-context.c: (gupnp_context_class_init):
+	* libgupnp/gupnp-device-info.c: (gupnp_device_info_class_init):
+	* libgupnp/gupnp-service-info.c: (gupnp_service_info_class_init):
+	* libgupnp/gupnp-service-proxy.c: (gupnp_service_proxy_class_init):
+
+	Added G_PARAM_STATIC_{NAME,NICK,BLURB}.
+
+2007-06-19  Jorn Baayen  <jorn@openedhand.com>
+
 	* tests/test-server.c: (main):
 
 	Use g_object_weak_ref() to destroy the description document when

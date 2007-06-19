@@ -209,7 +209,10 @@ gupnp_device_info_class_init (GUPnPDeviceInfoClass *klass)
                                       "The GUPnPContext",
                                       GUPNP_TYPE_CONTEXT,
                                       G_PARAM_READWRITE |
-                                      G_PARAM_CONSTRUCT_ONLY));
+                                      G_PARAM_CONSTRUCT_ONLY |
+                                      G_PARAM_STATIC_NAME |
+                                      G_PARAM_STATIC_NICK |
+                                      G_PARAM_STATIC_BLURB));
 
         /**
          * GUPnPDeviceInfo:location
@@ -225,7 +228,10 @@ gupnp_device_info_class_init (GUPnPDeviceInfoClass *klass)
                                       "file",
                                       NULL,
                                       G_PARAM_READWRITE |
-                                      G_PARAM_CONSTRUCT_ONLY));
+                                      G_PARAM_CONSTRUCT_ONLY |
+                                      G_PARAM_STATIC_NAME |
+                                      G_PARAM_STATIC_NICK |
+                                      G_PARAM_STATIC_BLURB));
 
         /**
          * GUPnPDeviceInfo:udn
@@ -240,7 +246,10 @@ gupnp_device_info_class_init (GUPnPDeviceInfoClass *klass)
                                       "The UDN",
                                       NULL,
                                       G_PARAM_READWRITE |
-                                      G_PARAM_CONSTRUCT_ONLY));
+                                      G_PARAM_CONSTRUCT_ONLY |
+                                      G_PARAM_STATIC_NAME |
+                                      G_PARAM_STATIC_NICK |
+                                      G_PARAM_STATIC_BLURB));
 
         /**
          * GUPnPDeviceInfo:url-base
@@ -255,7 +264,10 @@ gupnp_device_info_class_init (GUPnPDeviceInfoClass *klass)
                                       "The URL base",
                                       NULL,
                                       G_PARAM_READWRITE |
-                                      G_PARAM_CONSTRUCT_ONLY));
+                                      G_PARAM_CONSTRUCT_ONLY |
+                                      G_PARAM_STATIC_NAME |
+                                      G_PARAM_STATIC_NICK |
+                                      G_PARAM_STATIC_BLURB));
 
         /**
          * GUPnPDeviceInfo:element
@@ -272,7 +284,10 @@ gupnp_device_info_class_init (GUPnPDeviceInfoClass *klass)
                                        "The XML element related to this "
                                        "device",
                                        G_PARAM_READWRITE |
-                                       G_PARAM_CONSTRUCT_ONLY));
+                                       G_PARAM_CONSTRUCT_ONLY |
+                                       G_PARAM_STATIC_NAME |
+                                       G_PARAM_STATIC_NICK |
+                                       G_PARAM_STATIC_BLURB));
 }
 
 /**
