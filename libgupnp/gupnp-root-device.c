@@ -59,17 +59,23 @@ static void
 gupnp_root_device_finalize (GObject *object)
 {
         GUPnPRootDevice *device;
+        GObjectClass *object_class;
         
         device = GUPNP_ROOT_DEVICE (object);
 
         g_free (device->priv->relative_location);
         g_free (device->priv->relative_url_base);
+
+        /* Call super */
+        object_class = G_OBJECT_CLASS (gupnp_root_device_parent_class);
+        object_class->finalize (object);
 }
 
 static void
 gupnp_root_device_dispose (GObject *object)
 {
         GUPnPRootDevice *device;
+        GObjectClass *object_class;
         
         device = GUPNP_ROOT_DEVICE (object);
 
@@ -77,6 +83,10 @@ gupnp_root_device_dispose (GObject *object)
                 g_object_unref (device->priv->group);
                 device->priv->group = NULL;
         }
+
+        /* Call super */
+        object_class = G_OBJECT_CLASS (gupnp_root_device_parent_class);
+        object_class->dispose (object);
 }
 
 static void

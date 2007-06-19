@@ -1,5 +1,15 @@
 2007-06-19  Jorn Baayen  <jorn@openedhand.com>
 
+	* libgupnp/gupnp-context.c: (gupnp_context_dispose):
+	* libgupnp/gupnp-control-point.c: (gupnp_control_point_dispose):
+	* libgupnp/gupnp-root-device.c: (gupnp_root_device_finalize),
+	(gupnp_root_device_dispose):
+	* libgupnp/gupnp-service-proxy.c: (gupnp_service_proxy_dispose):
+
+	Chain up to parent class dispose and finalize methods.
+
+2007-06-19  Jorn Baayen  <jorn@openedhand.com>
+
 	* libgupnp/gupnp-context.c: (gupnp_context_init):
 
 	Remove unnecessary initialisations.

@@ -250,6 +250,7 @@ static void
 gupnp_context_dispose (GObject *object)
 {
         GUPnPContext *context;
+        GObjectClass *object_class;
 
         context = GUPNP_CONTEXT (object);
 
@@ -262,18 +263,27 @@ gupnp_context_dispose (GObject *object)
                 g_object_unref (context->priv->server);
                 context->priv->server = NULL;
         }
+
+        /* Call super */
+        object_class = G_OBJECT_CLASS (gupnp_context_parent_class);
+        object_class->dispose (object);
 }
 
 static void
 gupnp_context_finalize (GObject *object)
 {
         GUPnPContext *context;
+        GObjectClass *object_class;
 
         context = GUPNP_CONTEXT (object);
 
         g_free (context->priv->host_ip);
 
         g_free (context->priv->server_url);
+
+        /* Call super */
+        object_class = G_OBJECT_CLASS (gupnp_context_parent_class);
+        object_class->finalize (object);
 }
 
 static void

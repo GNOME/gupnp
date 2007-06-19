@@ -115,6 +115,7 @@ static void
 gupnp_control_point_dispose (GObject *object)
 {
         GUPnPControlPoint *control_point;
+        GObjectClass *object_class;
 
         control_point = GUPNP_CONTROL_POINT (object);
 
@@ -146,16 +147,25 @@ gupnp_control_point_dispose (GObject *object)
 
                 get_description_url_data_free (data);
         }
+
+        /* Call super */
+        object_class = G_OBJECT_CLASS (gupnp_control_point_parent_class);
+        object_class->dispose (object);
 }
 
 static void
 gupnp_control_point_finalize (GObject *object)
 {
         GUPnPControlPoint *control_point;
+        GObjectClass *object_class;
 
         control_point = GUPNP_CONTROL_POINT (object);
 
         g_hash_table_destroy (control_point->priv->doc_cache);
+
+        /* Call super */
+        object_class = G_OBJECT_CLASS (gupnp_control_point_parent_class);
+        object_class->finalize (object);
 }
 
 /**

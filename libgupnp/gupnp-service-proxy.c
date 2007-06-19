@@ -194,6 +194,7 @@ static void
 gupnp_service_proxy_dispose (GObject *object)
 {
         GUPnPServiceProxy *proxy;
+        GObjectClass *object_class;
 
         proxy = GUPNP_SERVICE_PROXY (object);
 
@@ -214,18 +215,27 @@ gupnp_service_proxy_dispose (GObject *object)
 
                 proxy->priv->subscribed = FALSE;
         }
+
+        /* Call super */
+        object_class = G_OBJECT_CLASS (gupnp_service_proxy_parent_class);
+        object_class->dispose (object);
 }
 
 static void
 gupnp_service_proxy_finalize (GObject *object)
 {
         GUPnPServiceProxy *proxy;
+        GObjectClass *object_class;
 
         proxy = GUPNP_SERVICE_PROXY (object);
 
         g_free (proxy->priv->path);
 
         g_hash_table_destroy (proxy->priv->notify_hash);
+
+        /* Call super */
+        object_class = G_OBJECT_CLASS (gupnp_service_proxy_parent_class);
+        object_class->finalize (object);
 }
 
 static void
