@@ -91,7 +91,7 @@ gupnp_service_action_get_locales  (GUPnPServiceAction *action);
 
 void
 gupnp_service_action_get          (GUPnPServiceAction *action,
-                                   ...);
+                                   ...) G_GNUC_NULL_TERMINATED;
 
 void
 gupnp_service_action_get_valist   (GUPnPServiceAction *action,
@@ -104,7 +104,7 @@ gupnp_service_action_get_value    (GUPnPServiceAction *action,
 
 void
 gupnp_service_action_set          (GUPnPServiceAction *action,
-                                   ...);
+                                   ...) G_GNUC_NULL_TERMINATED;
 
 void
 gupnp_service_action_set_valist   (GUPnPServiceAction *action,
@@ -124,7 +124,7 @@ gupnp_service_action_return_error (GUPnPServiceAction *action,
 
 void
 gupnp_service_notify        (GUPnPService *service,
-                             ...);
+                             ...) G_GNUC_NULL_TERMINATED;
 
 void
 gupnp_service_notify_valist (GUPnPService *service,

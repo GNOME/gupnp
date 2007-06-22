@@ -188,41 +188,6 @@ server_handler (SoupServerContext *server_context,
 }
 
 static void
-set_child_element_content (xmlNode    *element,
-                           const char *child_name,
-                           const char *value)
-{
-        xmlNode *child_element;
-
-        child_element = xml_util_get_element (element,
-                                              child_name,
-                                              NULL);
-
-        if (!child_element) {
-                child_element = xmlNewNode (NULL, (xmlChar *) child_name);
-
-                xmlAddChild (element, child_element);
-        }
-
-        xmlNodeSetContent (child_element, (xmlChar *) value);
-}
-
-static xmlChar *
-get_child_element_content (xmlNode    *element,
-                           const char *child_name)
-{
-        xmlNode *child_element;
-
-        child_element = xml_util_get_element (element,
-                                              child_name,
-                                              NULL);
-        if (!child_element)
-                return NULL;
-
-        return xmlNodeGetContent (child_element);
-}
-
-static void
 fill_resource_group (xmlNode            *element,
                      const char         *location,
                      GSSDPResourceGroup *group)
@@ -232,14 +197,15 @@ fill_resource_group (xmlNode            *element,
         char *usn;
 
         /* Add device */
-        udn = get_child_element_content (element, "UDN");
+        udn = xml_util_get_child_element_content (element, "UDN");
         if (!udn) {
                 g_warning ("No UDN specified.");
 
                 return;
         }
 
-        device_type = get_child_element_content (element, "deviceType");
+        device_type = xml_util_get_child_element_content (element,
+                                                          "deviceType");
         if (!device_type) {
                 g_warning ("No deviceType specified.");
 
@@ -271,7 +237,7 @@ fill_resource_group (xmlNode            *element,
                         if (strcmp ("service", (char *) child->name))
                                 continue;
 
-                        service_type = get_child_element_content
+                        service_type = xml_util_get_child_element_content
                                                 (child, "serviceType");
                         if (!service_type)
                                 continue;
@@ -377,7 +343,7 @@ gupnp_root_device_constructor (GType                  type,
         }
 
         /* Get UDN */
-        udn = get_child_element_content (element, "UDN");
+        udn = xml_util_get_child_element_content (element, "UDN");
         if (!udn) {
                 g_warning ("No UDN specified.");
 
@@ -406,7 +372,9 @@ gupnp_root_device_constructor (GType                  type,
                                          NULL);
 
                 /* Set URL base in description XML */
-                set_child_element_content (root_element, "URLBase", url_base);
+                xml_util_set_child_element_content (root_element,
+                                                    "URLBase",
+                                                    url_base);
         } else
                 url_base = NULL;
 
@@ -547,6 +515,9 @@ gupnp_root_device_class_init (GUPnPRootDeviceClass *klass)
  * URL root path
  * @relative_url_location: The location to use for this device, relative to the
  * URL root path
+ *
+ * Create a new #GUPnPRootDevice object. A modified @description_doc will
+ * automatically be hosted at @relative_location.
  *
  * Return value: A new @GUPnPRootDevice object.
  **/

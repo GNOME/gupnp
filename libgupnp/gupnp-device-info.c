@@ -55,6 +55,32 @@ enum {
         PROP_ELEMENT
 };
 
+static char *
+get_property (GUPnPDeviceInfo *info,
+              const char      *element_name)
+{
+        xmlNode *element;
+
+        g_return_val_if_fail (GUPNP_IS_DEVICE_INFO (info), NULL);
+
+        element = xml_util_get_element (info->priv->element,
+                                        element_name,
+                                        NULL);
+
+        if (element) {
+                xmlChar *value;
+                char *ret;
+                
+                /* Make glib memmanaged */
+                value = xmlNodeGetContent (element);
+                ret = g_strdup ((char *) value);
+                xmlFree (value);
+
+                return ret;
+        } else
+                return NULL;
+}
+
 static void
 gupnp_device_info_init (GUPnPDeviceInfo *info)
 {
@@ -94,24 +120,8 @@ gupnp_device_info_set_property (GObject      *object,
                 info->priv->element =
                         g_value_get_pointer (value);
 
-                if (!info->priv->udn) {
-                        /* No UDN specified manually. Take it off the 
-                         * element. */
-                        xmlNode *tmp;
-
-                        tmp = xml_util_get_element (info->priv->element,
-                                                    "UDN",
-                                                    NULL);
-                        if (tmp) {
-                                xmlChar *content;
-
-                                content = xmlNodeGetContent (tmp);
-
-                                info->priv->udn = g_strdup ((char *) content);
-                
-                                xmlFree (content);
-                        }
-                }
+                if (!info->priv->udn)
+                        info->priv->udn = get_property (info, "UDN");
 
                 break;
         default:
@@ -344,32 +354,6 @@ gupnp_device_info_get_udn (GUPnPDeviceInfo *info)
         g_return_val_if_fail (GUPNP_IS_DEVICE_INFO (info), NULL);
 
         return info->priv->udn;
-}
-
-static char *
-get_property (GUPnPDeviceInfo *info,
-              const char      *element_name)
-{
-        xmlNode *element;
-
-        g_return_val_if_fail (GUPNP_IS_DEVICE_INFO (info), NULL);
-
-        element = xml_util_get_element (info->priv->element,
-                                        element_name,
-                                        NULL);
-
-        if (element) {
-                xmlChar *value;
-                char *ret;
-                
-                /* Make glib memmanaged */
-                value = xmlNodeGetContent (element);
-                ret = g_strdup ((char *) value);
-                xmlFree (value);
-
-                return ret;
-        } else
-                return NULL;
 }
 
 /**

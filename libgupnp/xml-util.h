@@ -27,10 +27,19 @@
 #include <glib.h>
 
 xmlNode *
-xml_util_get_element          (xmlNode *node,
-                               ...) G_GNUC_NULL_TERMINATED;
+xml_util_get_element               (xmlNode    *node,
+                                    ...) G_GNUC_NULL_TERMINATED;
 
 int
-xml_util_node_get_content_int (xmlNode *node);
+xml_util_node_get_content_int      (xmlNode    *node);
+
+void
+xml_util_set_child_element_content (xmlNode    *node,
+                                    const char *child_name,
+                                    const char *content);
+
+xmlChar *
+xml_util_get_child_element_content (xmlNode    *node,
+                                    const char *child_name);
 
 #endif /* __XML_UTIL_H__ */
