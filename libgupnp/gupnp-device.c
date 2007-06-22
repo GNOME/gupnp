@@ -32,6 +32,7 @@
 
 #include "gupnp-device.h"
 #include "gupnp-service.h"
+#include "gupnp-service-private.h"
 #include "xml-util.h"
 
 static GUPnPDevice *
@@ -74,7 +75,7 @@ gupnp_device_get_service (GUPnPDeviceInfo *info,
                           xmlNode         *element)
 {
         GUPnPDevice *proxy;
-        //GUPnPService *service;
+        GUPnPService *service;
         GUPnPContext *context;
         const char *location, *udn, *url_base;
 
@@ -85,7 +86,6 @@ gupnp_device_get_service (GUPnPDeviceInfo *info,
         location = gupnp_device_info_get_location (info);
         url_base = gupnp_device_info_get_url_base (info);
 
-#if 0
         service = _gupnp_service_new_from_element (context,
                                                    element,
                                                    udn,
@@ -93,8 +93,6 @@ gupnp_device_get_service (GUPnPDeviceInfo *info,
                                                    url_base);
 
         return GUPNP_SERVICE_INFO (service);
-#endif
-        return NULL;
 }
 
 static void

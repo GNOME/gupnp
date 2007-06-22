@@ -48,6 +48,7 @@
 #include "gupnp-context-private.h"
 #include "gupnp-marshal.h"
 #include "gena-protocol.h"
+#include "accept-language.h"
 
 G_DEFINE_TYPE (GUPnPContext,
                gupnp_context,
@@ -514,17 +515,18 @@ gupnp_context_get_subscription_timeout (GUPnPContext *context)
         return context->priv->subscription_timeout;
 }
 
-/* Taken from libsoup simple-httpd.c (Modified) */
+/* Modified from libsoup simple-httpd.c */
 static void
 hosting_server_handler (SoupServerContext *server_context,
                         SoupMessage       *msg,
                         gpointer           user_data)
 {
         const char *local_path;
-        char *path, *path_to_open, *slash;
+        char *path, *path_to_open, *path_locale, *slash;
         SoupMethodId method;
         struct stat st;
         int fd, path_offset;
+        GList *locales;
 
         local_path = (const char *) user_data;
 
@@ -533,8 +535,12 @@ hosting_server_handler (SoupServerContext *server_context,
         method = soup_method_get_id (msg->method);
         if (method != SOUP_METHOD_ID_GET && method != SOUP_METHOD_ID_HEAD) {
                 soup_message_set_status (msg, SOUP_STATUS_NOT_IMPLEMENTED);
+                locales = NULL;
                 goto DONE;
         }
+
+        /* Get preferred locales */
+        locales = accept_language_get (msg);
 
         if (path) {
                 if (*path != '/') {
@@ -550,16 +556,33 @@ hosting_server_handler (SoupServerContext *server_context,
                 path_offset = 0;
         }
 
-        path_to_open = g_build_filename (local_path, path + path_offset, NULL);
+        path_locale = NULL;
+
+ NEXT_LOCALE:
+        g_free (path_locale);
+
+        if (locales) {
+                path_locale = g_strdup_printf ("%s.%s",
+                                               path + path_offset,
+                                               (char *) locales->data);
+        } else
+                path_locale = g_strdup (path + path_offset);
+
+        path_to_open = g_build_filename (local_path, path_locale, NULL);
 
  AGAIN:
         if (stat (path_to_open, &st) == -1) {
                 g_free (path_to_open);
                 if (errno == EPERM)
                         soup_message_set_status (msg, SOUP_STATUS_FORBIDDEN);
-                else if (errno == ENOENT)
-                        soup_message_set_status (msg, SOUP_STATUS_NOT_FOUND);
-                else
+                else if (errno == ENOENT) {
+                        if (locales) {
+                                locales = locales->next;
+                                goto NEXT_LOCALE;
+                        } else
+                                soup_message_set_status (msg,
+                                                         SOUP_STATUS_NOT_FOUND);
+                } else
                         soup_message_set_status
                                 (msg, SOUP_STATUS_INTERNAL_SERVER_ERROR);
                 goto DONE;
@@ -585,10 +608,12 @@ hosting_server_handler (SoupServerContext *server_context,
 
                 g_free (path_to_open);
                 path_to_open = g_build_filename (local_path,
-                                                 path + path_offset,
+                                                 path_locale,
                                                  "index.html", NULL);
                 goto AGAIN;
         }
+
+        g_free (path_locale);
 
         fd = open (path_to_open, O_RDONLY);
         g_free (path_to_open);
@@ -619,6 +644,11 @@ hosting_server_handler (SoupServerContext *server_context,
 
  DONE:
         g_free (path);
+
+        while (locales) {
+                g_free (locales->data);
+                locales = g_list_delete_link (locales, locales);
+        }
 }
 
 static void
@@ -635,7 +665,9 @@ unregister_hosting_server_handler (SoupServer        *server,
  * @local_path: Path to the local file or folder to be hosted
  * @server_path: Web server path where @local_path should be hosted
  *
- * Start hosting @local_path at @server_path.
+ * Start hosting @local_path at @server_path. Files with the path
+ * @local_path.LOCALE (if they exist) will be served up when LOCALE is
+ * specified in the request's Accept-Language header. 
  **/
 void
 gupnp_context_host_path (GUPnPContext *context,

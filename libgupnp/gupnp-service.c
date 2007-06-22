@@ -28,6 +28,7 @@
  */
 
 #include "gupnp-service.h"
+#include "gupnp-service-private.h"
 #include "gupnp-marshal.h"
 
 G_DEFINE_TYPE (GUPnPService,
@@ -64,13 +65,14 @@ gupnp_service_action_get_name (GUPnPServiceAction *action)
 }
 
 /**
- * gupnp_service_action_get_locale
+ * gupnp_service_action_get_locales
  * @action: A #GUPnPServiceAction
  *
- * Return value: The locale @action requests.
+ * Return value: An ordered (preferred first) #GList of locales preferred by 
+ * the client. Free list and elements after use.
  **/
-const char *
-gupnp_service_action_get_locale (GUPnPServiceAction *action)
+GList *
+gupnp_service_action_get_locales (GUPnPServiceAction *action)
 {
         g_return_val_if_fail (action != NULL, NULL);
 
@@ -391,4 +393,37 @@ void
 gupnp_service_thaw_notify (GUPnPService *service)
 {
         g_return_if_fail (GUPNP_IS_SERVICE (service));
+}
+
+/**
+ * _gupnp_service_new_from_element
+ * @context: A #GUPnPContext
+ * @element: The #xmlNode ponting to the right service element
+ * @location: The location of the service description file
+ * @udn: The UDN of the device the service is contained in
+ * @url_base: The URL base for this service, or NULL if none
+ *
+ * Return value: A #GUPnPService for the service with element @element, as
+ * read from the service description file specified by @location.
+ **/
+GUPnPService *
+_gupnp_service_new_from_element (GUPnPContext *context,
+                                 xmlNode      *element,
+                                 const char   *udn,
+                                 const char   *location,
+                                 const char   *url_base)
+{
+        GUPnPService *service;
+
+        g_return_val_if_fail (element, NULL);
+
+        service = g_object_new (GUPNP_TYPE_SERVICE,
+                                "context", context,
+                                "location", location,
+                                "udn", udn,
+                                "url-base", url_base,
+                                "element", element,
+                                NULL);
+
+        return service;
 }

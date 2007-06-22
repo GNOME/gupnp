@@ -1,3 +1,25 @@
+2007-06-22  Jorn Baayen  <jorn@openedhand.com>
+
+	* libgupnp/Makefile.am:
+	* libgupnp/accept-language.c:
+	* libgupnp/accept-language.h:
+	* libgupnp/gupnp-context.c:
+	(gupnp_context_get_subscription_timeout), (hosting_server_handler),
+	(unregister_hosting_server_handler):
+
+	Proper Accept-Language support.
+
+	* libgupnp/gupnp-device.c: (gupnp_device_get_service):
+	* libgupnp/gupnp-service-private.h:
+	* libgupnp/gupnp-service-proxy.c:
+	(gupnp_service_proxy_begin_action),
+	(gupnp_service_proxy_begin_action_valist):
+	* libgupnp/gupnp-service.c: (gupnp_service_action_get_name),
+	(gupnp_service_thaw_notify):
+	* libgupnp/gupnp-service.h:
+
+	Handle service object creation.
+
 2007-06-19  Jorn Baayen  <jorn@openedhand.com>
 
 	* doc/Makefile.am:

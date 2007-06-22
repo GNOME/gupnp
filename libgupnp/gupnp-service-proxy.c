@@ -45,6 +45,7 @@
 #include "gupnp-error.h"
 #include "xml-util.h"
 #include "gena-protocol.h"
+#include "accept-language.h"
 
 G_DEFINE_TYPE (GUPnPServiceProxy,
                gupnp_service_proxy,
@@ -432,46 +433,6 @@ gupnp_service_proxy_begin_action (GUPnPServiceProxy              *proxy,
         return ret;
 }
 
-/* Returns the language taken from the current locale, in a format
- * suitable for the HTTP Accept-Language header. */
-static char *
-get_current_language (void)
-{
-        char *locale, *lang;
-        int i;
-        
-        locale = setlocale (LC_ALL, NULL);
-        if (locale == NULL)
-                return NULL;
-
-        if (strcmp (locale, "C") == 0)
-                return NULL;
-
-        lang = g_strdup (locale);
-
-        i = 0;
-        while (lang[i] != '\0') {
-                switch (lang[i]) {
-                case '_':
-                        lang[i] = '-';
-                        break;
-                case '.':
-                case '@':
-                        lang[i] = '\0';
-                        break;
-                default:
-                        break;
-                }
-
-                if (lang[i] == '\0')
-                        break;
-
-                i++;
-        }
-
-        return lang;
-}
-
 static void
 action_got_response (SoupMessage             *msg,
                      GUPnPServiceProxyAction *action)
@@ -536,7 +497,7 @@ gupnp_service_proxy_begin_action_valist
         g_free (full_action);
 
         /* Specify language */
-        lang = get_current_language ();
+        lang = accept_language_get_current ();
         if (lang) {
                 soup_message_add_header (SOUP_MESSAGE (msg)->request_headers,
                                          "Accept-Language",

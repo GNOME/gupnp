@@ -24,7 +24,9 @@ gupnp-marshal.h: gupnp-marshal.list
 
 BUILT_SOURCES = gupnp-marshal.c gupnp-marshal.h
 
-libgupnp_1_0_la_SOURCES = gupnp-context.c		\
+libgupnp_1_0_la_SOURCES = accept-language.c		\
+			  accept-language.h		\
+			  gupnp-context.c		\
 			  gupnp-context-private.h	\
 			  gupnp-control-point.c		\
 			  gupnp-device.c		\
@@ -35,6 +37,7 @@ libgupnp_1_0_la_SOURCES = gupnp-context.c		\
 			  gupnp-root-device.c		\
 		          gupnp-service.c		\
 			  gupnp-service-info.c		\
+			  gupnp-service-private.h	\
 			  gupnp-service-proxy.c		\
 			  gupnp-service-proxy-private.h \
 			  xml-util.c			\

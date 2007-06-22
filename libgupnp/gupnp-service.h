@@ -86,8 +86,8 @@ typedef struct {
 const char *
 gupnp_service_action_get_name     (GUPnPServiceAction *action);
 
-const char *
-gupnp_service_action_get_locale   (GUPnPServiceAction *action);
+GList *
+gupnp_service_action_get_locales  (GUPnPServiceAction *action);
 
 void
 gupnp_service_action_get          (GUPnPServiceAction *action,
