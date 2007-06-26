@@ -28,6 +28,7 @@
  */
 
 #include <libsoup/soup-date.h>
+#include <gobject/gvaluecollector.h>
 #include <string.h>
 
 #include "gupnp-service.h"
@@ -42,6 +43,7 @@ G_DEFINE_TYPE (GUPnPService,
                GUPNP_TYPE_SERVICE_INFO);
 
 struct _GUPnPServicePrivate {
+        gboolean notify_frozen;
 };
 
 enum {
@@ -93,8 +95,8 @@ gupnp_service_action_get_locales (GUPnPServiceAction *action)
 /**
  * gupnp_service_action_get
  * @action: A #GUPnPServiceAction
- * @Varargs: tuples of argument name, argument type, and argument value, 
- * terminated with NULL.
+ * @Varargs: tuples of argument name, argument type, and argument value
+ * location, terminated with NULL.
  *
  * Retrieves the specified action arguments.
  **/
@@ -102,14 +104,20 @@ void
 gupnp_service_action_get (GUPnPServiceAction *action,
                           ...)
 {
+        va_list var_args;
+
         g_return_if_fail (action != NULL);
+
+        va_start (var_args, action);
+        gupnp_service_action_get_valist (action, var_args);
+        va_end (var_args);
 }
 
 /**
  * gupnp_service_action_get_valist
  * @action: A #GUPnPServiceAction
  * @var_args: va_list of tuples of argument name, argument type, and argument
- * value.
+ * value location.
  *
  * See gupnp_service_action_get(); this version takes a va_list for
  * use by language bindings.
@@ -118,14 +126,44 @@ void
 gupnp_service_action_get_valist (GUPnPServiceAction *action,
                                  va_list             var_args)
 {
+        const char *arg_name;
+        GType arg_type;
+        GValue value = {0, };
+        char *copy_error;
+
         g_return_if_fail (action != NULL);
+
+        copy_error = NULL;
+
+        arg_name = va_arg (var_args, const char *);
+        while (arg_name) {
+                arg_type = va_arg (var_args, GType);
+                g_value_init (&value, arg_type);
+
+                gupnp_service_action_get_value (action, arg_name, &value);
+
+                G_VALUE_LCOPY (&value, var_args, 0, &copy_error);
+
+                g_value_unset (&value);
+
+                if (copy_error) {
+                        g_warning ("Error lcopying value: %s\n", copy_error);
+
+                        g_free (copy_error);
+
+                        return;
+                }
+
+                arg_name = va_arg (var_args, const char *);
+        }
 }
 
 /**
  * gupnp_service_action_get_value
  * @action: A #GUPnPServiceAction
  * @argument: The name of the argument to retrieve
- * @value: The #GValue to store the value of the argument
+ * @value: The #GValue to store the value of the argument, initialized
+ * to the correct type.
  *
  * Retrieves the value of @argument into @value.
  **/
@@ -151,7 +189,13 @@ void
 gupnp_service_action_set (GUPnPServiceAction *action,
                           ...)
 {
+        va_list var_args;
+
         g_return_if_fail (action != NULL);
+
+        va_start (var_args, action);
+        gupnp_service_action_set_valist (action, var_args);
+        va_end (var_args);
 }
 
 /**
@@ -167,7 +211,38 @@ void
 gupnp_service_action_set_valist (GUPnPServiceAction *action,
                                  va_list             var_args)
 {
+        const char *arg_name;
+        GType arg_type;
+        GValue value = {0, };
+        char *collect_error;
+        
         g_return_if_fail (action != NULL);
+
+        collect_error = NULL;
+
+        arg_name = va_arg (var_args, const char *);
+        while (arg_name) {
+                arg_type = va_arg (var_args, GType);
+                g_value_init (&value, arg_type);
+
+                G_VALUE_COLLECT (&value, var_args, 0, &collect_error);
+                if (collect_error) {
+                        g_warning ("Error collecting value: %s\n",
+                                   collect_error);
+
+                        g_free (collect_error);
+
+                        g_value_unset (&value);
+
+                        return;
+                }
+
+                gupnp_service_action_set_value (action, arg_name, &value);
+
+                g_value_unset (&value);
+
+                arg_name = va_arg (var_args, const char *);
+        }
 }
 
 /**
@@ -215,6 +290,8 @@ gupnp_service_action_return_error (GUPnPServiceAction *action,
 {
         g_return_if_fail (action != NULL);
         g_return_if_fail (error != NULL);
+
+        /* XXX */
 
         soup_message_set_status (action->msg,
                                  SOUP_STATUS_INTERNAL_SERVER_ERROR);
@@ -605,7 +682,13 @@ void
 gupnp_service_notify (GUPnPService *service,
                       ...)
 {
+        va_list var_args;
+
         g_return_if_fail (GUPNP_IS_SERVICE (service));
+
+        va_start (var_args, service);
+        gupnp_service_notify_valist (service, var_args);
+        va_end (var_args);
 }
 
 /**
@@ -621,7 +704,38 @@ void
 gupnp_service_notify_valist (GUPnPService *service,
                              va_list       var_args)
 {
+        const char *var_name;
+        GType var_type;
+        GValue value = {0, };
+        char *collect_error;
+
         g_return_if_fail (GUPNP_IS_SERVICE (service));
+
+        collect_error = NULL;
+
+        var_name = va_arg (var_args, const char *);
+        while (var_name) {
+                var_type = va_arg (var_args, GType);
+                g_value_init (&value, var_type);
+
+                G_VALUE_COLLECT (&value, var_args, 0, &collect_error);
+                if (collect_error) {
+                        g_warning ("Error collecting value: %s\n",
+                                   collect_error);
+
+                        g_free (collect_error);
+
+                        g_value_unset (&value);
+
+                        return;
+                }
+
+                gupnp_service_notify_value (service, var_name, &value);
+
+                g_value_unset (&value);
+
+                var_name = va_arg (var_args, const char *);
+        }
 }
 
 /**
@@ -653,6 +767,8 @@ void
 gupnp_service_freeze_notify (GUPnPService *service)
 {
         g_return_if_fail (GUPNP_IS_SERVICE (service));
+
+        service->priv->notify_frozen = TRUE;
 }
 
 /**
@@ -665,6 +781,8 @@ void
 gupnp_service_thaw_notify (GUPnPService *service)
 {
         g_return_if_fail (GUPNP_IS_SERVICE (service));
+
+        service->priv->notify_frozen = FALSE;
 }
 
 /**

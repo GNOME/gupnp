@@ -771,6 +771,9 @@ gupnp_service_proxy_end_action_valist (GUPnPServiceProxy       *proxy,
                 }
                 
                 G_VALUE_LCOPY (&value, var_args, 0, &copy_error);
+
+                g_value_unset (&value);
+
                 if (copy_error) {
                         g_set_error (error,
                                      GUPNP_ERROR_QUARK,
@@ -778,8 +781,6 @@ gupnp_service_proxy_end_action_valist (GUPnPServiceProxy       *proxy,
                                      copy_error);
 
                         g_free (copy_error);
-
-                        g_value_unset (&value);
                         
                         gupnp_service_proxy_action_free (action);
 
@@ -788,8 +789,6 @@ gupnp_service_proxy_end_action_valist (GUPnPServiceProxy       *proxy,
                         return FALSE;
                 }
 
-                g_value_unset (&value);
-                
                 arg_name = va_arg (var_args, const char *);
         }
 
