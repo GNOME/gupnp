@@ -1,3 +1,5 @@
+SUBDIRS = xdgmime
+
 AM_CFLAGS = $(LIBGUPNP_CFLAGS) -I$(top_srcdir)
 
 libgupnpincdir = $(includedir)/gupnp-1.0/libgupnp
@@ -45,7 +47,7 @@ libgupnp_1_0_la_SOURCES = accept-language.c		\
 			  gena-protocol.h		\
 			  $(BUILT_SOURCES)
 
-libgupnp_1_0_la_LIBADD = $(LIBGUPNP_LIBS)
+libgupnp_1_0_la_LIBADD = $(LIBGUPNP_LIBS) xdgmime/libxdgmime.la
 
 EXTRA_DIST = gupnp-marshal.list
 

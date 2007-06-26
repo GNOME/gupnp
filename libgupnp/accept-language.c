@@ -28,10 +28,10 @@
 /* Returns the language taken from the current locale, in a format
  * suitable for the HTTP Accept-Language header. */
 char *
-accept_language_get_current (void)
+accept_language_get_header (void)
 {
         char *locale, *lang;
-        int i, dash_index;
+        int dash_index;
         GString *tmp;
         
         locale = setlocale (LC_ALL, NULL);
@@ -43,27 +43,7 @@ accept_language_get_current (void)
 
         lang = g_strdup (locale);
 
-        i = dash_index = 0;
-        while (lang[i] != '\0') {
-                switch (lang[i]) {
-                case '_':
-                        dash_index = i;
-                        lang[i] = '-';
-                        break;
-                case '.':
-                case '@':
-                        lang[i] = '\0';
-                        break;
-                default:
-                        lang[i] = g_ascii_tolower (lang[i]);
-                        break;
-                }
-
-                if (lang[i] == '\0')
-                        break;
-
-                i++;
-        }
+        dash_index = http_language_from_locale (lang);
 
         tmp = g_string_new (lang);
         g_string_append (tmp, ";q=1");
@@ -95,14 +75,13 @@ get_quality (char *val)
 }
 
 /* Parses the Accept-Language header in @message, and returns its values
- * in an ordered list in locale format */
+ * in an ordered list in UNIX locale format */
 GList *
-accept_language_get (SoupMessage *message)
+accept_language_get_locales (SoupMessage *message)
 {
         const char *header;
         char **bits;
         int i, j;
-        gboolean toupper;
         GList *locales;
         
         header = soup_message_get_header (message->request_headers,
@@ -143,31 +122,7 @@ accept_language_get (SoupMessage *message)
 
                         break;
                 default:
-                        toupper = FALSE;
-
-                        for (j = 0; bits[i][j] != '\0'; j++) {
-                                switch (bits[i][j]) {
-                                case '-':
-                                        /* Dashes to underscores */
-                                        bits[i][j] = '_';
-
-                                        /* Uppercase country bit */
-                                        toupper = TRUE;
-
-                                        break;
-                                case ';':
-                                        /* Terminate our string here */
-                                        bits[i][j] = '\0';
-
-                                        break;
-                                default:
-                                        if (toupper)
-                                                bits[i][j] = g_ascii_toupper
-                                                                (bits[i][j]);
-
-                                        break;
-                                }
-                        }
+                        locale_from_http_language (bits[i]);
 
                         /* Because bits is sorted in ascending order */
                         locales = g_list_prepend (locales, bits[i]);
@@ -175,7 +130,89 @@ accept_language_get (SoupMessage *message)
                         break;
                 }
         }
+
         g_free (bits);
 
         return locales;
+}
+
+/* Converts @lang from HTTP language tag format into locale format.
+ * Return value: The index of the '-' character. */
+int
+http_language_from_locale (char *lang)
+{
+        gboolean tolower;
+        int i, dash_index;
+
+        tolower = FALSE;
+        dash_index = -1;
+
+        for (i = 0; lang[i] != '\0'; i++) {
+                switch (lang[i]) {
+                case '_':
+                        /* Underscores to dashes */
+                        lang[i] = '-';
+
+                        /* Lowercase country bit */
+                        tolower = TRUE;
+
+                        /* Save dash index */
+                        dash_index = i;
+
+                        break;
+                case '.':
+                case '@':
+                        /* Terminate our string here */
+                        lang[i] = '\0';
+
+                        return dash_index;
+                default:
+                        if (tolower)
+                                lang[i] = g_ascii_tolower (lang[i]);
+
+                        break;
+                }
+        }
+
+        return dash_index;
+}
+
+/* Converts @lang from locale format into HTTP language tag format.
+ * Return value: The index of the '_' character. */
+int
+locale_from_http_language (char *lang)
+{
+        gboolean toupper;
+        int i, underscore_index;
+
+        toupper = FALSE;
+        underscore_index = -1;
+
+        for (i = 0; lang[i] != '\0'; i++) {
+                switch (lang[i]) {
+                case '-':
+                        /* Dashes to underscores */
+                        lang[i] = '_';
+
+                        /* Uppercase country bit */
+                        toupper = TRUE;
+
+                        /* Save underscore index */
+                        underscore_index = i;
+
+                        break;
+                case ';':
+                        /* Terminate our string here */
+                        lang[i] = '\0';
+
+                        return underscore_index;
+                default:
+                        if (toupper)
+                                lang[i] = g_ascii_toupper (lang[i]);
+
+                        break;
+                }
+        }
+
+        return underscore_index;
 }

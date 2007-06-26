@@ -27,10 +27,16 @@
 G_BEGIN_DECLS
 
 char *
-accept_language_get_current (void);
+accept_language_get_header  (void);
 
 GList *
-accept_language_get         (SoupMessage *message);
+accept_language_get_locales (SoupMessage *message);
+
+int
+http_language_from_locale   (char        *lang);
+
+int
+locale_from_http_language   (char        *lang);
 
 G_END_DECLS
 

@@ -44,6 +44,8 @@
 #include <arpa/inet.h>
 #include <libsoup/soup-address.h>
 
+#include "xdgmime/xdgmime.h"
+
 #include "gupnp-context.h"
 #include "gupnp-context-private.h"
 #include "gupnp-marshal.h"
@@ -521,7 +523,7 @@ hosting_server_handler (SoupServerContext *server_context,
                         SoupMessage       *msg,
                         gpointer           user_data)
 {
-        const char *local_path;
+        const char *local_path, *lang, *mime;
         char *path, *path_to_open, *path_locale, *slash;
         SoupMethodId method;
         struct stat st;
@@ -540,7 +542,7 @@ hosting_server_handler (SoupServerContext *server_context,
         }
 
         /* Get preferred locales */
-        locales = accept_language_get (msg);
+        locales = accept_language_get_locales (msg);
 
         if (path) {
                 if (*path != '/') {
@@ -588,6 +590,7 @@ hosting_server_handler (SoupServerContext *server_context,
                 goto DONE;
         }
 
+        /* Handle directories */
         if (S_ISDIR (st.st_mode)) {
                 slash = strrchr (path_to_open, '/');
                 if (!slash || slash[1]) {
@@ -615,6 +618,7 @@ hosting_server_handler (SoupServerContext *server_context,
 
         g_free (path_locale);
 
+        /* Read file */
         fd = open (path_to_open, O_RDONLY);
         g_free (path_to_open);
         if (fd == -1) {
@@ -626,23 +630,36 @@ hosting_server_handler (SoupServerContext *server_context,
         msg->response.owner = SOUP_BUFFER_SYSTEM_OWNED;
         msg->response.length = st.st_size;
 
-        if (method == SOUP_METHOD_ID_GET) {
-                msg->response.body = g_malloc (msg->response.length);
-                read (fd, msg->response.body, msg->response.length);
-        } else /* method == SOUP_METHOD_ID_HEAD */ {
-                /* SoupServer will ignore response.body and only use
-                 * response.length when responding to HEAD, so we
-                 * could just use the same code for both GET and HEAD.
-                 * But we'll optimize and avoid the extra malloc.
-                 */
-                msg->response.body = NULL;
-        }
+        msg->response.body = g_malloc (msg->response.length);
+        read (fd, msg->response.body, msg->response.length);
 
         close (fd);
 
+        /* Set Content-Type */
+        mime = xdg_mime_get_mime_type_for_data (msg->response.body,
+                                                msg->response.length);
+
+        soup_message_add_header (msg->response_headers,
+                                 "Content-Type",
+                                 mime);
+
+        /* Set Content-Language */
+        if (locales) {
+                http_language_from_locale (locales->data);
+
+                lang = locales->data;
+        } else
+                lang = "en";
+
+        soup_message_add_header (msg->response_headers,
+                                 "Content-Language",
+                                 lang);
+
+        /* OK */
         soup_message_set_status (msg, SOUP_STATUS_OK);
 
  DONE:
+        /* Cleanup */
         g_free (path);
 
         while (locales) {

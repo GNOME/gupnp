@@ -1,3 +1,44 @@
+2007-06-26  Jorn Baayen  <jorn@openedhand.com>
+
+	* libgupnp/accept-language.c: (accept_language_get_header):
+	* libgupnp/accept-language.h:
+
+	Cleanup, additional functions to convert between locale and HTTP
+	language tag representations.
+
+	* libgupnp/gupnp-service-proxy.c:
+	(gupnp_service_proxy_begin_action_valist):
+
+	Updated for accept-language function rename.
+
+	* configure.ac:
+
+	Depend on shared-mime-data.
+
+	* libgupnp/Makefile.am:
+	* libgupnp/xdgmime/Makefile.am:
+	* libgupnp/xdgmime/xdgmime.c:
+	* libgupnp/xdgmime/xdgmime.h:
+	* libgupnp/xdgmime/xdgmimealias.c:
+	* libgupnp/xdgmime/xdgmimealias.h:
+	* libgupnp/xdgmime/xdgmimecache.c:
+	* libgupnp/xdgmime/xdgmimecache.h:
+	* libgupnp/xdgmime/xdgmimeglob.c:
+	* libgupnp/xdgmime/xdgmimeglob.h:
+	* libgupnp/xdgmime/xdgmimeint.c:
+	* libgupnp/xdgmime/xdgmimeint.h:
+	* libgupnp/xdgmime/xdgmimemagic.c:
+	* libgupnp/xdgmime/xdgmimemagic.h:
+	* libgupnp/xdgmime/xdgmimeparent.c:
+	* libgupnp/xdgmime/xdgmimeparent.h:
+	* libgupnp/gupnp-context.c: (hosting_server_handler):
+
+	Use xdgmime to set correct Content-Type HTTP headers.
+
+	* tests/test-server.c: (main):
+
+	Print port number on startup.
+
 2007-06-22  Jorn Baayen  <jorn@openedhand.com>
 
 	* libgupnp/gupnp-device-info.c: (gupnp_device_info_set_property),

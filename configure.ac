@@ -9,11 +9,13 @@ AC_ISC_POSIX
 AC_PROG_CC
 AC_STDC_HEADERS
 AC_PROG_LIBTOOL
+AC_FUNC_MMAP
 
 PKG_CHECK_MODULES(LIBGUPNP, gobject-2.0 >= 2.9.1 \
                             gssdp-1.0 \
                             libsoup-2.2 \
-                            libxml-2.0)
+                            libxml-2.0 \
+                            shared-mime-info)
 
 # glib-genmarshal
 GLIB_GENMARSHAL=`pkg-config --variable=glib_genmarshal glib-2.0`
@@ -42,6 +44,7 @@ GTK_DOC_CHECK([1.0])
 AC_OUTPUT([
 Makefile
 libgupnp/Makefile
+libgupnp/xdgmime/Makefile
 tests/Makefile
 po/Makefile.in
 po/Makefile

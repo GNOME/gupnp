@@ -497,7 +497,7 @@ gupnp_service_proxy_begin_action_valist
         g_free (full_action);
 
         /* Specify language */
-        lang = accept_language_get_current ();
+        lang = accept_language_get_header ();
         if (lang) {
                 soup_message_add_header (SOUP_MESSAGE (msg)->request_headers,
                                          "Accept-Language",

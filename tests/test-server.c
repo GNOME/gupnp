@@ -51,6 +51,8 @@ main (int argc, char **argv)
                 return 1;
         }
 
+        g_print ("Running on port %d\n", gupnp_context_get_port (context));
+
         /* Host current directory */
         gupnp_context_host_path (context, ".", "");
 

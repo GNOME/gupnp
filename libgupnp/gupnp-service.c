@@ -427,3 +427,13 @@ _gupnp_service_new_from_element (GUPnPContext *context,
 
         return service;
 }
+
+/* XXX plaan:
+ * o Set up listeners at eventSubURL and controlURL
+ * o Handle event subscription
+ * o Emit action signal
+ * 
+ * o Implement notification
+ *
+ * o Implement action stuff
+ **/
