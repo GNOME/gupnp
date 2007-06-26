@@ -1,5 +1,12 @@
 2007-06-26  Jorn Baayen  <jorn@openedhand.com>
 
+	* libgupnp/gupnp-service.c: (query_state_variable),
+	(control_server_handler):
+
+	Implement QueryStateVariable.
+
+2007-06-26  Jorn Baayen  <jorn@openedhand.com>
+
 	* libgupnp/gupnp-service-proxy.c:
 	(gupnp_service_proxy_begin_action_valist):
 	* libgupnp/gupnp-service.c: (gupnp_service_action_get_name),

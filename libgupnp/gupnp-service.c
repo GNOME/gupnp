@@ -231,13 +231,49 @@ gupnp_service_init (GUPnPService *proxy)
 /* Handle QueryStateVariable action */
 static void
 query_state_variable (GUPnPService *service,
+                      SoupMessage  *msg,
                       xmlNode      *action_node)
 {
-        xmlNode *node;
+        xmlDoc *response_doc;
+        xmlNode *node, *response_node;
+        char *service_type;
+        xmlNs *ns;
+        xmlChar *mem;
+        int size;
 
+        /* Set up response */
+        response_doc = xmlNewDoc ((const xmlChar *) "1.0");
+        response_node = xmlNewDocNode (response_doc,
+                                       NULL,
+                                       (const xmlChar *) "Envelope",
+                                       NULL);
+        ns = xmlNewNs (response_node,
+                       (const xmlChar *)
+                               "http://schemas.xmlsoap.org/soap/envelope/",
+                       (const xmlChar *) "s");
+        xmlSetNs (response_node, ns);
+
+        response_node = xmlNewChild (response_node,
+                                     ns,
+                                     (const xmlChar *) "Body",
+                                     NULL);
+
+        response_node = xmlNewChild (response_node,
+                                     NULL,
+                                     (const xmlChar *)
+                                             "QueryStateVariableResponse",
+                                     NULL);
+
+        service_type = gupnp_service_info_get_service_type
+                                        (GUPNP_SERVICE_INFO (service));
+        ns = xmlNewNs (response_node,
+                       (xmlChar *) service_type, (const xmlChar *) "u");
+        g_free (service_type);
+
+        /* Iterate requested variables */
         for (node = action_node->children; node; node = node->next) {
                 xmlChar *var_name;
-                GValue value = {0,};
+                GValue value = {0,}, transformed_value = {0, };
 
                 if (strcmp ((char *) node->name, "varName") != 0)
                         continue;
@@ -249,16 +285,51 @@ query_state_variable (GUPnPService *service,
                         continue;
                 }
 
+                /* Query variable */
                 g_signal_emit (service,
                                signals[QUERY_VARIABLE],
                                g_quark_from_string ((char *) var_name),
                                (char *) var_name,
                                &value);
 
-                /* XXX response */
+                if (!G_IS_VALUE (&value)) {
+                        g_warning ("Failed to query variable \"%s\"\n",
+                                   var_name);
+                        xmlFree (var_name);
+                        continue;
+                }
+
+                /* Transform to string */
+                g_value_init (&transformed_value, G_TYPE_STRING);
+                if (g_value_transform (&value, &transformed_value)) {
+                        /* Append to response */
+                        xmlNewChild (response_node,
+                                     NULL,
+                                     var_name,
+                                     (xmlChar *)
+                                     g_value_get_string (&transformed_value));
+                } else
+                        g_warning ("Failed to transform value to string");
+
+                /* Cleanup */
+                g_value_unset (&value);
+                g_value_unset (&transformed_value);
 
                 xmlFree (var_name);
         }
+
+        /* Dump doc into response */
+        xmlDocDumpMemory (response_doc, &mem, &size);
+
+        msg->response.body   = (char *) mem;
+        msg->response.length = size;
+
+        /* Cleanup */
+        xmlFreeDoc (response_doc);
+        xmlFree (mem);
+
+        /* OK */
+        soup_message_set_status (msg, SOUP_STATUS_OK);
 }
 
 static void
@@ -315,11 +386,9 @@ control_server_handler (SoupServerContext *server_context,
         }
 
         /* QueryStateVariable? */
-        if (strcmp (action_name, "QueryStateVariable") == 0) {
-                query_state_variable (service, action_node);
-
-                soup_message_set_status (msg, SOUP_STATUS_OK);
-        } else {
+        if (strcmp (action_name, "QueryStateVariable") == 0)
+                query_state_variable (service, msg, action_node);
+        else {
                 GUPnPServiceAction *action;
 
                 /* Create action structure */
@@ -632,7 +701,6 @@ _gupnp_service_new_from_element (GUPnPContext *context,
 }
 
 /* o Handle event subscription
- * o QueryStateVariable
  * 
  * o Implement notification
  *
