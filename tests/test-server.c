@@ -20,8 +20,19 @@
  */
 
 #include <libgupnp/gupnp-root-device.h>
+#include <libgupnp/gupnp-service.h>
 #include <stdio.h>
 #include <locale.h>
+
+static void
+browse_cb (GUPnPService       *service,
+           GUPnPServiceAction *action,
+           gpointer            user_data)
+{
+        g_print ("The \"Browse\" action was invoked.\n");
+
+        gupnp_service_action_return (action);
+}
 
 int
 main (int argc, char **argv)
@@ -30,6 +41,7 @@ main (int argc, char **argv)
         GUPnPContext *context;
         xmlDoc *doc;
         GUPnPRootDevice *dev;
+        GUPnPServiceInfo *content_dir;
         GMainLoop *main_loop;
 
         if (argc < 2) {
@@ -68,6 +80,19 @@ main (int argc, char **argv)
         /* Free doc when root device is destroyed */
         g_object_weak_ref (G_OBJECT (dev), (GWeakNotify) xmlFreeDoc, doc);
 
+        /* Implement Browse action on ContentDirectory if available */
+        content_dir = gupnp_device_info_get_service
+                         (GUPNP_DEVICE_INFO (dev),
+                          "urn:schemas-upnp-org:service:ContentDirectory:1");
+
+        if (content_dir) {
+                g_signal_connect (content_dir,
+                                  "action-invoked::Browse",
+                                  G_CALLBACK (browse_cb),
+                                  NULL);
+        }
+
+        /* Run */
         gupnp_root_device_set_available (dev, TRUE);
 
         main_loop = g_main_loop_new (NULL, FALSE);

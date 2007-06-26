@@ -68,8 +68,8 @@ typedef struct {
         void (* action_invoked) (GUPnPService       *service,
                                  GUPnPServiceAction *action);
 
-        void (* query_property) (GUPnPService       *service,
-                                 const char         *property,
+        void (* query_variable) (GUPnPService       *service,
+                                 const char         *variable,
                                  GValue             *value);
 
         void (* notify_failed)  (GUPnPService       *service,
@@ -132,7 +132,7 @@ gupnp_service_notify_valist (GUPnPService *service,
 
 void
 gupnp_service_notify_value  (GUPnPService *service,
-                             const char   *property,
+                             const char   *variable,
                              const GValue *value);
 
 void

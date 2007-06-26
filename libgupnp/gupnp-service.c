@@ -27,9 +27,15 @@
  * the #GUPnPServiceInfo interface.
  */
 
+#include <libsoup/soup-date.h>
+#include <string.h>
+
 #include "gupnp-service.h"
 #include "gupnp-service-private.h"
+#include "gupnp-context-private.h"
 #include "gupnp-marshal.h"
+#include "accept-language.h"
+#include "xml-util.h"
 
 G_DEFINE_TYPE (GUPnPService,
                gupnp_service,
@@ -40,7 +46,7 @@ struct _GUPnPServicePrivate {
 
 enum {
         ACTION_INVOKED,
-        QUERY_PROPERTY,
+        QUERY_VARIABLE,
         NOTIFY_FAILED,
         LAST_SIGNAL
 };
@@ -48,6 +54,11 @@ enum {
 static guint signals[LAST_SIGNAL];
 
 struct _GUPnPServiceAction {
+        const char  *name;
+
+        SoupMessage *msg;
+
+        xmlNode     *action_node;
 };
 
 /**
@@ -61,7 +72,7 @@ gupnp_service_action_get_name (GUPnPServiceAction *action)
 {
         g_return_val_if_fail (action != NULL, NULL);
 
-        return NULL;
+        return action->name;
 }
 
 /**
@@ -76,7 +87,7 @@ gupnp_service_action_get_locales (GUPnPServiceAction *action)
 {
         g_return_val_if_fail (action != NULL, NULL);
 
-        return NULL;
+        return accept_language_get_locales (action->msg);
 }
 
 /**
@@ -187,6 +198,8 @@ void
 gupnp_service_action_return (GUPnPServiceAction *action)
 {
         g_return_if_fail (action != NULL);
+
+        soup_message_set_status (action->msg, SOUP_STATUS_OK);
 }
 
 /**
@@ -202,6 +215,9 @@ gupnp_service_action_return_error (GUPnPServiceAction *action,
 {
         g_return_if_fail (action != NULL);
         g_return_if_fail (error != NULL);
+
+        soup_message_set_status (action->msg,
+                                 SOUP_STATUS_INTERNAL_SERVER_ERROR);
 }
 
 static void
@@ -210,6 +226,192 @@ gupnp_service_init (GUPnPService *proxy)
         proxy->priv = G_TYPE_INSTANCE_GET_PRIVATE (proxy,
                                                    GUPNP_TYPE_SERVICE,
                                                    GUPnPServicePrivate);
+}
+
+/* Handle QueryStateVariable action */
+static void
+query_state_variable (GUPnPService *service,
+                      xmlNode      *action_node)
+{
+        xmlNode *node;
+
+        for (node = action_node->children; node; node = node->next) {
+                xmlChar *var_name;
+                GValue value = {0,};
+
+                if (strcmp ((char *) node->name, "varName") != 0)
+                        continue;
+
+                /* varName */
+                var_name = xmlNodeGetContent (node);
+                if (!var_name) {
+                        g_warning ("No variable name specified.");
+                        continue;
+                }
+
+                g_signal_emit (service,
+                               signals[QUERY_VARIABLE],
+                               g_quark_from_string ((char *) var_name),
+                               (char *) var_name,
+                               &value);
+
+                /* XXX response */
+
+                xmlFree (var_name);
+        }
+}
+
+static void
+control_server_handler (SoupServerContext *server_context,
+                        SoupMessage       *msg,
+                        gpointer           user_data)
+{
+        GUPnPService *service;
+        GUPnPContext *context;
+        GSSDPClient *client;
+        xmlDoc *doc;
+        xmlNode *action_node;
+        const char *soap_action, *action_name;
+        char *end, *date;
+
+        service = GUPNP_SERVICE (user_data);
+
+        if (strcmp (msg->method, SOUP_METHOD_POST) != 0) {
+                soup_message_set_status (msg, SOUP_STATUS_NOT_IMPLEMENTED);
+
+                return;
+        }
+
+        context = gupnp_service_info_get_context (GUPNP_SERVICE_INFO (service));
+        client = GSSDP_CLIENT (context);
+
+        /* Get action name */
+        soap_action = soup_message_get_header (msg->request_headers,
+                                               "SOAPAction");
+        action_name = strchr (soap_action, '#');
+        if (!action_name) {
+                soup_message_set_status (msg, SOUP_STATUS_PRECONDITION_FAILED);
+
+                return;
+        }
+
+        action_name += 1;
+
+        /* This memory is libsoup-owned so we can do this */
+        end = strrchr (action_name, '"');
+        *end = '\0';
+
+        /* Parse action_node */
+        doc = xmlParseMemory (msg->request.body, msg->request.length);
+        action_node = xml_util_get_element ((xmlNode *) doc,
+                                            "Envelope",
+                                            "Body",
+                                            action_name,
+                                            NULL);
+        if (!action_node) {
+                soup_message_set_status (msg, SOUP_STATUS_PRECONDITION_FAILED);
+
+                return;
+        }
+
+        /* QueryStateVariable? */
+        if (strcmp (action_name, "QueryStateVariable") == 0) {
+                query_state_variable (service, action_node);
+
+                soup_message_set_status (msg, SOUP_STATUS_OK);
+        } else {
+                GUPnPServiceAction *action;
+
+                /* Create action structure */
+                action = g_slice_new (GUPnPServiceAction);
+
+                action->name        = action_name;
+                action->msg         = msg;
+                action->action_node = action_node;
+
+                /* Emit signal. Handler parses request and fills in response. */
+                g_signal_emit (service,
+                               signals[ACTION_INVOKED],
+                               g_quark_from_string (action_name),
+                               action);
+
+                /* Cleanup */
+                g_slice_free (GUPnPServiceAction, action);
+        }
+
+        /* Server header on response */
+        soup_message_add_header (msg->response_headers,
+                                 "Server",
+                                 gssdp_client_get_server_id (client));
+
+        /* Date header on response */
+        date = soup_date_generate (time (NULL));
+        soup_message_add_header (msg->response_headers,
+                                 "Date",
+                                 date);
+        g_free (date);
+}
+
+static void
+subscription_server_handler (SoupServerContext *server_context,
+                             SoupMessage       *msg,
+                             gpointer           user_data)
+{
+        GUPnPService *service;
+
+        service = GUPNP_SERVICE (user_data);
+}
+
+static GObject *
+gupnp_service_constructor (GType                  type,
+                           guint                  n_construct_params,
+                           GObjectConstructParam *construct_params)
+{
+        GObjectClass *object_class;
+        GObject *object;
+        GUPnPServiceInfo *info;
+        GUPnPContext *context;
+        SoupServer *server;
+        SoupUri *uri;
+        char *url;
+
+        object_class = G_OBJECT_CLASS (gupnp_service_parent_class);
+
+        /* Construct */
+        object = object_class->constructor (type,
+                                            n_construct_params,
+                                            construct_params);
+        info = GUPNP_SERVICE_INFO (object);
+
+        /* Get server */
+        context = gupnp_service_info_get_context (info);
+        server = _gupnp_context_get_server (context);
+
+        /* Run listener on controlURL */
+        url = gupnp_service_info_get_control_url (info);
+        uri = soup_uri_new (url);
+        g_free (url);
+
+        url = soup_uri_to_string (uri, TRUE);
+        soup_uri_free (uri);
+
+        soup_server_add_handler (server, url, NULL,
+                                 control_server_handler, NULL, object);
+        g_free (url);
+
+        /* Run listener on eventSubscriptionURL */
+        url = gupnp_service_info_get_event_subscription_url (info);
+        uri = soup_uri_new (url);
+        g_free (url);
+
+        url = soup_uri_to_string (uri, TRUE);
+        soup_uri_free (uri);
+
+        soup_server_add_handler (server, url, NULL,
+                                 subscription_server_handler, NULL, object);
+        g_free (url);
+
+        return object;
 }
 
 static void
@@ -246,8 +448,9 @@ gupnp_service_class_init (GUPnPServiceClass *klass)
 
         object_class = G_OBJECT_CLASS (klass);
 
-        object_class->dispose  = gupnp_service_dispose;
-        object_class->finalize = gupnp_service_finalize;
+        object_class->constructor = gupnp_service_constructor;
+        object_class->dispose     = gupnp_service_dispose;
+        object_class->finalize    = gupnp_service_finalize;
 
         info_class = GUPNP_SERVICE_INFO_CLASS (klass);
         
@@ -264,7 +467,7 @@ gupnp_service_class_init (GUPnPServiceClass *klass)
         signals[ACTION_INVOKED] =
                 g_signal_new ("action-invoked",
                               GUPNP_TYPE_SERVICE,
-                              G_SIGNAL_RUN_LAST,
+                              G_SIGNAL_RUN_LAST | G_SIGNAL_DETAILED,
                               G_STRUCT_OFFSET (GUPnPServiceClass,
                                                action_invoked),
                               NULL,
@@ -275,20 +478,20 @@ gupnp_service_class_init (GUPnPServiceClass *klass)
                               G_TYPE_POINTER);
 
         /**
-         * GUPnPService::query-property
+         * GUPnPService::query-variable
          * @service: The #GUPnPService that received the signal
-         * @property: The property that is being queried
-         * @value: The location of the #GValue of the property
+         * @variable: The variable that is being queried
+         * @value: The location of the #GValue of the variable
          *
-         * Emitted whenever @service needs to know the value of @property.
-         * Handler should fill @value with the value of @property.
+         * Emitted whenever @service needs to know the value of @variable.
+         * Handler should fill @value with the value of @variable.
          **/
-        signals[QUERY_PROPERTY] =
-                g_signal_new ("query-property",
+        signals[QUERY_VARIABLE] =
+                g_signal_new ("query-variable",
                               GUPNP_TYPE_SERVICE,
-                              G_SIGNAL_RUN_LAST,
+                              G_SIGNAL_RUN_LAST | G_SIGNAL_DETAILED,
                               G_STRUCT_OFFSET (GUPnPServiceClass,
-                                               query_property),
+                                               query_variable),
                               NULL,
                               NULL,
                               gupnp_marshal_VOID__STRING_POINTER,
@@ -323,7 +526,7 @@ gupnp_service_class_init (GUPnPServiceClass *klass)
 /**
  * gupnp_service_notify
  * @service: A #GUPnPService
- * @Varargs: Tuples of property name, property type, and property value,
+ * @Varargs: Tuples of variable name, variable type, and variable value,
  * terminated with NULL.
  *
  * Notifies listening clients that the properties listed in @Varargs
@@ -339,7 +542,7 @@ gupnp_service_notify (GUPnPService *service,
 /**
  * gupnp_service_notify_valist
  * @service: A #GUPnPService
- * @var_args: A va_list of tuples of property name, property type, and property
+ * @var_args: A va_list of tuples of variable name, variable type, and variable
  * value, terminated with NULL.
  *
  * See gupnp_service_notify_valist(); this version takes a va_list for
@@ -355,18 +558,18 @@ gupnp_service_notify_valist (GUPnPService *service,
 /**
  * gupnp_service_notify_value
  * @service: A #GUPnPService
- * @property: The name of the property to notify
- * @value: The value of the property
+ * @variable: The name of the variable to notify
+ * @value: The value of the variable
  *
- * Notifies listening clients that @property has changed to @value.
+ * Notifies listening clients that @variable has changed to @value.
  **/
 void
 gupnp_service_notify_value (GUPnPService *service,
-                            const char   *property,
+                            const char   *variable,
                             const GValue *value)
 {
         g_return_if_fail (GUPNP_IS_SERVICE (service));
-        g_return_if_fail (property != NULL);
+        g_return_if_fail (variable != NULL);
         g_return_if_fail (G_IS_VALUE (value));
 }
 
@@ -428,12 +631,10 @@ _gupnp_service_new_from_element (GUPnPContext *context,
         return service;
 }
 
-/* XXX plaan:
- * o Set up listeners at eventSubURL and controlURL
- * o Handle event subscription
- * o Emit action signal
+/* o Handle event subscription
+ * o QueryStateVariable
  * 
  * o Implement notification
  *
  * o Implement action stuff
- **/
+ */

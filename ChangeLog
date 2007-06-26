@@ -1,5 +1,28 @@
 2007-06-26  Jorn Baayen  <jorn@openedhand.com>
 
+	* libgupnp/gupnp-service-proxy.c:
+	(gupnp_service_proxy_begin_action_valist):
+	* libgupnp/gupnp-service.c: (gupnp_service_action_get_name),
+	(gupnp_service_action_get_locales),
+	(gupnp_service_action_set_value), (gupnp_service_action_return),
+	(gupnp_service_action_return_error), (gupnp_service_init),
+	(query_state_variable), (control_server_handler),
+	(subscription_server_handler), (gupnp_service_constructor),
+	(gupnp_service_dispose), (gupnp_service_finalize),
+	(gupnp_service_class_init), (gupnp_service_notify),
+	(gupnp_service_notify_valist), (gupnp_service_notify_value),
+	(gupnp_service_freeze_notify), (gupnp_service_thaw_notify),
+	(_gupnp_service_new_from_element):
+	* libgupnp/gupnp-service.h:
+
+	Basic server-side actioning. No argument handling yet.
+
+	* tests/test-server.c: (browse_cb), (main):
+
+	Test actioning.
+
+2007-06-26  Jorn Baayen  <jorn@openedhand.com>
+
 	* libgupnp/accept-language.c: (accept_language_get_header):
 	* libgupnp/accept-language.h:
 

@@ -487,15 +487,6 @@ gupnp_service_proxy_begin_action_valist
 
         g_assert (msg != NULL);
 
-        /* Specify action */
-        service_type = gupnp_service_info_get_service_type
-                                        (GUPNP_SERVICE_INFO (proxy));
-        full_action = g_strdup_printf ("\"%s#%s\"", service_type, action);
-        soup_message_add_header (SOUP_MESSAGE (msg)->request_headers,
-				 "SOAPAction",
-                                 full_action);
-        g_free (full_action);
-
         /* Specify language */
         lang = accept_language_get_header ();
         if (lang) {
@@ -505,6 +496,15 @@ gupnp_service_proxy_begin_action_valist
 
                 g_free (lang);
         }
+
+        /* Specify action */
+        service_type = gupnp_service_info_get_service_type
+                                        (GUPNP_SERVICE_INFO (proxy));
+        full_action = g_strdup_printf ("\"%s#%s\"", service_type, action);
+        soup_message_add_header (SOUP_MESSAGE (msg)->request_headers,
+				 "SOAPAction",
+                                 full_action);
+        g_free (full_action);
 
         /* Fill envelope */
 	soup_soap_message_start_envelope (msg);
