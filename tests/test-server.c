@@ -29,7 +29,21 @@ browse_cb (GUPnPService       *service,
            GUPnPServiceAction *action,
            gpointer            user_data)
 {
+        char *filter;
+
         g_print ("The \"Browse\" action was invoked.\n");
+
+        gupnp_service_action_get (action,
+                                  "Filter", G_TYPE_STRING, &filter,
+                                  NULL);
+        g_print ("\tFilter: %s\n", filter);
+        g_free (filter);
+
+        gupnp_service_action_set (action,
+                                  "Result", G_TYPE_STRING, "Hello world",
+                                  "NumberReturned", G_TYPE_INT, 0,
+                                  "TotalMatches", G_TYPE_INT, 0,
+                                  NULL);
 
         gupnp_service_action_return (action);
 }

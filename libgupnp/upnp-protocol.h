@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2006 OpenedHand Ltd.
+ * Copyright (C) 2007 OpenedHand Ltd.
  *
  * Author: Jorn Baayen <jorn@openedhand.com>
  *
@@ -19,26 +19,23 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef __GUPNP_ERROR_H__
-#define __GUPNP_ERROR_H__
+#ifndef __UPNP_PROTOCOL_H__
+#define __UPNP_PROTOCOL_H__
 
-#include <glib.h>
+#include "gupnp-error.h"
 
 G_BEGIN_DECLS
 
-typedef enum {
-        GUPNP_ACTION_ERROR_INVALID_ACTION,
-        GUPNP_ACTION_ERROR_INVALID_ARGS,
-        GUPNP_ACTION_ERROR_OUT_OF_SYNC,
-        GUPNP_ACTION_ERROR_ACTION_FAILED,
-        GUPNP_ACTION_ERROR_LAST
-} GUPnPActionError;
-
-GQuark
-gupnp_error_quark (void) G_GNUC_CONST;
-
-#define GUPNP_ERROR_QUARK (gupnp_error_quark ())
+struct {
+        const char *code;
+        const char *description;
+} upnp_errors[GUPNP_ACTION_ERROR_LAST] = {
+        { "401", "Invalid Action" },
+        { "402", "Invalid Args"   },
+        { "403", "Out of Sync"    },
+        { "501", "Action Failed"  }
+};
 
 G_END_DECLS
 
-#endif /* __GUPNP_ERROR_H__ */
+#endif /* __UPNP_PROTOCOL_H__ */

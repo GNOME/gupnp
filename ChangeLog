@@ -1,3 +1,37 @@
+2007-06-27  Jorn Baayen  <jorn@openedhand.com>
+
+	* libgupnp/gupnp-service.c: (gupnp_service_action_get_value),
+	(gupnp_service_action_set_valist),
+	(gupnp_service_action_set_value), (gupnp_service_action_return),
+	(gupnp_service_action_return_error), (gupnp_service_init),
+	(new_action_response_node), (query_state_variable),
+	(control_server_handler), (gupnp_service_notify_valist),
+	(gupnp_service_notify_value), (gupnp_service_freeze_notify),
+	(gupnp_service_thaw_notify), (_gupnp_service_new_from_element):
+	* libgupnp/gupnp-service.h:
+
+	Fully implement actioning.
+
+	* libgupnp/Makefile.am:
+	* libgupnp/gupnp-error.h:
+	* libgupnp/upnp-protocol.h:
+
+	Added error codes and descriptions.
+
+	* libgupnp/xml-util.c: (xml_util_node_get_content_int):
+	* libgupnp/xml-util.h:
+
+	Added xml_util_node_get_content_value() for retrieving xmlNode
+	contents as GValues.
+
+	* libgupnp/gupnp-service-proxy.c: (server_handler):
+
+	Use xml_util_node_get_content_value().
+
+	* tests/test-server.c: (browse_cb):
+
+	Test actioning.
+
 2007-06-26  Jorn Baayen  <jorn@openedhand.com>
 
 	* libgupnp/gupnp-service-proxy.c:

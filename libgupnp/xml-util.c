@@ -69,6 +69,46 @@ xml_util_node_get_content_int (xmlNode *node)
                 return -1;
 }
 
+gboolean
+xml_util_node_get_content_value (xmlNode *node,
+                                 GValue  *value)
+{
+        xmlChar *content;
+        gboolean success;
+        GValue int_value = {0, };
+        int i;
+
+        content = xmlNodeGetContent (node);
+        success = TRUE;
+
+        switch (G_VALUE_TYPE (value)) {
+        case G_TYPE_STRING:
+                g_value_set_string (value, (char *) content);
+                break;
+        default:
+                i = atoi ((char *) content);
+
+                g_value_init (&int_value, G_TYPE_INT);
+                g_value_set_int (&int_value, i);
+
+                if (!g_value_transform (&int_value, value)) {
+                        g_warning ("Failed to transform "
+                                   "integer value to type %s",
+                                   G_VALUE_TYPE_NAME (value));
+
+                        success = FALSE;
+                }
+
+                g_value_unset (&int_value);
+
+                break;
+        }
+
+        xmlFree (content);
+
+        return success;
+}
+
 void
 xml_util_set_child_element_content (xmlNode    *node,
                                     const char *child_name,

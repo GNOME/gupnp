@@ -45,6 +45,7 @@ libgupnp_1_0_la_SOURCES = accept-language.c		\
 			  xml-util.c			\
 			  xml-util.h			\
 			  gena-protocol.h		\
+			  upnp-protocol.h		\
 			  $(BUILT_SOURCES)
 
 libgupnp_1_0_la_LIBADD = $(LIBGUPNP_LIBS) xdgmime/libxdgmime.la

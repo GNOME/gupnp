@@ -24,7 +24,7 @@
 
 #include <libxml/tree.h>
 #include <stdarg.h>
-#include <glib.h>
+#include <glib-object.h>
 
 xmlNode *
 xml_util_get_element               (xmlNode    *node,
@@ -32,6 +32,10 @@ xml_util_get_element               (xmlNode    *node,
 
 int
 xml_util_node_get_content_int      (xmlNode    *node);
+
+gboolean
+xml_util_node_get_content_value    (xmlNode    *node,
+                                    GValue     *value);
 
 void
 xml_util_set_child_element_content (xmlNode    *node,

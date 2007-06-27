@@ -25,6 +25,7 @@
 #include <stdarg.h>
 
 #include "gupnp-service-info.h"
+#include "gupnp-error.h"
 
 G_BEGIN_DECLS
 
@@ -120,7 +121,7 @@ gupnp_service_action_return       (GUPnPServiceAction *action);
 
 void
 gupnp_service_action_return_error (GUPnPServiceAction *action,
-                                   GError             *error);
+                                   GUPnPActionError    error);
 
 void
 gupnp_service_notify        (GUPnPService *service,

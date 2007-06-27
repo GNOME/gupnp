@@ -1065,47 +1065,22 @@ server_handler (SoupServerContext *server_context,
                 for (var_node = node->children; var_node;
                      var_node = var_node->next) {
                         NotifyData *data;
-                        xmlChar *val;
-                        GValue value = {0, }, int_value = {0, };
+                        GValue value = {0, };
                         GList *l;
-                        int i;
 
                         data = g_hash_table_lookup (proxy->priv->notify_hash,
                                                     var_node->name);
                         if (data == NULL)
                                 continue;
 
-                        /* We have a notify struct for this variable */
-                        val = xmlNodeGetContent (var_node);
-
                         /* Make a GValue of the desired type */
                         g_value_init (&value, data->type);
 
-                        switch (data->type) {
-                        case G_TYPE_STRING:
-                                g_value_set_string (&value, (char *) val); 
-                                break;
-                        default:
-                                i = atoi ((char *) val);
+                        if (!xml_util_node_get_content_value (var_node,
+                                                              &value)) {
+                                g_value_unset (&value);
 
-                                g_value_init (&int_value, G_TYPE_INT);
-                                g_value_set_int (&int_value, i);
-
-                                if (!g_value_transform (&int_value, &value)) {
-                                        g_warning ("Failed to transform "
-                                                   "integer value to type %s",
-                                                   g_type_name (data->type));
-
-                                        g_value_unset (&int_value);
-                                        g_value_unset (&value);
-
-                                        xmlFree (val);
-
-                                        continue;
-                                }
-
-                                g_value_unset (&int_value);
-                                break;
+                                continue;
                         }
 
                         /* Call callbacks */
@@ -1123,8 +1098,6 @@ server_handler (SoupServerContext *server_context,
 
                         /* Cleanup */
                         g_value_unset (&value);
-
-                        xmlFree (val);
                 }
         }
 

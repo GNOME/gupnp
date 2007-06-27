@@ -37,6 +37,7 @@
 #include "gupnp-marshal.h"
 #include "accept-language.h"
 #include "xml-util.h"
+#include "upnp-protocol.h"
 
 G_DEFINE_TYPE (GUPnPService,
                gupnp_service,
@@ -60,7 +61,9 @@ struct _GUPnPServiceAction {
 
         SoupMessage *msg;
 
-        xmlNode     *action_node;
+        xmlNode     *node;
+
+        xmlNode     *response_node;
 };
 
 /**
@@ -172,9 +175,20 @@ gupnp_service_action_get_value (GUPnPServiceAction *action,
                                 const char         *argument,
                                 GValue             *value)
 {
+        xmlNode *node;
+
         g_return_if_fail (action != NULL);
         g_return_if_fail (argument != NULL);
         g_return_if_fail (value != NULL);
+
+        for (node = action->node->children; node; node = node->next) {
+                if (strcmp ((char *) node->name, argument) != 0)
+                        continue;
+
+                xml_util_node_get_content_value (node, value);
+
+                break;
+        }
 }
 
 /**
@@ -258,9 +272,28 @@ gupnp_service_action_set_value (GUPnPServiceAction *action,
                                 const char         *argument,
                                 const GValue       *value)
 {
+        GValue transformed_value = {0, };
+
         g_return_if_fail (action != NULL);
         g_return_if_fail (argument != NULL);
         g_return_if_fail (value != NULL);
+
+        /* Transform to string */
+        g_value_init (&transformed_value, G_TYPE_STRING);
+        if (g_value_transform (value, &transformed_value)) {
+                /* Append to response */
+                xmlNewTextChild (action->response_node,
+                                 NULL,
+                                 (const xmlChar *) argument,
+                                 (xmlChar *) g_value_get_string
+                                                    (&transformed_value));
+        } else {
+                g_warning ("Failed to transform value of type %s to "
+                           "string.", G_VALUE_TYPE_NAME (value));
+        }
+
+        /* Cleanup */
+        g_value_unset (&transformed_value);
 }
 
 /**
@@ -286,12 +319,47 @@ gupnp_service_action_return (GUPnPServiceAction *action)
  **/
 void
 gupnp_service_action_return_error (GUPnPServiceAction *action,
-                                   GError             *error)
+                                   GUPnPActionError    error)
 {
-        g_return_if_fail (action != NULL);
-        g_return_if_fail (error != NULL);
+        xmlNode *node;
+        xmlNs *ns;
 
-        /* XXX */
+        g_return_if_fail (action != NULL);
+        g_return_if_fail (error < GUPNP_ACTION_ERROR_LAST);
+
+        xmlFreeNode (action->response_node);
+        action->response_node = xmlNewNode (NULL,
+                                            (const xmlChar *) "Fault");
+
+        xmlNewTextChild (action->response_node,
+                         NULL,
+                         (const xmlChar *) "faultcode",
+                         (const xmlChar *) "s:Client");
+
+        xmlNewTextChild (action->response_node,
+                         NULL,
+                         (const xmlChar *) "faultstring",
+                         (const xmlChar *) "UPnPError");
+
+        node = xmlNewTextChild (action->response_node,
+                                NULL,
+                                (const xmlChar *) "UPnPError",
+                                NULL);
+
+        ns = xmlNewNs (node,
+                       (const xmlChar *) "urn:schemas-upnp-org:control-1-0",
+                       (const xmlChar *) "u");
+        xmlSetNs (node, ns);
+
+        xmlNewTextChild (node,
+                         NULL,
+                         (const xmlChar *) "errorCode",
+                         (const xmlChar *) upnp_errors[error].code);
+
+        xmlNewTextChild (node,
+                         NULL,
+                         (const xmlChar *) "errorDescription",
+                         (const xmlChar *) upnp_errors[error].description);
 
         soup_message_set_status (action->msg,
                                  SOUP_STATUS_INTERNAL_SERVER_ERROR);
@@ -305,52 +373,40 @@ gupnp_service_init (GUPnPService *proxy)
                                                    GUPnPServicePrivate);
 }
 
+/* Generate a new action response node for @action_name */
+static xmlNode *
+new_action_response_node (GUPnPService *service,
+                          const char   *action_name)
+{
+        xmlNode *node;
+        xmlNs *ns;
+        char *tmp;
+
+        tmp = g_strdup_printf ("%sResponse", action_name);
+        node = xmlNewNode (NULL, (const xmlChar *) tmp);
+        g_free (tmp);
+
+        tmp = gupnp_service_info_get_service_type
+                                        (GUPNP_SERVICE_INFO (service));
+        ns = xmlNewNs (node, (xmlChar *) tmp, (const xmlChar *) "u");
+        g_free (tmp);
+
+        xmlSetNs (node, ns);
+
+        return node;
+}
+
 /* Handle QueryStateVariable action */
 static void
-query_state_variable (GUPnPService *service,
-                      SoupMessage  *msg,
-                      xmlNode      *action_node)
+query_state_variable (GUPnPService       *service,
+                      GUPnPServiceAction *action)
 {
-        xmlDoc *response_doc;
-        xmlNode *node, *response_node;
-        char *service_type;
-        xmlNs *ns;
-        xmlChar *mem;
-        int size;
-
-        /* Set up response */
-        response_doc = xmlNewDoc ((const xmlChar *) "1.0");
-        response_node = xmlNewDocNode (response_doc,
-                                       NULL,
-                                       (const xmlChar *) "Envelope",
-                                       NULL);
-        ns = xmlNewNs (response_node,
-                       (const xmlChar *)
-                               "http://schemas.xmlsoap.org/soap/envelope/",
-                       (const xmlChar *) "s");
-        xmlSetNs (response_node, ns);
-
-        response_node = xmlNewChild (response_node,
-                                     ns,
-                                     (const xmlChar *) "Body",
-                                     NULL);
-
-        response_node = xmlNewChild (response_node,
-                                     NULL,
-                                     (const xmlChar *)
-                                             "QueryStateVariableResponse",
-                                     NULL);
-
-        service_type = gupnp_service_info_get_service_type
-                                        (GUPNP_SERVICE_INFO (service));
-        ns = xmlNewNs (response_node,
-                       (xmlChar *) service_type, (const xmlChar *) "u");
-        g_free (service_type);
+        xmlNode *node;
 
         /* Iterate requested variables */
-        for (node = action_node->children; node; node = node->next) {
+        for (node = action->node->children; node; node = node->next) {
                 xmlChar *var_name;
-                GValue value = {0,}, transformed_value = {0, };
+                GValue value = {0,};
 
                 if (strcmp ((char *) node->name, "varName") != 0)
                         continue;
@@ -358,8 +414,10 @@ query_state_variable (GUPnPService *service,
                 /* varName */
                 var_name = xmlNodeGetContent (node);
                 if (!var_name) {
-                        g_warning ("No variable name specified.");
-                        continue;
+                        gupnp_service_action_return_error
+                                (action, GUPNP_ACTION_ERROR_INVALID_ARGS);
+
+                        return;
                 }
 
                 /* Query variable */
@@ -370,43 +428,26 @@ query_state_variable (GUPnPService *service,
                                &value);
 
                 if (!G_IS_VALUE (&value)) {
-                        g_warning ("Failed to query variable \"%s\"\n",
-                                   var_name);
+                        gupnp_service_action_return_error
+                                (action, GUPNP_ACTION_ERROR_INVALID_ARGS);
+
                         xmlFree (var_name);
-                        continue;
+
+                        return;
                 }
 
-                /* Transform to string */
-                g_value_init (&transformed_value, G_TYPE_STRING);
-                if (g_value_transform (&value, &transformed_value)) {
-                        /* Append to response */
-                        xmlNewChild (response_node,
-                                     NULL,
-                                     var_name,
-                                     (xmlChar *)
-                                     g_value_get_string (&transformed_value));
-                } else
-                        g_warning ("Failed to transform value to string");
+                /* Add variable to response */
+                gupnp_service_action_set_value (action,
+                                                (char *) var_name,
+                                                &value);
 
                 /* Cleanup */
                 g_value_unset (&value);
-                g_value_unset (&transformed_value);
 
                 xmlFree (var_name);
         }
 
-        /* Dump doc into response */
-        xmlDocDumpMemory (response_doc, &mem, &size);
-
-        msg->response.body   = (char *) mem;
-        msg->response.length = size;
-
-        /* Cleanup */
-        xmlFreeDoc (response_doc);
-        xmlFree (mem);
-
-        /* OK */
-        soup_message_set_status (msg, SOUP_STATUS_OK);
+        gupnp_service_action_return (action);
 }
 
 static void
@@ -417,10 +458,14 @@ control_server_handler (SoupServerContext *server_context,
         GUPnPService *service;
         GUPnPContext *context;
         GSSDPClient *client;
-        xmlDoc *doc;
-        xmlNode *action_node;
+        xmlDoc *doc, *response_doc;
+        xmlNode *action_node, *response_node;
+        xmlNs *ns;
         const char *soap_action, *action_name;
         char *end, *date;
+        GUPnPServiceAction *action;
+        xmlChar *mem;
+        int size;
 
         service = GUPNP_SERVICE (user_data);
 
@@ -462,28 +507,68 @@ control_server_handler (SoupServerContext *server_context,
                 return;
         }
 
+        /* Create action structure */
+        action = g_slice_new (GUPnPServiceAction);
+
+        action->name          = action_name;
+        action->msg           = msg;
+        action->node          = action_node;
+        action->response_node = new_action_response_node (service, action_name);
+
         /* QueryStateVariable? */
         if (strcmp (action_name, "QueryStateVariable") == 0)
-                query_state_variable (service, msg, action_node);
+                query_state_variable (service, action);
         else {
-                GUPnPServiceAction *action;
-
-                /* Create action structure */
-                action = g_slice_new (GUPnPServiceAction);
-
-                action->name        = action_name;
-                action->msg         = msg;
-                action->action_node = action_node;
-
                 /* Emit signal. Handler parses request and fills in response. */
                 g_signal_emit (service,
                                signals[ACTION_INVOKED],
                                g_quark_from_string (action_name),
                                action);
 
-                /* Cleanup */
-                g_slice_free (GUPnPServiceAction, action);
+                /* Was it handled? */
+                if (msg->status_code == SOUP_STATUS_NONE) {
+                        /* No. */
+                        gupnp_service_action_return_error
+                                (action, GUPNP_ACTION_ERROR_INVALID_ACTION);
+                }
         }
+
+        /* Embed action->response_node in a SOUP document */
+        response_doc = xmlNewDoc ((const xmlChar *) "1.0");
+        response_node = xmlNewDocNode (response_doc,
+                                       NULL,
+                                       (const xmlChar *) "Envelope",
+                                       NULL);
+        xmlDocSetRootElement (response_doc, response_node);
+
+        ns = xmlNewNs (response_node,
+                       (const xmlChar *)
+                               "http://schemas.xmlsoap.org/soap/envelope/",
+                       (const xmlChar *) "s");
+        xmlSetNs (response_node, ns);
+
+        response_node = xmlNewChild (response_node,
+                                     ns,
+                                     (const xmlChar *) "Body",
+                                     NULL);
+
+        if (msg->status_code == SOUP_STATUS_INTERNAL_SERVER_ERROR)
+                xmlSetNs (action->response_node, ns);
+
+        xmlAddChild (response_node, action->response_node);
+
+        /* Dump document to response */
+        xmlDocDumpMemory (response_doc, &mem, &size);
+
+        msg->response.owner  = SOUP_BUFFER_SYSTEM_OWNED;
+        msg->response.body   = g_strdup ((char *) mem);
+        msg->response.length = size;
+
+        /* Cleanup */
+        xmlFreeDoc (response_doc);
+        xmlFree (mem);
+
+        g_slice_free (GUPnPServiceAction, action);
 
         /* Server header on response */
         soup_message_add_header (msg->response_headers,
@@ -821,6 +906,4 @@ _gupnp_service_new_from_element (GUPnPContext *context,
 /* o Handle event subscription
  * 
  * o Implement notification
- *
- * o Implement action stuff
  */
