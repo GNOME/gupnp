@@ -27,8 +27,9 @@
  * the #GUPnPServiceInfo interface.
  */
 
-#include <libsoup/soup-date.h>
 #include <gobject/gvaluecollector.h>
+#include <libsoup/soup-date.h>
+#include <uuid/uuid.h>
 #include <string.h>
 
 #include "gupnp-service.h"
@@ -36,6 +37,7 @@
 #include "gupnp-context-private.h"
 #include "gupnp-marshal.h"
 #include "accept-language.h"
+#include "gena-protocol.h"
 #include "xml-util.h"
 
 G_DEFINE_TYPE (GUPnPService,
@@ -43,7 +45,9 @@ G_DEFINE_TYPE (GUPnPService,
                GUPNP_TYPE_SERVICE_INFO);
 
 struct _GUPnPServicePrivate {
-        gboolean notify_frozen;
+        GHashTable *subscriptions;
+
+        gboolean    notify_frozen;
 };
 
 enum {
@@ -54,6 +58,27 @@ enum {
 };
 
 static guint signals[LAST_SIGNAL];
+
+typedef struct {
+        GUPnPService *service;
+
+        char         *callback;
+        char         *sid;
+
+        guint         timeout_id;
+} SubscriptionData;
+
+static void
+subscription_data_free (SubscriptionData *data)
+{
+        g_free (data->callback);
+        g_free (data->sid);
+
+        if (data->timeout_id)
+                g_source_remove (data->timeout_id);
+
+        g_slice_free (SubscriptionData, data);
+}
 
 struct _GUPnPServiceAction {
         const char  *name;
@@ -375,6 +400,12 @@ gupnp_service_init (GUPnPService *proxy)
         proxy->priv = G_TYPE_INSTANCE_GET_PRIVATE (proxy,
                                                    GUPNP_TYPE_SERVICE,
                                                    GUPnPServicePrivate);
+
+        proxy->priv->subscriptions =
+                g_hash_table_new_full (g_str_hash,
+                                       g_str_equal,
+                                       NULL,
+                                       (GDestroyNotify) subscription_data_free);
 }
 
 /* Generate a new action response node for @action_name */
@@ -456,6 +487,7 @@ query_state_variable (GUPnPService       *service,
         gupnp_service_action_return (action);
 }
 
+/* controlURL handler */
 static void
 control_server_handler (SoupServerContext *server_context,
                         SoupMessage       *msg,
@@ -590,14 +622,243 @@ control_server_handler (SoupServerContext *server_context,
         g_free (date);
 }
 
+/* Generates a standard (re)subscription response */
+static void
+subscription_response (GUPnPService *service,
+                       SoupMessage  *msg,
+                       const char   *sid,
+                       const char   *timeout)
+{
+        GUPnPContext *context;
+        GSSDPClient *client;
+        char *date;
+
+        context = gupnp_service_info_get_context (GUPNP_SERVICE_INFO (service));
+        client = GSSDP_CLIENT (context);
+
+        /* Server header on response */
+        soup_message_add_header (msg->response_headers,
+                                 "Server",
+                                 gssdp_client_get_server_id (client));
+
+        /* Date header on response */
+        date = soup_date_generate (time (NULL));
+        soup_message_add_header (msg->response_headers,
+                                 "Date",
+                                 date);
+        g_free (date);
+
+        /* SID header */
+        soup_message_add_header (msg->response_headers,
+                                 "SID",
+                                 sid);
+
+        /* Timeout header */
+        soup_message_add_header (msg->response_headers,
+                                 "Timeout",
+                                 timeout);
+
+        /* 200 OK */
+        soup_message_set_status (msg, SOUP_STATUS_OK);
+}
+
+/* Generates a new SID */
+static char *
+generate_sid (void)
+{
+        uuid_t id;
+        char out[39];
+
+        uuid_generate (id);
+        uuid_unparse (id, out);
+
+        return g_strdup_printf ("uuid:%s", out);
+}
+
+/* Subscription expired */
+static gboolean
+subscription_timeout (gpointer user_data)
+{
+        SubscriptionData *data;
+
+        data = user_data;
+
+        g_hash_table_remove (data->service->priv->subscriptions, data->sid);
+
+        return FALSE;
+}
+
+/* Parse timeout header and return its value in seconds, or -1
+ * if infinite */
+static int
+parse_timeout (const char *timeout)
+{
+        int timeout_seconds;
+
+        timeout_seconds = -1;
+
+        if (strncmp (timeout, "Second-", strlen ("Second-")) == 0) {
+                /* We have a finite timeout */
+                timeout_seconds = atoi (timeout + strlen ("Second-"));
+                if (timeout_seconds < GENA_MIN_TIMEOUT) {
+                        g_warning ("Specified timeout is too short. Assuming "
+                                   "default of %d.", GENA_DEFAULT_TIMEOUT);
+
+                        timeout_seconds = GENA_DEFAULT_TIMEOUT;
+                }
+        }
+
+        return timeout_seconds;
+}
+
+/* Subscription request */
+static void
+subscribe (GUPnPService *service,
+           SoupMessage  *msg,
+           const char   *callback,
+           const char   *timeout)
+{
+        SubscriptionData *data;
+        int timeout_seconds;
+
+        data = g_slice_new0 (SubscriptionData);
+        
+        data->service  = service;
+        data->callback = g_strdup (callback);
+        data->sid      = generate_sid ();
+
+        /* Add timeout */
+        timeout_seconds = parse_timeout (timeout);
+        if (timeout_seconds >= 0) {
+                data->timeout_id = g_timeout_add (timeout_seconds * 1000,
+                                                  subscription_timeout,
+                                                  data);
+        }
+
+        /* Add to hash */
+        g_hash_table_insert (service->priv->subscriptions,
+                             data->sid,
+                             data);
+
+        /* Respond */
+        subscription_response (service, msg, data->sid, timeout);
+}
+
+/* Resubscription request */
+static void
+resubscribe (GUPnPService *service,
+             SoupMessage  *msg,
+             const char   *sid,
+             const char   *timeout)
+{
+        SubscriptionData *data;
+        int timeout_seconds;
+
+        data = g_hash_table_lookup (service->priv->subscriptions, sid);
+        if (!data) {
+                soup_message_set_status (msg, SOUP_STATUS_PRECONDITION_FAILED);
+
+                return;
+        }
+
+        /* Update timeout */
+        if (data->timeout_id) {
+                g_source_remove (data->timeout_id);
+                data->timeout_id = 0;
+        }
+
+        timeout_seconds = parse_timeout (timeout);
+        if (timeout_seconds >= 0) {
+                data->timeout_id = g_timeout_add (timeout_seconds * 1000,
+                                                  subscription_timeout,
+                                                  data);
+        }
+
+        /* Respond */
+        subscription_response (service, msg, sid, timeout);
+}
+
+/* Unsubscription request */
+static void
+unsubscribe (GUPnPService *service,
+             SoupMessage  *msg,
+             const char   *sid)
+{
+        if (g_hash_table_remove (service->priv->subscriptions, sid))
+                soup_message_set_status (msg, SOUP_STATUS_OK);
+        else
+                soup_message_set_status (msg, SOUP_STATUS_PRECONDITION_FAILED);
+}
+
+/* eventSubscriptionURL handler */
 static void
 subscription_server_handler (SoupServerContext *server_context,
                              SoupMessage       *msg,
                              gpointer           user_data)
 {
         GUPnPService *service;
+        const char *callback, *nt, *timeout, *sid;
 
         service = GUPNP_SERVICE (user_data);
+
+        callback = soup_message_get_header (msg->request_headers, "Callback");
+        nt       = soup_message_get_header (msg->request_headers, "NT");
+        timeout  = soup_message_get_header (msg->request_headers, "Timeout");
+        sid      = soup_message_get_header (msg->request_headers, "SID");
+
+        /* Choose appropriate handler */
+        if (strcmp (msg->method, GENA_METHOD_SUBSCRIBE) == 0) {
+                if (callback) {
+                        if (sid) {
+                                soup_message_set_status
+                                        (msg, SOUP_STATUS_BAD_REQUEST);
+
+                        } else if (!nt || strcmp (nt, "upnp:event") != 0) {
+                                soup_message_set_status
+                                        (msg, SOUP_STATUS_PRECONDITION_FAILED);
+
+                        } else {
+                                subscribe (service, msg, callback, timeout);
+
+                        }
+
+                } else if (sid) {
+                        if (nt) {
+                                soup_message_set_status
+                                        (msg, SOUP_STATUS_BAD_REQUEST);
+
+                        } else {
+                                resubscribe (service, msg, sid, timeout);
+
+                        }
+
+                } else {
+                        soup_message_set_status
+                                (msg, SOUP_STATUS_BAD_REQUEST);
+
+                }
+
+        } else if (strcmp (msg->method, GENA_METHOD_UNSUBSCRIBE) == 0) {
+                if (sid) {
+                        if (nt || callback) {
+                                soup_message_set_status
+                                        (msg, SOUP_STATUS_BAD_REQUEST);
+
+                        } else {
+                                unsubscribe (service, msg, sid);
+
+                        }
+
+                } else {
+                        soup_message_set_status
+                                (msg, SOUP_STATUS_PRECONDITION_FAILED);
+
+                }
+
+        } else {
+                soup_message_set_status (msg, SOUP_STATUS_NOT_IMPLEMENTED);
+
+        }
 }
 
 static GObject *
@@ -653,25 +914,14 @@ gupnp_service_constructor (GType                  type,
 }
 
 static void
-gupnp_service_dispose (GObject *object)
-{
-        GUPnPService *proxy;
-        GObjectClass *object_class;
-
-        proxy = GUPNP_SERVICE (object);
-
-        /* Call super */
-        object_class = G_OBJECT_CLASS (gupnp_service_parent_class);
-        object_class->dispose (object);
-}
-
-static void
 gupnp_service_finalize (GObject *object)
 {
-        GUPnPService *proxy;
+        GUPnPService *service;
         GObjectClass *object_class;
 
-        proxy = GUPNP_SERVICE (object);
+        service = GUPNP_SERVICE (object);
+
+        g_hash_table_destroy (service->priv->subscriptions);
 
         /* Call super */
         object_class = G_OBJECT_CLASS (gupnp_service_parent_class);
@@ -687,7 +937,6 @@ gupnp_service_class_init (GUPnPServiceClass *klass)
         object_class = G_OBJECT_CLASS (klass);
 
         object_class->constructor = gupnp_service_constructor;
-        object_class->dispose     = gupnp_service_dispose;
         object_class->finalize    = gupnp_service_finalize;
 
         info_class = GUPNP_SERVICE_INFO_CLASS (klass);
@@ -846,6 +1095,8 @@ gupnp_service_notify_value (GUPnPService *service,
         g_return_if_fail (GUPNP_IS_SERVICE (service));
         g_return_if_fail (variable != NULL);
         g_return_if_fail (G_IS_VALUE (value));
+
+        /* XXX */
 }
 
 /**
@@ -875,6 +1126,8 @@ gupnp_service_thaw_notify (GUPnPService *service)
         g_return_if_fail (GUPNP_IS_SERVICE (service));
 
         service->priv->notify_frozen = FALSE;
+
+        /* XXX */
 }
 
 /**
@@ -909,8 +1162,3 @@ _gupnp_service_new_from_element (GUPnPContext *context,
 
         return service;
 }
-
-/* o Handle event subscription
- * 
- * o Implement notification
- */

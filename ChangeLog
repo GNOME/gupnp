@@ -1,5 +1,32 @@
 2007-06-27  Jorn Baayen  <jorn@openedhand.com>
 
+	* configure.ac:
+	
+	Depend on uuid.
+
+	* libgupnp/gena-protocol.h:
+
+	Added minimum timeout value.
+
+	* libgupnp/gupnp-context.c: (gupnp_context_class_init):
+
+	Use minimum timeout value.
+
+	* libgupnp/gupnp-service.c: (gupnp_service_action_return_error),
+	(gupnp_service_init), (query_state_variable),
+	(control_server_handler), (subscription_response), (generate_sid),
+	(subscription_timeout), (parse_timeout), (subscribe),
+	(resubscribe), (unsubscribe), (subscription_server_handler),
+	(gupnp_service_constructor), (gupnp_service_finalize),
+	(gupnp_service_class_init), (gupnp_service_notify),
+	(gupnp_service_notify_valist), (gupnp_service_notify_value),
+	(gupnp_service_freeze_notify), (gupnp_service_thaw_notify),
+	(_gupnp_service_new_from_element):
+
+	Implement subscription.
+
+2007-06-27  Jorn Baayen  <jorn@openedhand.com>
+
 	* libgupnp/Makefile.am:
 	* libgupnp/gupnp-error.h:
 	* libgupnp/gupnp-service.c: (gupnp_service_action_return_error),

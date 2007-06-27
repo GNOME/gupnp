@@ -353,7 +353,9 @@ gupnp_context_class_init (GUPnPContextClass *klass)
                  g_param_spec_uint ("subscription-timeout",
                                     "Subscription timeout",
                                     "Subscription timeout",
-                                    0, G_MAXUINT, GENA_DEFAULT_TIMEOUT,
+                                    GENA_MIN_TIMEOUT,
+                                    G_MAXUINT,
+                                    GENA_DEFAULT_TIMEOUT,
                                     G_PARAM_READWRITE |
                                     G_PARAM_CONSTRUCT_ONLY |
                                     G_PARAM_STATIC_NAME |

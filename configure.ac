@@ -15,7 +15,8 @@ PKG_CHECK_MODULES(LIBGUPNP, gobject-2.0 >= 2.9.1 \
                             gssdp-1.0 \
                             libsoup-2.2 \
                             libxml-2.0 \
-                            shared-mime-info)
+                            shared-mime-info \
+                            uuid)
 
 # glib-genmarshal
 GLIB_GENMARSHAL=`pkg-config --variable=glib_genmarshal glib-2.0`
