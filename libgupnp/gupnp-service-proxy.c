@@ -365,7 +365,7 @@ gupnp_service_proxy_send_action_valist (GUPnPServiceProxy *proxy,
 
         context = gupnp_service_info_get_context (GUPNP_SERVICE_INFO (proxy));
         main_context = gssdp_client_get_main_context (GSSDP_CLIENT (context));
-        main_loop = g_main_loop_new (main_context, FALSE);
+        main_loop = g_main_loop_new (main_context, TRUE);
 
         handle = gupnp_service_proxy_begin_action_valist (proxy,
                                                           action,
@@ -380,7 +380,8 @@ gupnp_service_proxy_send_action_valist (GUPnPServiceProxy *proxy,
         }
 
         /* Loop till we get a reply (or time out) */
-        g_main_loop_run (main_loop);
+        if (g_main_loop_is_running (main_loop))
+                g_main_loop_run (main_loop);
 
         g_main_loop_unref (main_loop);
 

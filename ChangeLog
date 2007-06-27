@@ -1,5 +1,13 @@
 2007-06-27  Jorn Baayen  <jorn@openedhand.com>
 
+	* libgupnp/gupnp-service-proxy.c:
+	(gupnp_service_proxy_send_action_valist):
+
+	Only run the main loop if it hasn't been quit before yet. Fixes
+	a hang.
+
+2007-06-27  Jorn Baayen  <jorn@openedhand.com>
+
 	* libgupnp/gupnp-service.c: (subscription_data_free), (subscribe),
 	(gupnp_service_constructor), (gupnp_service_finalize),
 	(gupnp_service_class_init), (gupnp_service_notify_valist),
