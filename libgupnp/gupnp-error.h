@@ -26,14 +26,6 @@
 
 G_BEGIN_DECLS
 
-typedef enum {
-        GUPNP_ACTION_ERROR_INVALID_ACTION,
-        GUPNP_ACTION_ERROR_INVALID_ARGS,
-        GUPNP_ACTION_ERROR_OUT_OF_SYNC,
-        GUPNP_ACTION_ERROR_ACTION_FAILED,
-        GUPNP_ACTION_ERROR_LAST
-} GUPnPActionError;
-
 GQuark
 gupnp_error_quark (void) G_GNUC_CONST;
 

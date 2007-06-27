@@ -37,7 +37,6 @@
 #include "gupnp-marshal.h"
 #include "accept-language.h"
 #include "xml-util.h"
-#include "upnp-protocol.h"
 
 G_DEFINE_TYPE (GUPnPService,
                gupnp_service,
@@ -313,19 +312,22 @@ gupnp_service_action_return (GUPnPServiceAction *action)
 /**
  * gupnp_service_action_return_error
  * @action: A #GUPnPServiceAction
- * @error: The #GError
+ * @error_code: The error code
+ * @error_description: The error description
  *
- * Return @error.
+ * Return @error_code.
  **/
 void
 gupnp_service_action_return_error (GUPnPServiceAction *action,
-                                   GUPnPActionError    error)
+                                   guint               error_code,
+                                   const char         *error_description)
 {
         xmlNode *node;
         xmlNs *ns;
+        char *tmp;
 
         g_return_if_fail (action != NULL);
-        g_return_if_fail (error < GUPNP_ACTION_ERROR_LAST);
+        g_return_if_fail (error_description != NULL);
 
         xmlFreeNode (action->response_node);
         action->response_node = xmlNewNode (NULL,
@@ -351,15 +353,17 @@ gupnp_service_action_return_error (GUPnPServiceAction *action,
                        (const xmlChar *) "u");
         xmlSetNs (node, ns);
 
+        tmp = g_strdup_printf ("%u", error_code);
         xmlNewTextChild (node,
                          NULL,
                          (const xmlChar *) "errorCode",
-                         (const xmlChar *) upnp_errors[error].code);
+                         (const xmlChar *) tmp);
+        g_free (tmp);
 
         xmlNewTextChild (node,
                          NULL,
                          (const xmlChar *) "errorDescription",
-                         (const xmlChar *) upnp_errors[error].description);
+                         (const xmlChar *) error_description);
 
         soup_message_set_status (action->msg,
                                  SOUP_STATUS_INTERNAL_SERVER_ERROR);
@@ -414,8 +418,9 @@ query_state_variable (GUPnPService       *service,
                 /* varName */
                 var_name = xmlNodeGetContent (node);
                 if (!var_name) {
-                        gupnp_service_action_return_error
-                                (action, GUPNP_ACTION_ERROR_INVALID_ARGS);
+                        gupnp_service_action_return_error (action,
+                                                           402,
+                                                           "Invalid Args");
 
                         return;
                 }
@@ -428,8 +433,9 @@ query_state_variable (GUPnPService       *service,
                                &value);
 
                 if (!G_IS_VALUE (&value)) {
-                        gupnp_service_action_return_error
-                                (action, GUPNP_ACTION_ERROR_INVALID_ARGS);
+                        gupnp_service_action_return_error (action,
+                                                           402,
+                                                           "Invalid Args");
 
                         xmlFree (var_name);
 
@@ -528,8 +534,9 @@ control_server_handler (SoupServerContext *server_context,
                 /* Was it handled? */
                 if (msg->status_code == SOUP_STATUS_NONE) {
                         /* No. */
-                        gupnp_service_action_return_error
-                                (action, GUPNP_ACTION_ERROR_INVALID_ACTION);
+                        gupnp_service_action_return_error (action,
+                                                           401,
+                                                           "Invalid Action");
                 }
         }
 
