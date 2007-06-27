@@ -73,7 +73,7 @@ typedef struct {
                                  GValue             *value);
 
         void (* notify_failed)  (GUPnPService       *service,
-                                 const char         *notify_url,
+                                 const char         *callback_url,
                                  GError             *reason);
 
         /* future padding */

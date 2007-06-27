@@ -1,5 +1,17 @@
 2007-06-27  Jorn Baayen  <jorn@openedhand.com>
 
+	* libgupnp/gupnp-service.c: (subscription_data_free), (subscribe),
+	(gupnp_service_constructor), (gupnp_service_finalize),
+	(gupnp_service_class_init), (gupnp_service_notify_valist),
+	(notify_got_response), (notify_subscriber), (flush_notifications),
+	(gupnp_service_notify_value), (gupnp_service_freeze_notify),
+	(gupnp_service_thaw_notify):
+	* libgupnp/gupnp-service.h:
+
+	Implement notification.
+
+2007-06-27  Jorn Baayen  <jorn@openedhand.com>
+
 	* configure.ac:
 	
 	Depend on uuid.

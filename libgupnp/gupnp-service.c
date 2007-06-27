@@ -36,6 +36,7 @@
 #include "gupnp-service-private.h"
 #include "gupnp-context-private.h"
 #include "gupnp-marshal.h"
+#include "gupnp-error.h"
 #include "accept-language.h"
 #include "gena-protocol.h"
 #include "xml-util.h"
@@ -46,6 +47,8 @@ G_DEFINE_TYPE (GUPnPService,
 
 struct _GUPnPServicePrivate {
         GHashTable *subscriptions;
+
+        GQueue     *notify_queue;
 
         gboolean    notify_frozen;
 };
@@ -65,6 +68,8 @@ typedef struct {
         char         *callback;
         char         *sid;
 
+        int           seq;
+
         guint         timeout_id;
 } SubscriptionData;
 
@@ -78,6 +83,20 @@ subscription_data_free (SubscriptionData *data)
                 g_source_remove (data->timeout_id);
 
         g_slice_free (SubscriptionData, data);
+}
+
+typedef struct {
+        char  *variable;
+        GValue value;
+} NotifyData;
+
+static void
+notify_data_free (NotifyData *data)
+{
+        g_free (data->variable);
+        g_value_unset (&data->value);
+
+        g_slice_free (NotifyData, data);
 }
 
 struct _GUPnPServiceAction {
@@ -742,6 +761,9 @@ subscribe (GUPnPService *service,
 
         /* Respond */
         subscription_response (service, msg, data->sid, timeout);
+
+        /* XXX once we have introspection we should send an initial
+         * event message here. */
 }
 
 /* Resubscription request */
@@ -918,10 +940,16 @@ gupnp_service_finalize (GObject *object)
 {
         GUPnPService *service;
         GObjectClass *object_class;
+        NotifyData *data;
 
         service = GUPNP_SERVICE (object);
 
+        /* Free subscription hash */
         g_hash_table_destroy (service->priv->subscriptions);
+
+        /* Free notify queue */
+        while ((data = g_queue_pop_head (service->priv->notify_queue)))
+                notify_data_free (data);
 
         /* Call super */
         object_class = G_OBJECT_CLASS (gupnp_service_parent_class);
@@ -990,7 +1018,7 @@ gupnp_service_class_init (GUPnPServiceClass *klass)
         /**
          * GUPnPService::notify-failed
          * @service: The #GUPnPService that received the signal
-         * @notify_url: The notification URL
+         * @callback_url: The callback URL
          * @reason: A pointer to a #GError describing why the notify failed
          *
          * Emitted whenever notification of a client fails.
@@ -1079,6 +1107,160 @@ gupnp_service_notify_valist (GUPnPService *service,
         }
 }
 
+/* Receiveid notify response. */
+static void
+notify_got_response (SoupMessage *msg,
+                     gpointer     user_data)
+{
+        SubscriptionData *data;
+
+        data = user_data;
+
+        if (!SOUP_STATUS_IS_SUCCESSFUL (msg->status_code)) {
+                /* Emit 'notify-failed' signal */
+                GError *error;
+
+                error = g_error_new (GUPNP_ERROR_QUARK,
+                                     msg->status_code,
+                                     "Notify failed");
+
+                g_signal_emit (data->service,
+                               signals[NOTIFY_FAILED],
+                               0,
+                               data->callback,
+                               error);
+
+                g_error_free (error);
+        }
+}
+
+/* Send notification @user_data to subscriber @value */
+static void
+notify_subscriber (gpointer key,
+                   gpointer value,
+                   gpointer user_data)
+{
+        SubscriptionData *data;
+        const char *property_set;
+        char *tmp;
+        SoupMessage *msg;
+        GUPnPContext *context;
+        SoupSession *session;
+
+        data = value;
+        property_set = user_data;
+
+        /* Create message */
+        msg = soup_message_new (GENA_METHOD_NOTIFY, data->callback);
+
+        /* Add headers */
+        soup_message_add_header (msg->request_headers,
+                                 "Content-Type",
+                                 "text/xml");
+
+        soup_message_add_header (msg->request_headers,
+                                 "NT",
+                                 "upnp:event");
+
+        soup_message_add_header (msg->request_headers,
+                                 "NTS",
+                                 "upnp:propchange");
+
+        soup_message_add_header (msg->request_headers,
+                                 "SID",
+                                 data->sid);
+
+        tmp = g_strdup_printf ("%d", data->seq);
+        soup_message_add_header (msg->request_headers,
+                                 "SEQ",
+                                 tmp);
+        g_free (tmp);
+
+        if (data->seq < G_MAXINT32)
+                data->seq++;
+        else
+                data->seq = 1;
+
+        /* Add body */
+        msg->response.owner  = SOUP_BUFFER_SYSTEM_OWNED;
+        msg->response.body   = g_strdup (property_set);
+        msg->response.length = strlen (property_set);
+
+        /* Queue */
+        context = gupnp_service_info_get_context
+                        (GUPNP_SERVICE_INFO (data->service));
+        session = _gupnp_context_get_session (context);
+        soup_session_queue_message (session,
+                                    msg,
+                                    notify_got_response,
+                                    data);
+}
+
+/* Flush all queued notifications */
+static void
+flush_notifications (GUPnPService *service)
+{
+        GValue transformed_value = {0, };
+        NotifyData *data;
+        xmlDoc *doc;
+        xmlNode *node;
+        xmlNs *ns;
+        xmlChar *mem;
+        int size;
+
+        /* Compose property set */
+        doc = xmlNewDoc ((const xmlChar *) "1.0");
+        node = xmlNewDocNode (doc,
+                              NULL,
+                              (const xmlChar *) "propertyset",
+                              NULL);
+        xmlDocSetRootElement (doc, node);
+
+        ns = xmlNewNs (node,
+                       (const xmlChar *) "urn:schemas-upnp-org:event-1-0",
+                       (const xmlChar *) "e");
+        xmlSetNs (node, ns);
+
+        node = xmlNewTextChild (node,
+                                ns,
+                                (const xmlChar *) "property",
+                                NULL);
+
+        /* Add variables */
+        while ((data = g_queue_pop_head (service->priv->notify_queue))) {
+                g_value_init (&transformed_value, G_TYPE_STRING);
+                if (g_value_transform (&data->value, &transformed_value)) {
+                        /* Add to property set */
+                        xmlNewTextChild
+                                (node,
+                                 NULL,
+                                 (const xmlChar *) data->variable,
+                                 (xmlChar *) g_value_get_string
+                                                    (&transformed_value));
+                } else {
+                        g_warning ("Failed to transform value of type %s to "
+                                   "string.", G_VALUE_TYPE_NAME (&data->value));
+                }
+
+                /* Cleanup */
+                g_value_unset (&transformed_value);
+
+                notify_data_free (data);
+        }
+
+        /* Dump document to response */
+        xmlDocDumpMemory (doc, &mem, &size);
+
+        /* And send it off */
+        g_hash_table_foreach (service->priv->subscriptions,
+                              notify_subscriber,
+                              mem);
+
+        /* Cleanup */
+        xmlFreeDoc (doc);
+        xmlFree (mem);
+}
+
 /**
  * gupnp_service_notify_value
  * @service: A #GUPnPService
@@ -1096,7 +1278,21 @@ gupnp_service_notify_value (GUPnPService *service,
         g_return_if_fail (variable != NULL);
         g_return_if_fail (G_IS_VALUE (value));
 
-        /* XXX */
+        /* Queue */
+        NotifyData *data;
+
+        data = g_slice_new (NotifyData);
+
+        data->variable = g_strdup (variable);
+
+        g_value_init (&data->value, G_VALUE_TYPE (value));
+        g_value_copy (value, &data->value);
+
+        g_queue_push_tail (service->priv->notify_queue, data);
+
+        /* And flush, if not frozen */
+        if (!service->priv->notify_frozen)
+                flush_notifications (service);
 }
 
 /**
@@ -1127,7 +1323,10 @@ gupnp_service_thaw_notify (GUPnPService *service)
 
         service->priv->notify_frozen = FALSE;
 
-        /* XXX */
+        if (g_queue_get_length (service->priv->notify_queue) == 0)
+                return; /* Empty notify queue */
+
+        flush_notifications (service);
 }
 
 /**
