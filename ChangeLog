@@ -1,5 +1,12 @@
 2007-06-30  Jorn Baayen  <jorn@openedhand.com>
 
+	* libgupnp/gupnp-service-proxy.c: (gupnp_service_proxy_end_action),
+	(gupnp_service_proxy_end_action_valist):
+
+	Added set_error_literal() helper function.
+
+2007-06-30  Jorn Baayen  <jorn@openedhand.com>
+
 	* libgupnp/gupnp-service-proxy.c:
 	(gupnp_service_proxy_end_action_valist):
 

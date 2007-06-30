@@ -651,6 +651,20 @@ gupnp_service_proxy_end_action (GUPnPServiceProxy       *proxy,
         return ret;
 }
 
+static void
+set_error_literal (GError    **error,
+                   GQuark      error_quark,
+                   int         code,
+                   const char *message)
+{
+        if (*error == NULL) {
+                *error = g_error_new_literal (error_quark,
+                                              code,
+                                              message);
+        } else
+                g_warning ("Error already set.");
+}
+
 /**
  * gupnp_service_proxy_end_action_valist
  * @proxy: A #GUPnPServiceProxy
@@ -687,10 +701,10 @@ gupnp_service_proxy_end_action_valist (GUPnPServiceProxy       *proxy,
         case SOUP_STATUS_INTERNAL_SERVER_ERROR:
                 break;
         default:
-                g_set_error (error,
-                             GUPNP_ERROR_QUARK,
-                             soup_msg->status_code,
-                             soup_msg->reason_phrase);
+                set_error_literal (error,
+                                   GUPNP_ERROR_QUARK,
+                                   soup_msg->status_code,
+                                   soup_msg->reason_phrase);
                 
                 gupnp_service_proxy_action_free (action);
 
@@ -706,10 +720,10 @@ gupnp_service_proxy_end_action_valist (GUPnPServiceProxy       *proxy,
                                      0,
                                      "Could not parse SOAP response");
                 } else {
-                        g_set_error (error,
-                                     GUPNP_ERROR_QUARK,
-                                     soup_msg->status_code,
-                                     soup_msg->reason_phrase);
+                        set_error_literal (error,
+                                           GUPNP_ERROR_QUARK,
+                                           soup_msg->status_code,
+                                           soup_msg->reason_phrase);
                 }
                 
                 gupnp_service_proxy_action_free (action);
@@ -749,17 +763,17 @@ gupnp_service_proxy_end_action_valist (GUPnPServiceProxy       *proxy,
                                 desc = g_strdup (soup_msg->reason_phrase);
                         }
 
-                        g_set_error (error,
-                                     GUPNP_ERROR_QUARK,
-                                     code,
-                                     desc);
+                        set_error_literal (error,
+                                           GUPNP_ERROR_QUARK,
+                                           code,
+                                           desc);
 
                         g_free (desc);
                 } else {
-                        g_set_error (error,
-                                     GUPNP_ERROR_QUARK,
-                                     soup_msg->status_code,
-                                     soup_msg->reason_phrase);
+                        set_error_literal (error,
+                                           GUPNP_ERROR_QUARK,
+                                           soup_msg->status_code,
+                                           soup_msg->reason_phrase);
                 }
                 
                 gupnp_service_proxy_action_free (action);
