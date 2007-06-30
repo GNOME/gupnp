@@ -520,7 +520,7 @@ gupnp_control_point_resource_unavailable
 
                                 control_point->priv->devices =
                                         g_list_delete_link
-                                                (control_point->priv->services,
+                                                (control_point->priv->devices,
                                                  l);
 
                                 break;

@@ -1,3 +1,10 @@
+2007-06-30  Jorn Baayen  <jorn@openedhand.com>
+
+	* libgupnp/gupnp-control-point.c:
+	(gupnp_control_point_resource_unavailable):
+
+	Remove unavailable device from correct list!
+
 2007-06-29  Jorn Baayen  <jorn@openedhand.com>
 
 	* AUTHORS: Added Zeeshan.
