@@ -1,5 +1,21 @@
 2007-06-30  Jorn Baayen  <jorn@openedhand.com>
 
+	* libgupnp/gupnp-service-proxy.c:
+	(gupnp_service_proxy_end_action_valist):
+
+	Handle SOAP Faults.
+
+	* libgupnp/gupnp-service.c: (gupnp_service_action_set_value),
+	(gupnp_service_action_return_error):
+
+	Return SOAP Fault in correct format.
+
+	* tests/test-client.c: (service_proxy_available_cb):
+
+	Return on error.
+
+2007-06-30  Jorn Baayen  <jorn@openedhand.com>
+
 	* libgupnp/gupnp-service-proxy.c: (subscribe_got_response):
 
 	Remove obsolete comment and correct warning message.

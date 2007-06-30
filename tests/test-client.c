@@ -139,6 +139,10 @@ service_proxy_available_cb (GUPnPControlPoint *cp,
                 if (error) {
                         g_printerr ("Error: %s\n", error->message);
                         g_error_free (error);
+
+                        g_free (type);
+
+                        return;
                 }
 
                 g_print ("Browse returned:\n");

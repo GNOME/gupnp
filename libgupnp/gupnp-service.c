@@ -321,6 +321,14 @@ gupnp_service_action_set_value (GUPnPServiceAction *action,
         g_return_if_fail (argument != NULL);
         g_return_if_fail (value != NULL);
 
+        if (action->msg->status == SOUP_STATUS_INTERNAL_SERVER_ERROR) {
+                g_warning ("Calling gupnp_service_action_set_value() after "
+                           "having called gupnp_service_action_return_error() "
+                           "is not allowed.");
+
+                return;
+        }
+
         /* Transform to string */
         g_value_init (&transformed_value, G_TYPE_STRING);
         if (g_value_transform (value, &transformed_value)) {
@@ -388,6 +396,11 @@ gupnp_service_action_return_error (GUPnPServiceAction *action,
                          (const xmlChar *) "UPnPError");
 
         node = xmlNewTextChild (action->response_node,
+                                NULL,
+                                (const xmlChar *) "detail",
+                                NULL);
+
+        node = xmlNewTextChild (node,
                                 NULL,
                                 (const xmlChar *) "UPnPError",
                                 NULL);

@@ -673,15 +673,20 @@ gupnp_service_proxy_end_action_valist (GUPnPServiceProxy       *proxy,
 {
         SoupMessage *soup_msg;
         SoupSoapResponse *response;
+        SoupSoapParameter *param;
         const char *arg_name;
 
         g_return_val_if_fail (GUPNP_IS_SERVICE_PROXY (proxy), FALSE);
         g_return_val_if_fail (action, FALSE);
 
-        /* Check for errors */
         soup_msg = SOUP_MESSAGE (action->msg);
-	if (!SOUP_STATUS_IS_SUCCESSFUL (soup_msg->status_code)) {
-                /* XXX full error handling */
+
+        /* Check for errors */
+        switch (soup_msg->status_code) {
+        case SOUP_STATUS_OK:
+        case SOUP_STATUS_INTERNAL_SERVER_ERROR:
+                break;
+        default:
                 g_set_error (error,
                              GUPNP_ERROR_QUARK,
                              soup_msg->status_code,
@@ -690,27 +695,85 @@ gupnp_service_proxy_end_action_valist (GUPnPServiceProxy       *proxy,
                 gupnp_service_proxy_action_free (action);
 
                 return FALSE;
-	}
+        }
 
         /* Parse response */
 	response = soup_soap_message_parse_response (action->msg);
 	if (!response) {
-                g_set_error (error,
-                             GUPNP_ERROR_QUARK,
-                             0,
-                             "Could not parse SOAP response");
+                if (soup_msg->status_code == SOUP_STATUS_OK) {
+                        g_set_error (error,
+                                     GUPNP_ERROR_QUARK,
+                                     0,
+                                     "Could not parse SOAP response");
+                } else {
+                        g_set_error (error,
+                                     GUPNP_ERROR_QUARK,
+                                     soup_msg->status_code,
+                                     soup_msg->reason_phrase);
+                }
                 
                 gupnp_service_proxy_action_free (action);
 
                 return FALSE;
 	}
 
+        /* Check whether we have a Fault */
+        if (soup_msg->status_code == SOUP_STATUS_INTERNAL_SERVER_ERROR) {
+                param = soup_soap_response_get_first_parameter_by_name
+                                                        (response, "detail");
+                if (param) {
+                        param = soup_soap_parameter_get_first_child_by_name
+                                                        (param, "UPnPError");
+                }
+
+                if (param) {
+                        SoupSoapParameter *child;
+                        int code;
+                        char *desc;
+
+                        child = soup_soap_parameter_get_first_child_by_name
+                                                (param, "errorCode");
+                        if (child) {
+                                code = soup_soap_parameter_get_int_value
+                                                                      (child);
+                        } else {
+                                code = soup_msg->status;
+                        }
+
+                        child = soup_soap_parameter_get_first_child_by_name
+                                                (param, "errorDescription");
+                        if (child) {
+                                desc = soup_soap_parameter_get_string_value
+                                                                      (child);
+                        } else {
+                                desc = g_strdup (soup_msg->reason_phrase);
+                        }
+
+                        g_set_error (error,
+                                     GUPNP_ERROR_QUARK,
+                                     code,
+                                     desc);
+
+                        g_free (desc);
+                } else {
+                        g_set_error (error,
+                                     GUPNP_ERROR_QUARK,
+                                     soup_msg->status_code,
+                                     soup_msg->reason_phrase);
+                }
+                
+                gupnp_service_proxy_action_free (action);
+
+                g_object_unref (response);
+
+                return FALSE;
+        }
+
         /* Arguments */
         arg_name = va_arg (var_args, const char *);
         while (arg_name) {
                 GType arg_type;
                 GValue value = { 0, }, int_value = { 0, };
-                SoupSoapParameter *param;
                 char *copy_error = NULL;
                 char *str;
                 int i;
