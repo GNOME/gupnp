@@ -29,7 +29,13 @@ G_BEGIN_DECLS
 GQuark
 gupnp_error_quark (void) G_GNUC_CONST;
 
-#define GUPNP_ERROR_QUARK (gupnp_error_quark ())
+#define GUPNP_ERROR (gupnp_error_quark ())
+
+typedef enum {
+        GUPNP_ERROR_INVALID_RESPONSE,
+        GUPNP_ERROR_VARIABLE_NOT_FOUND,
+        GUPNP_ERROR_SUBSCRIPTION_LOST
+} GUPnPError;
 
 G_END_DECLS
 

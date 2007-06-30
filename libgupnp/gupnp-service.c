@@ -1139,7 +1139,7 @@ notify_got_response (SoupMessage *msg,
                 /* Emit 'notify-failed' signal */
                 GError *error;
 
-                error = g_error_new (GUPNP_ERROR_QUARK,
+                error = g_error_new (GUPNP_ERROR,
                                      msg->status_code,
                                      "Notify failed");
 

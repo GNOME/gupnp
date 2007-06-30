@@ -532,10 +532,8 @@ gupnp_service_proxy_begin_action_valist
 
                 G_VALUE_COLLECT (&value, var_args, 0, &collect_error);
                 if (collect_error) {
-                        g_set_error (error,
-                                     GUPNP_ERROR_QUARK,
-                                     0,
-                                     collect_error);
+                        g_warning ("Error collecting value: %s\n",
+                                   collect_error);
 
                         g_free (collect_error);
                         
@@ -550,11 +548,8 @@ gupnp_service_proxy_begin_action_valist
 
                 g_value_init (&transformed_value, G_TYPE_STRING);
                 if (!g_value_transform (&value, &transformed_value)) {
-                        g_set_error (error,
-                                     GUPNP_ERROR_QUARK,
-                                     0,
-                                     "Failed to transform value of type %s "
-                                     "to a string", g_type_name (arg_type));
+                        g_warning ("Failed to transform value of type %s "
+                                   "to a string", g_type_name (arg_type));
                         
                         g_value_unset (&value);
                         g_value_unset (&transformed_value);
@@ -657,6 +652,9 @@ set_error_literal (GError    **error,
                    int         code,
                    const char *message)
 {
+        if (error == NULL)
+                return;
+
         if (*error == NULL) {
                 *error = g_error_new_literal (error_quark,
                                               code,
@@ -702,7 +700,7 @@ gupnp_service_proxy_end_action_valist (GUPnPServiceProxy       *proxy,
                 break;
         default:
                 set_error_literal (error,
-                                   GUPNP_ERROR_QUARK,
+                                   GUPNP_ERROR,
                                    soup_msg->status_code,
                                    soup_msg->reason_phrase);
                 
@@ -716,12 +714,12 @@ gupnp_service_proxy_end_action_valist (GUPnPServiceProxy       *proxy,
 	if (!response) {
                 if (soup_msg->status_code == SOUP_STATUS_OK) {
                         g_set_error (error,
-                                     GUPNP_ERROR_QUARK,
-                                     0,
+                                     GUPNP_ERROR,
+                                     GUPNP_ERROR_INVALID_RESPONSE,
                                      "Could not parse SOAP response");
                 } else {
                         set_error_literal (error,
-                                           GUPNP_ERROR_QUARK,
+                                           GUPNP_ERROR,
                                            soup_msg->status_code,
                                            soup_msg->reason_phrase);
                 }
@@ -764,14 +762,14 @@ gupnp_service_proxy_end_action_valist (GUPnPServiceProxy       *proxy,
                         }
 
                         set_error_literal (error,
-                                           GUPNP_ERROR_QUARK,
+                                           GUPNP_ERROR,
                                            code,
                                            desc);
 
                         g_free (desc);
                 } else {
                         set_error_literal (error,
-                                           GUPNP_ERROR_QUARK,
+                                           GUPNP_ERROR,
                                            soup_msg->status_code,
                                            soup_msg->reason_phrase);
                 }
@@ -796,9 +794,10 @@ gupnp_service_proxy_end_action_valist (GUPnPServiceProxy       *proxy,
                                                         (response, arg_name);
                 if (!param) {
                         g_set_error (error,
-                                     GUPNP_ERROR_QUARK,
-                                     0,
-                                     "Could not find variable '%s' in response",
+                                     GUPNP_ERROR,
+                                     GUPNP_ERROR_VARIABLE_NOT_FOUND,
+                                     "Could not find variable \"%s\" in "
+                                     "response",
                                      arg_name);
 
                         gupnp_service_proxy_action_free (action);
@@ -826,12 +825,9 @@ gupnp_service_proxy_end_action_valist (GUPnPServiceProxy       *proxy,
                         g_value_set_int (&int_value, i);
 
                         if (!g_value_transform (&int_value, &value)) {
-                                g_set_error (error,
-                                             GUPNP_ERROR_QUARK,
-                                             0,
-                                             "Failed to transform integer "
-                                             "value to type %s",
-                                             g_type_name (arg_type));
+                                g_warning ("Failed to transform integer "
+                                           "value to type %s",
+                                           g_type_name (arg_type));
 
                                 g_value_unset (&int_value);
                                 g_value_unset (&value);
@@ -853,10 +849,7 @@ gupnp_service_proxy_end_action_valist (GUPnPServiceProxy       *proxy,
                 g_value_unset (&value);
 
                 if (copy_error) {
-                        g_set_error (error,
-                                     GUPNP_ERROR_QUARK,
-                                     0,
-                                     copy_error);
+                        g_warning ("Error copying value: %s", copy_error);
 
                         g_free (copy_error);
                         
@@ -1281,8 +1274,8 @@ subscribe_got_response (SoupMessage       *msg,
                         g_object_notify (G_OBJECT (proxy), "subscribed");
 
                         /* Emit subscription-lost */
-                        error = g_error_new (GUPNP_ERROR_QUARK,
-                                             0,
+                        error = g_error_new (GUPNP_ERROR,
+                                             GUPNP_ERROR_SUBSCRIPTION_LOST,
                                              "No SID in SUBSCRIBE response");
 
                         g_signal_emit (proxy,
@@ -1344,7 +1337,7 @@ subscribe_got_response (SoupMessage       *msg,
                 g_object_notify (G_OBJECT (proxy), "subscribed");
 
                 /* Emit subscription-lost */
-                error = g_error_new (GUPNP_ERROR_QUARK,
+                error = g_error_new (GUPNP_ERROR,
                                      msg->status_code,
                                      "(Re)subscription failed: %d",
                                      msg->status_code);
