@@ -1,3 +1,53 @@
+2007-06-29  Jorn Baayen  <jorn@openedhand.com>
+
+	* AUTHORS: Added Zeeshan.
+
+2007-06-29  Zeeshan Ali  <zeenix@gstreamer.net>
+
+	reviewed by: Jorn Baayen  <jorn@openedhand.com>
+
+	* libgupnp/Makefile.am:
+	* libgupnp/gupnp.h:
+	* libgupnp/gupnp-service-introspection.c:
+	(gupnp_service_introspection_init),
+	(gupnp_service_introspection_set_property),
+	(gupnp_service_introspection_get_property),
+	(gupnp_service_introspection_dispose),
+	(gupnp_service_introspection_finalize),
+	(gupnp_service_introspection_class_init), (get_scpd),
+	(set_default_value), (set_string_value_limits),
+	(set_value_limit_by_name), (set_variable_limits),
+	(set_variable_type), (get_state_variable), (get_action_argument),
+	(get_action_arguments), (action_argument_list_free), (get_actions),
+	(get_state_variables), (contstruct_introspection_info),
+	(collect_action_names), (collect_action_arguments),
+	(collect_actions), (collect_allowed_values), (copy_state_variable),
+	(collect_state_variables), (gupnp_service_introspection_new),
+	(gupnp_service_introspection_list_action_names),
+	(gupnp_service_introspection_list_action_arguments),
+	(gupnp_service_introspection_list_actions),
+	(gupnp_service_action_arg_info_free),
+	(gupnp_service_action_info_free),
+	(gupnp_service_introspection_list_state_variables),
+	(gupnp_service_state_variable_info_free):
+	* libgupnp/gupnp-service-introspection.h:
+
+	Add service introspection support.
+
+	* libgupnp/gupnp-service-info.c:
+	(gupnp_service_proxy_request_introspection):
+	* libgupnp/gupnp-service-info.h:
+	
+	- Add service introspection support.
+
+	* tests/Makefile.am:
+	* tests/test-introspection.c: (print_action_arguments),
+	(print_actions), (print_state_variables),
+	(service_proxy_available_cb), (service_proxy_unavailable_cb),
+	(main):
+
+	Add a test application for the introspection API.
+
 2007-06-27  Jorn Baayen  <jorn@openedhand.com>
 
 	* libgupnp/gupnp-service-proxy.c:

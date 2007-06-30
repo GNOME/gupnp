@@ -6,16 +6,17 @@ libgupnpincdir = $(includedir)/gupnp-1.0/libgupnp
 
 lib_LTLIBRARIES = libgupnp-1.0.la
 
-libgupnpinc_HEADERS = gupnp-context.h		\
-		      gupnp-control-point.h	\
-		      gupnp-device.h		\
-		      gupnp-device-info.h	\
-	              gupnp-device-proxy.h	\
-		      gupnp-error.h		\
-		      gupnp-root-device.h	\
-		      gupnp-service.h		\
-		      gupnp-service-info.h	\
-		      gupnp-service-proxy.h	\
+libgupnpinc_HEADERS = gupnp-context.h			\
+		      gupnp-control-point.h		\
+		      gupnp-device.h			\
+		      gupnp-device-info.h		\
+	              gupnp-device-proxy.h		\
+		      gupnp-error.h			\
+		      gupnp-root-device.h		\
+		      gupnp-service.h			\
+		      gupnp-service-info.h		\
+		      gupnp-service-proxy.h		\
+	              gupnp-service-introspection.h	\
 		      gupnp.h
 
 gupnp-marshal.c: gupnp-marshal.list
@@ -41,6 +42,7 @@ libgupnp_1_0_la_SOURCES = accept-language.c		\
 			  gupnp-service-info.c		\
 			  gupnp-service-private.h	\
 			  gupnp-service-proxy.c		\
+	                  gupnp-service-introspection.c	\
 			  gupnp-service-proxy-private.h \
 			  xml-util.c			\
 			  xml-util.h			\

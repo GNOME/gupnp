@@ -438,3 +438,31 @@ gupnp_service_info_get_event_subscription_url (GUPnPServiceInfo *info)
 {
         return get_url_property (info, "eventSubURL");
 }
+
+/**
+ * gupnp_service_info_request_introspection
+ * @info: A #GUPnPServiceInfo
+ *
+ * Note that introspection object is created from the information in service
+ * description document (SCPD) provided by the service so it can not be created
+ * if the service does not provide an SCPD.
+ *
+ * Return value: A new #GUPnPServiceIntrospection for this service or NULL.
+ * Unref after use.
+ **/
+GUPnPServiceIntrospection *
+gupnp_service_info_get_introspection (GUPnPServiceInfo *info)
+{
+        GUPnPServiceIntrospection *introspection;
+        char *scpd_url;
+
+        scpd_url = gupnp_service_info_get_scpd_url (info);
+        if (scpd_url == NULL)
+                return NULL;
+
+        introspection = gupnp_service_introspection_new (scpd_url);
+
+        g_free (scpd_url);
+
+        return introspection;
+}

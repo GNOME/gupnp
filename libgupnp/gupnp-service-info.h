@@ -26,6 +26,7 @@
 #include <libxml/tree.h>
 
 #include "gupnp-context.h"
+#include "gupnp-service-introspection.h"
 
 G_BEGIN_DECLS
 
@@ -97,6 +98,9 @@ gupnp_service_info_get_control_url            (GUPnPServiceInfo *info);
 
 char *
 gupnp_service_info_get_event_subscription_url (GUPnPServiceInfo *info);
+
+GUPnPServiceIntrospection *
+gupnp_service_info_get_introspection          (GUPnPServiceInfo *info);
 
 G_END_DECLS
 

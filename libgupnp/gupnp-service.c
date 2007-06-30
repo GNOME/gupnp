@@ -1176,6 +1176,7 @@ notify_subscriber (gpointer key,
                                  tmp);
         g_free (tmp);
 
+        /* Handle overflow */
         if (data->seq < G_MAXINT32)
                 data->seq++;
         else

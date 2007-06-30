@@ -28,4 +28,5 @@
 #include "gupnp-root-device.h"
 #include "gupnp-service.h"
 #include "gupnp-service-info.h"
+#include "gupnp-service-introspection.h"
 #include "gupnp-service-proxy.h"
