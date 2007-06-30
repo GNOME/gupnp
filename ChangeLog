@@ -1,5 +1,12 @@
 2007-06-30  Jorn Baayen  <jorn@openedhand.com>
 
+	* libgupnp/gupnp-service-proxy.c:
+	(gupnp_service_proxy_begin_action):
+
+	Use M-POST when POST fails.
+
+2007-06-30  Jorn Baayen  <jorn@openedhand.com>
+
 	* libgupnp/gupnp-error.h:
 	* libgupnp/gupnp-service.c: (gupnp_service_action_return_error):
 

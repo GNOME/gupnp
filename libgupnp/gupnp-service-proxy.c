@@ -434,11 +434,44 @@ gupnp_service_proxy_begin_action (GUPnPServiceProxy              *proxy,
         return ret;
 }
 
+/* Received response to action message */
 static void
 action_got_response (SoupMessage             *msg,
                      GUPnPServiceProxyAction *action)
 {
-        action->callback (action->proxy, action, action->user_data);
+        if (msg->status == SOUP_STATUS_METHOD_NOT_ALLOWED) {
+                /* Not allowed .. */
+                const char *full_action;
+                GUPnPContext *context;
+                SoupSession *session;
+
+                /* Retry with M-POST */
+                msg->method = "M-POST";
+
+                soup_message_add_header
+                        (msg->request_headers,
+                         "Man",
+                         "\"http://schemas.xmlsoap.org/soap/envelope/\"; ns=s");
+
+                /* Rename "SOAPAction" to "s-SOAPAction" */
+                full_action = soup_message_get_header (msg->request_headers,
+                                                       "SOAPAction");
+                soup_message_add_header (msg->request_headers,
+                                         "s-SOAPAction",
+                                         full_action);
+                soup_message_remove_header (msg->request_headers,
+                                            "SOAPAction");
+
+                /* And re-queue */
+                context = gupnp_service_info_get_context
+                                (GUPNP_SERVICE_INFO (action->proxy));
+                session = _gupnp_context_get_session (context);
+
+                soup_session_requeue_message (session, msg);
+        } else {
+                /* Success: Call callback */
+                action->callback (action->proxy, action, action->user_data);
+        }
 }
 
 /**
