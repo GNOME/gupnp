@@ -1233,10 +1233,6 @@ subscribe_got_response (SoupMessage       *msg,
                                          proxy);
 
                 /* Figure out when the subscription times out */
-
-                /* XXX Date header unsupported for now as getting
-                 * a correct local time out of an RFC 1123 time is the pest */
-
                 hdr = soup_message_get_header (msg->response_headers,
                                                "Timeout");
                 if (hdr == NULL) {
@@ -1249,9 +1245,8 @@ subscribe_got_response (SoupMessage       *msg,
                         /* We have a finite timeout */
                         timeout = atoi (hdr + strlen ("Second-"));
                         if (timeout < 0) {
-                                g_warning ("Date specified in SUBSCRIBE "
-                                           "response is too far in the past. "
-                                           "Assuming default time-out of %d.",
+                                g_warning ("Invalid time-out specified. "
+                                           "Assuming default value of %d.",
                                            GENA_DEFAULT_TIMEOUT);
 
                                 timeout = GENA_DEFAULT_TIMEOUT;

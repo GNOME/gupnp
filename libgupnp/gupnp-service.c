@@ -646,11 +646,11 @@ static void
 subscription_response (GUPnPService *service,
                        SoupMessage  *msg,
                        const char   *sid,
-                       const char   *timeout)
+                       int           timeout)
 {
         GUPnPContext *context;
         GSSDPClient *client;
-        char *date;
+        char *tmp;
 
         context = gupnp_service_info_get_context (GUPNP_SERVICE_INFO (service));
         client = GSSDP_CLIENT (context);
@@ -661,11 +661,11 @@ subscription_response (GUPnPService *service,
                                  gssdp_client_get_server_id (client));
 
         /* Date header on response */
-        date = soup_date_generate (time (NULL));
+        tmp = soup_date_generate (time (NULL));
         soup_message_add_header (msg->response_headers,
                                  "Date",
-                                 date);
-        g_free (date);
+                                 tmp);
+        g_free (tmp);
 
         /* SID header */
         soup_message_add_header (msg->response_headers,
@@ -673,9 +673,15 @@ subscription_response (GUPnPService *service,
                                  sid);
 
         /* Timeout header */
+        if (timeout > 0)
+                tmp = g_strdup_printf ("Second-%d", timeout);
+        else
+                tmp = g_strdup ("infinite");
+
         soup_message_add_header (msg->response_headers,
                                  "Timeout",
-                                 timeout);
+                                 tmp);
+        g_free (tmp);
 
         /* 200 OK */
         soup_message_set_status (msg, SOUP_STATUS_OK);
@@ -714,7 +720,7 @@ parse_timeout (const char *timeout)
 {
         int timeout_seconds;
 
-        timeout_seconds = -1;
+        timeout_seconds = 0;
 
         if (strncmp (timeout, "Second-", strlen ("Second-")) == 0) {
                 /* We have a finite timeout */
@@ -748,7 +754,7 @@ subscribe (GUPnPService *service,
 
         /* Add timeout */
         timeout_seconds = parse_timeout (timeout);
-        if (timeout_seconds >= 0) {
+        if (timeout_seconds > 0) {
                 data->timeout_id = g_timeout_add (timeout_seconds * 1000,
                                                   subscription_timeout,
                                                   data);
@@ -760,7 +766,7 @@ subscribe (GUPnPService *service,
                              data);
 
         /* Respond */
-        subscription_response (service, msg, data->sid, timeout);
+        subscription_response (service, msg, data->sid, timeout_seconds);
 
         /* XXX once we have introspection we should send an initial
          * event message here. */
@@ -790,14 +796,14 @@ resubscribe (GUPnPService *service,
         }
 
         timeout_seconds = parse_timeout (timeout);
-        if (timeout_seconds >= 0) {
+        if (timeout_seconds > 0) {
                 data->timeout_id = g_timeout_add (timeout_seconds * 1000,
                                                   subscription_timeout,
                                                   data);
         }
 
         /* Respond */
-        subscription_response (service, msg, sid, timeout);
+        subscription_response (service, msg, sid, timeout_seconds);
 }
 
 /* Unsubscription request */

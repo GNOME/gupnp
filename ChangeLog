@@ -1,5 +1,17 @@
 2007-06-30  Jorn Baayen  <jorn@openedhand.com>
 
+	* libgupnp/gupnp-service-proxy.c: (subscribe_got_response):
+
+	Remove obsolete comment and correct warning message.
+
+	* libgupnp/gupnp-service.c: (subscription_response),
+	(subscription_timeout), (parse_timeout), (subscribe),
+	(resubscribe):
+
+	Return correct timeout to subscriber.
+
+2007-06-30  Jorn Baayen  <jorn@openedhand.com>
+
 	* libgupnp/gupnp-control-point.c:
 	(gupnp_control_point_resource_unavailable):
 
