@@ -1,5 +1,16 @@
 2007-06-30  Jorn Baayen  <jorn@openedhand.com>
 
+	* libgupnp/gupnp-error.h:
+	* libgupnp/gupnp-service.c: (gupnp_service_action_return_error):
+
+	Fill in description automatically for known error codes.
+
+	* libgupnp/gupnp-service-proxy.c: (convert_error_code):
+
+	Handle unknown error codes.
+
+2007-06-30  Jorn Baayen  <jorn@openedhand.com>
+
 	* libgupnp/gupnp-error.c:
 	* libgupnp/gupnp-error.h:
 	* libgupnp/gupnp-service-proxy.c: (set_error_literal),

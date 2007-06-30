@@ -365,7 +365,11 @@ gupnp_service_action_return (GUPnPServiceAction *action)
  * gupnp_service_action_return_error
  * @action: A #GUPnPServiceAction
  * @error_code: The error code
- * @error_description: The error description
+ * @error_description: The error description, or NULL if @error_code is
+ * one of #GUPNP_CONTROL_ERROR_INVALID_ACTION,
+ * #GUPNP_CONTROL_ERROR_INVALID_ARGS, #GUPNP_CONTROL_ERROR_OUT_OF_SYNC or
+ * #GUPNP_CONTROL_ERROR_ACTION_FAILED, in which case a description is
+ * provided automatically.
  *
  * Return @error_code.
  **/
@@ -379,8 +383,34 @@ gupnp_service_action_return_error (GUPnPServiceAction *action,
         char *tmp;
 
         g_return_if_fail (action != NULL);
-        g_return_if_fail (error_description != NULL);
 
+        switch (error_code) {
+        case GUPNP_CONTROL_ERROR_INVALID_ACTION:
+                if (error_description == NULL)
+                        error_description = "Invalid Action";
+
+                break;
+        case GUPNP_CONTROL_ERROR_INVALID_ARGS:
+                if (error_description == NULL)
+                        error_description = "Invalid Args";
+
+                break;
+        case GUPNP_CONTROL_ERROR_OUT_OF_SYNC:
+                if (error_description == NULL)
+                        error_description = "Out of Sync";
+
+                break;
+        case GUPNP_CONTROL_ERROR_ACTION_FAILED:
+                if (error_description == NULL)
+                        error_description = "Action Failed";
+
+                break;
+        default:
+                g_return_if_fail (error_description != NULL);
+                break;
+        }
+
+        /* Replace response_node with a SOAP Fault */
         xmlFreeNode (action->response_node);
         action->response_node = xmlNewNode (NULL,
                                             (const xmlChar *) "Fault");

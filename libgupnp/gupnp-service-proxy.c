@@ -668,30 +668,27 @@ static int
 convert_error_code (int code)
 {
         switch (code) {
-        case 401:
-                code = GUPNP_CONTROL_ERROR_INVALID_ACTION;
-                break;
-        case 402:
-                code = GUPNP_CONTROL_ERROR_INVALID_ARGS;
-                break;
-        case 403:
-                code = GUPNP_CONTROL_ERROR_OUT_OF_SYNC;
-                break;
-        case 501:
-                code = GUPNP_CONTROL_ERROR_ACTION_FAILED;
-                break;
+        case GUPNP_CONTROL_ERROR_INVALID_ACTION:
+                return code;
+        case GUPNP_CONTROL_ERROR_INVALID_ARGS:
+                return code;
+        case GUPNP_CONTROL_ERROR_OUT_OF_SYNC:
+                return code;
+        case GUPNP_CONTROL_ERROR_ACTION_FAILED:
+                return code;
         default:
                 if (code >= 600 && code < 700)
-                        code = GUPNP_CONTROL_ERROR_UPNP_FORUM_DEFINED;
+                        return GUPNP_CONTROL_ERROR_UPNP_FORUM_DEFINED;
                 else if (code >= 700 && code < 800)
-                        code = GUPNP_CONTROL_ERROR_DEVICE_TYPE_DEFINED;
+                        return GUPNP_CONTROL_ERROR_DEVICE_TYPE_DEFINED;
                 else if (code >= 800 && code < 900)
-                        code = GUPNP_CONTROL_ERROR_VENDOR_DEFINED;
+                        return GUPNP_CONTROL_ERROR_VENDOR_DEFINED;
+                else {
+                        g_warning ("Unrecognised error code: %d", code);
 
-                break;
+                        return GUPNP_CONTROL_ERROR_VENDOR_DEFINED;
+                }
         }
-
-        return code;
 }
 
 /**
