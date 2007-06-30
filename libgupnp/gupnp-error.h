@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2006 OpenedHand Ltd.
+ * Copyright (C) 2006, 2007 OpenedHand Ltd.
  *
  * Author: Jorn Baayen <jorn@openedhand.com>
  *
@@ -27,15 +27,43 @@
 G_BEGIN_DECLS
 
 GQuark
-gupnp_error_quark (void) G_GNUC_CONST;
+gupnp_server_error_quark (void) G_GNUC_CONST;
 
-#define GUPNP_ERROR (gupnp_error_quark ())
+#define GUPNP_SERVER_ERROR (gupnp_server_error_quark ())
 
 typedef enum {
-        GUPNP_ERROR_INVALID_RESPONSE,
-        GUPNP_ERROR_VARIABLE_NOT_FOUND,
-        GUPNP_ERROR_SUBSCRIPTION_LOST
-} GUPnPError;
+        GUPNP_SERVER_ERROR_INTERNAL_SERVER_ERROR,
+        GUPNP_SERVER_ERROR_NOT_FOUND,
+        GUPNP_SERVER_ERROR_NOT_IMPLEMENTED,
+        GUPNP_SERVER_ERROR_INVALID_RESPONSE,
+        GUPNP_SERVER_ERROR_OTHER
+} GUPnPServerError;
+
+GQuark
+gupnp_eventing_error_quark (void) G_GNUC_CONST;
+
+#define GUPNP_EVENTING_ERROR (gupnp_eventing_error_quark ())
+
+typedef enum {
+        GUPNP_EVENTING_ERROR_SUBSCRIPTION_FAILED,
+        GUPNP_EVENTING_ERROR_SUBSCRIPTION_LOST,
+        GUPNP_EVENTING_ERROR_NOTIFY_FAILED,
+} GUPnPEventingError;
+
+GQuark
+gupnp_control_error_quark (void) G_GNUC_CONST;
+
+#define GUPNP_CONTROL_ERROR (gupnp_control_error_quark ())
+
+typedef enum {
+        GUPNP_CONTROL_ERROR_INVALID_ACTION,
+        GUPNP_CONTROL_ERROR_INVALID_ARGS,
+        GUPNP_CONTROL_ERROR_OUT_OF_SYNC,
+        GUPNP_CONTROL_ERROR_ACTION_FAILED,
+        GUPNP_CONTROL_ERROR_UPNP_FORUM_DEFINED,
+        GUPNP_CONTROL_ERROR_DEVICE_TYPE_DEFINED,
+        GUPNP_CONTROL_ERROR_VENDOR_DEFINED,
+} GUPnPControlError;
 
 G_END_DECLS
 

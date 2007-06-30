@@ -1,5 +1,16 @@
 2007-06-30  Jorn Baayen  <jorn@openedhand.com>
 
+	* libgupnp/gupnp-error.c:
+	* libgupnp/gupnp-error.h:
+	* libgupnp/gupnp-service-proxy.c: (set_error_literal),
+	(convert_error_code), (gupnp_service_proxy_end_action_valist),
+	(subscription_expire), (subscribe_got_response):
+	* libgupnp/gupnp-service.c: (notify_got_response):
+
+	More detailed erroring.
+
+2007-06-30  Jorn Baayen  <jorn@openedhand.com>
+
 	* libgupnp/gupnp-error.h:
 	* libgupnp/gupnp-service-proxy.c:
 	(gupnp_service_proxy_begin_action_valist), (set_error_literal),

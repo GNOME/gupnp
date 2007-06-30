@@ -663,6 +663,37 @@ set_error_literal (GError    **error,
                 g_warning ("Error already set.");
 }
 
+/* Convert errorCode to GUPnPControlError */
+static int
+convert_error_code (int code)
+{
+        switch (code) {
+        case 401:
+                code = GUPNP_CONTROL_ERROR_INVALID_ACTION;
+                break;
+        case 402:
+                code = GUPNP_CONTROL_ERROR_INVALID_ARGS;
+                break;
+        case 403:
+                code = GUPNP_CONTROL_ERROR_OUT_OF_SYNC;
+                break;
+        case 501:
+                code = GUPNP_CONTROL_ERROR_ACTION_FAILED;
+                break;
+        default:
+                if (code >= 600 && code < 700)
+                        code = GUPNP_CONTROL_ERROR_UPNP_FORUM_DEFINED;
+                else if (code >= 700 && code < 800)
+                        code = GUPNP_CONTROL_ERROR_DEVICE_TYPE_DEFINED;
+                else if (code >= 800 && code < 900)
+                        code = GUPNP_CONTROL_ERROR_VENDOR_DEFINED;
+
+                break;
+        }
+
+        return code;
+}
+
 /**
  * gupnp_service_proxy_end_action_valist
  * @proxy: A #GUPnPServiceProxy
@@ -687,6 +718,7 @@ gupnp_service_proxy_end_action_valist (GUPnPServiceProxy       *proxy,
         SoupSoapResponse *response;
         SoupSoapParameter *param;
         const char *arg_name;
+        int code;
 
         g_return_val_if_fail (GUPNP_IS_SERVICE_PROXY (proxy), FALSE);
         g_return_val_if_fail (action, FALSE);
@@ -699,9 +731,22 @@ gupnp_service_proxy_end_action_valist (GUPnPServiceProxy       *proxy,
         case SOUP_STATUS_INTERNAL_SERVER_ERROR:
                 break;
         default:
+                /* Convert SoupStatus to GUPnPServerError */
+                switch (soup_msg->status_code) {
+                case SOUP_STATUS_NOT_IMPLEMENTED:
+                        code = GUPNP_SERVER_ERROR_NOT_IMPLEMENTED;
+                        break;
+                case SOUP_STATUS_NOT_FOUND:
+                        code = GUPNP_SERVER_ERROR_NOT_FOUND;
+                        break;
+                default:
+                        code = GUPNP_SERVER_ERROR_OTHER;
+                        break;
+                }
+
                 set_error_literal (error,
-                                   GUPNP_ERROR,
-                                   soup_msg->status_code,
+                                   GUPNP_SERVER_ERROR,
+                                   code,
                                    soup_msg->reason_phrase);
                 
                 gupnp_service_proxy_action_free (action);
@@ -714,14 +759,15 @@ gupnp_service_proxy_end_action_valist (GUPnPServiceProxy       *proxy,
 	if (!response) {
                 if (soup_msg->status_code == SOUP_STATUS_OK) {
                         g_set_error (error,
-                                     GUPNP_ERROR,
-                                     GUPNP_ERROR_INVALID_RESPONSE,
+                                     GUPNP_SERVER_ERROR,
+                                     GUPNP_SERVER_ERROR_INVALID_RESPONSE,
                                      "Could not parse SOAP response");
                 } else {
-                        set_error_literal (error,
-                                           GUPNP_ERROR,
-                                           soup_msg->status_code,
-                                           soup_msg->reason_phrase);
+                        set_error_literal
+                                    (error,
+                                     GUPNP_SERVER_ERROR,
+                                     GUPNP_SERVER_ERROR_INTERNAL_SERVER_ERROR,
+                                     soup_msg->reason_phrase);
                 }
                 
                 gupnp_service_proxy_action_free (action);
@@ -731,6 +777,9 @@ gupnp_service_proxy_end_action_valist (GUPnPServiceProxy       *proxy,
 
         /* Check whether we have a Fault */
         if (soup_msg->status_code == SOUP_STATUS_INTERNAL_SERVER_ERROR) {
+                SoupSoapParameter *child;
+                char *desc;
+
                 param = soup_soap_response_get_first_parameter_by_name
                                                         (response, "detail");
                 if (param) {
@@ -738,42 +787,55 @@ gupnp_service_proxy_end_action_valist (GUPnPServiceProxy       *proxy,
                                                         (param, "UPnPError");
                 }
 
-                if (param) {
-                        SoupSoapParameter *child;
-                        int code;
-                        char *desc;
+                if (!param) {
+                        g_set_error (error,
+                                     GUPNP_SERVER_ERROR,
+                                     GUPNP_SERVER_ERROR_INVALID_RESPONSE,
+                                     "Invalid Fault");
 
-                        child = soup_soap_parameter_get_first_child_by_name
-                                                (param, "errorCode");
-                        if (child) {
-                                code = soup_soap_parameter_get_int_value
-                                                                      (child);
-                        } else {
-                                code = soup_msg->status;
-                        }
+                        gupnp_service_proxy_action_free (action);
 
-                        child = soup_soap_parameter_get_first_child_by_name
-                                                (param, "errorDescription");
-                        if (child) {
-                                desc = soup_soap_parameter_get_string_value
-                                                                      (child);
-                        } else {
-                                desc = g_strdup (soup_msg->reason_phrase);
-                        }
+                        g_object_unref (response);
 
-                        set_error_literal (error,
-                                           GUPNP_ERROR,
-                                           code,
-                                           desc);
-
-                        g_free (desc);
-                } else {
-                        set_error_literal (error,
-                                           GUPNP_ERROR,
-                                           soup_msg->status_code,
-                                           soup_msg->reason_phrase);
+                        return FALSE;
                 }
+
+                /* Code */
+                child = soup_soap_parameter_get_first_child_by_name
+                                                (param, "errorCode");
+                if (child) {
+                        code = soup_soap_parameter_get_int_value (child);
+
+                        code = convert_error_code (code);
+                } else {
+                        g_set_error (error,
+                                     GUPNP_SERVER_ERROR,
+                                     GUPNP_SERVER_ERROR_INVALID_RESPONSE,
+                                     "Invalid Fault");
+
+                        gupnp_service_proxy_action_free (action);
+
+                        g_object_unref (response);
+
+                        return FALSE;
+                }
+
+                /* Description */
+                child = soup_soap_parameter_get_first_child_by_name
+                                                (param, "errorDescription");
+                if (child)
+                        desc = soup_soap_parameter_get_string_value (child);
+                else
+                        desc = g_strdup (soup_msg->reason_phrase);
+
+                set_error_literal (error,
+                                   GUPNP_CONTROL_ERROR,
+                                   code,
+                                   desc);
+
+                g_free (desc);
                 
+                /* Cleanup */
                 gupnp_service_proxy_action_free (action);
 
                 g_object_unref (response);
@@ -794,8 +856,8 @@ gupnp_service_proxy_end_action_valist (GUPnPServiceProxy       *proxy,
                                                         (response, arg_name);
                 if (!param) {
                         g_set_error (error,
-                                     GUPNP_ERROR,
-                                     GUPNP_ERROR_VARIABLE_NOT_FOUND,
+                                     GUPNP_CONTROL_ERROR,
+                                     GUPNP_CONTROL_ERROR_INVALID_ARGS,
                                      "Could not find variable \"%s\" in "
                                      "response",
                                      arg_name);
@@ -1274,9 +1336,10 @@ subscribe_got_response (SoupMessage       *msg,
                         g_object_notify (G_OBJECT (proxy), "subscribed");
 
                         /* Emit subscription-lost */
-                        error = g_error_new (GUPNP_ERROR,
-                                             GUPNP_ERROR_SUBSCRIPTION_LOST,
-                                             "No SID in SUBSCRIBE response");
+                        error = g_error_new
+                                        (GUPNP_EVENTING_ERROR,
+                                         GUPNP_EVENTING_ERROR_SUBSCRIPTION_LOST,
+                                         "No SID in SUBSCRIBE response");
 
                         g_signal_emit (proxy,
                                        signals[SUBSCRIPTION_LOST],
@@ -1337,8 +1400,8 @@ subscribe_got_response (SoupMessage       *msg,
                 g_object_notify (G_OBJECT (proxy), "subscribed");
 
                 /* Emit subscription-lost */
-                error = g_error_new (GUPNP_ERROR,
-                                     msg->status_code,
+                error = g_error_new (GUPNP_EVENTING_ERROR,
+                                     GUPNP_EVENTING_ERROR_SUBSCRIPTION_FAILED,
                                      "(Re)subscription failed: %d",
                                      msg->status_code);
 

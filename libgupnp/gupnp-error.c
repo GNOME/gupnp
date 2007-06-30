@@ -27,17 +27,49 @@
 #include "gupnp-error.h"
 
 /**
- * gupnp_error_quark
+ * gupnp_server_error_quark
  *
- * Returns a #GQuark uniquely used by GUPnP's errors.
+ * Returns a #GQuark uniquely used by GUPnP's server errors.
  **/
 GQuark
-gupnp_error_quark (void)
+gupnp_server_error_quark (void)
 {
         static GQuark quark = 0;
 
         if (!quark)
-                quark = g_quark_from_static_string ("gupnp-error-quark");
+                quark = g_quark_from_static_string ("gupnp-server-error");
+
+        return quark;
+}
+
+/**
+ * gupnp_eventing_error_quark
+ *
+ * Returns a #GQuark uniquely used by GUPnP's eventing errors.
+ **/
+GQuark
+gupnp_eventing_error_quark (void)
+{
+        static GQuark quark = 0;
+
+        if (!quark)
+                quark = g_quark_from_static_string ("gupnp-eventing-error");
+
+        return quark;
+}
+
+/**
+ * gupnp_control_error_quark
+ *
+ * Returns a #GQuark uniquely used by GUPnP's control errors.
+ **/
+GQuark
+gupnp_control_error_quark (void)
+{
+        static GQuark quark = 0;
+
+        if (!quark)
+                quark = g_quark_from_static_string ("gupnp-control-error");
 
         return quark;
 }
