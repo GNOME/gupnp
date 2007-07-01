@@ -1058,11 +1058,11 @@ gupnp_service_class_init (GUPnPServiceClass *klass)
                                                query_variable),
                               NULL,
                               NULL,
-                              gupnp_marshal_VOID__STRING_POINTER,
+                              gupnp_marshal_VOID__STRING_BOXED,
                               G_TYPE_NONE,
                               2,
                               G_TYPE_STRING,
-                              G_TYPE_POINTER);
+                              G_TYPE_VALUE);
 
         /**
          * GUPnPService::notify-failed
