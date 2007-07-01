@@ -1385,7 +1385,7 @@ gupnp_service_thaw_notify (GUPnPService *service)
  * @element: The #xmlNode ponting to the right service element
  * @location: The location of the service description file
  * @udn: The UDN of the device the service is contained in
- * @url_base: The URL base for this service, or NULL if none
+ * @url_base: The URL base for this service
  *
  * Return value: A #GUPnPService for the service with element @element, as
  * read from the service description file specified by @location.
@@ -1395,11 +1395,14 @@ _gupnp_service_new_from_element (GUPnPContext *context,
                                  xmlNode      *element,
                                  const char   *udn,
                                  const char   *location,
-                                 const char   *url_base)
+                                 SoupUri      *url_base)
 {
         GUPnPService *service;
 
-        g_return_val_if_fail (element, NULL);
+        g_return_val_if_fail (GUPNP_IS_CONTEXT (context), NULL);
+        g_return_val_if_fail (element != NULL, NULL);
+        g_return_val_if_fail (location != NULL, NULL);
+        g_return_val_if_fail (url_base != NULL, NULL);
 
         service = g_object_new (GUPNP_TYPE_SERVICE,
                                 "context", context,

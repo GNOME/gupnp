@@ -24,6 +24,7 @@
 
 #include <glib-object.h>
 #include <libxml/tree.h>
+#include <libsoup/soup-uri.h>
 
 #include "gupnp-context.h"
 #include "gupnp-service-introspection.h"
@@ -78,7 +79,7 @@ gupnp_service_info_get_context                (GUPnPServiceInfo *info);
 const char *
 gupnp_service_info_get_location               (GUPnPServiceInfo *info);
 
-const char *
+SoupUri *
 gupnp_service_info_get_url_base               (GUPnPServiceInfo *info);
 
 const char *

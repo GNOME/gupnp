@@ -1655,10 +1655,13 @@ _gupnp_service_proxy_new_from_doc (GUPnPContext *context,
 {
         GUPnPServiceProxy *proxy;
         xmlNode *element, *url_base_element;
-        xmlChar *url_base = NULL;
+        xmlChar *url_base_str = NULL;
+        SoupUri *url_base;
 
-        g_return_val_if_fail (doc, NULL);
-        g_return_val_if_fail (type, NULL);
+        g_return_val_if_fail (GUPNP_IS_CONTEXT (context), NULL);
+        g_return_val_if_fail (doc != NULL, NULL);
+        g_return_val_if_fail (type != NULL, NULL);
+        g_return_val_if_fail (location != NULL, NULL);
 
         element = xml_util_get_element ((xmlNode *) doc,
                                         "root",
@@ -1689,18 +1692,22 @@ _gupnp_service_proxy_new_from_doc (GUPnPContext *context,
                                       "URLBase",
                                       NULL);
         if (url_base_element)
-               url_base = xmlNodeGetContent (url_base_element);
+               url_base_str = xmlNodeGetContent (url_base_element);
+
+        if (url_base_str) {
+                url_base = soup_uri_new ((const char *) url_base_str);
+
+                xmlFree (url_base_str);
+        } else
+                url_base = soup_uri_new (location);
 
         proxy = g_object_new (GUPNP_TYPE_SERVICE_PROXY,
                               "context", context,
                               "location", location,
                               "udn", udn,
-                              "url-base", (const char *) url_base,
+                              "url-base", url_base,
                               "element", element,
                               NULL);
-
-        if (url_base)
-                xmlFree (url_base);
 
         return proxy;
 }
@@ -1721,11 +1728,14 @@ _gupnp_service_proxy_new_from_element (GUPnPContext *context,
                                        xmlNode      *element,
                                        const char   *udn,
                                        const char   *location,
-                                       const char   *url_base)
+                                       SoupUri      *url_base)
 {
         GUPnPServiceProxy *proxy;
 
-        g_return_val_if_fail (element, NULL);
+        g_return_val_if_fail (GUPNP_IS_CONTEXT (context), NULL);
+        g_return_val_if_fail (element != NULL, NULL);
+        g_return_val_if_fail (location != NULL, NULL);
+        g_return_val_if_fail (url_base != NULL, NULL);
 
         proxy = g_object_new (GUPNP_TYPE_SERVICE_PROXY,
                               "context", context,

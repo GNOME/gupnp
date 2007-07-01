@@ -43,7 +43,7 @@ struct _GUPnPServiceInfoPrivate {
 
         char *location;
         char *udn;
-        char *url_base;
+        SoupUri *url_base;
 
         xmlNode *element;
 };
@@ -81,19 +81,16 @@ gupnp_service_info_set_property (GObject      *object,
                         g_object_ref (g_value_get_object (value));
                 break;
         case PROP_LOCATION:
-                g_free (info->priv->location);
                 info->priv->location =
                         g_value_dup_string (value);
                 break;
         case PROP_UDN:
-                g_free (info->priv->udn);
                 info->priv->udn =
                         g_value_dup_string (value);
                 break;
         case PROP_URL_BASE:
-                g_free (info->priv->url_base);
                 info->priv->url_base =
-                        g_value_dup_string (value);
+                        g_value_get_pointer (value);
                 break;
         case PROP_ELEMENT:
                 info->priv->element =
@@ -129,8 +126,8 @@ gupnp_service_info_get_property (GObject    *object,
                                     info->priv->udn);
                 break;
         case PROP_URL_BASE:
-                g_value_set_string (value,
-                                    info->priv->url_base);
+                g_value_set_pointer (value,
+                                     info->priv->url_base);
                 break;
         case PROP_ELEMENT:
                 g_value_set_pointer (value,
@@ -164,7 +161,7 @@ gupnp_service_info_finalize (GObject *object)
 
         g_free (info->priv->location);
         g_free (info->priv->udn);
-        g_free (info->priv->url_base);
+        soup_uri_free (info->priv->url_base);
 }
 
 static void
@@ -239,20 +236,19 @@ gupnp_service_info_class_init (GUPnPServiceInfoClass *klass)
         /**
          * GUPnPServiceInfo:url-base
          *
-         * The URL base.
+         * The URL base (SoupUri).
          **/
         g_object_class_install_property
                 (object_class,
                  PROP_URL_BASE,
-                 g_param_spec_string ("url-base",
-                                      "URL base",
-                                      "The URL base",
-                                      NULL,
-                                      G_PARAM_READWRITE |
-                                      G_PARAM_CONSTRUCT_ONLY |
-                                      G_PARAM_STATIC_NAME |
-                                      G_PARAM_STATIC_NICK |
-                                      G_PARAM_STATIC_BLURB));
+                 g_param_spec_pointer ("url-base",
+                                       "URL base",
+                                       "The URL base",
+                                       G_PARAM_READWRITE |
+                                       G_PARAM_CONSTRUCT_ONLY |
+                                       G_PARAM_STATIC_NAME |
+                                       G_PARAM_STATIC_NICK |
+                                       G_PARAM_STATIC_BLURB));
 
         /**
          * GUPnPServiceInfo:element
@@ -308,7 +304,7 @@ gupnp_service_info_get_location (GUPnPServiceInfo *info)
  *
  * Return value: The URL base.
  **/
-const char *
+SoupUri *
 gupnp_service_info_get_url_base (GUPnPServiceInfo *info)
 {
         g_return_val_if_fail (GUPNP_IS_SERVICE_INFO (info), NULL);
@@ -360,23 +356,30 @@ static char *
 get_url_property (GUPnPServiceInfo *info,
                   const char       *element_name)
 {
-        char *prop;
+        xmlNode *element;
 
-        prop = get_property (info, element_name);
+        g_return_val_if_fail (GUPNP_IS_SERVICE_INFO (info), NULL);
 
-        if (info->priv->url_base != NULL) {
-                char *full_url;
+        element = xml_util_get_element (info->priv->element,
+                                        element_name,
+                                        NULL);
 
-                full_url = g_build_path ("/",
-                                         info->priv->url_base,
-                                         (const char *) prop,
-                                         NULL);
+        if (element) {
+                xmlChar *value;
+                SoupUri *uri;
+                char *ret;
+                
+                value = xmlNodeGetContent (element);
+                uri = soup_uri_new_with_base (info->priv->url_base,
+                                              (const char *) value);
+                xmlFree (value);
 
-                g_free (prop);
+                ret = soup_uri_to_string (uri, FALSE);
+                soup_uri_free (uri);
 
-                return full_url;
+                return ret;
         } else
-                return prop;
+                return NULL;
 }
 
 /**

@@ -32,6 +32,6 @@ _gupnp_service_new_from_element (GUPnPContext *context,
                                  xmlNode      *element,
                                  const char   *location,
                                  const char   *udn,
-                                 const char   *url_base);
+                                 SoupUri      *url_base);
 
 #endif /* __GUPNP_SERVICE_PRIVATE_H__ */

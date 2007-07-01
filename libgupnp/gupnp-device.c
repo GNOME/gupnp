@@ -40,7 +40,7 @@ _gupnp_device_new_from_element (GUPnPContext *context,
                                 xmlNode      *element,
                                 const char   *udn,
                                 const char   *location,
-                                const char   *url_base);
+                                SoupUri      *url_base);
 
 G_DEFINE_TYPE (GUPnPDevice,
                gupnp_device,
@@ -52,7 +52,8 @@ gupnp_device_get_device (GUPnPDeviceInfo *info,
 {
         GUPnPDevice *proxy, *device;
         GUPnPContext *context;
-        const char *location, *udn, *url_base;
+        const char *location, *udn;
+        SoupUri *url_base;
 
         proxy = GUPNP_DEVICE (info);
                                 
@@ -77,7 +78,8 @@ gupnp_device_get_service (GUPnPDeviceInfo *info,
         GUPnPDevice *proxy;
         GUPnPService *service;
         GUPnPContext *context;
-        const char *location, *udn, *url_base;
+        const char *location, *udn;
+        SoupUri *url_base;
 
         proxy = GUPNP_DEVICE (info);
                                 
@@ -162,7 +164,7 @@ _gupnp_device_find_element_for_udn (xmlNode    *element,
  * @element: The #xmlNode ponting to the right device element
  * @udn: The UDN of the device to create a proxy for
  * @location: The location of the device description file
- * @url_base: The URL base for this device, or NULL if none
+ * @url_base: The URL base for this device
  *
  * Return value: A #GUPnPDevice for the device with element @element, as
  * read from the device description file specified by @location.
@@ -172,11 +174,13 @@ _gupnp_device_new_from_element (GUPnPContext *context,
                                 xmlNode      *element,
                                 const char   *udn,
                                 const char   *location,
-                                const char   *url_base)
+                                SoupUri      *url_base)
 {
         GUPnPDevice *proxy;
 
-        g_return_val_if_fail (element, NULL);
+        g_return_val_if_fail (GUPNP_IS_CONTEXT (context), NULL);
+        g_return_val_if_fail (element != NULL, NULL);
+        g_return_val_if_fail (url_base != NULL, NULL);
 
         proxy = g_object_new (GUPNP_TYPE_DEVICE,
                               "context", context,

@@ -88,8 +88,7 @@ main (int argc, char **argv)
         /* Create root device */
         dev = gupnp_root_device_new (context,
                                      doc,
-                                     "/description.xml",
-                                     "/");
+                                     "/description.xml");
 
         /* Free doc when root device is destroyed */
         g_object_weak_ref (G_OBJECT (dev), (GWeakNotify) xmlFreeDoc, doc);

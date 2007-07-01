@@ -41,7 +41,7 @@ struct _GUPnPDeviceInfoPrivate {
 
         char *location;
         char *udn;
-        char *url_base;
+        SoupUri *url_base;
 
         xmlNode *element;
 };
@@ -114,7 +114,7 @@ gupnp_device_info_set_property (GObject      *object,
                 break;
         case PROP_URL_BASE:
                 info->priv->url_base =
-                        g_value_dup_string (value);
+                        g_value_get_pointer (value);
                 break;
         case PROP_ELEMENT:
                 info->priv->element =
@@ -154,8 +154,8 @@ gupnp_device_info_get_property (GObject    *object,
                                     info->priv->udn);
                 break;
         case PROP_URL_BASE:
-                g_value_set_string (value,
-                                    info->priv->url_base);
+                g_value_set_pointer (value,
+                                     info->priv->url_base);
                 break;
         case PROP_ELEMENT:
                 g_value_set_pointer (value,
@@ -189,7 +189,7 @@ gupnp_device_info_finalize (GObject *object)
 
         g_free (info->priv->location);
         g_free (info->priv->udn);
-        g_free (info->priv->url_base);
+        soup_uri_free (info->priv->url_base);
 }
 
 static void
@@ -264,20 +264,19 @@ gupnp_device_info_class_init (GUPnPDeviceInfoClass *klass)
         /**
          * GUPnPDeviceInfo:url-base
          *
-         * The URL base.
+         * The URL base (SoupUri).
          **/
         g_object_class_install_property
                 (object_class,
                  PROP_URL_BASE,
-                 g_param_spec_string ("url-base",
-                                      "URL base",
-                                      "The URL base",
-                                      NULL,
-                                      G_PARAM_READWRITE |
-                                      G_PARAM_CONSTRUCT_ONLY |
-                                      G_PARAM_STATIC_NAME |
-                                      G_PARAM_STATIC_NICK |
-                                      G_PARAM_STATIC_BLURB));
+                 g_param_spec_pointer ("url-base",
+                                       "URL base",
+                                       "The URL base",
+                                       G_PARAM_READWRITE |
+                                       G_PARAM_CONSTRUCT_ONLY |
+                                       G_PARAM_STATIC_NAME |
+                                       G_PARAM_STATIC_NICK |
+                                       G_PARAM_STATIC_BLURB));
 
         /**
          * GUPnPDeviceInfo:element
@@ -334,7 +333,7 @@ gupnp_device_info_get_location (GUPnPDeviceInfo *info)
  *
  * Return value: The URL base.
  **/
-const char *
+SoupUri *
 gupnp_device_info_get_url_base (GUPnPDeviceInfo *info)
 {
         g_return_val_if_fail (GUPNP_IS_DEVICE_INFO (info), NULL);
@@ -525,13 +524,12 @@ icon_parse (GUPnPDeviceInfo *info, xmlNode *element)
 
                 url = xmlNodeGetContent (prop);
                 if (url) {
-                        if (info->priv->url_base != NULL) {
-                                icon->url = g_build_path ("/",
-                                                          info->priv->url_base,
-                                                          (const char *) url,
-                                                          NULL);
-                        } else
-                                icon->url = g_strdup ((const char *) url);
+                        SoupUri *uri;
+
+                        uri = soup_uri_new_with_base (info->priv->url_base,
+                                                      (const char *) url);
+                        icon->url = soup_uri_to_string (uri, FALSE);
+                        soup_uri_free (uri);
 
                         xmlFree (url);
                 }

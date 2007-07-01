@@ -43,7 +43,6 @@ struct _GUPnPRootDevicePrivate {
 
         GSSDPResourceGroup *group;
 
-        char *relative_url_base;
         char *relative_location;
 };
 
@@ -51,7 +50,6 @@ enum {
         PROP_0,
         PROP_DESCRIPTION_DOC,
         PROP_RELATIVE_LOCATION,
-        PROP_RELATIVE_URL_BASE,
         PROP_AVAILABLE
 };
 
@@ -64,7 +62,6 @@ gupnp_root_device_finalize (GObject *object)
         device = GUPNP_ROOT_DEVICE (object);
 
         g_free (device->priv->relative_location);
-        g_free (device->priv->relative_url_base);
 
         /* Call super */
         object_class = G_OBJECT_CLASS (gupnp_root_device_parent_class);
@@ -114,9 +111,6 @@ gupnp_root_device_set_property (GObject      *object,
         case PROP_RELATIVE_LOCATION:
                 device->priv->relative_location = g_value_dup_string (value);
                 break;
-        case PROP_RELATIVE_URL_BASE:
-                device->priv->relative_url_base = g_value_dup_string (value);
-                break;
         case PROP_AVAILABLE:
                 gupnp_root_device_set_available
                                         (device, g_value_get_boolean (value));
@@ -142,10 +136,6 @@ gupnp_root_device_get_property (GObject    *object,
                 g_value_set_string (value,
                                     device->priv->relative_location);
                 break;
-        case PROP_RELATIVE_URL_BASE:
-                g_value_set_string (value,
-                                    device->priv->relative_url_base);
-                break;
         case PROP_AVAILABLE:
                 g_value_set_boolean (value,
                                      gupnp_root_device_get_available (device));
@@ -154,37 +144,6 @@ gupnp_root_device_get_property (GObject    *object,
                 G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
                 break;
         }
-}
-
-/* Serve our modified description document */
-static void
-server_handler (SoupServerContext *server_context,
-                SoupMessage       *msg,
-                gpointer           user_data)
-{
-        GUPnPRootDevice *device;
-        xmlChar *mem;
-        int size;
-
-        device = GUPNP_ROOT_DEVICE (user_data);
-
-        if (strcmp (msg->method, SOUP_METHOD_GET) != 0) {
-                /* We don't implement this method */
-                soup_message_set_status (msg, SOUP_STATUS_NOT_IMPLEMENTED);
-
-                return;
-        }
-
-        xmlDocDumpFormatMemory (device->priv->description_doc,
-                                &mem, &size, TRUE);
-
-        msg->response.owner = SOUP_BUFFER_SYSTEM_OWNED;
-        msg->response.length = size;
-        msg->response.body = g_strdup ((char *) mem);
-
-        soup_message_set_status (msg, SOUP_STATUS_OK);
-
-        xmlFree (mem);
 }
 
 static void
@@ -279,13 +238,13 @@ gupnp_root_device_constructor (GType                  type,
         GObject *object;
         GUPnPRootDevice *device;
         GUPnPContext *context;
-        SoupServer *server;
-        const char *server_url;
-        char *url_base, *location, *usn;
+        const char *server_url, *udn;
+        char *location, *usn;
         int i;
         xmlDoc *description_doc;
-        xmlNode *root_element, *element;
-        xmlChar *udn;
+        xmlNode *root_element, *element, *url_base_element;
+        xmlChar *url_base_str = NULL;
+        SoupUri *url_base;
 
         /* Get 'description-doc' property value */
         description_doc = NULL;
@@ -342,14 +301,6 @@ gupnp_root_device_constructor (GType                  type,
                 }
         }
 
-        /* Get UDN */
-        udn = xml_util_get_child_element_content (element, "UDN");
-        if (!udn) {
-                g_warning ("No UDN specified.");
-
-                return NULL;
-        }
-
         /* Create object */
         object_class = G_OBJECT_CLASS (gupnp_root_device_parent_class);
 
@@ -364,45 +315,38 @@ gupnp_root_device_constructor (GType                  type,
         /* Get server URL */
         server_url = _gupnp_context_get_server_url (context);
 
-        /* Generate full URL base */
-        if (device->priv->relative_url_base) {
-                url_base = g_build_path ("/",
-                                         server_url,
-                                         device->priv->relative_url_base,
-                                         NULL);
-
-                /* Set URL base in description XML */
-                xml_util_set_child_element_content (root_element,
-                                                    "URLBase",
-                                                    url_base);
-        } else
-                url_base = NULL;
-
         /* Generate full location */
         location = g_build_path ("/",
                                  server_url,
                                  device->priv->relative_location,
                                  NULL);
 
-        /* Host description file */
-        server = _gupnp_context_get_server (context);
-        soup_server_add_handler (server,
-                                 device->priv->relative_location,
-                                 NULL,
-                                 server_handler,
-                                 NULL,
-                                 device);
+        /* Save the URL base, if any */
+        url_base_element =
+                xml_util_get_element (root_element,
+                                      "URLBase",
+                                      NULL);
+        if (url_base_element)
+               url_base_str = xmlNodeGetContent (url_base_element);
+
+        if (url_base_str) {
+                url_base = soup_uri_new ((const char *) url_base_str);
+
+                xmlFree (url_base_str);
+        } else
+                url_base = soup_uri_new (location);
 
         /* Set .. */
         g_object_set (object,
-                      "url-base", url_base,
                       "location", location,
+                      "url-base", url_base,
                       NULL);
 
         /* Create resource group */
         device->priv->group = gssdp_resource_group_new (GSSDP_CLIENT (context));
 
         /* Add services and devices to resource group */
+        udn = gupnp_device_info_get_udn (GUPNP_DEVICE_INFO (device));
         usn = g_strdup_printf ("%s::upnp:rootdevice", (const char *) udn);
         gssdp_resource_group_add_resource_simple (device->priv->group,
                                                   "upnp:rootdevice",
@@ -413,10 +357,7 @@ gupnp_root_device_constructor (GType                  type,
         fill_resource_group (element, location, device->priv->group);
 
         /* Cleanup */
-        g_free (url_base);
         g_free (location);
-
-        xmlFree (udn);
 
         return object;
 }
@@ -472,24 +413,6 @@ gupnp_root_device_class_init (GUPnPRootDeviceClass *klass)
                                       G_PARAM_STATIC_BLURB));
 
         /**
-         * GUPnPRootDevice:relative-url-base
-         *
-         * Relative URL base.
-         **/
-        g_object_class_install_property
-                (object_class,
-                 PROP_RELATIVE_URL_BASE,
-                 g_param_spec_string ("relative-url-base",
-                                      "Relative URL base",
-                                      "Relative URL base",
-                                      NULL,
-                                      G_PARAM_READWRITE |
-                                      G_PARAM_CONSTRUCT_ONLY |
-                                      G_PARAM_STATIC_NAME |
-                                      G_PARAM_STATIC_NICK |
-                                      G_PARAM_STATIC_BLURB));
-
-        /**
          * GUPnPRootDevice:available
          *
          * TRUE if this device is available.
@@ -511,26 +434,21 @@ gupnp_root_device_class_init (GUPnPRootDeviceClass *klass)
  * gupnp_root_device_new
  * @context: The #GUPnPContext
  * @description_doc: Pointer to the device description document
- * @relative_url_base: The URL base to use for this device, relative to the
- * URL root path
- * @relative_url_location: The location to use for this device, relative to the
- * URL root path
+ * @relative_location: Location to use for this device, relative to the
+ * HTTP root
  *
- * Create a new #GUPnPRootDevice object. A modified @description_doc will
- * automatically be hosted at @relative_location.
+ * Create a new #GUPnPRootDevice object.
  *
  * Return value: A new @GUPnPRootDevice object.
  **/
 GUPnPRootDevice *
 gupnp_root_device_new (GUPnPContext *context,
                        xmlDoc       *description_doc,
-                       const char   *relative_location,
-                       const char   *relative_url_base)
+                       const char   *relative_location)
 {
         return g_object_new (GUPNP_TYPE_ROOT_DEVICE,
                              "context", context,
                              "description-doc", description_doc,
-                             "relative-url-base", relative_url_base,
                              "relative-location", relative_location,
                              NULL);
 }
@@ -567,20 +485,6 @@ gupnp_root_device_get_available (GUPnPRootDevice *root_device)
         g_return_val_if_fail (GUPNP_IS_ROOT_DEVICE (root_device), FALSE);
 
         return gssdp_resource_group_get_available (root_device->priv->group);
-}
-
-/**
- * gupnp_root_device_get_relative_url_base
- * @root_device: A #GUPnPRootDevice
- *
- * Return value: The relative URL base of @root_device.
- **/
-const char *
-gupnp_root_device_get_relative_url_base (GUPnPRootDevice *root_device)
-{
-        g_return_val_if_fail (GUPNP_IS_ROOT_DEVICE (root_device), NULL);
-
-        return root_device->priv->relative_url_base;
 }
 
 /**

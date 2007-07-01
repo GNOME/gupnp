@@ -40,7 +40,7 @@ _gupnp_device_proxy_new_from_element (GUPnPContext  *context,
                                       xmlNode       *element,
                                       const char    *udn,
                                       const char    *location,
-                                      const char    *url_base);
+                                      SoupUri       *url_base);
 
 G_DEFINE_TYPE (GUPnPDeviceProxy,
                gupnp_device_proxy,
@@ -52,7 +52,8 @@ gupnp_device_proxy_get_device (GUPnPDeviceInfo *info,
 {
         GUPnPDeviceProxy *proxy, *device;
         GUPnPContext *context;
-        const char *location, *udn, *url_base;
+        const char *location, *udn;
+        SoupUri *url_base;
 
         proxy = GUPNP_DEVICE_PROXY (info);
                                 
@@ -77,7 +78,8 @@ gupnp_device_proxy_get_service (GUPnPDeviceInfo *info,
         GUPnPDeviceProxy *proxy;
         GUPnPServiceProxy *service;
         GUPnPContext *context;
-        const char *location, *udn, *url_base;
+        const char *location, *udn;
+        SoupUri *url_base;
 
         proxy = GUPNP_DEVICE_PROXY (info);
                                 
@@ -174,7 +176,12 @@ _gupnp_device_proxy_new_from_doc (GUPnPContext *context,
 {
         GUPnPDeviceProxy *proxy;
         xmlNode *element, *url_base_element;
-        xmlChar *url_base = NULL;
+        xmlChar *url_base_str = NULL;
+        SoupUri *url_base;
+
+        g_return_val_if_fail (GUPNP_IS_CONTEXT (context), NULL);
+        g_return_val_if_fail (doc != NULL, NULL);
+        g_return_val_if_fail (location != NULL, NULL);
 
         element = xml_util_get_element ((xmlNode *) doc,
                                         "root",
@@ -200,18 +207,22 @@ _gupnp_device_proxy_new_from_doc (GUPnPContext *context,
                                       "URLBase",
                                       NULL);
         if (url_base_element != NULL)
-                url_base = xmlNodeGetContent (url_base_element);
+                url_base_str = xmlNodeGetContent (url_base_element);
+
+        if (url_base_str) {
+                url_base = soup_uri_new ((const char *) url_base_str);
+
+                xmlFree (url_base_str);
+        } else
+                url_base = soup_uri_new (location);
 
         proxy = g_object_new (GUPNP_TYPE_DEVICE_PROXY,
                               "context", context,
                               "location", location,
                               "udn", udn,
-                              "url-base", (const char *) url_base,
+                              "url-base", url_base,
                               "element", element,
                               NULL);
-
-        if (url_base)
-                xmlFree (url_base);
 
         return proxy;
 }
@@ -232,11 +243,14 @@ _gupnp_device_proxy_new_from_element (GUPnPContext *context,
                                       xmlNode      *element,
                                       const char   *udn,
                                       const char   *location,
-                                      const char   *url_base)
+                                      SoupUri      *url_base)
 {
         GUPnPDeviceProxy *proxy;
 
-        g_return_val_if_fail (element, NULL);
+        g_return_val_if_fail (GUPNP_IS_CONTEXT (context), NULL);
+        g_return_val_if_fail (element != NULL, NULL);
+        g_return_val_if_fail (location != NULL, NULL);
+        g_return_val_if_fail (url_base != NULL, NULL);
 
         proxy = g_object_new (GUPNP_TYPE_DEVICE_PROXY,
                               "context", context,
