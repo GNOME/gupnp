@@ -51,24 +51,6 @@ xml_util_get_element (xmlNode *node,
         return node;
 }
 
-int
-xml_util_node_get_content_int (xmlNode *node)
-{
-        xmlChar *tmp;
-
-        tmp = xmlNodeGetContent (node);
-        if (tmp) {
-                int i;
-
-                i = atoi ((char *) tmp);
-
-                xmlFree (tmp);
-
-                return i;
-        } else
-                return -1;
-}
-
 gboolean
 xml_util_node_get_content_value (xmlNode *node,
                                  GValue  *value)
@@ -142,4 +124,78 @@ xml_util_get_child_element_content (xmlNode    *node,
                 return NULL;
 
         return xmlNodeGetContent (child_node);
+}
+
+int
+xml_util_get_child_element_content_int (xmlNode    *node,
+                                        const char *child_name)
+{
+        xmlChar *content;
+        int i;
+
+        content = xml_util_get_child_element_content (node, child_name);
+        if (!content)
+                return -1;
+
+        i = atoi ((char *) content);
+
+        xmlFree (content);
+
+        return i;
+}
+
+char *
+xml_util_get_child_element_content_glib (xmlNode    *node,
+                                         const char *child_name)
+{
+        xmlChar *content;
+        char *copy;
+
+        content = xml_util_get_child_element_content (node, child_name);
+        if (!content)
+                return NULL;
+
+        copy = g_strdup ((char *) content);
+
+        xmlFree (content);
+
+        return copy;
+}
+
+SoupUri *
+xml_util_get_child_element_content_uri (xmlNode    *node,
+                                        const char *child_name,
+                                        SoupUri    *base)
+{
+        xmlChar *content;
+        SoupUri *uri;
+
+        content = xml_util_get_child_element_content (node, child_name);
+        if (!content)
+                return NULL;
+
+        uri = soup_uri_new_with_base (base, (const char *) content);
+
+        xmlFree (content);
+
+        return uri;
+}
+
+char *
+xml_util_get_child_element_content_url (xmlNode    *node,
+                                        const char *child_name,
+                                        SoupUri    *base)
+{
+        SoupUri *uri;
+        char *url;
+
+        uri = xml_util_get_child_element_content_uri (node, child_name, base);
+        if (!uri)
+                return NULL;
+
+        url = soup_uri_to_string (uri, FALSE);
+
+        soup_uri_free (uri);
+
+        return url;
 }

@@ -23,27 +23,43 @@
 #define __XML_UTIL_H__
 
 #include <libxml/tree.h>
+#include <libsoup/soup-uri.h>
 #include <stdarg.h>
 #include <glib-object.h>
 
 xmlNode *
-xml_util_get_element               (xmlNode    *node,
-                                    ...) G_GNUC_NULL_TERMINATED;
-
-int
-xml_util_node_get_content_int      (xmlNode    *node);
+xml_util_get_element                    (xmlNode    *node,
+                                         ...) G_GNUC_NULL_TERMINATED;
 
 gboolean
-xml_util_node_get_content_value    (xmlNode    *node,
-                                    GValue     *value);
+xml_util_node_get_content_value         (xmlNode    *node,
+                                         GValue     *value);
 
 void
-xml_util_set_child_element_content (xmlNode    *node,
-                                    const char *child_name,
-                                    const char *content);
+xml_util_set_child_element_content      (xmlNode    *node,
+                                         const char *child_name,
+                                         const char *content);
 
 xmlChar *
-xml_util_get_child_element_content (xmlNode    *node,
-                                    const char *child_name);
+xml_util_get_child_element_content      (xmlNode    *node,
+                                         const char *child_name);
+
+int
+xml_util_get_child_element_content_int  (xmlNode    *node,
+                                         const char *child_name);
+
+char *
+xml_util_get_child_element_content_glib (xmlNode    *node,
+                                         const char *child_name);
+
+SoupUri *
+xml_util_get_child_element_content_uri  (xmlNode    *node,
+                                         const char *child_name,
+                                         SoupUri    *base);
+
+char *
+xml_util_get_child_element_content_url  (xmlNode    *node,
+                                         const char *child_name,
+                                         SoupUri    *base);
 
 #endif /* __XML_UTIL_H__ */

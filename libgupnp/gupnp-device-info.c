@@ -41,6 +41,7 @@ struct _GUPnPDeviceInfoPrivate {
 
         char *location;
         char *udn;
+
         SoupUri *url_base;
 
         xmlNode *element;
@@ -54,62 +55,6 @@ enum {
         PROP_URL_BASE,
         PROP_ELEMENT
 };
-
-static char *
-get_property (GUPnPDeviceInfo *info,
-              const char      *element_name)
-{
-        xmlNode *element;
-
-        g_return_val_if_fail (GUPNP_IS_DEVICE_INFO (info), NULL);
-
-        element = xml_util_get_element (info->priv->element,
-                                        element_name,
-                                        NULL);
-
-        if (element) {
-                xmlChar *value;
-                char *ret;
-                
-                /* Make glib memmanaged */
-                value = xmlNodeGetContent (element);
-                ret = g_strdup ((char *) value);
-                xmlFree (value);
-
-                return ret;
-        } else
-                return NULL;
-}
-
-static char *
-get_url_property (GUPnPDeviceInfo *info,
-                  const char      *element_name)
-{
-        xmlNode *element;
-
-        g_return_val_if_fail (GUPNP_IS_SERVICE_INFO (info), NULL);
-
-        element = xml_util_get_element (info->priv->element,
-                                        element_name,
-                                        NULL);
-
-        if (element) {
-                xmlChar *value;
-                SoupUri *uri;
-                char *ret;
-                
-                value = xmlNodeGetContent (element);
-                uri = soup_uri_new_with_base (info->priv->url_base,
-                                              (const char *) value);
-                xmlFree (value);
-
-                ret = soup_uri_to_string (uri, FALSE);
-                soup_uri_free (uri);
-
-                return ret;
-        } else
-                return NULL;
-}
 
 static void
 gupnp_device_info_init (GUPnPDeviceInfo *info)
@@ -150,8 +95,11 @@ gupnp_device_info_set_property (GObject      *object,
                 info->priv->element =
                         g_value_get_pointer (value);
 
-                if (!info->priv->udn)
-                        info->priv->udn = get_property (info, "UDN");
+                if (!info->priv->udn) {
+                        info->priv->udn =
+                                xml_util_get_child_element_content_glib
+                                        (info->priv->element, "UDN");
+                }
 
                 break;
         default:
@@ -219,6 +167,7 @@ gupnp_device_info_finalize (GObject *object)
 
         g_free (info->priv->location);
         g_free (info->priv->udn);
+
         soup_uri_free (info->priv->url_base);
 }
 
@@ -394,7 +343,8 @@ gupnp_device_info_get_udn (GUPnPDeviceInfo *info)
 char *
 gupnp_device_info_get_device_type (GUPnPDeviceInfo *info)
 {
-        return get_property (info, "deviceType");
+        return xml_util_get_child_element_content_glib (info->priv->element,
+                                                        "deviceType");
 }
 
 /**
@@ -406,7 +356,8 @@ gupnp_device_info_get_device_type (GUPnPDeviceInfo *info)
 char *
 gupnp_device_info_get_friendly_name (GUPnPDeviceInfo *info)
 {
-        return get_property (info, "friendlyName");
+        return xml_util_get_child_element_content_glib (info->priv->element,
+                                                        "friendlyName");
 }
 
 /**
@@ -418,7 +369,8 @@ gupnp_device_info_get_friendly_name (GUPnPDeviceInfo *info)
 char *
 gupnp_device_info_get_manufacturer (GUPnPDeviceInfo *info)
 {
-        return get_property (info, "manufacturer");
+        return xml_util_get_child_element_content_glib (info->priv->element,
+                                                        "manufacturer");
 }
 
 /**
@@ -431,7 +383,9 @@ gupnp_device_info_get_manufacturer (GUPnPDeviceInfo *info)
 char *
 gupnp_device_info_get_manufacturer_url (GUPnPDeviceInfo *info)
 {
-        return get_url_property (info, "manufacturerURL");
+        return xml_util_get_child_element_content_url (info->priv->element,
+                                                       "manufacturerURL",
+                                                       info->priv->url_base);
 }
 
 /**
@@ -444,7 +398,8 @@ gupnp_device_info_get_manufacturer_url (GUPnPDeviceInfo *info)
 char *
 gupnp_device_info_get_model_description (GUPnPDeviceInfo *info)
 {
-        return get_property (info, "modelDescription");
+        return xml_util_get_child_element_content_glib (info->priv->element,
+                                                        "modelDescription");
 }
 
 /**
@@ -456,7 +411,8 @@ gupnp_device_info_get_model_description (GUPnPDeviceInfo *info)
 char *
 gupnp_device_info_get_model_name (GUPnPDeviceInfo *info)
 {
-        return get_property (info, "modelName");
+        return xml_util_get_child_element_content_glib (info->priv->element,
+                                                        "modelName");
 }
 
 /**
@@ -468,7 +424,8 @@ gupnp_device_info_get_model_name (GUPnPDeviceInfo *info)
 char *
 gupnp_device_info_get_model_number (GUPnPDeviceInfo *info)
 {
-        return get_property (info, "modelDescription");
+        return xml_util_get_child_element_content_glib (info->priv->element,
+                                                        "modelDescription");
 }
 
 /**
@@ -481,7 +438,9 @@ gupnp_device_info_get_model_number (GUPnPDeviceInfo *info)
 char *
 gupnp_device_info_get_model_url (GUPnPDeviceInfo *info)
 {
-        return get_url_property (info, "modelURL");
+        return xml_util_get_child_element_content_url (info->priv->element,
+                                                       "modelURL",
+                                                       info->priv->url_base);
 }
 
 /**
@@ -493,7 +452,8 @@ gupnp_device_info_get_model_url (GUPnPDeviceInfo *info)
 char *
 gupnp_device_info_get_serial_number (GUPnPDeviceInfo *info)
 {
-        return get_property (info, "serialNumber");
+        return xml_util_get_child_element_content_glib (info->priv->element,
+                                                        "serialNumber");
 }
 
 /**
@@ -505,7 +465,8 @@ gupnp_device_info_get_serial_number (GUPnPDeviceInfo *info)
 char *
 gupnp_device_info_get_upc (GUPnPDeviceInfo *info)
 {
-        return get_property (info, "UPC");
+        return xml_util_get_child_element_content_glib (info->priv->element,
+                                                        "UPC");
 }
 
 typedef struct {
@@ -513,7 +474,7 @@ typedef struct {
         int      width;
         int      height;
         int      depth;
-        char    *url;
+        xmlChar *url;
 
         int      weight;
 } Icon;
@@ -522,48 +483,19 @@ static Icon *
 icon_parse (GUPnPDeviceInfo *info, xmlNode *element)
 {
         Icon *icon;
-        xmlNode *prop;
 
         icon = g_slice_new0 (Icon);
 
-        prop = xml_util_get_element (element, "mimetype", NULL);
-        if (prop)
-                icon->mime_type = xmlNodeGetContent (prop);
-
-        prop = xml_util_get_element (element, "width", NULL);
-        if (prop)
-                icon->width = xml_util_node_get_content_int (prop);
-        else
-                icon->width = -1;
-        
-        prop = xml_util_get_element (element, "height", NULL);
-        if (prop)
-                icon->height = xml_util_node_get_content_int (prop);
-        else
-                icon->width = -1;
-        
-        prop = xml_util_get_element (element, "depth", NULL);
-        if (prop)
-                icon->depth = xml_util_node_get_content_int (prop);
-        else
-                icon->width = -1;
-        
-        prop = xml_util_get_element (element, "url", NULL);
-        if (prop) {
-                xmlChar *url;
-
-                url = xmlNodeGetContent (prop);
-                if (url) {
-                        SoupUri *uri;
-
-                        uri = soup_uri_new_with_base (info->priv->url_base,
-                                                      (const char *) url);
-                        icon->url = soup_uri_to_string (uri, FALSE);
-                        soup_uri_free (uri);
-
-                        xmlFree (url);
-                }
-        }
+        icon->mime_type = xml_util_get_child_element_content      (element,
+                                                                  "mimetype");
+        icon->width     = xml_util_get_child_element_content_int (element,
+                                                                  "width");
+        icon->height    = xml_util_get_child_element_content_int (element,
+                                                                  "height");
+        icon->depth     = xml_util_get_child_element_content_int (element,
+                                                                  "depth");
+        icon->url       = xml_util_get_child_element_content     (element,
+                                                                  "url");
 
         return icon;
 }
@@ -574,7 +506,8 @@ icon_free (Icon *icon)
         if (icon->mime_type)
                 xmlFree (icon->mime_type);
 
-        g_free (icon->url);
+        if (icon->url)
+                xmlFree (icon->url);
 
         g_slice_free (Icon, icon);
 }
@@ -700,8 +633,14 @@ gupnp_device_info_get_icon_url (GUPnPDeviceInfo *info,
 
         /* Fill in return values */
         if (closest) {
-                if (mime_type)
-                        *mime_type = g_strdup ((char *) icon->mime_type);
+                if (mime_type) {
+                        if (icon->mime_type) {
+                                *mime_type = g_strdup
+                                                ((char *) icon->mime_type);
+                        } else
+                                *mime_type = NULL;
+                }
+
                 if (depth)
                         *depth = icon->depth;
                 if (width)
@@ -709,7 +648,15 @@ gupnp_device_info_get_icon_url (GUPnPDeviceInfo *info,
                 if (height)
                         *height = icon->height;
 
-                ret = g_strdup ((char *) icon->url);
+                if (icon->url) {
+                        SoupUri *uri;
+
+                        uri = soup_uri_new_with_base (info->priv->url_base,
+                                                      (const char *) icon->url);
+                        ret = soup_uri_to_string (uri, FALSE);
+                        soup_uri_free (uri);
+                } else
+                        ret = NULL;
         } else {
                 if (mime_type)
                         *mime_type = NULL;

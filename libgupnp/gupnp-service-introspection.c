@@ -410,7 +410,7 @@ set_variable_type (GUPnPServiceStateVariableInfo *variable,
                 g_value_init (&variable->step, gtype);
         g_value_init (&variable->default_value, gtype);
         variable->gtype = gtype;
-        variable->data_type = g_strdup (data_type);
+        variable->data_type = data_type;
 }
 
 /**
@@ -423,10 +423,11 @@ static GUPnPServiceStateVariableInfo *
 get_state_variable (xmlNodePtr variable_node)
 {
         GUPnPServiceStateVariableInfo *variable;
-        xmlChar *data_type, *send_events;
+        xmlChar *send_events;
+        char *data_type;
         
-        data_type = xml_util_get_child_element_content (variable_node, 
-                                                        "dataType");
+        data_type = xml_util_get_child_element_content_glib (variable_node, 
+                                                             "dataType");
         if (!data_type) {
                 /* We can't report much about a state variable whose dataType
                  * is not specified so better not report anything at all */
@@ -435,8 +436,7 @@ get_state_variable (xmlNodePtr variable_node)
         
         variable = g_slice_new0 (GUPnPServiceStateVariableInfo);
 
-        set_variable_type (variable, (char *) data_type);
-        xmlFree (data_type);
+        set_variable_type (variable, data_type);
 
         set_variable_limits (variable_node, variable);
         set_default_value (variable_node, variable);
@@ -447,7 +447,7 @@ get_state_variable (xmlNodePtr variable_node)
         if (send_events) {
                 if (strcmp ("yes", (char *) send_events) == 0)
                         variable->send_events = TRUE;
-               xmlFree (send_events);
+                xmlFree (send_events);
         }
         
         return variable;
@@ -463,26 +463,28 @@ static GUPnPServiceActionArgInfo *
 get_action_argument (xmlNodePtr argument_node)
 {
         GUPnPServiceActionArgInfo *argument;
-        xmlChar *name, *direction, *state_var;
+        char *name, *direction, *state_var;
         
-        name = xml_util_get_child_element_content (argument_node, "name");
-        direction = xml_util_get_child_element_content (argument_node, 
-                                                        "direction");
-        state_var = xml_util_get_child_element_content (argument_node,
-                                                        "relatedStateVariable");
+        name      = xml_util_get_child_element_content_glib
+                                        (argument_node, "name");
+        direction = xml_util_get_child_element_content_glib
+                                        (argument_node, "direction");
+        state_var = xml_util_get_child_element_content_glib
+                                        (argument_node, "relatedStateVariable");
 
-        if (!name || !direction || !state_var)
+        if (!name || !direction || !state_var) {
+                g_free (name);
+                g_free (direction);
+                g_free (state_var);
+
                 return NULL;
+        }
 
         argument = g_slice_new0 (GUPnPServiceActionArgInfo);
 
-        argument->name                   = g_strdup ((char *) name);
-        argument->direction              = g_strdup ((char *) direction);
-        argument->related_state_variable = g_strdup ((char *) state_var);
-
-        xmlFree (name);
-        xmlFree (direction);
-        xmlFree (state_var);
+        argument->name                   = name;
+        argument->direction              = direction;
+        argument->related_state_variable = state_var;
 
         if (xml_util_get_element (argument_node, "retval", NULL) != NULL)
                 argument->retval = TRUE;
@@ -568,7 +570,7 @@ get_actions (xmlNode *list_element)
         for (action_node = list_element->children; 
              action_node;
              action_node = action_node->next) {
-                xmlChar *name;
+                char *name;
                 GSList *arguments;
 
                 if (strcmp ("action", (char *) action_node->name) != 0)
@@ -579,14 +581,12 @@ get_actions (xmlNode *list_element)
                         continue;
                 }
 
-                name = xml_util_get_child_element_content (action_node, "name");
+                name = xml_util_get_child_element_content_glib (action_node,
+                                                                "name");
                 if (!name)
                         continue;
 
-                g_hash_table_insert (actions,
-                                     g_strdup ((char *) name), arguments);
-
-                xmlFree (name);
+                g_hash_table_insert (actions, name, arguments);
         }
 
         return actions;
@@ -617,23 +617,25 @@ get_state_variables (xmlNode *list_element)
         for (variable_node = list_element->children; 
              variable_node;
              variable_node = variable_node->next) {
-                xmlChar *name;
+                char *name;
                 GUPnPServiceStateVariableInfo *variable;
 
                 if (strcmp ("stateVariable", (char *) variable_node->name) != 0)
                         continue;
 
-                variable = get_state_variable (variable_node);
-                if (!variable)
-                        continue;
-
-                name = xml_util_get_child_element_content
-                                        (variable_node, "name");
+                name = xml_util_get_child_element_content_glib (variable_node,
+                                                                "name");
                 if (!name)
                         continue;
 
-                variable->name = g_strdup ((char *) name);
-                xmlFree (name);
+                variable = get_state_variable (variable_node);
+                if (!variable) {
+                        g_free (name);
+
+                        continue;
+                }
+
+                variable->name = name;
 
                 g_hash_table_insert (variables, variable->name, variable);
         }

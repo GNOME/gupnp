@@ -43,6 +43,7 @@ struct _GUPnPServiceInfoPrivate {
 
         char *location;
         char *udn;
+
         SoupUri *url_base;
 
         xmlNode *element;
@@ -161,6 +162,7 @@ gupnp_service_info_finalize (GObject *object)
 
         g_free (info->priv->location);
         g_free (info->priv->udn);
+
         soup_uri_free (info->priv->url_base);
 }
 
@@ -326,62 +328,6 @@ gupnp_service_info_get_udn (GUPnPServiceInfo *info)
         return info->priv->udn;
 }
 
-static char *
-get_property (GUPnPServiceInfo *info,
-              const char       *element_name)
-{
-        xmlNode *element;
-
-        g_return_val_if_fail (GUPNP_IS_SERVICE_INFO (info), NULL);
-
-        element = xml_util_get_element (info->priv->element,
-                                        element_name,
-                                        NULL);
-
-        if (element) {
-                xmlChar *value;
-                char *ret;
-                
-                /* Make glib memmanaged */
-                value = xmlNodeGetContent (element);
-                ret = g_strdup ((char *) value);
-                xmlFree (value);
-
-                return ret;
-        } else
-                return NULL;
-}
-
-static char *
-get_url_property (GUPnPServiceInfo *info,
-                  const char       *element_name)
-{
-        xmlNode *element;
-
-        g_return_val_if_fail (GUPNP_IS_SERVICE_INFO (info), NULL);
-
-        element = xml_util_get_element (info->priv->element,
-                                        element_name,
-                                        NULL);
-
-        if (element) {
-                xmlChar *value;
-                SoupUri *uri;
-                char *ret;
-                
-                value = xmlNodeGetContent (element);
-                uri = soup_uri_new_with_base (info->priv->url_base,
-                                              (const char *) value);
-                xmlFree (value);
-
-                ret = soup_uri_to_string (uri, FALSE);
-                soup_uri_free (uri);
-
-                return ret;
-        } else
-                return NULL;
-}
-
 /**
  * gupnp_service_info_get_service_type
  * @info: A #GUPnPServiceInfo
@@ -391,7 +337,8 @@ get_url_property (GUPnPServiceInfo *info,
 char *
 gupnp_service_info_get_service_type (GUPnPServiceInfo *info)
 {
-        return get_property (info, "serviceType");
+        return xml_util_get_child_element_content_glib (info->priv->element,
+                                                        "serviceType");
 }
 
 /**
@@ -403,7 +350,8 @@ gupnp_service_info_get_service_type (GUPnPServiceInfo *info)
 char *
 gupnp_service_info_get_id (GUPnPServiceInfo *info)
 {
-        return get_property (info, "serviceId");
+        return xml_util_get_child_element_content_glib (info->priv->element,
+                                                        "serviceId");
 }
 
 /**
@@ -415,7 +363,9 @@ gupnp_service_info_get_id (GUPnPServiceInfo *info)
 char *
 gupnp_service_info_get_scpd_url (GUPnPServiceInfo *info)
 {
-        return get_url_property (info, "SCPDURL");
+        return xml_util_get_child_element_content_url (info->priv->element,
+                                                       "SCPDURL",
+                                                       info->priv->url_base);
 }
 
 /**
@@ -427,7 +377,9 @@ gupnp_service_info_get_scpd_url (GUPnPServiceInfo *info)
 char *
 gupnp_service_info_get_control_url (GUPnPServiceInfo *info)
 {
-        return get_url_property (info, "controlURL");
+        return xml_util_get_child_element_content_url (info->priv->element,
+                                                       "controlURL",
+                                                       info->priv->url_base);
 }
 
 /**
@@ -439,7 +391,9 @@ gupnp_service_info_get_control_url (GUPnPServiceInfo *info)
 char *
 gupnp_service_info_get_event_subscription_url (GUPnPServiceInfo *info)
 {
-        return get_url_property (info, "eventSubURL");
+        return xml_util_get_child_element_content_url (info->priv->element,
+                                                       "eventSubURL",
+                                                       info->priv->url_base);
 }
 
 /**

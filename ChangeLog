@@ -1,5 +1,23 @@
 2007-07-01  Jorn Baayen  <jorn@openedhand.com>
 
+	* libgupnp/gupnp-device-info.c:
+	* libgupnp/gupnp-device-proxy.c:
+	(_gupnp_device_proxy_new_from_doc):
+	* libgupnp/gupnp-root-device.c: (gupnp_root_device_constructor):
+	* libgupnp/gupnp-service-info.c: (gupnp_service_info_finalize),
+	(gupnp_service_info_get_udn):
+	* libgupnp/gupnp-service-introspection.c: (set_variable_type),
+	(get_state_variable), (get_action_argument), (get_actions),
+	(get_state_variables):
+	* libgupnp/gupnp-service-proxy.c:
+	(_gupnp_service_proxy_new_from_doc):
+	* libgupnp/xml-util.c: (xml_util_get_element):
+	* libgupnp/xml-util.h:
+
+	Add more shared XML helpers.
+
+2007-07-01  Jorn Baayen  <jorn@openedhand.com>
+
 	* libgupnp/gupnp-device-info.c: (get_property),
 	(gupnp_device_info_get_friendly_name),
 	(gupnp_device_info_get_manufacturer),

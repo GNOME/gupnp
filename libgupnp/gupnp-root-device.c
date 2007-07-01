@@ -242,8 +242,7 @@ gupnp_root_device_constructor (GType                  type,
         char *location, *usn;
         int i;
         xmlDoc *description_doc;
-        xmlNode *root_element, *element, *url_base_element;
-        xmlChar *url_base_str = NULL;
+        xmlNode *root_element, *element;
         SoupUri *url_base;
 
         /* Get 'description-doc' property value */
@@ -322,18 +321,10 @@ gupnp_root_device_constructor (GType                  type,
                                  NULL);
 
         /* Save the URL base, if any */
-        url_base_element =
-                xml_util_get_element (root_element,
-                                      "URLBase",
-                                      NULL);
-        if (url_base_element)
-               url_base_str = xmlNodeGetContent (url_base_element);
-
-        if (url_base_str) {
-                url_base = soup_uri_new ((const char *) url_base_str);
-
-                xmlFree (url_base_str);
-        } else
+        url_base = xml_util_get_child_element_content_uri (root_element,
+                                                           "URLBase",
+                                                           NULL);
+        if (!url_base)
                 url_base = soup_uri_new (location);
 
         /* Set .. */
