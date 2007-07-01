@@ -28,14 +28,9 @@
  * #GUPnPServiceInfo interface.
  */
 
-#ifndef _XOPEN_SOURCE
-#define _XOPEN_SOURCE
-#endif
-
 #include <libsoup/soup-soap-message.h>
 #include <gobject/gvaluecollector.h>
 #include <string.h>
-#include <time.h>
 #include <locale.h>
 
 #include "gupnp-service-proxy.h"

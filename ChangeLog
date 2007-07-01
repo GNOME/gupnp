@@ -1,5 +1,11 @@
 2007-07-01  Jorn Baayen  <jorn@openedhand.com>
 
+	* libgupnp/gupnp-service-proxy.c:
+
+	Remove unused includes.
+
+2007-07-01  Jorn Baayen  <jorn@openedhand.com>
+
 	* libgupnp/gupnp-device-info.c:
 	(gupnp_device_info_list_device_types),
 	(gupnp_device_info_list_service_types):
