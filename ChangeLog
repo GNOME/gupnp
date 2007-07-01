@@ -1,5 +1,13 @@
 2007-07-01  Jorn Baayen  <jorn@openedhand.com>
 
+	* libgupnp/gupnp-service-introspection.c:
+	(gupnp_service_introspection_finalize),
+	(contstruct_introspection_info):
+
+	Added small optimization + missing NULL checks.
+
+2007-07-01  Jorn Baayen  <jorn@openedhand.com>
+
 	* libgupnp/gupnp-device-info.c:
 	* libgupnp/gupnp-device-proxy.c:
 	(_gupnp_device_proxy_new_from_doc):

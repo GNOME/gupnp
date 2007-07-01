@@ -118,8 +118,11 @@ gupnp_service_introspection_finalize (GObject *object)
 
         introspection = GUPNP_SERVICE_INTROSPECTION (object);
 
-        g_hash_table_destroy (introspection->priv->action_hash);
-        g_hash_table_destroy (introspection->priv->variable_hash);
+        if (introspection->priv->action_hash)
+                g_hash_table_destroy (introspection->priv->action_hash);
+
+        if (introspection->priv->variable_hash)
+                g_hash_table_destroy (introspection->priv->variable_hash);
 
         g_free (introspection->priv->scpd_url);
 }
@@ -651,7 +654,7 @@ static void
 contstruct_introspection_info (GUPnPServiceIntrospection *introspection)
 {
         xmlDoc *scpd;
-        xmlNode *list_element;
+        xmlNode *root_element, *element;
 
         g_return_if_fail (introspection->priv->scpd_url != NULL);
 
@@ -659,22 +662,24 @@ contstruct_introspection_info (GUPnPServiceIntrospection *introspection)
         if (!scpd)
                 return;
 
-        /* Get actionList element */
-        list_element = xml_util_get_element ((xmlNode *) scpd,
+        root_element = xml_util_get_element ((xmlNode *) scpd,
                                              "scpd",
-                                             "actionList",
                                              NULL);
-        if (list_element)
-                introspection->priv->action_hash = get_actions (list_element);
 
         /* Get actionList element */
-        list_element = xml_util_get_element ((xmlNode *) scpd,
-                                             "scpd",
-                                             "serviceStateTable",
-                                             NULL);
-        if (list_element)
+        element = xml_util_get_element (root_element,
+                                        "actionList",
+                                        NULL);
+        if (element)
+                introspection->priv->action_hash = get_actions (element);
+
+        /* Get actionList element */
+        element = xml_util_get_element (root_element,
+                                        "serviceStateTable",
+                                        NULL);
+        if (element)
                 introspection->priv->variable_hash =
-                        get_state_variables (list_element);
+                        get_state_variables (element);
 
         xmlFreeDoc (scpd);
 }
