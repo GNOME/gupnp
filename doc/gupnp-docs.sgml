@@ -38,13 +38,34 @@
   </bookinfo>
 
   <chapter>
-    <title>GUPnP</title>
-    <xi:include href="xml/gupnp-context.xml"/>
-    <xi:include href="xml/gupnp-control-point.xml"/>
+    <title>Device Information</title>
+
     <xi:include href="xml/gupnp-device-info.xml"/>
-    <xi:include href="xml/gupnp-device-proxy.xml"/>
     <xi:include href="xml/gupnp-service-info.xml"/>
+    <xi:include href="xml/gupnp-service-introspection.xml"/>
+  </chapter>
+
+  <chapter>
+    <title>Device Control</title>
+
+    <xi:include href="xml/gupnp-control-point.xml"/>
+    <xi:include href="xml/gupnp-device-proxy.xml"/>
     <xi:include href="xml/gupnp-service-proxy.xml"/>
+  </chapter>
+
+  <chapter>
+    <title>Device Implementation</title>
+
+    <xi:include href="xml/gupnp-device.xml"/>
+    <xi:include href="xml/gupnp-root-device.xml"/>
+    <xi:include href="xml/gupnp-service.xml"/>
+  </chapter>
+
+  <chapter>
+    <title>Tools</title>
+
+    <xi:include href="xml/gupnp-context.xml"/>
     <xi:include href="xml/gupnp-error.xml"/>
   </chapter>
+
 </book>

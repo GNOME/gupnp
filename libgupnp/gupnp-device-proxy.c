@@ -24,8 +24,7 @@
  * @short_description: Proxy class for remote devices.
  *
  * #GUPnPDeviceProxy allows for retrieving proxies for a device's subdevices
- * and services. Device proxies also implement the #GUPnPDeviceInfo
- * interface.
+ * and services. #GUPnPDeviceProxy implements the #GUPnPDeviceInfo interface.
  */
 
 #include <string.h>

@@ -21,7 +21,7 @@
 
 /**
  * SECTION:gupnp-control-point
- * @short_description: Class handling device and service discovery.
+ * @short_description: Class for resource discovery.
  *
  * #GUPnPControlPoint handles device and service discovery. After creating
  * a control point and activating it using gssdp_resource_browser_set_active(),

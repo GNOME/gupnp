@@ -1,5 +1,19 @@
 2007-07-01  Jorn Baayen  <jorn@openedhand.com>
 
+	* doc/gupnp-docs.sgml:
+	* libgupnp/gupnp-control-point.c:
+	* libgupnp/gupnp-device-info.c: (gupnp_device_info_class_init):
+	* libgupnp/gupnp-device-proxy.c:
+	* libgupnp/gupnp-device.c:
+	* libgupnp/gupnp-service-info.c: (gupnp_service_info_class_init):
+	* libgupnp/gupnp-service-introspection.c:
+	* libgupnp/gupnp-service-proxy.c:
+	* libgupnp/gupnp-service.c:
+
+	Documentation updates.
+
+2007-07-01  Jorn Baayen  <jorn@openedhand.com>
+
 	* libgupnp/gupnp-service-introspection.c:
 	(gupnp_service_introspection_finalize),
 	(contstruct_introspection_info):

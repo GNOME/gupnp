@@ -24,7 +24,7 @@
  * @short_description: Proxy class for remote services.
  *
  * #GUPnPServiceProxy sends commands to a remote UPnP service and handles
- * incoming event notifications. Service proxies also implement the
+ * incoming event notifications. #GUPnPServiceProxy implements the
  * #GUPnPServiceInfo interface.
  */
 

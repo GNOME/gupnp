@@ -21,10 +21,10 @@
 
 /**
  * SECTION:gupnp-service-info
- * @short_description: Interface for querying service information.
+ * @short_description: Base abstract class for querying service information.
  *
- * The #GUPnPDeviceInfo interface provides methods for querying service
- * information.
+ * The #GUPnPDeviceInfo base abstract class provides methods for querying
+ * service information.
  */
 
 #include <libsoup/soup.h>
@@ -238,7 +238,7 @@ gupnp_service_info_class_init (GUPnPServiceInfoClass *klass)
         /**
          * GUPnPServiceInfo:url-base
          *
-         * The URL base (SoupUri).
+         * The URL base (#SoupUri).
          **/
         g_object_class_install_property
                 (object_class,

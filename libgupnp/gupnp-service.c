@@ -23,8 +23,8 @@
  * SECTION:gupnp-service
  * @short_description: Class for service implementations.
  *
- * #GUPnPService allows for implementing services. #GUPnPService implements
- * the #GUPnPServiceInfo interface.
+ * #GUPnPService allows for handling incoming actions and state variable
+ * notification. #GUPnPService implements the #GUPnPServiceInfo interface.
  */
 
 #include <gobject/gvaluecollector.h>

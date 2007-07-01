@@ -24,7 +24,7 @@
  * @short_description: Class for device implementations.
  *
  * #GUPnPDevice allows for retrieving a device's subdevices
- * and services. #GUPnPDevice also implements the #GUPnPDeviceInfo
+ * and services. #GUPnPDevice implements the #GUPnPDeviceInfo
  * interface.
  */
 

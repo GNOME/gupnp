@@ -21,10 +21,10 @@
 
 /**
  * SECTION:gupnp-device-info
- * @short_description: Interface for querying device information.
+ * @short_description: Base abstract class for querying device information.
  *
- * The #GUPnPDeviceInfo interface provides methods for querying device
- * information.
+ * The #GUPnPDeviceInfo base abstract class provides methods for querying
+ * device information.
  */
 
 #include <string.h>
@@ -243,7 +243,7 @@ gupnp_device_info_class_init (GUPnPDeviceInfoClass *klass)
         /**
          * GUPnPDeviceInfo:url-base
          *
-         * The URL base (SoupUri).
+         * The URL base (#SoupUri).
          **/
         g_object_class_install_property
                 (object_class,

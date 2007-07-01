@@ -25,8 +25,9 @@
  * SECTION:gupnp-service-introspection
  * @short_description: Service introspection class.
  *
- * The #GUPnPServiceIntrospection class provides introspection information about
- * a service.
+ * The #GUPnPServiceIntrospection class provides methods for service
+ * introspection based on information contained in its service description
+ * document (SCPD).
  **/
 
 #include <libsoup/soup.h>
