@@ -81,6 +81,36 @@ get_property (GUPnPDeviceInfo *info,
                 return NULL;
 }
 
+static char *
+get_url_property (GUPnPDeviceInfo *info,
+                  const char      *element_name)
+{
+        xmlNode *element;
+
+        g_return_val_if_fail (GUPNP_IS_SERVICE_INFO (info), NULL);
+
+        element = xml_util_get_element (info->priv->element,
+                                        element_name,
+                                        NULL);
+
+        if (element) {
+                xmlChar *value;
+                SoupUri *uri;
+                char *ret;
+                
+                value = xmlNodeGetContent (element);
+                uri = soup_uri_new_with_base (info->priv->url_base,
+                                              (const char *) value);
+                xmlFree (value);
+
+                ret = soup_uri_to_string (uri, FALSE);
+                soup_uri_free (uri);
+
+                return ret;
+        } else
+                return NULL;
+}
+
 static void
 gupnp_device_info_init (GUPnPDeviceInfo *info)
 {
@@ -401,7 +431,7 @@ gupnp_device_info_get_manufacturer (GUPnPDeviceInfo *info)
 char *
 gupnp_device_info_get_manufacturer_url (GUPnPDeviceInfo *info)
 {
-        return get_property (info, "manufacturerURL");
+        return get_url_property (info, "manufacturerURL");
 }
 
 /**
@@ -451,7 +481,7 @@ gupnp_device_info_get_model_number (GUPnPDeviceInfo *info)
 char *
 gupnp_device_info_get_model_url (GUPnPDeviceInfo *info)
 {
-        return get_property (info, "modelURL");
+        return get_url_property (info, "modelURL");
 }
 
 /**

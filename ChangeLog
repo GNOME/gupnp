@@ -1,5 +1,15 @@
 2007-07-01  Jorn Baayen  <jorn@openedhand.com>
 
+	* libgupnp/gupnp-device-info.c: (get_property),
+	(gupnp_device_info_get_friendly_name),
+	(gupnp_device_info_get_manufacturer),
+	(gupnp_device_info_get_model_name),
+	(gupnp_device_info_get_model_number):
+
+	Use get_url_property() for all URL properties.
+
+2007-07-01  Jorn Baayen  <jorn@openedhand.com>
+
 	* libgupnp/gupnp-service.c: (gupnp_service_class_init):
 
 	Use G_TYPE_VALUE for "value" argument on "query-variable" signal.
