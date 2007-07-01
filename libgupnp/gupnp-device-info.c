@@ -746,23 +746,14 @@ gupnp_device_info_list_device_types (GUPnPDeviceInfo *info)
 
         for (element = element->children; element; element = element->next) {
                 if (!strcmp ("device", (char *) element->name)) {
-                        xmlNode *type_element;
-                        xmlChar *type;
+                        char *type;
 
-                        type_element = xml_util_get_element (element,
-                                                             "deviceType",
-                                                             NULL);
-                        if (!type_element)
-                                continue;
-
-                        type = xmlNodeGetContent (type_element);
+                        type = xml_util_get_child_element_content_glib
+                                                   (element, "deviceType");
                         if (!type)
                                 continue;
 
-                        device_types =
-                                g_list_prepend (device_types,
-                                                g_strdup ((char *) type));
-                        xmlFree (type);
+                        device_types = g_list_prepend (device_types, type);
                 }
         }
 
@@ -895,23 +886,14 @@ gupnp_device_info_list_service_types (GUPnPDeviceInfo *info)
 
         for (element = element->children; element; element = element->next) {
                 if (!strcmp ("service", (char *) element->name)) {
-                        xmlNode *type_element;
-                        xmlChar *type;
+                        char *type;
 
-                        type_element = xml_util_get_element (element,
-                                                             "serviceType",
-                                                             NULL);
-                        if (!type_element)
-                                continue;
-
-                        type = xmlNodeGetContent (type_element);
+                        type = xml_util_get_child_element_content_glib
+                                                   (element, "serviceType");
                         if (!type)
                                 continue;
 
-                        service_types =
-                                g_list_prepend (service_types,
-                                                g_strdup ((char *) type));
-                        xmlFree (type);
+                        service_types = g_list_prepend (service_types, type);
                 }
         }
 

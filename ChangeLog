@@ -1,5 +1,13 @@
 2007-07-01  Jorn Baayen  <jorn@openedhand.com>
 
+	* libgupnp/gupnp-device-info.c:
+	(gupnp_device_info_list_device_types),
+	(gupnp_device_info_list_service_types):
+
+	Use xml_util_get_child_element_content_glib().
+
+2007-07-01  Jorn Baayen  <jorn@openedhand.com>
+
 	* doc/gupnp-docs.sgml:
 	* libgupnp/gupnp-control-point.c:
 	* libgupnp/gupnp-device-info.c: (gupnp_device_info_class_init):
