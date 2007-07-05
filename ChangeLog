@@ -1,3 +1,32 @@
+2007-07-04  Zeeshan Ali  <zeenix@gstreamer.net>
+
+	* libgupnp/gupnp-service-introspection.c:
+	(gupnp_service_state_variable_info_free),
+	(gupnp_service_action_info_free),
+	(gupnp_service_introspection_finalize), (set_variable_limits),
+	(set_variable_type), (get_action_argument),
+	(gupnp_service_action_arg_info_free), (collect_action_names),
+	(collect_action_arguments), (collect_actions),
+	(collect_state_variables),
+	(gupnp_service_introspection_list_action_names),
+	(gupnp_service_introspection_list_action_arguments),
+	(gupnp_service_introspection_list_actions),
+	(gupnp_service_introspection_list_state_variables),
+	(gupnp_service_introspection_get_state_variable):
+	* libgupnp/gupnp-service-introspection.h:
+	* tests/test-introspection.c: (print_action_arguments),
+	(print_actions), (print_state_variables):
+
+	- Return local copies of data to avoid malloc()s and free()s.
+	- Cache the returned GSLists to avoid allocating the list each time.
+	- return a 'const' from each function and update doc comments to
+	  make it very clear to the user that the return data can't be
+	  modified or freed.
+	- Rename 'gtype' field to 'type' for consistancy.
+	- Introduce an enum type for the direction of the action argument
+	  and use that instead of a string.
+	- Add a function for getting state variable information by name.
+
 2007-07-01  Jorn Baayen  <jorn@openedhand.com>
 
 	* libgupnp/gupnp-service-proxy.c:

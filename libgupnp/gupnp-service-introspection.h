@@ -53,11 +53,17 @@ gupnp_service_introspection_get_type (void) G_GNUC_CONST;
                  GUPNP_TYPE_SERVICE_INTROSPECTION, \
                  GUPnPServiceIntrospectionClass))
 
+typedef enum
+{
+  GUPNP_SERVICE_ACTION_ARG_DIRECTION_IN,
+  GUPNP_SERVICE_ACTION_ARG_DIRECTION_OUT
+} GUPnPServiceActionArgDirection;
+
 typedef struct {
-        char    *name;
-        char    *direction;
-        char    *related_state_variable;
-        gboolean retval;
+        char                          *name;
+        GUPnPServiceActionArgDirection direction;
+        char                          *related_state_variable;
+        gboolean                       retval;
 } GUPnPServiceActionArgInfo;
 
 typedef struct {
@@ -70,7 +76,7 @@ typedef struct {
         gboolean send_events;
         char    *data_type;
         gboolean is_numeric;
-        GType    gtype;
+        GType    type;
         GValue   default_value;
         GValue   minimum;         /* only for numeric data types           */
         GValue   maximum;         /* only for numeric data types           */
@@ -92,38 +98,30 @@ typedef struct {
         GObjectClass parent_class;
 } GUPnPServiceIntrospectionClass;
 
-void
-gupnp_service_action_arg_info_free
-                        (GUPnPServiceActionArgInfo     *action_arg_info);
-
-void
-gupnp_service_action_info_free
-                        (GUPnPServiceActionInfo        *action_info);
-
-void
-gupnp_service_state_variable_info_free
-                        (GUPnPServiceStateVariableInfo *variable_info);
-
 GUPnPServiceIntrospection *
 gupnp_service_introspection_new (const char *scpd_url);
 
-GSList *
+const GSList *
 gupnp_service_introspection_list_action_names
                                 (GUPnPServiceIntrospection *introspection);
 
-GSList *
+const GSList *
 gupnp_service_introspection_list_actions
                                 (GUPnPServiceIntrospection *introspection);
 
-GSList *
+const GSList *
 gupnp_service_introspection_list_action_arguments
                                 (GUPnPServiceIntrospection *introspection,
                                  const char                *action_name);
 
-GSList *
+const GSList *
 gupnp_service_introspection_list_state_variables
                                 (GUPnPServiceIntrospection *introspection);
 
+const GUPnPServiceStateVariableInfo *
+gupnp_service_introspection_get_state_variable
+                                (GUPnPServiceIntrospection *introspection,
+                                 const char                *variable_name);
 
 G_END_DECLS
 

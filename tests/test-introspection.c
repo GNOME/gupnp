@@ -40,7 +40,8 @@ print_action_arguments (GSList *argument_list)
                          "\t\tdirection: %s\n"
                          "\t\trelated state variable: %s\n\n",
                          argument->name,
-                         argument->direction,
+                         (argument->direction ==
+                          GUPNP_SERVICE_ACTION_ARG_DIRECTION_IN)? "in": "out",
                          argument->related_state_variable);
         }
 }
@@ -48,11 +49,11 @@ print_action_arguments (GSList *argument_list)
 static void
 print_actions (GUPnPServiceIntrospection *introspection)
 {
-        GSList *action_list;
+        const GSList *action_list;
 
         action_list = gupnp_service_introspection_list_actions (introspection);
         if (action_list) {
-                GSList *iter;
+                const GSList *iter;
 
                 g_print ("actions:\n");
                 for (iter = action_list; iter; iter = iter->next) {
@@ -62,24 +63,21 @@ print_actions (GUPnPServiceIntrospection *introspection)
 
                         g_print ("\tname: %s\n", action_info->name);
                         print_action_arguments (action_info->arguments);
-
-                        gupnp_service_action_info_free (action_info);
                 }
                 g_print ("\n");
-                g_slist_free (action_list);
         }
 }
 
 static void
 print_state_variables (GUPnPServiceIntrospection *introspection)
 {
-        GSList *variables;
+        const GSList *variables;
 
         variables = 
                 gupnp_service_introspection_list_state_variables (
                                 introspection);
         if (variables) {
-                GSList *iter;
+                const GSList *iter;
 
                 g_print ("state variables:\n");
                 for (iter = variables; iter; iter = iter->next) {
@@ -142,10 +140,8 @@ print_state_variables (GUPnPServiceIntrospection *introspection)
                         }
                         
                         g_print ("\n");
-                        gupnp_service_state_variable_info_free (variable);
                 }
                 g_print ("\n");
-                g_slist_free (variables);
         }
 }
 

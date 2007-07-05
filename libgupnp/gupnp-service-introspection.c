@@ -48,6 +48,11 @@ struct _GUPnPServiceIntrospectionPrivate {
         /* Intropection data */
         GHashTable *action_hash;
         GHashTable *variable_hash;
+        
+        /* For caching purposes */
+        GSList *variable_list;
+        GSList *action_list;
+        GSList *action_names;
 };
 
 enum {
@@ -57,6 +62,32 @@ enum {
 
 static void
 contstruct_introspection_info (GUPnPServiceIntrospection *introspection);
+
+/**
+ * gupnp_service_state_variable_info_free 
+ * @argument: A #GUPnPServiceStateVariableInfo 
+ *
+ * Frees a #GUPnPServiceStateVariableInfo.
+ *
+ **/
+static void
+gupnp_service_state_variable_info_free (GUPnPServiceStateVariableInfo *variable)
+{
+        g_free (variable->name);
+        g_free (variable->data_type);
+        g_value_unset (&variable->default_value);
+        if (variable->is_numeric) {
+                g_value_unset (&variable->minimum);
+                g_value_unset (&variable->maximum);
+                g_value_unset (&variable->step);
+        }
+        g_slist_foreach (variable->allowed_values,
+                         (GFunc) g_free,
+                         NULL);
+        g_slist_free (variable->allowed_values);
+        
+        g_slice_free (GUPnPServiceStateVariableInfo, variable);
+}
 
 static void
 gupnp_service_introspection_init (GUPnPServiceIntrospection *introspection)
@@ -112,6 +143,20 @@ gupnp_service_introspection_get_property (GObject    *object,
         }
 }
 
+/**
+ * gupnp_service_action_info_free
+ * @argument: A #GUPnPServiceActionInfo
+ *
+ * Frees a #GUPnPServiceActionInfo.
+ *
+ **/
+static void
+gupnp_service_action_info_free (GUPnPServiceActionInfo *action_info)
+{
+        g_slist_free (action_info->arguments);
+        g_slice_free (GUPnPServiceActionInfo, action_info);
+}
+
 static void
 gupnp_service_introspection_finalize (GObject *object)
 {
@@ -119,6 +164,19 @@ gupnp_service_introspection_finalize (GObject *object)
 
         introspection = GUPNP_SERVICE_INTROSPECTION (object);
 
+        if (introspection->priv->variable_list)
+                g_slist_free (introspection->priv->variable_list);
+        
+        if (introspection->priv->action_list) {
+                g_slist_foreach (introspection->priv->action_list,
+                                 (GFunc) gupnp_service_action_info_free,
+                                 NULL);
+                g_slist_free (introspection->priv->action_list);
+        }
+        
+        if (introspection->priv->action_names)
+                g_slist_free (introspection->priv->action_names);
+        
         if (introspection->priv->action_hash)
                 g_hash_table_destroy (introspection->priv->action_hash);
 
@@ -291,7 +349,7 @@ set_variable_limits (xmlNodePtr                    variable_node,
                 set_value_limit_by_name (limit_node,
                                 &(variable->step),
                                 "step");
-        } else if (variable->gtype == G_TYPE_STRING) {
+        } else if (variable->type == G_TYPE_STRING) {
                 limit_node = xml_util_get_element (variable_node,
                                                    "allowedValueList",
                                                    NULL);
@@ -307,113 +365,113 @@ static void
 set_variable_type (GUPnPServiceStateVariableInfo *variable,
                    char                          *data_type)
 {
-        GType gtype;
+        GType type;
 
         if (strcmp ("string", data_type) == 0) {
-                gtype = G_TYPE_STRING;
+                type = G_TYPE_STRING;
         }
         
         else if (strcmp ("char", data_type) == 0) {
-                gtype = G_TYPE_CHAR;
+                type = G_TYPE_CHAR;
         }
 
         else if (strcmp ("boolean", data_type) == 0) {
-                gtype = G_TYPE_BOOLEAN;
+                type = G_TYPE_BOOLEAN;
         }
 
         else if (strcmp ("i1", data_type) == 0) {
-                gtype = G_TYPE_INT;
-                g_value_init (&variable->minimum, gtype);
+                type = G_TYPE_INT;
+                g_value_init (&variable->minimum, type);
                 g_value_set_int (&variable->minimum, G_MININT8);
-                g_value_init (&variable->maximum, gtype);
+                g_value_init (&variable->maximum, type);
                 g_value_set_int (&variable->maximum, G_MAXINT8);
                 variable->is_numeric = TRUE;
         }
          
         else if (strcmp ("i2", data_type) == 0) {
-                gtype = G_TYPE_INT;
-                g_value_init (&variable->minimum, gtype);
+                type = G_TYPE_INT;
+                g_value_init (&variable->minimum, type);
                 g_value_set_int (&variable->minimum, G_MININT16);
-                g_value_init (&variable->maximum, gtype);
+                g_value_init (&variable->maximum, type);
                 g_value_set_int (&variable->maximum, G_MAXINT16);
                 variable->is_numeric = TRUE;
         }
         
         else if (strcmp ("i4", data_type) == 0 ||
                  strcmp ("int", data_type) == 0) {
-                gtype = G_TYPE_INT;
-                g_value_init (&variable->minimum, gtype);
+                type = G_TYPE_INT;
+                g_value_init (&variable->minimum, type);
                 g_value_set_int (&variable->minimum, G_MININT32);
-                g_value_init (&variable->maximum, gtype);
+                g_value_init (&variable->maximum, type);
                 g_value_set_int (&variable->maximum, G_MAXINT32);
                 variable->is_numeric = TRUE;
         }
 
         else if (strcmp ("ui1", data_type) == 0) {
-                gtype = G_TYPE_UINT;
-                g_value_init (&variable->minimum, gtype);
+                type = G_TYPE_UINT;
+                g_value_init (&variable->minimum, type);
                 g_value_set_uint (&variable->minimum, 0);
-                g_value_init (&variable->maximum, gtype);
+                g_value_init (&variable->maximum, type);
                 g_value_set_uint (&variable->maximum, G_MAXUINT8);
                 variable->is_numeric = TRUE;
         }
         
         else if (strcmp ("ui2", data_type) == 0) {
-                gtype = G_TYPE_UINT;
-                g_value_init (&variable->minimum, gtype);
+                type = G_TYPE_UINT;
+                g_value_init (&variable->minimum, type);
                 g_value_set_uint (&variable->minimum, 0);
-                g_value_init (&variable->maximum, gtype);
+                g_value_init (&variable->maximum, type);
                 g_value_set_uint (&variable->maximum, G_MAXUINT16);
                 variable->is_numeric = TRUE;
         }
         
         else if (strcmp ("ui4", data_type) == 0) {
-                gtype = G_TYPE_UINT;
-                g_value_init (&variable->minimum, gtype);
+                type = G_TYPE_UINT;
+                g_value_init (&variable->minimum, type);
                 g_value_set_uint (&variable->minimum, 0);
-                g_value_init (&variable->maximum, gtype);
+                g_value_init (&variable->maximum, type);
                 g_value_set_uint (&variable->maximum, G_MAXUINT32);
                 variable->is_numeric = TRUE;
         }
         
         else if (strcmp ("r4", data_type) == 0) {
-                gtype = G_TYPE_FLOAT;
-                g_value_init (&variable->minimum, gtype);
+                type = G_TYPE_FLOAT;
+                g_value_init (&variable->minimum, type);
                 g_value_set_float (&variable->minimum, -G_MAXFLOAT);
-                g_value_init (&variable->maximum, gtype);
+                g_value_init (&variable->maximum, type);
                 g_value_set_float (&variable->maximum, G_MAXFLOAT);
                 variable->is_numeric = TRUE;
         }
         
         else if (strcmp ("r8", data_type) == 0 ||
                  strcmp ("number", data_type) == 0) {
-                gtype = G_TYPE_DOUBLE;
-                g_value_init (&variable->minimum, gtype);
+                type = G_TYPE_DOUBLE;
+                g_value_init (&variable->minimum, type);
                 g_value_set_double (&variable->minimum,  -G_MAXDOUBLE);
-                g_value_init (&variable->maximum, gtype);
+                g_value_init (&variable->maximum, type);
                 g_value_set_double (&variable->maximum, G_MAXDOUBLE);
                 variable->is_numeric = TRUE;
         }
         
         else if (strcmp ("fixed.14.4", data_type) == 0) {
                 /* Just how did this get into the UPnP specs? */
-                gtype = G_TYPE_DOUBLE;
-                g_value_init (&variable->minimum, gtype);
+                type = G_TYPE_DOUBLE;
+                g_value_init (&variable->minimum, type);
                 g_value_set_double (&variable->minimum,  -MAX_FIXED_14_4);
-                g_value_init (&variable->maximum, gtype);
+                g_value_init (&variable->maximum, type);
                 g_value_set_double (&variable->maximum, MAX_FIXED_14_4);
                 variable->is_numeric = TRUE;
         }
 
         else {
                 /* We treat rest of the types as strings */
-                gtype = G_TYPE_STRING;
+                type = G_TYPE_STRING;
         }
         
         if (variable->is_numeric)
-                g_value_init (&variable->step, gtype);
-        g_value_init (&variable->default_value, gtype);
-        variable->gtype = gtype;
+                g_value_init (&variable->step, type);
+        g_value_init (&variable->default_value, type);
+        variable->type = type;
         variable->data_type = data_type;
 }
 
@@ -430,7 +488,7 @@ get_state_variable (xmlNodePtr variable_node)
         xmlChar *send_events;
         char *data_type;
         
-        data_type = xml_util_get_child_element_content_glib (variable_node, 
+        data_type = xml_util_get_child_element_content_glib (variable_node,
                                                              "dataType");
         if (!data_type) {
                 /* We can't report much about a state variable whose dataType
@@ -467,28 +525,36 @@ static GUPnPServiceActionArgInfo *
 get_action_argument (xmlNodePtr argument_node)
 {
         GUPnPServiceActionArgInfo *argument;
-        char *name, *direction, *state_var;
+        char *name, *state_var;
+        xmlChar *direction;
         
         name      = xml_util_get_child_element_content_glib
                                         (argument_node, "name");
-        direction = xml_util_get_child_element_content_glib
-                                        (argument_node, "direction");
         state_var = xml_util_get_child_element_content_glib
                                         (argument_node, "relatedStateVariable");
+        direction = xml_util_get_child_element_content
+                                        (argument_node, "direction");
 
-        if (!name || !direction || !state_var) {
+        if (!name || !state_var || !direction) {
                 g_free (name);
-                g_free (direction);
                 g_free (state_var);
+
+                xmlFree (direction);
 
                 return NULL;
         }
 
         argument = g_slice_new0 (GUPnPServiceActionArgInfo);
 
-        argument->name                   = name;
-        argument->direction              = direction;
+        argument->name = name;
+
         argument->related_state_variable = state_var;
+
+        if (strcmp ("in", (char *) direction) == 0)
+                argument->direction = GUPNP_SERVICE_ACTION_ARG_DIRECTION_IN;
+        else
+                argument->direction = GUPNP_SERVICE_ACTION_ARG_DIRECTION_OUT;
+        xmlFree (direction);
 
         if (xml_util_get_element (argument_node, "retval", NULL) != NULL)
                 argument->retval = TRUE;
@@ -532,6 +598,22 @@ get_action_arguments (xmlNodePtr action_node)
         }
 
         return argument_list;
+}
+
+/**
+ * gupnp_service_action_arg_info_free
+ * @argument: A #GUPnPServiceActionArgInfo
+ *
+ * Frees a #GUPnPServiceActionArgInfo.
+ *
+ **/
+void
+gupnp_service_action_arg_info_free (GUPnPServiceActionArgInfo *argument)
+{
+        g_free (argument->name);
+        g_free (argument->related_state_variable);
+
+        g_slice_free (GUPnPServiceActionArgInfo, argument);
 }
 
 /**
@@ -693,7 +775,7 @@ collect_action_names (gpointer key,
         GSList **action_names = (GSList **) user_data;
         char *action_name;
        
-        action_name = g_strdup ((char *) key);
+        action_name = (char *) key;
         *action_names = g_slist_append (*action_names, action_name);
 }
 
@@ -703,18 +785,10 @@ collect_action_arguments (gpointer data,
 {
         GSList **argument_list = (GSList **) user_data;
         GUPnPServiceActionArgInfo *argument;
-        GUPnPServiceActionArgInfo *tmp;
        
         argument = (GUPnPServiceActionArgInfo *) data;
 
-        tmp = g_slice_new (GUPnPServiceActionArgInfo);
-
-        tmp->name = g_strdup (argument->name);
-        tmp->direction = g_strdup (argument->direction);
-        tmp->related_state_variable =
-                g_strdup (argument->related_state_variable);
-
-        *argument_list = g_slist_append (*argument_list, tmp);
+        *argument_list = g_slist_append (*argument_list, argument);
 }
 
 static void
@@ -727,7 +801,7 @@ collect_actions (gpointer key,
        
         action_info = g_slice_new0 (GUPnPServiceActionInfo);
 
-        action_info->name = g_strdup ((char *) key);
+        action_info->name = (char *) key;
         g_slist_foreach ((GSList *) value,
                          collect_action_arguments,
                          &action_info->arguments);
@@ -736,56 +810,12 @@ collect_actions (gpointer key,
 }
 
 static void
-collect_allowed_values (gpointer data,
-                        gpointer user_data)
-{
-        GSList **allowed_values = (GSList **) user_data;
-        char *tmp;
-       
-        tmp = g_strdup ((char *) data);
-
-        *allowed_values = g_slist_append (*allowed_values, tmp);
-}
-
-static GUPnPServiceStateVariableInfo *
-copy_state_variable (GUPnPServiceStateVariableInfo *variable)
-{
-        GUPnPServiceStateVariableInfo *new_variable;
-
-        new_variable = g_slice_new0 (GUPnPServiceStateVariableInfo);
-        
-        new_variable->name = g_strdup (variable->name);
-        new_variable->send_events = variable->send_events;
-        new_variable->data_type = g_strdup (variable->data_type);
-        new_variable->gtype = variable->gtype;
-        new_variable->is_numeric = variable->is_numeric;
-
-        g_value_init (&new_variable->default_value, variable->gtype);
-        g_value_copy (&variable->default_value, &new_variable->default_value);
-        if (variable->is_numeric) {
-                g_value_init (&new_variable->minimum, variable->gtype);
-                g_value_init (&new_variable->maximum, variable->gtype);
-                g_value_init (&new_variable->step, variable->gtype);
-
-                g_value_copy (&variable->minimum, &new_variable->minimum);
-                g_value_copy (&variable->maximum, &new_variable->maximum);
-                g_value_copy (&variable->step, &new_variable->step);
-        }
-        g_slist_foreach (variable->allowed_values,
-                         (GFunc) collect_allowed_values,
-                         &new_variable->allowed_values);
-
-        return new_variable;
-}
-
-static void
 collect_state_variables (gpointer key, gpointer value, gpointer user_data)
 {
         GSList **variable_list = (GSList **) user_data;
         GUPnPServiceStateVariableInfo *variable;
       
-        variable = copy_state_variable (
-                        (GUPnPServiceStateVariableInfo *) value);
+        variable = (GUPnPServiceStateVariableInfo *) value;
         *variable_list = g_slist_append (*variable_list, variable);
 }
 
@@ -819,188 +849,149 @@ gupnp_service_introspection_new (const char *scpd_url)
         return introspection;
 }
 
-
 /**
  * gupnp_service_introspection_list_action_names
  * @introspection: A #GUPnPServiceIntrospection
  *
- * Returns newly-allocated GSList of names of all the actions in this service.
+ * Returns a GSList of names of all the actions in this service.
  *
  * Note that this function retreives the needed information from the service
  * description document provided by the service and hence the list of actions
  * reported by this function is not guaranteed to be complete.
  * 
- * Return value: A GSList of names of all the actions or NULL. g_slist_free()
- * the list and g_free() the contents after use.
+ * Return value: A GSList of names of all the actions or NULL. Do not modify
+ * or free it or it's contents.
  **/
-GSList *
+const GSList *
 gupnp_service_introspection_list_action_names (
                 GUPnPServiceIntrospection *introspection)
 {
-        GSList *action_names = NULL;
-      
         if (introspection->priv->action_hash == NULL)
                 return NULL;
 
-        g_hash_table_foreach (introspection->priv->action_hash,
-                              collect_action_names,
-                              &action_names);
-        return action_names;
+        if (introspection->priv->action_names == NULL) {
+                g_hash_table_foreach (introspection->priv->action_hash,
+                                      collect_action_names,
+                                      &introspection->priv->action_names);
+        }
+
+        return introspection->priv->action_names;
 }
 
 /**
  * gupnp_service_introspection_list_action_arguments
  * @introspection: A #GUPnPServiceIntrospection
  *
- * Returns newly-allocated GSList of all the arguments (of type
- * #GUPnPServiceActionArgInfo) of @action_name. 
+ * Returns a GSList of all the arguments (of type #GUPnPServiceActionArgInfo)
+ * of @action_name. 
  *
  * Note that this function retreives the needed information from the service
  * description document provided by the service and hence the list of arguments
  * reported by this function is not guaranteed to be complete.
  * 
- * Return value: A GSList of all the arguments of the @action_name or NULL.
- * g_slist_free() the list and gupnp_service_action_arg_info_free() the
- * list data after use.
+ * Return value: A GSList of all the arguments of the @action_name or NULL. Do
+ * not modify or free it or it's contents.
+ *
 **/
-GSList *
+const GSList *
 gupnp_service_introspection_list_action_arguments (
                 GUPnPServiceIntrospection *introspection,
                 const char                *action_name)
 {
-        GSList *arguments = NULL;
-        GSList *argument_list = NULL;
-      
         if (introspection->priv->action_hash == NULL)
                 return NULL;
 
-        arguments = g_hash_table_lookup (introspection->priv->action_hash,
-                                         action_name);
-        g_slist_foreach (arguments,
-                         collect_action_arguments,
-                         &argument_list);
-        
-        return argument_list;
+        return g_hash_table_lookup (introspection->priv->action_hash,
+                                    action_name);
 }
 
 /**
  * gupnp_service_introspection_list_actions
  * @introspection: A #GUPnPServiceIntrospection
  *
- * Returns newly-allocated GSList of all the actions (of type
- * #GUPnPServiceActionInfo) in this service.
+ * Returns a GSList of all the actions (of type #GUPnPServiceActionInfo) in
+ * this service.
  *
  * Note that this function retreives the needed information from the service
  * description document provided by the service and hence the list of actions
  * reported by this function is not guaranteed to be complete.
  * 
- * Return value: A GSList of all the actions or
- * NULL. g_slist_free() the list and gupnp_service_action_info_free() the
- * contents after use.
+ * Return value: A GSList of all the actions or NULL. Do not modify or free it
+ * or it's contents.
+ *
  **/
-GSList *
+const GSList *
 gupnp_service_introspection_list_actions (
                 GUPnPServiceIntrospection *introspection)
 {
-        GSList *action_list = NULL;
-      
         if (introspection->priv->action_hash == NULL)
                 return NULL;
+        
+        if (introspection->priv->action_list == NULL) {
+                g_hash_table_foreach (introspection->priv->action_hash,
+                                      collect_actions,
+                                      &introspection->priv->action_list);
+        }
 
-        g_hash_table_foreach (introspection->priv->action_hash,
-                              collect_actions,
-                              &action_list);
-        return action_list;
-}
-
-/**
- * gupnp_service_action_arg_info_free
- * @argument: A #GUPnPServiceActionArgInfo
- *
- * Frees a #GUPnPServiceActionArgInfo.
- *
- **/
-void
-gupnp_service_action_arg_info_free (GUPnPServiceActionArgInfo *argument)
-{
-        g_free (argument->name);
-        g_free (argument->direction);
-        g_free (argument->related_state_variable);
-
-        g_slice_free (GUPnPServiceActionArgInfo, argument);
-}
-
-/**
- * gupnp_service_action_info_free
- * @argument: A #GUPnPServiceActionInfo
- *
- * Frees a #GUPnPServiceActionInfo.
- *
- **/
-void
-gupnp_service_action_info_free (GUPnPServiceActionInfo *action_info)
-{
-        g_free (action_info->name);
-
-        g_slist_foreach (action_info->arguments,
-                         (GFunc) gupnp_service_action_arg_info_free,
-                         NULL);
-
-        g_slice_free (GUPnPServiceActionInfo, action_info);
+        return introspection->priv->action_list;
 }
 
 /**
  * gupnp_service_introspection_list_state_variables
  * @introspection: A #GUPnPServiceIntrospection
  *
- * Returns newly-allocated GSList of all the state variables (of type
+ * Returns a GSList of all the state variables (of type
  * #GUPnPServiceStateVariableInfo) in this service.
  *
  * Note that this function retreives the needed information from the service
  * description document provided by the service and hence the list of state
  * variables reported by this function is not guaranteed to be complete.
  * 
- * Return value: A GSList of all the state variables or
- * NULL. g_slist_free() the list and gupnp_service_state_variable_info_free()
- * the contents after use.
+ * Return value: A GSList of all the state variables or NULL. Do not modify or
+ * free it or it's contents.
+ * 
  **/
-GSList *
+const GSList *
 gupnp_service_introspection_list_state_variables (
                 GUPnPServiceIntrospection *introspection)
 {
-        GSList *variable_list = NULL;
-      
         if (introspection->priv->variable_hash == NULL)
                 return NULL;
 
-        g_hash_table_foreach (introspection->priv->variable_hash,
-                              collect_state_variables,
-                              &variable_list);
-        return variable_list;
+        if (introspection->priv->variable_list == NULL) {
+                g_hash_table_foreach (introspection->priv->variable_hash,
+                                      collect_state_variables,
+                                      &introspection->priv->variable_list);
+        }
+
+        return introspection->priv->variable_list;
 }
 
 /**
- * gupnp_service_state_variable_info_free 
- * @argument: A #GUPnPServiceStateVariableInfo 
+ * gupnp_service_introspection_get_state_variable
+ * @introspection: A #GUPnPServiceIntrospection
  *
- * Frees a #GUPnPServiceStateVariableInfo.
+ * Returns a pointer to the state variable (of type #GUPnPServiceStateVariable)
+ * in this service with the name @variable_name.
  *
- **/
-void
-gupnp_service_state_variable_info_free (GUPnPServiceStateVariableInfo *variable)
+ * Note that this function retreives the needed information from the service
+ * description document provided by the service and hence the list of arguments
+ * reported by this function is not guaranteed to be complete.
+ * 
+ * Return value: The pointer to the variable by the name @action_name or NULL.
+ * Do not modify or free it.
+ *
+**/
+const GUPnPServiceStateVariableInfo *
+gupnp_service_introspection_get_state_variable
+                                (GUPnPServiceIntrospection *introspection,
+                                 const char                *variable_name)
 {
-        g_free (variable->name);
-        g_free (variable->data_type);
-        g_value_unset (&variable->default_value);
-        if (variable->is_numeric) {
-                g_value_unset (&variable->minimum);
-                g_value_unset (&variable->maximum);
-                g_value_unset (&variable->step);
-        }
-        g_slist_foreach (variable->allowed_values,
-                         (GFunc) g_free,
-                         NULL);
-        g_slist_free (variable->allowed_values);
-        
-        g_slice_free (GUPnPServiceStateVariableInfo, variable);
+        if (introspection->priv->action_hash == NULL)
+                return NULL;
+
+        return g_hash_table_lookup (introspection->priv->variable_hash,
+                                    variable_name);
 }
+
+
