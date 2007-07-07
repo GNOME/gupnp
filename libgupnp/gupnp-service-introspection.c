@@ -35,6 +35,7 @@
 
 #include "gupnp-service-introspection.h"
 #include "xml-util.h"
+#include "gupnp-types.h"
 
 #define MAX_FIXED_14_4 99999999999999.9999
 
@@ -43,7 +44,7 @@ G_DEFINE_TYPE (GUPnPServiceIntrospection,
                G_TYPE_OBJECT);
 
 struct _GUPnPServiceIntrospectionPrivate {
-        char *scpd_url;
+        xmlDoc *scpd;
         
         /* Intropection data */
         GHashTable *action_hash;
@@ -57,7 +58,7 @@ struct _GUPnPServiceIntrospectionPrivate {
 
 enum {
         PROP_0,
-        PROP_SCPD_URL
+        PROP_SCPD
 };
 
 static void
@@ -71,10 +72,10 @@ contstruct_introspection_info (GUPnPServiceIntrospection *introspection);
  *
  **/
 static void
-gupnp_service_state_variable_info_free (GUPnPServiceStateVariableInfo *variable)
+gupnp_service_state_variable_info_free
+                                (GUPnPServiceStateVariableInfo *variable)
 {
         g_free (variable->name);
-        g_free (variable->data_type);
         g_value_unset (&variable->default_value);
         if (variable->is_numeric) {
                 g_value_unset (&variable->minimum);
@@ -109,33 +110,12 @@ gupnp_service_introspection_set_property (GObject      *object,
         introspection = GUPNP_SERVICE_INTROSPECTION (object);
 
         switch (property_id) {
-        case PROP_SCPD_URL:
-                introspection->priv->scpd_url =
-                        g_value_dup_string (value);
+        case PROP_SCPD:
+                introspection->priv->scpd =
+                        g_value_get_pointer (value);
 
                 /* Contruct introspection data */
                 contstruct_introspection_info (introspection);
-                break;
-        default:
-                G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
-                break;
-        }
-}
-
-static void
-gupnp_service_introspection_get_property (GObject    *object,
-                                          guint      property_id,
-                                          GValue     *value,
-                                          GParamSpec *pspec)
-{
-        GUPnPServiceIntrospection *introspection;
-
-        introspection = GUPNP_SERVICE_INTROSPECTION (object);
-
-        switch (property_id) {
-        case PROP_SCPD_URL:
-                g_value_set_string (value,
-                                    introspection->priv->scpd_url);
                 break;
         default:
                 G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -183,7 +163,7 @@ gupnp_service_introspection_finalize (GObject *object)
         if (introspection->priv->variable_hash)
                 g_hash_table_destroy (introspection->priv->variable_hash);
 
-        g_free (introspection->priv->scpd_url);
+        xmlFreeDoc (introspection->priv->scpd);
 }
 
 static void
@@ -194,72 +174,24 @@ gupnp_service_introspection_class_init (GUPnPServiceIntrospectionClass *klass)
         object_class = G_OBJECT_CLASS (klass);
 
         object_class->set_property = gupnp_service_introspection_set_property;
-        object_class->get_property = gupnp_service_introspection_get_property;
         object_class->finalize     = gupnp_service_introspection_finalize;
 
         g_type_class_add_private (klass,
                                   sizeof (GUPnPServiceIntrospectionPrivate));
 
         /**
-         * GUPnPServiceIntrospection:scpd_url
+         * GUPnPServiceIntrospection:scpd
          *
-         * The scpd_url of the device description file.
+         * The scpd of the device description file.
          **/
         g_object_class_install_property
                 (object_class,
-                 PROP_SCPD_URL,
-                 g_param_spec_string ("scpd-url",
-                                      "SCPD-URL",
-                                      "The URL of the SCPD from which "
-                                      "introspection is built",
-                                      NULL,
-                                      G_PARAM_READWRITE |
-                                      G_PARAM_CONSTRUCT_ONLY));
-}
-
-/**
- * 
- * Synchronously downloads and parses the SCPD from the URL @scpd_url and
- * returns the xmlDoc pointer to the resulting xml document tree.
- *
- **/
-static xmlDoc * 
-get_scpd (const char *scpd_url)
-{
-        SoupSession *session;
-        xmlDoc *scpd = NULL;
-        SoupMessage *msg;
-        guint status;
-        
-        session = soup_session_sync_new ();
-        
-        msg = soup_message_new (SOUP_METHOD_GET, scpd_url);
-        if (!msg) {
-                g_warning ("failed to create request message for %s", scpd_url);
-
-                goto EXIT_POINT;
-        }
-
-        status = soup_session_send_message (session, msg);
-        if (!SOUP_STATUS_IS_SUCCESSFUL (status)) {
-                g_warning ("failed to get %s. Reason: %s",
-                            scpd_url,
-                            soup_status_get_phrase (status));
-
-                goto FAILED_GET;
-        }
-
-        scpd = xmlParseMemory (msg->response.body,
-                                  msg->response.length);
-        if (!scpd)
-                g_warning ("failed to get parse SCPD document '%s'", scpd_url);
-
- FAILED_GET:
-        g_object_unref (msg);
-        g_object_unref (session);
-
- EXIT_POINT:
-        return scpd;
+                 PROP_SCPD,
+                 g_param_spec_pointer ("scpd",
+                                       "SCPD",
+                                       "Pointer to SCPD",
+                                       G_PARAM_WRITABLE |
+                                       G_PARAM_CONSTRUCT_ONLY));
 }
 
 static void
@@ -314,7 +246,8 @@ set_value_limit_by_name (xmlNodePtr limit_node,
 {
         xmlChar *limit_str;
 
-        limit_str = xml_util_get_child_element_content (limit_node, limit_name);
+        limit_str = xml_util_get_child_element_content (limit_node,
+                                                        limit_name);
         if (limit_str) {
                 GValue tmp;
 
@@ -361,7 +294,7 @@ set_variable_limits (xmlNodePtr                    variable_node,
        }
 }
 
-static void
+static gboolean
 set_variable_type (GUPnPServiceStateVariableInfo *variable,
                    char                          *data_type)
 {
@@ -464,15 +397,20 @@ set_variable_type (GUPnPServiceStateVariableInfo *variable,
         }
 
         else {
-                /* We treat rest of the types as strings */
-                type = G_TYPE_STRING;
+                type = gupnp_data_type_to_gtype (data_type);
         }
-        
+
+        if (type == G_TYPE_INVALID) {
+                g_warning ("Unkown type '%s' in the SCPD", data_type);
+                return FALSE;
+        }
+
         if (variable->is_numeric)
                 g_value_init (&variable->step, type);
         g_value_init (&variable->default_value, type);
         variable->type = type;
-        variable->data_type = data_type;
+        
+        return TRUE;
 }
 
 /**
@@ -487,7 +425,8 @@ get_state_variable (xmlNodePtr variable_node)
         GUPnPServiceStateVariableInfo *variable;
         xmlChar *send_events;
         char *data_type;
-        
+        gboolean success;
+
         data_type = xml_util_get_child_element_content_glib (variable_node,
                                                              "dataType");
         if (!data_type) {
@@ -498,13 +437,21 @@ get_state_variable (xmlNodePtr variable_node)
         
         variable = g_slice_new0 (GUPnPServiceStateVariableInfo);
 
-        set_variable_type (variable, data_type);
+        success = set_variable_type (variable, data_type);
+        g_free (data_type);
+        if (!success)
+                return NULL;
 
         set_variable_limits (variable_node, variable);
         set_default_value (variable_node, variable);
 
         send_events = xml_util_get_child_element_content
                                        (variable_node, "sendEventsAttribute");
+        if (send_events == NULL) {
+                /* Some documents put it as attribute of the tag */
+                send_events = xml_util_get_attribute_contents (variable_node,
+                                                               "sendEvents");
+        }
 
         if (send_events) {
                 if (strcmp ("yes", (char *) send_events) == 0)
@@ -529,11 +476,11 @@ get_action_argument (xmlNodePtr argument_node)
         xmlChar *direction;
         
         name      = xml_util_get_child_element_content_glib
-                                        (argument_node, "name");
+                                       (argument_node, "name");
         state_var = xml_util_get_child_element_content_glib
-                                        (argument_node, "relatedStateVariable");
+                                       (argument_node, "relatedStateVariable");
         direction = xml_util_get_child_element_content
-                                        (argument_node, "direction");
+                                       (argument_node, "direction");
 
         if (!name || !state_var || !direction) {
                 g_free (name);
@@ -547,7 +494,6 @@ get_action_argument (xmlNodePtr argument_node)
         argument = g_slice_new0 (GUPnPServiceActionArgInfo);
 
         argument->name = name;
-
         argument->related_state_variable = state_var;
 
         if (strcmp ("in", (char *) direction) == 0)
@@ -697,7 +643,7 @@ get_state_variables (xmlNode *list_element)
                                  g_str_equal,
                                  NULL,
                                  (GDestroyNotify)
-                                        gupnp_service_state_variable_info_free);
+                                       gupnp_service_state_variable_info_free);
         
         /* Iterate over all variable elements */
         for (variable_node = list_element->children; 
@@ -706,7 +652,8 @@ get_state_variables (xmlNode *list_element)
                 char *name;
                 GUPnPServiceStateVariableInfo *variable;
 
-                if (strcmp ("stateVariable", (char *) variable_node->name) != 0)
+                if (strcmp ("stateVariable",
+                            (char *) variable_node->name) != 0)
                         continue;
 
                 name = xml_util_get_child_element_content_glib (variable_node,
@@ -736,18 +683,14 @@ get_state_variables (xmlNode *list_element)
 static void
 contstruct_introspection_info (GUPnPServiceIntrospection *introspection)
 {
-        xmlDoc *scpd;
         xmlNode *root_element, *element;
 
-        g_return_if_fail (introspection->priv->scpd_url != NULL);
+        g_return_if_fail (introspection->priv->scpd != NULL);
 
-        scpd = get_scpd (introspection->priv->scpd_url);
-        if (!scpd)
-                return;
-
-        root_element = xml_util_get_element ((xmlNode *) scpd,
-                                             "scpd",
-                                             NULL);
+        root_element = xml_util_get_element (
+                        (xmlNode *) introspection->priv->scpd,
+                        "scpd",
+                        NULL);
 
         /* Get actionList element */
         element = xml_util_get_element (root_element,
@@ -763,8 +706,6 @@ contstruct_introspection_info (GUPnPServiceIntrospection *introspection)
         if (element)
                 introspection->priv->variable_hash =
                         get_state_variables (element);
-
-        xmlFreeDoc (scpd);
 }
 
 static void
@@ -821,27 +762,24 @@ collect_state_variables (gpointer key, gpointer value, gpointer user_data)
 
 /**
  * gupnp_service_introspection_new
- * @scpd_url: The URL to the SCPD of the service to create a introspection for
+ * @scpd: Pointer to the SCPD of the service to create a introspection for
  *
- * Return value: A #GUPnPServiceIntrospection for the service with type @type
- * from the device with UDN @udn, as read from the device description file
- * specified by @doc.
+ * Return value: A #GUPnPServiceIntrospection for the service created from the
+ * SCPD @scpd or NULL.
+ *
  **/
 GUPnPServiceIntrospection *
-gupnp_service_introspection_new (const char *scpd_url)
+gupnp_service_introspection_new (xmlDoc *scpd)
 {
         GUPnPServiceIntrospection *introspection;
 
-        g_return_val_if_fail (scpd_url != NULL, NULL);
+        g_return_val_if_fail (scpd != NULL, NULL);
 
         introspection = g_object_new (GUPNP_TYPE_SERVICE_INTROSPECTION,
-                              "scpd-url", scpd_url,
-                              NULL);
+                                      "scpd", scpd,
+                                      NULL);
 
         if (introspection->priv->action_hash == NULL) {
-                g_warning ("Failed to create introspection data from SCPD "
-                           "\"%s\".", scpd_url);
-
                 g_object_unref (introspection);
                 introspection = NULL;
         }

@@ -17,6 +17,7 @@ libgupnpinc_HEADERS = gupnp-context.h			\
 		      gupnp-service-info.h		\
 		      gupnp-service-proxy.h		\
 	              gupnp-service-introspection.h	\
+	              gupnp-types.h			\
 		      gupnp.h
 
 gupnp-marshal.c: gupnp-marshal.list
@@ -47,6 +48,7 @@ libgupnp_1_0_la_SOURCES = accept-language.c		\
 			  xml-util.c			\
 			  xml-util.h			\
 			  gena-protocol.h		\
+	                  gupnp-types.c			\
 			  $(BUILT_SOURCES)
 
 libgupnp_1_0_la_LIBADD = $(LIBGUPNP_LIBS) xdgmime/libxdgmime.la

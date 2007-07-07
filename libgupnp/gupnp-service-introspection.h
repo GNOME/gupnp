@@ -74,7 +74,6 @@ typedef struct {
 typedef struct {
         char    *name;
         gboolean send_events;
-        char    *data_type;
         gboolean is_numeric;
         GType    type;
         GValue   default_value;
@@ -99,7 +98,7 @@ typedef struct {
 } GUPnPServiceIntrospectionClass;
 
 GUPnPServiceIntrospection *
-gupnp_service_introspection_new (const char *scpd_url);
+gupnp_service_introspection_new (xmlDoc *scpd);
 
 const GSList *
 gupnp_service_introspection_list_action_names

@@ -199,3 +199,23 @@ xml_util_get_child_element_content_url (xmlNode    *node,
 
         return url;
 }
+
+xmlChar *
+xml_util_get_attribute_contents (xmlNode    *node,
+                                 const char *attribute_name)
+{
+        xmlAttr *attribute;
+
+        for (attribute = node->properties;
+             attribute;
+             attribute = attribute->next) {
+                if (strcmp (attribute_name, (char *) attribute->name) == 0)
+                        break;
+        }
+
+        if (attribute)
+                return xmlNodeGetContent (attribute->children);
+        else
+                return NULL;
+}
+

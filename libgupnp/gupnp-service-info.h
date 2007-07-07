@@ -66,6 +66,11 @@ typedef struct {
 typedef struct {
         GObjectClass parent_class;
 
+        /* signals */
+        void (* introspection_available)
+                                (GUPnPServiceInfo          *info,
+                                 GUPnPServiceIntrospection *introspection);
+
         /* future padding */
         void (* _gupnp_reserved1) (void);
         void (* _gupnp_reserved2) (void);
@@ -102,6 +107,9 @@ gupnp_service_info_get_event_subscription_url (GUPnPServiceInfo *info);
 
 GUPnPServiceIntrospection *
 gupnp_service_info_get_introspection          (GUPnPServiceInfo *info);
+
+void
+gupnp_service_info_get_introspection_async    (GUPnPServiceInfo *info);
 
 G_END_DECLS
 

@@ -25,6 +25,14 @@
 #include <libgupnp/gupnp-service-introspection.h>
 #include <string.h>
 
+static gboolean async = FALSE;
+static GOptionEntry entries[] = 
+{
+   { "async", 'a', 0, G_OPTION_ARG_NONE, &async, 
+     "Asynchronously create intropection object", NULL },
+   { NULL }
+};
+
 static void
 print_action_arguments (GSList *argument_list)
 {
@@ -83,6 +91,7 @@ print_state_variables (GUPnPServiceIntrospection *introspection)
                 for (iter = variables; iter; iter = iter->next) {
                         GUPnPServiceStateVariableInfo *variable;
                         GValue default_value;
+                        const char * default_value_str;
                         
                         variable = (GUPnPServiceStateVariableInfo *) iter->data;
 
@@ -90,15 +99,18 @@ print_state_variables (GUPnPServiceIntrospection *introspection)
                                  "\ttype: %s\n"
                                  "\tsend events: %s\n",
                                  variable->name,
-                                 variable->data_type,
+                                 g_type_name (variable->type),
                                  variable->send_events? "yes": "no");
 
                         memset (&default_value, 0, sizeof (GValue));
                         g_value_init (&default_value, G_TYPE_STRING);
                         g_value_transform (&variable->default_value,
                                            &default_value);
-                        g_print ("\tdefault value: %s\n", 
-                                 g_value_get_string (&default_value));
+                        default_value_str = g_value_get_string (&default_value);
+                        if (default_value_str) {
+                                g_print ("\tdefault value: %s\n",
+                                         default_value_str);
+                        }
                         g_value_unset (&default_value);
                         
                         if (variable->is_numeric) {
@@ -146,31 +158,41 @@ print_state_variables (GUPnPServiceIntrospection *introspection)
 }
 
 static void
+got_introspection (GUPnPServiceInfo *info,
+                   GUPnPServiceIntrospection *introspection,
+                   gpointer user_data)
+{
+        g_signal_handlers_disconnect_by_func (info, got_introspection, NULL);
+        g_print ("Introspection information for service %s at %s available:\n",
+                gupnp_service_info_get_udn (info),
+                gupnp_service_info_get_location (info));
+        print_actions (introspection);
+        print_state_variables (introspection);
+        g_object_unref (introspection);
+}
+
+static void
 service_proxy_available_cb (GUPnPControlPoint *cp,
                             GUPnPServiceProxy *proxy)
 {
         GUPnPServiceInfo *info;
         GUPnPServiceIntrospection *introspection;
-        char *type;
-        const char *location;
 
         info = GUPNP_SERVICE_INFO (proxy);
-        type = gupnp_service_info_get_service_type (info);
-        location = gupnp_service_info_get_location (info);
 
-        g_print ("Service available:\n");
-        g_print ("type:     %s\n", type);
-        g_print ("location: %s\n", location);
-
-        introspection = gupnp_service_info_get_introspection
-                                        (GUPNP_SERVICE_INFO (proxy));
-        if (introspection) {
-                print_actions (introspection);
-                print_state_variables (introspection);
-                g_object_unref (introspection);
+        if (async) {
+                g_signal_connect (info,
+                          "introspection-available",
+                          G_CALLBACK (got_introspection),
+                          NULL);
+                gupnp_service_info_get_introspection_async (info);
         }
-
-        g_free (type);
+       
+        else {
+                introspection = gupnp_service_info_get_introspection (info);
+                if (introspection)
+                        got_introspection (info, introspection, NULL);
+        }
 }
 
 static void
@@ -193,11 +215,24 @@ service_proxy_unavailable_cb (GUPnPControlPoint *cp,
 int
 main (int argc, char **argv)
 {
-        GError *error;
+        GError *error = NULL;
         GUPnPContext *context;
         GUPnPControlPoint *cp;
         GMainLoop *main_loop;
-        
+        GOptionContext *option_context;
+       
+        option_context = g_option_context_new ("- test GUPnP introspection");
+        g_option_context_add_main_entries (option_context,
+                                           entries,
+                                           NULL);
+        g_option_context_parse (option_context, 
+                                &argc,
+                                &argv,
+                                &error);
+        if (error)
+                g_error ("error while parsing commandline arguments: %s",
+                         error->message);
+
         g_thread_init (NULL);
         g_type_init ();
 

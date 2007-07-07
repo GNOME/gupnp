@@ -61,5 +61,8 @@ char *
 xml_util_get_child_element_content_url  (xmlNode    *node,
                                          const char *child_name,
                                          SoupUri    *base);
+xmlChar *
+xml_util_get_attribute_contents         (xmlNode    *node,
+                                         const char *attribute_name);
 
 #endif /* __XML_UTIL_H__ */

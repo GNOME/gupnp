@@ -872,7 +872,7 @@ gupnp_service_proxy_end_action_valist (GUPnPServiceProxy       *proxy,
         arg_name = va_arg (var_args, const char *);
         while (arg_name) {
                 GType arg_type;
-                GValue value = { 0, }, int_value = { 0, };
+                GValue value = { 0, }, tmp_value = { 0, };
                 char *copy_error = NULL;
                 char *str;
                 int i;
@@ -905,18 +905,43 @@ gupnp_service_proxy_end_action_valist (GUPnPServiceProxy       *proxy,
                         g_value_set_string_take_ownership (&value, str);
 
                         break;
-                default:
+                case G_TYPE_INT:
                         i = soup_soap_parameter_get_int_value (param);
 
-                        g_value_init (&int_value, G_TYPE_INT);
-                        g_value_set_int (&int_value, i);
+                        g_value_set_int (&value, i);
 
-                        if (!g_value_transform (&int_value, &value)) {
+                        break;
+                default:
+                        /* Try to convert */
+                        if (g_value_type_transformable (G_TYPE_STRING,
+                                                        arg_type)) {
+                                str = soup_soap_parameter_get_string_value
+                                                                        (param);
+
+                                g_value_init (&tmp_value, G_TYPE_STRING);
+                                g_value_set_string_take_ownership (&tmp_value,
+                                                                   str);
+
+                                g_value_transform (&tmp_value, &value);
+
+                                g_value_unset (&tmp_value);
+
+                        } else if (g_value_type_transformable (G_TYPE_INT,
+                                                               arg_type)) {
+                                i = soup_soap_parameter_get_int_value (param);
+
+                                g_value_init (&tmp_value, G_TYPE_INT);
+                                g_value_set_int (&tmp_value, i);
+
+                                g_value_transform (&tmp_value, &value);
+
+                                g_value_unset (&tmp_value);
+
+                        } else {
                                 g_warning ("Failed to transform integer "
                                            "value to type %s",
                                            g_type_name (arg_type));
 
-                                g_value_unset (&int_value);
                                 g_value_unset (&value);
 
                                 gupnp_service_proxy_action_free (action);
@@ -925,8 +950,6 @@ gupnp_service_proxy_end_action_valist (GUPnPServiceProxy       *proxy,
 
                                 return FALSE;
                         }
-
-                        g_value_unset (&int_value);
 
                         break;
                 }

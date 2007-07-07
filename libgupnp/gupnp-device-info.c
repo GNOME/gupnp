@@ -135,10 +135,6 @@ gupnp_device_info_get_property (GObject    *object,
                 g_value_set_pointer (value,
                                      info->priv->url_base);
                 break;
-        case PROP_ELEMENT:
-                g_value_set_pointer (value,
-                                     info->priv->element);
-                break;
         default:
                 G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
                 break;
@@ -271,7 +267,7 @@ gupnp_device_info_class_init (GUPnPDeviceInfoClass *klass)
                                        "Element",
                                        "The XML element related to this "
                                        "device",
-                                       G_PARAM_READWRITE |
+                                       G_PARAM_WRITABLE |
                                        G_PARAM_CONSTRUCT_ONLY |
                                        G_PARAM_STATIC_NAME |
                                        G_PARAM_STATIC_NICK |

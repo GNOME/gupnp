@@ -47,6 +47,9 @@ struct _GUPnPServiceInfoPrivate {
         SoupUri *url_base;
 
         xmlNode *element;
+       
+        /* For async downloads */
+        GList *pending_gets;
 };
 
 enum {
@@ -57,6 +60,13 @@ enum {
         PROP_URL_BASE,
         PROP_ELEMENT
 };
+
+enum {
+        INTROSPECTION_AVAILABLE,
+        SIGNAL_LAST
+};
+
+static guint signals[SIGNAL_LAST];
 
 static void
 gupnp_service_info_init (GUPnPServiceInfo *info)
@@ -130,14 +140,28 @@ gupnp_service_info_get_property (GObject    *object,
                 g_value_set_pointer (value,
                                      info->priv->url_base);
                 break;
-        case PROP_ELEMENT:
-                g_value_set_pointer (value,
-                                     info->priv->element);
-                break;
         default:
                 G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
                 break;
         }
+}
+
+typedef struct {
+        GUPnPServiceInfo *info;
+
+        char *scpd_url;
+        
+        SoupMessage *message;
+} GetSCPDURLData;
+
+static void
+get_scpd_url_data_free (GetSCPDURLData *data)
+{
+        data->info->priv->pending_gets =
+                g_list_remove (data->info->priv->pending_gets, data);
+
+        g_free (data->scpd_url);
+        g_slice_free (GetSCPDURLData, data);
 }
 
 static void
@@ -147,7 +171,21 @@ gupnp_service_info_dispose (GObject *object)
 
         info = GUPNP_SERVICE_INFO (object);
 
+        /* Cancel any pending SCPD GETs */
         if (info->priv->context) {
+                SoupSession *session;
+
+                session = _gupnp_context_get_session (info->priv->context);
+
+                while (info->priv->pending_gets) {
+                        GetSCPDURLData *data;
+
+                        data = info->priv->pending_gets->data;
+                        soup_session_cancel_message (session, data->message);
+                        get_scpd_url_data_free (data);
+                }
+        
+                /* Unref context */
                 g_object_unref (info->priv->context);
                 info->priv->context = NULL;
         }
@@ -265,11 +303,32 @@ gupnp_service_info_class_init (GUPnPServiceInfoClass *klass)
                  g_param_spec_pointer ("element",
                                        "Element",
                                        "The XML element related to this device",
-                                       G_PARAM_READWRITE |
+                                       G_PARAM_WRITABLE |
                                        G_PARAM_CONSTRUCT_ONLY |
                                        G_PARAM_STATIC_NAME |
                                        G_PARAM_STATIC_NICK |
                                        G_PARAM_STATIC_BLURB));
+        
+        /**
+         * GUPnPServiceInfo::introspection-available
+         * @info: The #GUPnPServiceInfo that received the signal
+         * @introspection: The now available #GUPnPServiceIntrospection
+         *
+         * The ::introspection-available signal is emitted whenever a new
+         * device has become available.
+         **/
+        signals[INTROSPECTION_AVAILABLE] =
+                g_signal_new ("introspection-available",
+                              GUPNP_TYPE_SERVICE_INFO,
+                              G_SIGNAL_RUN_LAST,
+                              G_STRUCT_OFFSET (GUPnPServiceInfoClass,
+                                               introspection_available),
+                              NULL,
+                              NULL,
+                              g_cclosure_marshal_VOID__OBJECT,
+                              G_TYPE_NONE,
+                              1,
+                              GUPNP_TYPE_SERVICE_INTROSPECTION);
 }
 
 /**
@@ -397,7 +456,7 @@ gupnp_service_info_get_event_subscription_url (GUPnPServiceInfo *info)
 }
 
 /**
- * gupnp_service_info_request_introspection
+ * gupnp_service_info_get_introspection
  * @info: A #GUPnPServiceInfo
  *
  * Note that introspection object is created from the information in service
@@ -410,16 +469,121 @@ gupnp_service_info_get_event_subscription_url (GUPnPServiceInfo *info)
 GUPnPServiceIntrospection *
 gupnp_service_info_get_introspection (GUPnPServiceInfo *info)
 {
-        GUPnPServiceIntrospection *introspection;
+        GUPnPServiceIntrospection *introspection = NULL;
+        SoupSession *session;
+        SoupMessage *msg;
+        int status;
         char *scpd_url;
+        xmlDoc *scpd;
+
+        session = _gupnp_context_get_session (info->priv->context);
 
         scpd_url = gupnp_service_info_get_scpd_url (info);
         if (scpd_url == NULL)
                 return NULL;
 
-        introspection = gupnp_service_introspection_new (scpd_url);
-
+        msg = soup_message_new (SOUP_METHOD_GET, scpd_url);
         g_free (scpd_url);
 
+        if (!msg) {
+                g_warning ("Failed to create request message for %s", scpd_url);
+
+                return NULL;
+        }
+
+        status = soup_session_send_message (session, msg);
+        if (!SOUP_STATUS_IS_SUCCESSFUL (status)) {
+                g_warning ("Failed to get %s. Reason: %s",
+                            scpd_url,
+                            soup_status_get_phrase (status));
+
+                g_object_unref (msg);
+
+                return NULL;
+        }
+
+        scpd = xmlParseMemory (msg->response.body, msg->response.length);
+
+        g_object_unref (msg);
+
+        if (!scpd) {
+                g_warning ("Failed to parse SCPD document '%s'", scpd_url);
+
+                return NULL;
+        }
+
+        introspection = gupnp_service_introspection_new (scpd);
+
         return introspection;
+}
+
+/**
+ * SCPD URL downloaded.
+ **/
+static void
+got_scpd_url (SoupMessage    *msg,
+              GetSCPDURLData *data)
+{
+        if (SOUP_STATUS_IS_SUCCESSFUL (msg->status_code)) {
+                xmlDoc *scpd;
+
+                scpd = xmlParseMemory (msg->response.body,
+                                       msg->response.length);
+                if (scpd) {
+                        GUPnPServiceIntrospection *introspection;
+
+                        introspection = gupnp_service_introspection_new (scpd);
+                        if (introspection) {
+                                g_signal_emit (data->info,
+                                               signals[INTROSPECTION_AVAILABLE],
+                                               0,
+                                               introspection);
+                        }
+                } else
+                        g_warning ("Failed to parse %s", data->scpd_url);
+        } else
+                g_warning ("Failed to GET %s", data->scpd_url);
+
+        get_scpd_url_data_free (data);
+}
+
+/**
+ * gupnp_service_info_get_introspection_async
+ * @info: A #GUPnPServiceInfo
+ *
+ * Note that introspection object is created from the information in service
+ * description document (SCPD) provided by the service so it can not be created
+ * if the service does not provide an SCPD.
+ **/
+void
+gupnp_service_info_get_introspection_async (GUPnPServiceInfo *info)
+{
+        GetSCPDURLData *data;
+        char *scpd_url;
+        SoupSession *session;
+
+        scpd_url = gupnp_service_info_get_scpd_url (info);
+        if (scpd_url == NULL)
+                return;
+
+        session = _gupnp_context_get_session (info->priv->context);
+
+        /* Greate GetSCPDURLData structure */
+        data = g_slice_new (GetSCPDURLData);
+
+        data->info     = info;
+        data->scpd_url = scpd_url;
+
+        /* Create message & send off */
+        data->message = soup_message_new (SOUP_METHOD_GET,
+                                          scpd_url);
+
+        soup_session_queue_message (session,
+                                    data->message,
+                                    (SoupMessageCallbackFn) got_scpd_url,
+                                    data);
+
+        info->priv->pending_gets =
+                g_list_prepend (info->priv->pending_gets,
+                                data);
 }

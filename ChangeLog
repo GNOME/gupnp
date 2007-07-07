@@ -1,3 +1,62 @@
+2007-07-07  Jorn Baayen  <jorn@openedhand.com>
+
+	* libgupnp/gupnp-service-proxy.c:
+	* libgupnp/gupnp-types.c:
+
+	Handle conversion of strings to GUPnP string-based types.
+
+2007-07-06  Zeeshan Ali  <zeenix@gstreamer.net>
+            Jorn Baayen  <jorn@openedhand.com>
+
+	* libgupnp/Makefile.am:
+	* libgupnp/gupnp-types.h:
+	* libgupnp/gupnp-types.c: (gupnp_type_to_string),
+	(gupnp_bin_base64_get_type), (gupnp_bin_hex_get_type),
+	(gupnp_date_get_type), (gupnp_date_time_get_type),
+	(gupnp_date_time_tz_get_type), (gupnp_time_get_type),
+	(gupnp_time_tz_get_type), (gupnp_uri_get_type),
+	(gupnp_uuid_get_type), (gupnp_data_type_to_gtype):
+
+	Introduce new types for some UPnP data types that do not have a direct
+	equivalent in glib.
+
+	* libgupnp/xml-util.c: (xml_util_get_attribute_contents):
+	* libgupnp/xml-util.h:
+
+	Add helper function for getting the contents of an attribute.
+
+	* libgupnp/gupnp-service-introspection.c:
+	(gupnp_service_state_variable_info_free),
+	(gupnp_service_introspection_set_property),
+	(gupnp_service_introspection_finalize),
+	(gupnp_service_introspection_class_init), (set_variable_type),
+	(get_state_variable), (get_action_argument),
+	(contstruct_introspection_info), (gupnp_service_introspection_new):
+	* libgupnp/gupnp-service-introspection.h:
+
+	- Use the new GUPnP types instead of string type for some UPnP types.
+	- Take a pointer to SCPD xml instead of it's url in the constructor and
+	  leave the download of the document to the caller.
+	- Expect documents to specify 'sendEvents' as an attribute of the
+	  state variable node.
+
+	* libgupnp/gupnp-service-info.c: (gupnp_service_info_init),
+	(get_scpd_url_data_free), (gupnp_service_info_dispose),
+	(gupnp_service_info_class_init), (get_scpd),
+	(gupnp_service_info_get_introspection), (scpd_ready),
+	(got_scpd_url), (gupnp_service_info_get_introspection_async):
+	* libgupnp/gupnp-service-info.h:
+
+	- Handle the SCPD GET for and provide introspection's constructor a
+	  pointer to the xml document rather than the SCPD URL.
+	- Provide an asynchronous way of geting the introspection object.
+
+	* tests/test-introspection.c: (print_state_variables),
+	(got_introspection), (service_proxy_available_cb), (main):
+	
+	Provide a way to specify that the introspection object be
+	created/requested asynchronously through a command-line argument.
+
 2007-07-04  Zeeshan Ali  <zeenix@gstreamer.net>
 
 	* libgupnp/gupnp-service-introspection.c:
