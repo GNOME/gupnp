@@ -57,7 +57,7 @@ xml_util_node_get_content_value (xmlNode *node,
 {
         xmlChar *content;
         gboolean success;
-        GValue int_value = {0, };
+        GValue tmp_value = {0, };
         int i;
 
         content = xmlNodeGetContent (node);
@@ -67,21 +67,42 @@ xml_util_node_get_content_value (xmlNode *node,
         case G_TYPE_STRING:
                 g_value_set_string (value, (char *) content);
                 break;
-        default:
+        case G_TYPE_INT:
                 i = atoi ((char *) content);
 
-                g_value_init (&int_value, G_TYPE_INT);
-                g_value_set_int (&int_value, i);
+                g_value_set_int (value, i);
 
-                if (!g_value_transform (&int_value, value)) {
-                        g_warning ("Failed to transform "
-                                   "integer value to type %s",
+                break;
+        default:
+                /* Try to convert */
+                if (g_value_type_transformable (G_TYPE_STRING,
+                                                G_VALUE_TYPE (value))) {
+                        g_value_init (&tmp_value, G_TYPE_STRING);
+                        g_value_set_static_string (&tmp_value,
+                                                   (char *) content);
+
+                        g_value_transform (&tmp_value, value);
+
+                        g_value_unset (&tmp_value);
+
+                } else if (g_value_type_transformable (G_TYPE_INT,
+                                                       G_VALUE_TYPE (value))) {
+                        i = atoi ((char *) content);
+
+                        g_value_init (&tmp_value, G_TYPE_INT);
+                        g_value_set_int (&tmp_value, i);
+
+                        g_value_transform (&tmp_value, value);
+
+                        g_value_unset (&tmp_value);
+
+                } else {
+                        g_warning ("Failed to transform integer "
+                                   "value to type %s",
                                    G_VALUE_TYPE_NAME (value));
 
                         success = FALSE;
                 }
-
-                g_value_unset (&int_value);
 
                 break;
         }

@@ -37,6 +37,7 @@
 #include "gupnp-service-introspection-private.h"
 #include "xml-util.h"
 #include "gupnp-types.h"
+#include "gupnp-types-private.h"
 
 #define MAX_FIXED_14_4 99999999999999.9999
 

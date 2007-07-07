@@ -46,10 +46,11 @@ libgupnp_1_0_la_SOURCES = accept-language.c			\
 	                  gupnp-service-introspection.c		\
 	                  gupnp-service-introspection-private.h	\
 			  gupnp-service-proxy-private.h 	\
+	                  gupnp-types.c				\
+	                  gupnp-types-private.h			\
 			  xml-util.c				\
 			  xml-util.h				\
 			  gena-protocol.h			\
-	                  gupnp-types.c				\
 			  $(BUILT_SOURCES)
 
 libgupnp_1_0_la_LIBADD = $(LIBGUPNP_LIBS) xdgmime/libxdgmime.la

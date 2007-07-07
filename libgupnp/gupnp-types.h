@@ -76,8 +76,8 @@ gupnp_uri_get_type (void) G_GNUC_CONST;
 GType
 gupnp_uuid_get_type (void) G_GNUC_CONST;
 
-GType
-gupnp_data_type_to_gtype (const char *data_type);
+#define gupnp_value_get_string( value ) \
+        (const char *) g_value_get_boxed ((value))
 
 G_END_DECLS
 

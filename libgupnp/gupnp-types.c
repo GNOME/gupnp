@@ -27,9 +27,9 @@ static void
 gupnp_type_to_string (const GValue *src_value,
                       GValue       *dest_value)
 {
-        char *str;
+        const char *str;
 
-        str = (char *) g_value_get_boxed (src_value);
+        str = gupnp_value_get_string (src_value);
 
         g_value_set_string (dest_value, str);
 }
