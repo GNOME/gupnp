@@ -25,7 +25,6 @@
 #define __GUPNP_SERVICE_INTROSPECTION_H__
 
 #include <glib-object.h>
-#include <libxml/tree.h>
 
 G_BEGIN_DECLS
 
@@ -96,9 +95,6 @@ typedef struct {
 typedef struct {
         GObjectClass parent_class;
 } GUPnPServiceIntrospectionClass;
-
-GUPnPServiceIntrospection *
-gupnp_service_introspection_new (xmlDoc *scpd);
 
 const GSList *
 gupnp_service_introspection_list_action_names

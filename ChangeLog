@@ -1,5 +1,16 @@
 2007-07-07  Jorn Baayen  <jorn@openedhand.com>
 
+	* libgupnp/Makefile.am:
+	* libgupnp/gupnp-service-info.c:
+	* libgupnp/gupnp-service-introspection-private.h:
+	* libgupnp/gupnp-service-introspection.c:
+	* libgupnp/gupnp-service-introspection.h:
+	* libgupnp/gupnp.h:
+
+	Make introspection constructor private.
+
+2007-07-07  Jorn Baayen  <jorn@openedhand.com>
+
 	* libgupnp/gupnp-service-proxy.c:
 	* libgupnp/gupnp-types.c:
 

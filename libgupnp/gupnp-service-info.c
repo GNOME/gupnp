@@ -31,6 +31,7 @@
 #include <string.h>
 
 #include "gupnp-service-info.h"
+#include "gupnp-service-introspection-private.h"
 #include "gupnp-context-private.h"
 #include "xml-util.h"
 

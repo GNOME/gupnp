@@ -28,27 +28,28 @@ gupnp-marshal.h: gupnp-marshal.list
 
 BUILT_SOURCES = gupnp-marshal.c gupnp-marshal.h
 
-libgupnp_1_0_la_SOURCES = accept-language.c		\
-			  accept-language.h		\
-			  gupnp-context.c		\
-			  gupnp-context-private.h	\
-			  gupnp-control-point.c		\
-			  gupnp-device.c		\
-			  gupnp-device-info.c		\
-			  gupnp-device-proxy.c		\
-			  gupnp-device-proxy-private.h	\
-			  gupnp-error.c			\
-			  gupnp-root-device.c		\
-		          gupnp-service.c		\
-			  gupnp-service-info.c		\
-			  gupnp-service-private.h	\
-			  gupnp-service-proxy.c		\
-	                  gupnp-service-introspection.c	\
-			  gupnp-service-proxy-private.h \
-			  xml-util.c			\
-			  xml-util.h			\
-			  gena-protocol.h		\
-	                  gupnp-types.c			\
+libgupnp_1_0_la_SOURCES = accept-language.c			\
+			  accept-language.h			\
+			  gupnp-context.c			\
+			  gupnp-context-private.h		\
+			  gupnp-control-point.c			\
+			  gupnp-device.c			\
+			  gupnp-device-info.c			\
+			  gupnp-device-proxy.c			\
+			  gupnp-device-proxy-private.h		\
+			  gupnp-error.c				\
+			  gupnp-root-device.c			\
+		          gupnp-service.c			\
+			  gupnp-service-info.c			\
+			  gupnp-service-private.h		\
+			  gupnp-service-proxy.c			\
+	                  gupnp-service-introspection.c		\
+	                  gupnp-service-introspection-private.h	\
+			  gupnp-service-proxy-private.h 	\
+			  xml-util.c				\
+			  xml-util.h				\
+			  gena-protocol.h			\
+	                  gupnp-types.c				\
 			  $(BUILT_SOURCES)
 
 libgupnp_1_0_la_LIBADD = $(LIBGUPNP_LIBS) xdgmime/libxdgmime.la

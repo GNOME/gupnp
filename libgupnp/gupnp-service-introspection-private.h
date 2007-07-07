@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2006, 2007 OpenedHand Ltd.
+ * Copyright (C) 2007 OpenedHand Ltd.
  *
  * Author: Jorn Baayen <jorn@openedhand.com>
  *
@@ -19,15 +19,14 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#include "gupnp-context.h"
-#include "gupnp-control-point.h"
-#include "gupnp-error.h"
-#include "gupnp-device.h"
-#include "gupnp-device-info.h"
-#include "gupnp-device-proxy.h"
-#include "gupnp-root-device.h"
-#include "gupnp-service.h"
-#include "gupnp-service-info.h"
+#ifndef __GUPNP_SERVICE_INTROSPECTION_PRIVATE_H__
+#define __GUPNP_SERVICE_INTROSPECTION_PRIVATE_H__
+
+#include <libxml/tree.h>
+
 #include "gupnp-service-introspection.h"
-#include "gupnp-service-proxy.h"
-#include "gupnp-types.h"
+
+GUPnPServiceIntrospection *
+gupnp_service_introspection_new (xmlDoc *scpd);
+
+#endif /* __GUPNP_SERVICE_INTROSPECTION_PRIVATE_H__ */
