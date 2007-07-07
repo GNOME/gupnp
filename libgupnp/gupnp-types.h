@@ -62,9 +62,6 @@ GType
 gupnp_date_time_tz_get_type (void) G_GNUC_CONST;
 
 GType
-gupnp_fixed_14_4_get_type (void) G_GNUC_CONST;
-
-GType
 gupnp_time_get_type (void) G_GNUC_CONST;
 
 GType

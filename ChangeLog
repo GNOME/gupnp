@@ -1,5 +1,12 @@
 2007-07-07  Jorn Baayen  <jorn@openedhand.com>
 
+	* doc/gupnp-docs.sgml:
+	* libgupnp/gupnp-types.h:
+
+	Include gupnp-types in doc TOC.
+
+2007-07-07  Jorn Baayen  <jorn@openedhand.com>
+
 	* libgupnp/gupnp-control-point.c: (gupnp_control_point_dispose):
 	* libgupnp/gupnp-service-info.c: (gupnp_service_info_dispose):
 	* libgupnp/gupnp-service-proxy.c:
