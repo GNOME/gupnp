@@ -1,5 +1,12 @@
 2007-07-07  Jorn Baayen  <jorn@openedhand.com>
 
+	* libgupnp/gupnp-service-info.c: (gupnp_service_info_get_property),
+	(gupnp_service_info_dispose):
+
+	Rearrange some code.
+
+2007-07-07  Jorn Baayen  <jorn@openedhand.com>
+
 	* libgupnp/Makefile.am:
 	* libgupnp/gupnp-service-info.c:
 	* libgupnp/gupnp-service-introspection-private.h:

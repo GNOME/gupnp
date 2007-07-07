@@ -69,6 +69,25 @@ enum {
 
 static guint signals[SIGNAL_LAST];
 
+typedef struct {
+        GUPnPServiceInfo *info;
+
+        char *scpd_url;
+        
+        SoupMessage *message;
+} GetSCPDURLData;
+
+static void
+get_scpd_url_data_free (GetSCPDURLData *data)
+{
+        data->info->priv->pending_gets =
+                g_list_remove (data->info->priv->pending_gets, data);
+
+        g_free (data->scpd_url);
+
+        g_slice_free (GetSCPDURLData, data);
+}
+
 static void
 gupnp_service_info_init (GUPnPServiceInfo *info)
 {
@@ -147,24 +166,6 @@ gupnp_service_info_get_property (GObject    *object,
         }
 }
 
-typedef struct {
-        GUPnPServiceInfo *info;
-
-        char *scpd_url;
-        
-        SoupMessage *message;
-} GetSCPDURLData;
-
-static void
-get_scpd_url_data_free (GetSCPDURLData *data)
-{
-        data->info->priv->pending_gets =
-                g_list_remove (data->info->priv->pending_gets, data);
-
-        g_free (data->scpd_url);
-        g_slice_free (GetSCPDURLData, data);
-}
-
 static void
 gupnp_service_info_dispose (GObject *object)
 {
@@ -182,7 +183,9 @@ gupnp_service_info_dispose (GObject *object)
                         GetSCPDURLData *data;
 
                         data = info->priv->pending_gets->data;
+
                         soup_session_cancel_message (session, data->message);
+
                         get_scpd_url_data_free (data);
                 }
         
