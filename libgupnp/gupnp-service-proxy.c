@@ -401,10 +401,12 @@ gupnp_service_proxy_send_action_valist (GUPnPServiceProxy *proxy,
  * value, terminated with NULL
  *
  * Sends action @action with parameters @Varargs to the service exposed by
- * @proxy asynchronously, reporting the result by calling @callback.
+ * @proxy asynchronously, calling @callback on completion. From @callback, call
+ * gupnp_service_proxy_end_action() to check for errors, to retrieve return
+ * values, and to free the #GUPnPServiceProxyAction.
  *
- * Return value: A #GUPnPServiceProxyAction handle. This will be freed
- * automatically on @callback calling.
+ * Return value: A #GUPnPServiceProxyAction handle. This is freed when
+ * calling gupnp_service_proxy_end_action().
  **/
 GUPnPServiceProxyAction *
 gupnp_service_proxy_begin_action (GUPnPServiceProxy              *proxy,
@@ -1001,6 +1003,8 @@ gupnp_service_proxy_cancel_action (GUPnPServiceProxy       *proxy,
         context = gupnp_service_info_get_context (GUPNP_SERVICE_INFO (proxy));
         session = _gupnp_context_get_session (context);
         
+        soup_message_set_status (SOUP_MESSAGE (action->msg),
+                                 SOUP_STATUS_CANCELLED);
         soup_session_cancel_message (session, SOUP_MESSAGE (action->msg));
 
         gupnp_service_proxy_action_free (action);

@@ -1,5 +1,18 @@
 2007-07-07  Jorn Baayen  <jorn@openedhand.com>
 
+	* libgupnp/gupnp-control-point.c: (gupnp_control_point_dispose):
+	* libgupnp/gupnp-service-info.c: (gupnp_service_info_dispose):
+	* libgupnp/gupnp-service-proxy.c:
+	(gupnp_service_proxy_cancel_action):
+
+	Set message status to SOUP_STATUS_CANCELLED before cancelling.
+
+	* libgupnp/gupnp-service-proxy.c:
+
+	Elaborate begin_action() comments.
+
+2007-07-07  Jorn Baayen  <jorn@openedhand.com>
+
 	* libgupnp/Makefile.am:
 	* libgupnp/gupnp-service-introspection.c:
 	* libgupnp/gupnp-types-private.h:

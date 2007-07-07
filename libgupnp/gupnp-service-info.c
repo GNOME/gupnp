@@ -184,6 +184,8 @@ gupnp_service_info_dispose (GObject *object)
 
                         data = info->priv->pending_gets->data;
 
+                        soup_message_set_status (data->message,
+                                                 SOUP_STATUS_CANCELLED);
                         soup_session_cancel_message (session, data->message);
 
                         get_scpd_url_data_free (data);

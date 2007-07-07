@@ -146,6 +146,8 @@ gupnp_control_point_dispose (GObject *object)
 
                 context = gupnp_control_point_get_context (control_point);
                 session = _gupnp_context_get_session (context);
+
+                soup_message_set_status (data->message, SOUP_STATUS_CANCELLED);
                 soup_session_cancel_message (session, data->message);
 
                 get_description_url_data_free (data);
