@@ -1380,7 +1380,7 @@ gupnp_service_thaw_notify (GUPnPService *service)
 }
 
 /**
- * _gupnp_service_new_from_element
+ * _gupnp_service_new
  * @context: A #GUPnPContext
  * @element: The #xmlNode ponting to the right service element
  * @location: The location of the service description file
@@ -1391,11 +1391,11 @@ gupnp_service_thaw_notify (GUPnPService *service)
  * read from the service description file specified by @location.
  **/
 GUPnPService *
-_gupnp_service_new_from_element (GUPnPContext *context,
-                                 xmlNode      *element,
-                                 const char   *udn,
-                                 const char   *location,
-                                 SoupUri      *url_base)
+_gupnp_service_new (GUPnPContext *context,
+                    xmlNode      *element,
+                    const char   *udn,
+                    const char   *location,
+                    SoupUri      *url_base)
 {
         GUPnPService *service;
 

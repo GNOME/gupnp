@@ -36,11 +36,11 @@
 #include "xml-util.h"
 
 static GUPnPDevice *
-_gupnp_device_new_from_element (GUPnPContext *context,
-                                xmlNode      *element,
-                                const char   *udn,
-                                const char   *location,
-                                SoupUri      *url_base);
+_gupnp_device_new (GUPnPContext *context,
+                   xmlNode      *element,
+                   const char   *udn,
+                   const char   *location,
+                   SoupUri      *url_base);
 
 G_DEFINE_TYPE (GUPnPDevice,
                gupnp_device,
@@ -62,11 +62,11 @@ gupnp_device_get_device (GUPnPDeviceInfo *info,
         location = gupnp_device_info_get_location (info);
         url_base = gupnp_device_info_get_url_base (info);
 
-        device = _gupnp_device_new_from_element (context,
-                                                 element,
-                                                 udn,
-                                                 location,
-                                                 url_base);
+        device = _gupnp_device_new (context,
+                                    element,
+                                    udn,
+                                    location,
+                                    url_base);
 
         return GUPNP_DEVICE_INFO (device);
 }
@@ -88,11 +88,11 @@ gupnp_device_get_service (GUPnPDeviceInfo *info,
         location = gupnp_device_info_get_location (info);
         url_base = gupnp_device_info_get_url_base (info);
 
-        service = _gupnp_service_new_from_element (context,
-                                                   element,
-                                                   udn,
-                                                   location,
-                                                   url_base);
+        service = _gupnp_service_new (context,
+                                      element,
+                                      udn,
+                                      location,
+                                      url_base);
 
         return GUPNP_SERVICE_INFO (service);
 }
@@ -159,7 +159,7 @@ _gupnp_device_find_element_for_udn (xmlNode    *element,
 }
 
 /**
- * _gupnp_device_new_from_element
+ * _gupnp_device_new
  * @context: A #GUPnPContext
  * @element: The #xmlNode ponting to the right device element
  * @udn: The UDN of the device to create a proxy for
@@ -170,11 +170,11 @@ _gupnp_device_find_element_for_udn (xmlNode    *element,
  * read from the device description file specified by @location.
  **/
 static GUPnPDevice *
-_gupnp_device_new_from_element (GUPnPContext *context,
-                                xmlNode      *element,
-                                const char   *udn,
-                                const char   *location,
-                                SoupUri      *url_base)
+_gupnp_device_new (GUPnPContext *context,
+                   xmlNode      *element,
+                   const char   *udn,
+                   const char   *location,
+                   SoupUri      *url_base)
 {
         GUPnPDevice *proxy;
 

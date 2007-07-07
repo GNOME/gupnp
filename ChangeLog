@@ -1,5 +1,23 @@
 2007-07-07  Jorn Baayen  <jorn@openedhand.com>
 
+	* libgupnp/gupnp-control-point.c: (gupnp_control_point_finalize),
+	(process_service_list), (process_device_list),
+	(description_loaded), (got_description_url):
+	* libgupnp/gupnp-device-proxy-private.h:
+	* libgupnp/gupnp-device-proxy.c: (gupnp_device_proxy_get_device),
+	(gupnp_device_proxy_get_service):
+	* libgupnp/gupnp-device.c: (gupnp_device_get_device),
+	(gupnp_device_get_service), (_gupnp_device_find_element_for_udn):
+	* libgupnp/gupnp-service-private.h:
+	* libgupnp/gupnp-service-proxy-private.h:
+	* libgupnp/gupnp-service-proxy.c:
+	(gupnp_service_proxy_get_subscribed):
+	* libgupnp/gupnp-service.c: (gupnp_service_thaw_notify):
+
+	Create proxies for all, not just one, matching devices and services.
+
+2007-07-07  Jorn Baayen  <jorn@openedhand.com>
+
 	* libgupnp/gupnp-service-info.c: (gupnp_service_info_get_property),
 	(gupnp_service_info_dispose):
 

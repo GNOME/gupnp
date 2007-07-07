@@ -28,17 +28,10 @@
 #include "gupnp-service-proxy.h"
 
 GUPnPServiceProxy *
-_gupnp_service_proxy_new_from_doc     (GUPnPContext *context,
-                                       xmlDoc       *doc,
-                                       const char   *udn,
-                                       const char   *type,
-                                       const char   *location);
-
-GUPnPServiceProxy *
-_gupnp_service_proxy_new_from_element (GUPnPContext *context,
-                                       xmlNode      *element,
-                                       const char   *location,
-                                       const char   *udn,
-                                       SoupUri      *url_base);
+_gupnp_service_proxy_new (GUPnPContext *context,
+                          xmlNode      *element,
+                          const char   *location,
+                          const char   *udn,
+                          SoupUri      *url_base);
 
 #endif /* __GUPNP_SERVICE_PROXY_PRIVATE_H__ */

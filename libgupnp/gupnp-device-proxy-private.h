@@ -28,13 +28,10 @@
 #include "gupnp-device-proxy.h"
 
 GUPnPDeviceProxy *
-_gupnp_device_proxy_new_from_doc (GUPnPContext *context,
-                                  xmlDoc       *doc,
-                                  const char   *udn,
-                                  const char   *location);
-
-xmlNode *
-_gupnp_device_proxy_find_element_for_udn (xmlNode    *element,
-                                          const char *udn);
+_gupnp_device_proxy_new (GUPnPContext *context,
+                         xmlNode      *element,
+                         const char   *udn,
+                         const char   *location,
+                         SoupUri      *url_base);
 
 #endif /* __GUPNP_DEVICE_PROXY_PRIVATE_H__ */

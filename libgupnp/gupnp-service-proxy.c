@@ -1614,117 +1614,7 @@ gupnp_service_proxy_get_subscribed (GUPnPServiceProxy *proxy)
 }
 
 /**
- * @element: An #xmlNode pointing to a "device" element
- * @type: The type of the service element to find
- **/
-static xmlNode *
-find_service_element_for_type (xmlNode    *element,
-                               const char *type)
-{
-        xmlNode *tmp;
-
-        tmp = xml_util_get_element (element,
-                                    "serviceList",
-                                    NULL);
-        if (tmp) {
-                for (tmp = tmp->children; tmp; tmp = tmp->next) {
-                        xmlNode *type_element;
-
-                        type_element = xml_util_get_element (tmp,
-                                                             "serviceType",
-                                                             NULL);
-                        if (type_element) {
-                                xmlChar *content;
-                                gboolean match;
-
-                                content = xmlNodeGetContent (type_element);
-                                
-                                match = !strcmp (type, (char *) content);
-
-                                xmlFree (content);
-
-                                if (match)
-                                        return tmp;
-                        }
-                }
-        }
-
-        return NULL;
-}
-
-/**
- * _gupnp_service_proxy_new_from_doc
- * @context: A #GUPnPContext
- * @doc: A device description document
- * @udn: The UDN of the device the service is contained in
- * @type: The type of the service to create a proxy for
- * @location: The location of the service description file
- *
- * Return value: A #GUPnPServiceProxy for the service with type @type from
- * the device with UDN @udn, as read from the device description file specified
- * by @doc.
- **/
-GUPnPServiceProxy *
-_gupnp_service_proxy_new_from_doc (GUPnPContext *context,
-                                   xmlDoc       *doc,
-                                   const char   *udn,
-                                   const char   *type,
-                                   const char   *location)
-{
-        GUPnPServiceProxy *proxy;
-        xmlNode *root_element, *element;
-        SoupUri *url_base;
-
-        g_return_val_if_fail (GUPNP_IS_CONTEXT (context), NULL);
-        g_return_val_if_fail (doc != NULL, NULL);
-        g_return_val_if_fail (type != NULL, NULL);
-        g_return_val_if_fail (location != NULL, NULL);
-
-        root_element = xml_util_get_element ((xmlNode *) doc,
-                                             "root",
-                                             NULL);
-
-        element = xml_util_get_element (root_element,
-                                        "device",
-                                        NULL);
-        
-        if (element) {
-                element = _gupnp_device_proxy_find_element_for_udn (element,
-                                                                    udn);
-
-                if (element) {
-                        element = find_service_element_for_type (element,
-                                                                 type);
-                }
-        }
-
-        if (!element) {
-                g_warning ("Device description does not contain service "
-                           "with type \"%s\".", type);
-
-                return NULL;
-        }
-
-        /* Save the URL base, if any */
-        url_base = xml_util_get_child_element_content_uri (root_element,
-                                                           "URLBase",
-                                                           NULL);
-        if (!url_base)
-                url_base = soup_uri_new (location);
-
-        proxy = g_object_new (GUPNP_TYPE_SERVICE_PROXY,
-                              "context", context,
-                              "location", location,
-                              "udn", udn,
-                              "url-base", url_base,
-                              "element", element,
-                              NULL);
-
-        return proxy;
-}
-
-/**
- * _gupnp_service_proxy_new_from_element
+ * _gupnp_service_proxy_new
  * @context: A #GUPnPContext
  * @element: The #xmlNode ponting to the right service element
  * @location: The location of the service description file
@@ -1735,11 +1625,11 @@ _gupnp_service_proxy_new_from_doc (GUPnPContext *context,
  * read from the service description file specified by @location.
  **/
 GUPnPServiceProxy *
-_gupnp_service_proxy_new_from_element (GUPnPContext *context,
-                                       xmlNode      *element,
-                                       const char   *udn,
-                                       const char   *location,
-                                       SoupUri      *url_base)
+_gupnp_service_proxy_new (GUPnPContext *context,
+                          xmlNode      *element,
+                          const char   *udn,
+                          const char   *location,
+                          SoupUri      *url_base)
 {
         GUPnPServiceProxy *proxy;
 

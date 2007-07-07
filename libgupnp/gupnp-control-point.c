@@ -37,6 +37,7 @@
 #include "gupnp-context-private.h"
 #include "gupnp-device-proxy-private.h"
 #include "gupnp-service-proxy-private.h"
+#include "xml-util.h"
 
 G_DEFINE_TYPE (GUPnPControlPoint,
                gupnp_control_point,
@@ -170,33 +171,52 @@ gupnp_control_point_finalize (GObject *object)
         object_class->finalize (object);
 }
 
-/**
- * Called when the description document is loaded.
- *
- * Return value: TRUE if a proxy could be created.
- **/
-static gboolean
-description_loaded (GUPnPControlPoint *control_point,
-                    xmlDoc            *doc,
-                    const char        *udn,
-                    const char        *service_type,
-                    const char        *description_url)
+/* Search @element for matching services */
+static int
+process_service_list (xmlNode           *element,
+                      GUPnPControlPoint *control_point,
+                      const char        *udn,
+                      const char        *service_type,
+                      const char        *description_url,
+                      SoupUri           *url_base)
 {
-        GUPnPContext *context;
-        gboolean ret;
+        int matches;
 
-        context = gupnp_control_point_get_context (control_point);
+        matches = 0;
 
-        ret = FALSE;
-
-        if (service_type) {
+        for (element = element->children; element; element = element->next) {
+                xmlChar *prop;
+                gboolean match;
+                GUPnPContext *context;
                 GUPnPServiceProxy *proxy;
 
-                proxy = _gupnp_service_proxy_new_from_doc (context,
-                                                           doc,
-                                                           udn,
-                                                           service_type,
-                                                           description_url);
+                if (strcmp ((char *) element->name, "service") != 0)
+                        continue;
+
+                /* See if this is a matching service */
+                prop = xml_util_get_child_element_content (element,
+                                                           "serviceType");
+                if (!prop)
+                        continue;
+
+                match = (strcmp ((char *) prop, service_type) == 0);
+
+                xmlFree (prop);
+
+                if (!match)
+                        continue;
+
+                /* Match */
+
+                /* Get context */
+                context = gupnp_control_point_get_context (control_point);
+
+                /* Create proxy */
+                proxy = _gupnp_service_proxy_new (context,
+                                                  element,
+                                                  description_url,
+                                                  udn,
+                                                  url_base);
                 if (proxy) {
                         control_point->priv->services =
                                 g_list_prepend (control_point->priv->services,
@@ -207,30 +227,142 @@ description_loaded (GUPnPControlPoint *control_point,
                                        0,
                                        proxy);
 
-                        ret = TRUE;
-                }
-        } else {
-                GUPnPDeviceProxy *proxy;
-
-                proxy = _gupnp_device_proxy_new_from_doc (context,
-                                                          doc,
-                                                          udn,
-                                                          description_url);
-                if (proxy) {
-                        control_point->priv->devices =
-                                g_list_prepend (control_point->priv->devices,
-                                                proxy);
-
-                        g_signal_emit (control_point,
-                                       signals[DEVICE_PROXY_AVAILABLE],
-                                       0,
-                                       proxy);
-
-                        ret = TRUE;
+                        matches++;
                 }
         }
 
-        return ret;
+        return matches;
+}
+
+/* Recursively search @element for matching devices */
+static int
+process_device_list (xmlNode           *element,
+                     GUPnPControlPoint *control_point,
+                     const char        *udn,
+                     const char        *service_type,
+                     const char        *description_url,
+                     SoupUri           *url_base)
+{
+        int matches;
+
+        matches = 0;
+
+        for (element = element->children; element; element = element->next) {
+                xmlNode *children;
+                xmlChar *prop;
+                gboolean match;
+                GUPnPContext *context;
+
+                if (strcmp ((char *) element->name, "device") != 0)
+                        continue;
+
+                /* Recurse into children */
+                children = xml_util_get_element (element,
+                                                 "deviceList",
+                                                 NULL);
+
+                if (children) {
+                        matches += process_device_list (children,
+                                                        control_point,
+                                                        udn,
+                                                        service_type,
+                                                        description_url,
+                                                        url_base);
+                }
+
+                /* See if this is a matching device */
+                prop = xml_util_get_child_element_content (element, "UDN");
+                if (!prop)
+                        continue;
+
+                match = (strcmp ((char *) prop, udn) == 0);
+
+                xmlFree (prop);
+
+                if (!match)
+                        continue;
+
+                /* Match */
+
+                /* Get context */
+                context = gupnp_control_point_get_context (control_point);
+
+                if (service_type) {
+                        /* Dive into serviceList */
+                        children = xml_util_get_element (element,
+                                                         "serviceList",
+                                                         NULL);
+
+                        if (children) {
+                                matches += process_service_list
+                                                       (children,
+                                                        control_point,
+                                                        udn,
+                                                        service_type,
+                                                        description_url,
+                                                        url_base);
+                        }
+                } else {
+                        /* Create device proxy */
+                        GUPnPDeviceProxy *proxy;
+
+                        proxy = _gupnp_device_proxy_new (context,
+                                                         element,
+                                                         description_url,
+                                                         udn,
+                                                         url_base);
+                        if (proxy) {
+                                control_point->priv->devices =
+                                        g_list_prepend
+                                                (control_point->priv->devices,
+                                                 proxy);
+
+                                g_signal_emit (control_point,
+                                               signals[DEVICE_PROXY_AVAILABLE],
+                                               0,
+                                               proxy);
+
+                                matches++;
+                        }
+                }
+        }
+
+        return matches;
+}
+
+/**
+ * Called when the description document is loaded.
+ *
+ * Return value: Number of proxies created.
+ **/
+static int
+description_loaded (GUPnPControlPoint *control_point,
+                    xmlDoc            *doc,
+                    const char        *udn,
+                    const char        *service_type,
+                    const char        *description_url)
+{
+        xmlNode *element;
+        SoupUri *url_base;
+
+        /* Save the URL base, if any */
+        element = xml_util_get_element ((xmlNode *) doc,
+                                        "root",
+                                        NULL);
+
+        url_base = xml_util_get_child_element_content_uri (element,
+                                                           "URLBase",
+                                                           NULL);
+        if (!url_base)
+                url_base = soup_uri_new (description_url);
+
+        /* Iterate matching devices */
+        return process_device_list (element,
+                                    control_point,
+                                    udn,
+                                    service_type,
+                                    description_url,
+                                    url_base); 
 }
 
 /**
@@ -247,21 +379,26 @@ got_description_url (SoupMessage           *msg,
                 xml_doc = xmlParseMemory (msg->response.body,
                                           msg->response.length);
                 if (xml_doc) {
-                        if (description_loaded (data->control_point,
-                                                xml_doc,
-                                                data->udn,
-                                                data->service_type,
-                                                data->description_url)) {
+                        int ref_count;
+
+                        ref_count = description_loaded (data->control_point,
+                                                        xml_doc,
+                                                        data->udn,
+                                                        data->service_type,
+                                                        data->description_url);
+
+                        if (ref_count > 0) {
                                 doc = g_slice_new (DescriptionDoc);
                                 
                                 doc->doc       = xml_doc;
-                                doc->ref_count = 1;
+                                doc->ref_count = ref_count;
                                 
                                 g_hash_table_insert
                                         (data->control_point->priv->doc_cache,
                                          g_strdup (data->description_url),
                                          doc);
-                        }
+                        } else
+                                xmlFreeDoc (xml_doc);
                 } else
                         g_warning ("Failed to parse %s", data->description_url);
         } else
