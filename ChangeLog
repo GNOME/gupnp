@@ -1,5 +1,12 @@
 2007-07-07  Jorn Baayen  <jorn@openedhand.com>
 
+	* libgupnp/gupnp-control-point.c:
+	(gupnp_control_point_resource_unavailable):
+
+	Handle resource-unavailable in the same way.
+
+2007-07-07  Jorn Baayen  <jorn@openedhand.com>
+
 	* libgupnp/gupnp-control-point.c: (gupnp_control_point_finalize),
 	(process_service_list), (process_device_list),
 	(description_loaded), (got_description_url):

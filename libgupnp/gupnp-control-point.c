@@ -592,38 +592,33 @@ gupnp_control_point_resource_unavailable
 
         /* Find proxy */
         if (service_type) {
-                GUPnPServiceProxy *proxy;
-                GUPnPServiceInfo *info;
-
-                proxy = NULL;
-                
                 for (l = control_point->priv->services; l; l = l->next) {
+                        GUPnPServiceInfo *info;
+                        GUPnPServiceProxy *proxy;
+                        const char *location;
+
                         info = GUPNP_SERVICE_INFO (l->data);
 
-                        if ((!strcmp (udn,
-                                      gupnp_service_info_get_udn (info))) &&
-                            (!strcmp (service_type,
-                                      gupnp_service_info_get_service_type
-                                                                 (info)))) {
-                                proxy = GUPNP_SERVICE_PROXY (l->data);
+                        if ((strcmp (udn,
+                                     gupnp_service_info_get_udn (info)) != 0) ||
+                            (strcmp (service_type,
+                                     gupnp_service_info_get_service_type
+                                                                 (info)) != 0))
+                                continue;
 
-                                control_point->priv->services =
-                                        g_list_delete_link
-                                                (control_point->priv->services,
-                                                 l);
+                        proxy = GUPNP_SERVICE_PROXY (l->data);
 
-                                break;
-                        }
-                }
-
-                if (proxy) {
-                        const char *location;
+                        control_point->priv->services =
+                                g_list_delete_link
+                                        (control_point->priv->services,
+                                         l);
 
                         g_signal_emit (control_point,
                                        signals[SERVICE_PROXY_UNAVAILABLE],
                                        0,
                                        proxy);
 
+                        /* Unref description doc */
                         location = gupnp_service_info_get_location
                                         (GUPNP_SERVICE_INFO (proxy));
 
@@ -640,38 +635,33 @@ gupnp_control_point_resource_unavailable
                                 }
                         }
 
+                        /* Unref proxy */
                         g_object_unref (proxy);
                 }
         } else {
-                GUPnPDeviceProxy *proxy;
-                GUPnPDeviceInfo *info;
-
-                proxy = NULL;
-                
                 for (l = control_point->priv->devices; l; l = l->next) {
+                        GUPnPDeviceInfo *info;
+                        GUPnPDeviceProxy *proxy;
+                        const char *location;
+
                         info = GUPNP_DEVICE_INFO (l->data);
 
-                        if (!strcmp (udn,
-                                     gupnp_device_info_get_udn (info))) {
-                                proxy = GUPNP_DEVICE_PROXY (l->data);
+                        if (strcmp (udn,
+                                    gupnp_device_info_get_udn (info)) != 0)
+                                continue;
 
-                                control_point->priv->devices =
-                                        g_list_delete_link
-                                                (control_point->priv->devices,
-                                                 l);
+                        proxy = GUPNP_DEVICE_PROXY (l->data);
 
-                                break;
-                        }
-                }
-
-                if (proxy) {
-                        const char *location;
+                        control_point->priv->devices =
+                                 g_list_delete_link
+                                        (control_point->priv->devices, l);
 
                         g_signal_emit (control_point,
                                        signals[DEVICE_PROXY_UNAVAILABLE],
                                        0,
                                        proxy);
 
+                        /* Unref description doc */
                         location = gupnp_device_info_get_location
                                         (GUPNP_DEVICE_INFO (proxy));
 
@@ -688,6 +678,7 @@ gupnp_control_point_resource_unavailable
                                 }
                         }
 
+                        /* Unref proxy */
                         g_object_unref (proxy);
                 }
         }
