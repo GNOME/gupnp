@@ -30,8 +30,8 @@
 GUPnPServiceProxy *
 _gupnp_service_proxy_new (GUPnPContext *context,
                           xmlNode      *element,
-                          const char   *location,
                           const char   *udn,
+                          const char   *location,
                           SoupUri      *url_base);
 
 #endif /* __GUPNP_SERVICE_PROXY_PRIVATE_H__ */

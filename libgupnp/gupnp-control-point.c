@@ -216,8 +216,8 @@ process_service_list (xmlNode           *element,
                 /* Create proxy */
                 proxy = _gupnp_service_proxy_new (context,
                                                   element,
-                                                  description_url,
                                                   udn,
+                                                  description_url,
                                                   url_base);
                 if (proxy) {
                         control_point->priv->services =
@@ -310,8 +310,8 @@ process_device_list (xmlNode           *element,
 
                         proxy = _gupnp_device_proxy_new (context,
                                                          element,
-                                                         description_url,
                                                          udn,
+                                                         description_url,
                                                          url_base);
                         if (proxy) {
                                 control_point->priv->devices =
@@ -429,13 +429,11 @@ load_description (GUPnPControlPoint *control_point,
                                    description_url);
         if (doc) {
                 /* Doc was cached */
-                if (description_loaded (control_point,
-                                        doc->doc,
-                                        udn,
-                                        service_type,
-                                        description_url)) {
-                        doc->ref_count++;
-                }
+                doc->ref_count += description_loaded (control_point,
+                                                      doc->doc,
+                                                      udn,
+                                                      service_type,
+                                                      description_url);
         } else {
                 /* Asynchronously download doc */
                 GUPnPContext *context;
@@ -585,7 +583,7 @@ gupnp_control_point_resource_unavailable
         char *udn, *service_type;
         GList *l;
         DescriptionDoc *doc;
-        
+
         control_point = GUPNP_CONTROL_POINT (resource_browser);
 
         /* Parse USN */
@@ -598,15 +596,21 @@ gupnp_control_point_resource_unavailable
                         GUPnPServiceInfo *info;
                         GUPnPServiceProxy *proxy;
                         const char *location;
+                        char *tmp;
 
                         info = GUPNP_SERVICE_INFO (l->data);
 
+                        tmp = gupnp_service_info_get_service_type (info);
+
                         if ((strcmp (udn,
                                      gupnp_service_info_get_udn (info)) != 0) ||
-                            (strcmp (service_type,
-                                     gupnp_service_info_get_service_type
-                                                                 (info)) != 0))
+                            (strcmp (service_type, tmp) != 0)) {
+                                g_free (tmp);
+
                                 continue;
+                        }
+
+                        g_free (tmp);
 
                         proxy = GUPNP_SERVICE_PROXY (l->data);
 
