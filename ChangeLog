@@ -1,5 +1,12 @@
 2007-07-08  Jorn Baayen  <jorn@openedhand.com>
 
+	* libgupnp/gupnp-control-point.c: (got_description_url),
+	(load_description):
+
+	Fix description doc refcounting bugs.
+
+2007-07-08  Jorn Baayen  <jorn@openedhand.com>
+
 	* libgupnp/gupnp-control-point.c: (description_loaded):
 	* libgupnp/gupnp-device-info.c: (gupnp_device_info_set_property):
 	* libgupnp/gupnp-service-info.c: (gupnp_service_info_set_property):

@@ -380,15 +380,36 @@ static void
 got_description_url (SoupMessage           *msg,
                      GetDescriptionURLData *data)
 {
+        DescriptionDoc *doc;
+        int ref_count;
+
+        /* Now, make sure again this document is not already cached. If it is,
+         * we re-use the cached one. */
+        doc = g_hash_table_lookup (data->control_point->priv->doc_cache,
+                                   data->description_url);
+        if (doc) {
+                /* Doc was cached */
+                ref_count = description_loaded (data->control_point,
+                                                doc->doc,
+                                                data->udn,
+                                                data->service_type,
+                                                data->description_url);
+
+                doc->ref_count += ref_count;
+
+                get_description_url_data_free (data);
+
+                return;
+        }
+
+        /* Not cached */
         if (SOUP_STATUS_IS_SUCCESSFUL (msg->status_code)) {
-                DescriptionDoc *doc;
                 xmlDoc *xml_doc;
 
+                /* Parse response */
                 xml_doc = xmlParseMemory (msg->response.body,
                                           msg->response.length);
                 if (xml_doc) {
-                        int ref_count;
-
                         ref_count = description_loaded (data->control_point,
                                                         xml_doc,
                                                         data->udn,
@@ -397,7 +418,7 @@ got_description_url (SoupMessage           *msg,
 
                         if (ref_count > 0) {
                                 doc = g_slice_new (DescriptionDoc);
-                                
+
                                 doc->doc       = xml_doc;
                                 doc->ref_count = ref_count;
                                 
@@ -435,11 +456,15 @@ load_description (GUPnPControlPoint *control_point,
                                    description_url);
         if (doc) {
                 /* Doc was cached */
-                doc->ref_count += description_loaded (control_point,
-                                                      doc->doc,
-                                                      udn,
-                                                      service_type,
-                                                      description_url);
+                int ref_count;
+
+                ref_count = description_loaded (control_point,
+                                                doc->doc,
+                                                udn,
+                                                service_type,
+                                                description_url);
+
+                doc->ref_count += ref_count;
         } else {
                 /* Asynchronously download doc */
                 GUPnPContext *context;
