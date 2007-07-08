@@ -117,6 +117,11 @@ gupnp_service_info_set_property (GObject      *object,
         case PROP_URL_BASE:
                 info->priv->url_base =
                         g_value_get_pointer (value);
+
+                if (info->priv->url_base)
+                        info->priv->url_base =
+                                soup_uri_copy (info->priv->url_base);
+
                 break;
         case PROP_ELEMENT:
                 info->priv->element =

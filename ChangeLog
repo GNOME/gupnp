@@ -1,5 +1,13 @@
 2007-07-08  Jorn Baayen  <jorn@openedhand.com>
 
+	* libgupnp/gupnp-control-point.c: (description_loaded):
+	* libgupnp/gupnp-device-info.c: (gupnp_device_info_set_property):
+	* libgupnp/gupnp-service-info.c: (gupnp_service_info_set_property):
+
+	Each info object stores its own copy of the URLBase SoupUri.
+
+2007-07-08  Jorn Baayen  <jorn@openedhand.com>
+
 	* libgupnp/gupnp-control-point.c: (process_service_list),
 	(process_device_list), (load_description),
 	(gupnp_control_point_resource_unavailable):

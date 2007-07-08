@@ -346,6 +346,7 @@ description_loaded (GUPnPControlPoint *control_point,
 {
         xmlNode *element;
         SoupUri *url_base;
+        int matches;
 
         /* Save the URL base, if any */
         element = xml_util_get_element ((xmlNode *) doc,
@@ -359,12 +360,17 @@ description_loaded (GUPnPControlPoint *control_point,
                 url_base = soup_uri_new (description_url);
 
         /* Iterate matching devices */
-        return process_device_list (element,
-                                    control_point,
-                                    udn,
-                                    service_type,
-                                    description_url,
-                                    url_base); 
+        matches = process_device_list (element,
+                                       control_point,
+                                       udn,
+                                       service_type,
+                                       description_url,
+                                       url_base); 
+
+        /* Cleanup */
+        soup_uri_free (url_base);
+
+        return matches;
 }
 
 /**
