@@ -23,6 +23,16 @@
 #include <libgupnp/gupnp-service.h>
 #include <stdio.h>
 #include <locale.h>
+#include <string.h>
+#include <signal.h>
+
+GMainLoop *main_loop;
+
+static void
+interrupt_signal_handler (int signum)
+{
+        g_main_loop_quit (main_loop);
+}
 
 static void
 browse_cb (GUPnPService       *service,
@@ -56,7 +66,7 @@ main (int argc, char **argv)
         xmlDoc *doc;
         GUPnPRootDevice *dev;
         GUPnPServiceInfo *content_dir;
-        GMainLoop *main_loop;
+        struct sigaction sig_action;
 
         if (argc < 2) {
                 fprintf (stderr, "Usage: %s DESCRIPTION_FILE\n", argv[0]);
@@ -109,6 +119,12 @@ main (int argc, char **argv)
         gupnp_root_device_set_available (dev, TRUE);
 
         main_loop = g_main_loop_new (NULL, FALSE);
+        
+        /* Hook the handler for SIGTERM */
+        memset (&sig_action, 0, sizeof (sig_action));
+        sig_action.sa_handler = interrupt_signal_handler;
+        sigaction (SIGINT, &sig_action, NULL);
+
         g_main_loop_run (main_loop);
         g_main_loop_unref (main_loop);
 

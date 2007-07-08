@@ -22,6 +22,15 @@
 #include <libgupnp/gupnp-control-point.h>
 #include <string.h>
 #include <locale.h>
+#include <signal.h>
+
+GMainLoop *main_loop;
+
+static void
+interrupt_signal_handler (int signum)
+{
+        g_main_loop_quit (main_loop);
+}
 
 static void
 device_proxy_available_cb (GUPnPControlPoint *cp,
@@ -179,8 +188,8 @@ main (int argc, char **argv)
         GError *error;
         GUPnPContext *context;
         GUPnPControlPoint *cp;
-        GMainLoop *main_loop;
-        
+        struct sigaction sig_action;
+
         g_thread_init (NULL);
         g_type_init ();
         setlocale (LC_ALL, "");
@@ -217,6 +226,12 @@ main (int argc, char **argv)
         gssdp_resource_browser_set_active (GSSDP_RESOURCE_BROWSER (cp), TRUE);
 
         main_loop = g_main_loop_new (NULL, FALSE);
+        
+        /* Hook the handler for SIGTERM */
+        memset (&sig_action, 0, sizeof (sig_action));
+        sig_action.sa_handler = interrupt_signal_handler;
+        sigaction (SIGINT, &sig_action, NULL);
+
         g_main_loop_run (main_loop);
         g_main_loop_unref (main_loop);
 

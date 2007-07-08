@@ -24,6 +24,9 @@
 #include <libgupnp/gupnp-control-point.h>
 #include <libgupnp/gupnp-service-introspection.h>
 #include <string.h>
+#include <signal.h>
+
+GMainLoop *main_loop;
 
 static gboolean async = FALSE;
 static GOptionEntry entries[] = 
@@ -32,6 +35,12 @@ static GOptionEntry entries[] =
      "Asynchronously create intropection object", NULL },
    { NULL }
 };
+
+static void
+interrupt_signal_handler (int signum)
+{
+        g_main_loop_quit (main_loop);
+}
 
 static void
 print_action_arguments (GSList *argument_list)
@@ -162,8 +171,7 @@ got_introspection (GUPnPServiceInfo *info,
                    GUPnPServiceIntrospection *introspection,
                    gpointer user_data)
 {
-        g_signal_handlers_disconnect_by_func (info, got_introspection, NULL);
-        g_print ("Introspection information for service %s at %s available:\n",
+        g_print ("service:  %s\nlocation: %s\n",
                 gupnp_service_info_get_udn (info),
                 gupnp_service_info_get_location (info));
         print_actions (introspection);
@@ -181,11 +189,9 @@ service_proxy_available_cb (GUPnPControlPoint *cp,
         info = GUPNP_SERVICE_INFO (proxy);
 
         if (async) {
-                g_signal_connect (info,
-                          "introspection-available",
-                          G_CALLBACK (got_introspection),
-                          NULL);
-                gupnp_service_info_get_introspection_async (info);
+                gupnp_service_info_get_introspection_async (info,
+                                                            got_introspection,
+                                                            NULL);
         }
        
         else {
@@ -218,9 +224,9 @@ main (int argc, char **argv)
         GError *error = NULL;
         GUPnPContext *context;
         GUPnPControlPoint *cp;
-        GMainLoop *main_loop;
         GOptionContext *option_context;
-       
+        struct sigaction sig_action;
+
         option_context = g_option_context_new ("- test GUPnP introspection");
         g_option_context_add_main_entries (option_context,
                                            entries,
@@ -260,6 +266,12 @@ main (int argc, char **argv)
         gssdp_resource_browser_set_active (GSSDP_RESOURCE_BROWSER (cp), TRUE);
 
         main_loop = g_main_loop_new (NULL, FALSE);
+
+        /* Hook the handler for SIGTERM */
+        memset (&sig_action, 0, sizeof (sig_action));
+        sig_action.sa_handler = interrupt_signal_handler;
+        sigaction (SIGINT, &sig_action, NULL);
+
         g_main_loop_run (main_loop);
         g_main_loop_unref (main_loop);
 

@@ -1,3 +1,25 @@
+2007-07-08  Zeeshan Ali  <zeenix@gstreamer.net>
+	    Jorn Baayen  <jorn@openedhand.com>
+
+	* libgupnp/gupnp-service-info.c: (get_scpd_url_data_free),
+	(gupnp_service_info_class_init),
+	(gupnp_service_info_get_introspection), (scpd_ready),
+	(got_scpd_url), (gupnp_service_info_get_introspection_async):
+	* libgupnp/gupnp-service-info.h:
+
+	Use a callback instead of a signal.
+
+	* tests/test-introspection.c: (interrupt_signal_handler),
+	(got_introspection), (service_proxy_available_cb), (main):
+
+	- Use the new callback API.
+	- Terminate cleanly on SIGTERM.
+
+	* tests/test-client.c: (interrupt_signal_handler), (main):
+	* tests/test-server.c: (interrupt_signal_handler), (main):
+
+	Terminate cleanly on SIGTERM.
+
 2007-07-07  Jorn Baayen  <jorn@openedhand.com>
 
 	* doc/gupnp-docs.sgml:

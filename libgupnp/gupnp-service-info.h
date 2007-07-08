@@ -66,17 +66,17 @@ typedef struct {
 typedef struct {
         GObjectClass parent_class;
 
-        /* signals */
-        void (* introspection_available)
-                                (GUPnPServiceInfo          *info,
-                                 GUPnPServiceIntrospection *introspection);
-
         /* future padding */
         void (* _gupnp_reserved1) (void);
         void (* _gupnp_reserved2) (void);
         void (* _gupnp_reserved3) (void);
         void (* _gupnp_reserved4) (void);
 } GUPnPServiceInfoClass;
+
+typedef void (* GUPnPServiceIntrospectionCallback)
+                                (GUPnPServiceInfo           *info,
+                                 GUPnPServiceIntrospection  *introspection,
+                                 gpointer                    user_data);
 
 GUPnPContext *
 gupnp_service_info_get_context                (GUPnPServiceInfo *info);
@@ -109,7 +109,10 @@ GUPnPServiceIntrospection *
 gupnp_service_info_get_introspection          (GUPnPServiceInfo *info);
 
 void
-gupnp_service_info_get_introspection_async    (GUPnPServiceInfo *info);
+gupnp_service_info_get_introspection_async
+                              (GUPnPServiceInfo                 *info,
+                               GUPnPServiceIntrospectionCallback callback,
+                               gpointer                          user_data);
 
 G_END_DECLS
 
