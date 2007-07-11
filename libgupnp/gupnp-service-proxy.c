@@ -299,7 +299,8 @@ gupnp_service_proxy_class_init (GUPnPServiceProxyClass *klass)
  * out parameter type, and out parameter value location, terminated with NULL
  *
  * Sends action @action with parameters @Varargs to the service exposed by
- * @proxy synchronously.
+ * @proxy synchronously. If an error occurred, @error will be set. In case of
+ * a UPnPError the error code will be the same in @error.
  *
  * Return value: TRUE if sending the action was succesful.
  **/
@@ -662,7 +663,8 @@ gupnp_service_proxy_begin_action_valist
  * freed after use
  *
  * Retrieves the result of @action. The out parameters in @Varargs will be 
- * filled in, and ff an error occurred, @error will be set.
+ * filled in, and if an error occurred, @error will be set. In case of
+ * a UPnPError the error code will be the same in @error.
  *
  * Return value: TRUE on success.
  **/
@@ -700,34 +702,6 @@ set_error_literal (GError    **error,
                                               message);
         } else
                 g_warning ("Error already set.");
-}
-
-/* Convert errorCode to GUPnPControlError */
-static int
-convert_error_code (int code)
-{
-        switch (code) {
-        case GUPNP_CONTROL_ERROR_INVALID_ACTION:
-                return code;
-        case GUPNP_CONTROL_ERROR_INVALID_ARGS:
-                return code;
-        case GUPNP_CONTROL_ERROR_OUT_OF_SYNC:
-                return code;
-        case GUPNP_CONTROL_ERROR_ACTION_FAILED:
-                return code;
-        default:
-                if (code >= 600 && code < 700)
-                        return GUPNP_CONTROL_ERROR_UPNP_FORUM_DEFINED;
-                else if (code >= 700 && code < 800)
-                        return GUPNP_CONTROL_ERROR_DEVICE_TYPE_DEFINED;
-                else if (code >= 800 && code < 900)
-                        return GUPNP_CONTROL_ERROR_VENDOR_DEFINED;
-                else {
-                        g_warning ("Unrecognised error code: %d", code);
-
-                        return GUPNP_CONTROL_ERROR_VENDOR_DEFINED;
-                }
-        }
 }
 
 /**
@@ -839,11 +813,9 @@ gupnp_service_proxy_end_action_valist (GUPnPServiceProxy       *proxy,
                 /* Code */
                 child = soup_soap_parameter_get_first_child_by_name
                                                 (param, "errorCode");
-                if (child) {
+                if (child)
                         code = soup_soap_parameter_get_int_value (child);
-
-                        code = convert_error_code (code);
-                } else {
+                else {
                         g_set_error (error,
                                      GUPNP_SERVER_ERROR,
                                      GUPNP_SERVER_ERROR_INVALID_RESPONSE,

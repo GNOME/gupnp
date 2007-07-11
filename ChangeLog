@@ -1,5 +1,13 @@
 2007-07-11  Jorn Baayen  <jorn@openedhand.com>
 
+	* libgupnp/gupnp-error.h:
+	* libgupnp/gupnp-service-proxy.c: (set_error_literal),
+	(gupnp_service_proxy_end_action_valist):
+
+	Propagate UPnPError codes.
+
+2007-07-11  Jorn Baayen  <jorn@openedhand.com>
+
 	* libgupnp/gupnp-service-proxy.c:
 	(gupnp_service_proxy_begin_action_valist):
 
