@@ -1,3 +1,10 @@
+2007-07-11  Jorn Baayen  <jorn@openedhand.com>
+
+	* libgupnp/gupnp-service-proxy.c:
+	(gupnp_service_proxy_begin_action_valist):
+
+	Set error if no controlURL is defined.
+
 2007-07-08  Jorn Baayen  <jorn@openedhand.com>
 
 	* libgupnp/gupnp-control-point.c: (got_description_url),

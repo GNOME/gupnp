@@ -511,6 +511,15 @@ gupnp_service_proxy_begin_action_valist
         /* Create message */
         control_url = gupnp_service_info_get_control_url
                                         (GUPNP_SERVICE_INFO (proxy));
+        if (!control_url) {
+                g_set_error (error,
+                             GUPNP_SERVER_ERROR,
+                             GUPNP_SERVER_ERROR_OTHER,
+                             "No control URL defined");
+
+                return NULL;
+        }
+
         msg = soup_soap_message_new (SOUP_METHOD_POST,
 				     control_url,
 				     FALSE, NULL, NULL, NULL);
