@@ -477,14 +477,21 @@ load_description (GUPnPControlPoint *control_point,
 
                 data = g_slice_new (GetDescriptionURLData);
 
-                data->control_point = control_point;
+                data->message = soup_message_new (SOUP_METHOD_GET,
+                                                  description_url);
+                if (data->message == NULL) {
+                        g_warning ("Invalid URL: %s", description_url);
+
+                        g_slice_free (GetDescriptionURLData, data);
+
+                        return;
+                }
+
+                data->control_point   = control_point;
                 
                 data->udn             = g_strdup (udn);
                 data->service_type    = g_strdup (service_type);
                 data->description_url = g_strdup (description_url);
-
-                data->message = soup_message_new (SOUP_METHOD_GET,
-                                                  description_url);
 
 	        soup_session_queue_message (session,
                                             data->message,

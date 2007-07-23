@@ -483,7 +483,14 @@ gupnp_service_info_get_introspection (GUPnPServiceInfo *info,
 
         g_free (scpd_url);
 
-        g_assert (msg != NULL);
+        if (msg == NULL) {
+                g_set_error (error,
+                             GUPNP_SERVER_ERROR,
+                             GUPNP_SERVER_ERROR_NOT_IMPLEMENTED,
+                             "Service does not provide a valid SCPD URL");
+                             
+                return NULL;
+        }
 
         status = soup_session_send_message (session, msg);
         if (!SOUP_STATUS_IS_SUCCESSFUL (status)) {
@@ -606,7 +613,22 @@ gupnp_service_info_get_introspection_async
 
         g_free (scpd_url);
 
-        g_assert (data->message != NULL);
+        if (data->message == NULL) {
+                GError *error;
+
+                error = g_error_new
+                                (GUPNP_SERVER_ERROR,
+                                 GUPNP_SERVER_ERROR_NOT_IMPLEMENTED,
+                                 "Service does not provide a valid SCPD URL");
+
+                callback (info, NULL, user_data, error);
+
+                g_error_free (error);
+
+                g_slice_free (GetSCPDURLData, data);
+                             
+                return;
+        }
 
         data->info      = info;
         data->callback  = callback;

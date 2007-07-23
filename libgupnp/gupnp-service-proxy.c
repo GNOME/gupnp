@@ -1303,7 +1303,16 @@ subscription_expire (gpointer user_data)
         /* Create subscription message */
         sub_url = gupnp_service_info_get_event_subscription_url
                                                 (GUPNP_SERVICE_INFO (proxy));
+
         msg = soup_message_new (GENA_METHOD_SUBSCRIBE, sub_url);
+        if (msg == NULL) {
+                g_warning ("Invalid URL: %s", sub_url);
+
+                g_free (sub_url);
+
+                return FALSE;
+        }
+
         g_free (sub_url);
 
         g_assert (msg != NULL);
@@ -1451,10 +1460,17 @@ subscribe (GUPnPServiceProxy *proxy)
         /* Create subscription message */
         sub_url = gupnp_service_info_get_event_subscription_url
                                                 (GUPNP_SERVICE_INFO (proxy));
-        msg = soup_message_new (GENA_METHOD_SUBSCRIBE, sub_url);
-        g_free (sub_url);
 
-        g_assert (msg != NULL);
+        msg = soup_message_new (GENA_METHOD_SUBSCRIBE, sub_url);
+        if (msg == NULL) {
+                g_warning ("Invalid URL: %s", sub_url);
+
+                g_free (sub_url);
+
+                return;
+        }
+
+        g_free (sub_url);
 
         /* Add headers */
         server_url = _gupnp_context_get_server_url (context);
@@ -1517,6 +1533,14 @@ unsubscribe (GUPnPServiceProxy *proxy, gboolean sync)
         sub_url = gupnp_service_info_get_event_subscription_url
                                                 (GUPNP_SERVICE_INFO (proxy));
         msg = soup_message_new (GENA_METHOD_UNSUBSCRIBE, sub_url);
+        if (msg == NULL) {
+                g_warning ("Invalid URL: %s", sub_url);
+
+                g_free (sub_url);
+
+                return;
+        }
+
         g_free (sub_url);
 
         g_assert (msg != NULL);

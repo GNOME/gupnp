@@ -1,5 +1,17 @@
 2007-07-23  Jorn Baayen  <jorn@openedhand.com>
 
+	* libgupnp/gupnp-control-point.c: (load_description):
+	* libgupnp/gupnp-service-info.c:
+	(gupnp_service_info_get_introspection),
+	(gupnp_service_info_get_introspection_async):
+	* libgupnp/gupnp-service-proxy.c: (subscription_expire),
+	(subscribe), (unsubscribe):
+	* libgupnp/gupnp-service.c: (notify_subscriber):
+
+	Warn on invalid URL (don't crash!).
+
+2007-07-23  Jorn Baayen  <jorn@openedhand.com>
+
 	* libgupnp/gupnp-marshal.list:
 	* libgupnp/gupnp-service-proxy.c: (server_handler),
 	(subscription_expire), (subscribe_got_response), (subscribe):
