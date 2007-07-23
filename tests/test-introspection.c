@@ -169,8 +169,17 @@ print_state_variables (GUPnPServiceIntrospection *introspection)
 static void
 got_introspection (GUPnPServiceInfo *info,
                    GUPnPServiceIntrospection *introspection,
-                   gpointer user_data)
+                   gpointer user_data,
+                   GError *error)
 {
+        if (error) {
+                g_warning ("Failed to create introspection for '%s': %s",
+                           gupnp_service_info_get_udn (info),
+                           error->message);
+                g_error_free (error);
+                return;
+        }
+
         g_print ("service:  %s\nlocation: %s\n",
                 gupnp_service_info_get_udn (info),
                 gupnp_service_info_get_location (info));
@@ -185,6 +194,7 @@ service_proxy_available_cb (GUPnPControlPoint *cp,
 {
         GUPnPServiceInfo *info;
         GUPnPServiceIntrospection *introspection;
+        GError *error = NULL;
 
         info = GUPNP_SERVICE_INFO (proxy);
 
@@ -195,9 +205,17 @@ service_proxy_available_cb (GUPnPControlPoint *cp,
         }
        
         else {
-                introspection = gupnp_service_info_get_introspection (info);
+                introspection =
+                        gupnp_service_info_get_introspection (info, &error);
                 if (introspection)
-                        got_introspection (info, introspection, NULL);
+                        got_introspection (info, introspection, NULL, NULL);
+        }
+
+        if (error) {
+                g_warning ("Failed to create introspection for '%s': %s",
+                           gupnp_service_info_get_udn (info),
+                           error->message);
+                g_error_free (error);
         }
 }
 

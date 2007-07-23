@@ -76,7 +76,8 @@ typedef struct {
 typedef void (* GUPnPServiceIntrospectionCallback)
                                 (GUPnPServiceInfo           *info,
                                  GUPnPServiceIntrospection  *introspection,
-                                 gpointer                    user_data);
+                                 gpointer                    user_data,
+                                 GError                     *error);
 
 GUPnPContext *
 gupnp_service_info_get_context                (GUPnPServiceInfo *info);
@@ -106,7 +107,8 @@ char *
 gupnp_service_info_get_event_subscription_url (GUPnPServiceInfo *info);
 
 GUPnPServiceIntrospection *
-gupnp_service_info_get_introspection          (GUPnPServiceInfo *info);
+gupnp_service_info_get_introspection          (GUPnPServiceInfo *info,
+                                               GError          **error);
 
 void
 gupnp_service_info_get_introspection_async

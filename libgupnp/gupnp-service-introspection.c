@@ -27,7 +27,17 @@
  *
  * The #GUPnPServiceIntrospection class provides methods for service
  * introspection based on information contained in its service description
- * document (SCPD).
+ * document (SCPD). There is no constructor provided for this class, please use
+ * #gupnp_service_info_get_introspection or
+ * #gupnp_service_info_get_introspection_async to create an
+ * #GUPnPServiceIntrospection object for a specific service.
+ *
+ * Note that all the introspection information is retreived from the service
+ * description document (SCPD) provided by the service and hence can not be
+ * guaranteed to be complete. A UPnP service is required to provide an SCPD but
+ * unfortunately, many services either do not provide this document or the
+ * document does not provide any or all of the introspection information.
+ * 
  **/
 
 #include <libsoup/soup.h>
@@ -64,7 +74,7 @@ enum {
 };
 
 static void
-contstruct_introspection_info (GUPnPServiceIntrospection *introspection);
+construct_introspection_info (GUPnPServiceIntrospection *introspection);
 
 /**
  * gupnp_service_state_variable_info_free 
@@ -116,8 +126,8 @@ gupnp_service_introspection_set_property (GObject      *object,
                 introspection->priv->scpd =
                         g_value_get_pointer (value);
 
-                /* Contruct introspection data */
-                contstruct_introspection_info (introspection);
+                /* Construct introspection data */
+                construct_introspection_info (introspection);
                 break;
         default:
                 G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -683,7 +693,7 @@ get_state_variables (xmlNode *list_element)
  *
  * */
 static void
-contstruct_introspection_info (GUPnPServiceIntrospection *introspection)
+construct_introspection_info (GUPnPServiceIntrospection *introspection)
 {
         xmlNode *root_element, *element;
 
@@ -781,7 +791,8 @@ gupnp_service_introspection_new (xmlDoc *scpd)
                                       "scpd", scpd,
                                       NULL);
 
-        if (introspection->priv->action_hash == NULL) {
+        if (introspection->priv->action_hash == NULL &&
+            introspection->priv->variable_hash == NULL) {
                 g_object_unref (introspection);
                 introspection = NULL;
         }
@@ -910,14 +921,12 @@ gupnp_service_introspection_list_state_variables (
 /**
  * gupnp_service_introspection_get_state_variable
  * @introspection: A #GUPnPServiceIntrospection
+ * @variable_name: The name of the variable whose information is being
+ * requested.
  *
  * Returns a pointer to the state variable (of type #GUPnPServiceStateVariable)
  * in this service with the name @variable_name.
  *
- * Note that this function retreives the needed information from the service
- * description document provided by the service and hence the list of arguments
- * reported by this function is not guaranteed to be complete.
- * 
  * Return value: The pointer to the variable by the name @action_name or NULL.
  * Do not modify or free it.
  *
@@ -927,7 +936,7 @@ gupnp_service_introspection_get_state_variable
                                 (GUPnPServiceIntrospection *introspection,
                                  const char                *variable_name)
 {
-        if (introspection->priv->action_hash == NULL)
+        if (introspection->priv->variable_hash == NULL)
                 return NULL;
 
         return g_hash_table_lookup (introspection->priv->variable_hash,

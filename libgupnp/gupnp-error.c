@@ -25,6 +25,7 @@
  */
 
 #include "gupnp-error.h"
+#include "gupnp-error-private.h"
 
 /**
  * gupnp_server_error_quark
@@ -72,4 +73,58 @@ gupnp_control_error_quark (void)
                 quark = g_quark_from_static_string ("gupnp-control-error");
 
         return quark;
+}
+
+/* Missing g_set_error_literal() */
+void
+set_error_literal (GError    **error,
+                   GQuark      error_quark,
+                   int         code,
+                   const char *message)
+{
+        if (error == NULL)
+                return;
+
+        if (*error == NULL) {
+                *error = g_error_new_literal (error_quark,
+                                              code,
+                                              message);
+        } else
+                g_warning ("Error already set.");
+}
+
+/* Soup status code => GUPnPServerError */
+static int
+code_from_status_code (int status_code)
+{
+        switch (status_code) {
+        case SOUP_STATUS_INTERNAL_SERVER_ERROR:
+                return GUPNP_SERVER_ERROR_INTERNAL_SERVER_ERROR;
+        case SOUP_STATUS_NOT_IMPLEMENTED:
+                return GUPNP_SERVER_ERROR_NOT_IMPLEMENTED;
+        case SOUP_STATUS_NOT_FOUND:
+                return GUPNP_SERVER_ERROR_NOT_FOUND;
+        default:
+                return GUPNP_SERVER_ERROR_OTHER;
+        }
+}
+
+/* Set status of @msg to @error */
+void
+set_server_error (GError     **error,
+                  SoupMessage *msg)
+{
+        set_error_literal (error,
+                           GUPNP_SERVER_ERROR,
+                           code_from_status_code (msg->status_code),
+                           msg->reason_phrase);
+}
+
+/* Create a #GError with status of @msg */
+GError *
+new_server_error (SoupMessage *msg)
+{
+        return g_error_new_literal (GUPNP_SERVER_ERROR,
+                                    code_from_status_code (msg->status_code),
+                                    msg->reason_phrase);
 }

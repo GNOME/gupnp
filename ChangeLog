@@ -1,3 +1,31 @@
+2007-07-23  Zeeshan Ali  <zeenix@gstreamer.net>
+            Jorn Baayen  <jorn@openedhand.com>
+
+	* libgupnp/gupnp-error.c:
+	* libgupnp/gupnp-error-private.h:
+	* libgupnp/gupnp-service-proxy.c:
+
+	Add & use server error utility functions.
+
+	* libgupnp/gupnp-service-info.c:
+	(gupnp_service_info_get_introspection), (scpd_loaded),
+	(got_scpd_url), (gupnp_service_info_get_introspection_async):
+	* libgupnp/gupnp-service-info.h:
+
+	Report non-programmer errors using GError.
+
+	* libgupnp/gupnp-service-introspection.c:
+	(gupnp_service_introspection_set_property),
+	(construct_introspection_info), (gupnp_service_introspection_new),
+	(gupnp_service_introspection_get_state_variable):
+
+	Fix some typos and conditions.
+
+	* tests/test-introspection.c: (got_introspection),
+	(service_proxy_available_cb):
+
+	Update the test app to use the new GError-using API.
+
 2007-07-11  Jorn Baayen  <jorn@openedhand.com>
 
 	* libgupnp/gupnp-error.h:

@@ -38,6 +38,7 @@
 #include "gupnp-device-proxy-private.h"
 #include "gupnp-context-private.h"
 #include "gupnp-error.h"
+#include "gupnp-error-private.h"
 #include "xml-util.h"
 #include "gena-protocol.h"
 #include "accept-language.h"
@@ -687,23 +688,6 @@ gupnp_service_proxy_end_action (GUPnPServiceProxy       *proxy,
         return ret;
 }
 
-static void
-set_error_literal (GError    **error,
-                   GQuark      error_quark,
-                   int         code,
-                   const char *message)
-{
-        if (error == NULL)
-                return;
-
-        if (*error == NULL) {
-                *error = g_error_new_literal (error_quark,
-                                              code,
-                                              message);
-        } else
-                g_warning ("Error already set.");
-}
-
 /**
  * gupnp_service_proxy_end_action_valist
  * @proxy: A #GUPnPServiceProxy
@@ -741,23 +725,7 @@ gupnp_service_proxy_end_action_valist (GUPnPServiceProxy       *proxy,
         case SOUP_STATUS_INTERNAL_SERVER_ERROR:
                 break;
         default:
-                /* Convert SoupStatus to GUPnPServerError */
-                switch (soup_msg->status_code) {
-                case SOUP_STATUS_NOT_IMPLEMENTED:
-                        code = GUPNP_SERVER_ERROR_NOT_IMPLEMENTED;
-                        break;
-                case SOUP_STATUS_NOT_FOUND:
-                        code = GUPNP_SERVER_ERROR_NOT_FOUND;
-                        break;
-                default:
-                        code = GUPNP_SERVER_ERROR_OTHER;
-                        break;
-                }
-
-                set_error_literal (error,
-                                   GUPNP_SERVER_ERROR,
-                                   code,
-                                   soup_msg->reason_phrase);
+                set_server_error (error, soup_msg);
                 
                 gupnp_service_proxy_action_free (action);
 

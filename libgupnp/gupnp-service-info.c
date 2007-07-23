@@ -33,6 +33,8 @@
 #include "gupnp-service-info.h"
 #include "gupnp-service-introspection-private.h"
 #include "gupnp-context-private.h"
+#include "gupnp-error.h"
+#include "gupnp-error-private.h"
 #include "xml-util.h"
 
 G_DEFINE_ABSTRACT_TYPE (GUPnPServiceInfo,
@@ -68,7 +70,6 @@ typedef struct {
         GUPnPServiceIntrospectionCallback callback;
         gpointer                          user_data;
 
-        char                             *scpd_url;
         SoupMessage                      *message;
 } GetSCPDURLData;
 
@@ -77,8 +78,6 @@ get_scpd_url_data_free (GetSCPDURLData *data)
 {
         data->info->priv->pending_gets =
                 g_list_remove (data->info->priv->pending_gets, data);
-
-        g_free (data->scpd_url);
 
         g_slice_free (GetSCPDURLData, data);
 }
@@ -444,6 +443,7 @@ gupnp_service_info_get_event_subscription_url (GUPnPServiceInfo *info)
 /**
  * gupnp_service_info_get_introspection
  * @info: A #GUPnPServiceInfo
+ * @error: return location for a GError, or NULL
  *
  * Note that introspection object is created from the information in service
  * description document (SCPD) provided by the service so it can not be created
@@ -453,9 +453,9 @@ gupnp_service_info_get_event_subscription_url (GUPnPServiceInfo *info)
  * Unref after use.
  **/
 GUPnPServiceIntrospection *
-gupnp_service_info_get_introspection (GUPnPServiceInfo *info)
+gupnp_service_info_get_introspection (GUPnPServiceInfo *info,
+                                      GError          **error)
 {
-        GUPnPServiceIntrospection *introspection = NULL;
         SoupSession *session;
         SoupMessage *msg;
         int status;
@@ -467,24 +467,24 @@ gupnp_service_info_get_introspection (GUPnPServiceInfo *info)
         session = _gupnp_context_get_session (info->priv->context);
 
         scpd_url = gupnp_service_info_get_scpd_url (info);
-        if (scpd_url == NULL)
-                return NULL;
-
-        msg = soup_message_new (SOUP_METHOD_GET, scpd_url);
-        g_free (scpd_url);
-
-        if (!msg) {
-                g_warning ("Failed to create request message for %s",
-                           scpd_url);
-
+        if (scpd_url == NULL) {
+                g_set_error (error,
+                             GUPNP_SERVER_ERROR,
+                             GUPNP_SERVER_ERROR_NOT_IMPLEMENTED,
+                             "Service does not provide an SCPD");
+                             
                 return NULL;
         }
 
+        msg = soup_message_new (SOUP_METHOD_GET, scpd_url);
+
+        g_free (scpd_url);
+
+        g_assert (msg != NULL);
+
         status = soup_session_send_message (session, msg);
         if (!SOUP_STATUS_IS_SUCCESSFUL (status)) {
-                g_warning ("Failed to get %s. Reason: %s",
-                            scpd_url,
-                            soup_status_get_phrase (status));
+                set_server_error (error, msg);
 
                 g_object_unref (msg);
 
@@ -496,14 +496,15 @@ gupnp_service_info_get_introspection (GUPnPServiceInfo *info)
         g_object_unref (msg);
 
         if (!scpd) {
-                g_warning ("Failed to parse SCPD document '%s'", scpd_url);
+                g_set_error (error,
+                             GUPNP_SERVER_ERROR,
+                             GUPNP_SERVER_ERROR_INVALID_RESPONSE,
+                             "Could not parse SCPD");
 
                 return NULL;
         }
 
-        introspection = gupnp_service_introspection_new (scpd);
-
-        return introspection;
+        return gupnp_service_introspection_new (scpd);
 }
 
 /**
@@ -519,7 +520,8 @@ scpd_loaded (GetSCPDURLData *data,
         if (introspection) {
                 data->callback (data->info,
                                 introspection,
-                                data->user_data);
+                                data->user_data,
+                                NULL);
         }
 }
 
@@ -530,17 +532,32 @@ static void
 got_scpd_url (SoupMessage    *msg,
               GetSCPDURLData *data)
 {
+        GError *error = NULL;
+
         if (SOUP_STATUS_IS_SUCCESSFUL (msg->status_code)) {
                 xmlDoc *scpd;
 
                 scpd = xmlParseMemory (msg->response.body,
-                                          msg->response.length);
+                                       msg->response.length);
                 if (scpd)
                         scpd_loaded (data, scpd);
-                else
-                        g_warning ("Failed to parse %s", data->scpd_url);
+                else {
+                        error = g_error_new
+                                        (GUPNP_SERVER_ERROR,
+                                         GUPNP_SERVER_ERROR_INVALID_RESPONSE,
+                                         "Could not parse SCPD");
+                }
         } else
-                g_warning ("Failed to GET %s", data->scpd_url);
+                error = new_server_error (msg);
+
+        if (error) {
+                data->callback (data->info,
+                                NULL,
+                                data->user_data,
+                                error);
+
+                g_error_free (error);
+        }
 
         get_scpd_url_data_free (data);
 }
@@ -554,7 +571,6 @@ got_scpd_url (SoupMessage    *msg,
  * Note that introspection object is created from the information in service
  * description document (SCPD) provided by the service so it can not be created
  * if the service does not provide an SCPD.
- *
  **/
 void
 gupnp_service_info_get_introspection_async
@@ -570,22 +586,37 @@ gupnp_service_info_get_introspection_async
         g_return_if_fail (callback != NULL);
 
         scpd_url = gupnp_service_info_get_scpd_url (info);
-        if (scpd_url == NULL)
+        if (scpd_url == NULL) {
+                GError *error;
+
+                error = g_error_new (GUPNP_SERVER_ERROR,
+                                     GUPNP_SERVER_ERROR_NOT_IMPLEMENTED,
+                                     "Service does not provide an SCPD");
+
+                callback (info, NULL, user_data, error);
+
+                g_error_free (error);
+
                 return;
+        }
 
         session = _gupnp_context_get_session (info->priv->context);
 
         /* Greate GetSCPDURLData structure */
         data = g_slice_new (GetSCPDURLData);
 
+        /* Create message */
+        data->message = soup_message_new (SOUP_METHOD_GET, scpd_url);
+
+        g_free (scpd_url);
+
+        g_assert (data->message != NULL);
+
         data->info      = info;
-        data->scpd_url  = scpd_url;
         data->callback  = callback;
         data->user_data = user_data;
 
-        /* Create message & send off */
-        data->message = soup_message_new (SOUP_METHOD_GET, scpd_url);
-
+        /* Send off the message */
         soup_session_queue_message (session,
                                     data->message,
                                     (SoupMessageCallbackFn) got_scpd_url,
