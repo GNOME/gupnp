@@ -1,3 +1,18 @@
+2007-07-23  Zeeshan Ali  <zeenix@gstreamer.net>
+
+	* libgupnp/gupnp-service-introspection.c:
+	(construct_introspection_info), (collect_hash_keys),
+	(gupnp_service_introspection_list_action_names),
+	(gupnp_service_introspection_list_state_variable_names):
+	* libgupnp/gupnp-service-introspection.h:
+
+	- Add _list_state_variable_names() method.
+	- a minor optimization.
+
+	* tests/test-introspection.c: (service_proxy_available_cb):
+
+	centralize the error handling.
+
 2007-07-23  Jorn Baayen  <jorn@openedhand.com>
 
 	* libgupnp/gupnp-service-info.c:

@@ -110,6 +110,10 @@ gupnp_service_introspection_list_action_arguments
                                  const char                *action_name);
 
 const GSList *
+gupnp_service_introspection_list_state_variable_names
+                                (GUPnPServiceIntrospection *introspection);
+
+const GSList *
 gupnp_service_introspection_list_state_variables
                                 (GUPnPServiceIntrospection *introspection);
 

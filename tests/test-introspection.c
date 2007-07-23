@@ -202,20 +202,10 @@ service_proxy_available_cb (GUPnPControlPoint *cp,
                 gupnp_service_info_get_introspection_async (info,
                                                             got_introspection,
                                                             NULL);
-        }
-       
-        else {
+        } else {
                 introspection =
                         gupnp_service_info_get_introspection (info, &error);
-                if (introspection)
-                        got_introspection (info, introspection, NULL, NULL);
-        }
-
-        if (error) {
-                g_warning ("Failed to create introspection for '%s': %s",
-                           gupnp_service_info_get_udn (info),
-                           error->message);
-                g_error_free (error);
+                got_introspection (info, introspection, NULL, error);
         }
 }
 

@@ -62,6 +62,7 @@ struct _GUPnPServiceIntrospectionPrivate {
         
         /* For caching purposes */
         GSList *variable_list;
+        GSList *variable_names;
         GSList *action_list;
         GSList *action_names;
 };
@@ -202,7 +203,7 @@ gupnp_service_introspection_class_init (GUPnPServiceIntrospectionClass *klass)
 }
 
 static void
-set_default_value (xmlNodePtr variable_node,
+set_default_value (xmlNodePtr                     variable_node,
                    GUPnPServiceStateVariableInfo *variable)
 {
         xmlChar *default_str;
@@ -223,7 +224,7 @@ set_default_value (xmlNodePtr variable_node,
 }
 
 static void
-set_string_value_limits (xmlNodePtr limit_node,
+set_string_value_limits (xmlNodePtr   limit_node,
                          GSList     **limits)
 {
         xmlNodePtr value_node;
@@ -248,8 +249,8 @@ set_string_value_limits (xmlNodePtr limit_node,
 
 static void
 set_value_limit_by_name (xmlNodePtr limit_node,
-                         GValue *limit,
-                         char *limit_name)
+                         GValue    *limit,
+                         char      *limit_name)
 {
         xmlChar *limit_str;
 
@@ -268,7 +269,7 @@ set_value_limit_by_name (xmlNodePtr limit_node,
 }
 
 static void
-set_variable_limits (xmlNodePtr                    variable_node,
+set_variable_limits (xmlNodePtr                     variable_node,
                      GUPnPServiceStateVariableInfo *variable)
 {
         xmlNodePtr limit_node;
@@ -691,23 +692,21 @@ static void
 construct_introspection_info (GUPnPServiceIntrospection *introspection,
                               xmlDoc                    *scpd)
 {
-        xmlNode *root_element, *element;
+        xmlNode *element;
 
         g_return_if_fail (scpd != NULL);
 
-        root_element = xml_util_get_element ((xmlNode *) scpd,
-                                             "scpd",
-                                             NULL);
-
         /* Get actionList element */
-        element = xml_util_get_element (root_element,
+        element = xml_util_get_element ((xmlNode *) scpd,
+                                        "scpd",
                                         "actionList",
                                         NULL);
         if (element)
                 introspection->priv->action_hash = get_actions (element);
 
-        /* Get actionList element */
-        element = xml_util_get_element (root_element,
+        /* Get serviceStateTable element */
+        element = xml_util_get_element ((xmlNode *) scpd,
+                                        "scpd",
                                         "serviceStateTable",
                                         NULL);
         if (element)
@@ -716,15 +715,13 @@ construct_introspection_info (GUPnPServiceIntrospection *introspection,
 }
 
 static void
-collect_action_names (gpointer key,
-                      gpointer value,
-                      gpointer user_data)
+collect_hash_keys (gpointer key,
+                   gpointer value,
+                   gpointer user_data)
 {
-        GSList **action_names = (GSList **) user_data;
-        char *action_name;
+        GSList **key_list = (GSList **) user_data;
        
-        action_name = (char *) key;
-        *action_names = g_slist_append (*action_names, action_name);
+        *key_list = g_slist_append (*key_list, key);
 }
 
 static void
@@ -806,18 +803,18 @@ gupnp_service_introspection_new (xmlDoc *scpd)
  * reported by this function is not guaranteed to be complete.
  * 
  * Return value: A GSList of names of all the actions or NULL. Do not modify
- * or free it or it's contents.
+ * or free it or its contents.
  **/
 const GSList *
-gupnp_service_introspection_list_action_names (
-                GUPnPServiceIntrospection *introspection)
+gupnp_service_introspection_list_action_names
+                        (GUPnPServiceIntrospection *introspection)
 {
         if (introspection->priv->action_hash == NULL)
                 return NULL;
 
         if (introspection->priv->action_names == NULL) {
                 g_hash_table_foreach (introspection->priv->action_hash,
-                                      collect_action_names,
+                                      collect_hash_keys,
                                       &introspection->priv->action_names);
         }
 
@@ -836,13 +833,13 @@ gupnp_service_introspection_list_action_names (
  * reported by this function is not guaranteed to be complete.
  * 
  * Return value: A GSList of all the arguments of the @action_name or NULL. Do
- * not modify or free it or it's contents.
+ * not modify or free it or its contents.
  *
 **/
 const GSList *
-gupnp_service_introspection_list_action_arguments (
-                GUPnPServiceIntrospection *introspection,
-                const char                *action_name)
+gupnp_service_introspection_list_action_arguments
+                        (GUPnPServiceIntrospection *introspection,
+                         const char                *action_name)
 {
         if (introspection->priv->action_hash == NULL)
                 return NULL;
@@ -863,12 +860,12 @@ gupnp_service_introspection_list_action_arguments (
  * reported by this function is not guaranteed to be complete.
  * 
  * Return value: A GSList of all the actions or NULL. Do not modify or free it
- * or it's contents.
+ * or its contents.
  *
  **/
 const GSList *
-gupnp_service_introspection_list_actions (
-                GUPnPServiceIntrospection *introspection)
+gupnp_service_introspection_list_actions
+                        (GUPnPServiceIntrospection *introspection)
 {
         if (introspection->priv->action_hash == NULL)
                 return NULL;
@@ -894,12 +891,12 @@ gupnp_service_introspection_list_actions (
  * variables reported by this function is not guaranteed to be complete.
  * 
  * Return value: A GSList of all the state variables or NULL. Do not modify or
- * free it or it's contents.
+ * free it or its contents.
  * 
  **/
 const GSList *
-gupnp_service_introspection_list_state_variables (
-                GUPnPServiceIntrospection *introspection)
+gupnp_service_introspection_list_state_variables
+                        (GUPnPServiceIntrospection *introspection)
 {
         if (introspection->priv->variable_hash == NULL)
                 return NULL;
@@ -938,4 +935,28 @@ gupnp_service_introspection_get_state_variable
                                     variable_name);
 }
 
+/**
+ * gupnp_service_introspection_list_state_variable_names
+ * @introspection: A #GUPnPServiceIntrospection
+ *
+ * Returns a GSList of names of all the state_variables in this service.
+ *
+ * Return value: A GSList of names of all the state_variables or NULL. Do not
+ * modify or free it or its contents.
+ **/
+const GSList *
+gupnp_service_introspection_list_state_variable_names
+                        (GUPnPServiceIntrospection *introspection)
+{
+        if (introspection->priv->variable_hash == NULL)
+                return NULL;
+
+        if (introspection->priv->variable_names == NULL) {
+                g_hash_table_foreach (introspection->priv->variable_hash,
+                                      collect_hash_keys,
+                                      &introspection->priv->variable_names);
+        }
+
+        return introspection->priv->variable_names;
+}
 
