@@ -1131,11 +1131,34 @@ server_handler (SoupServerContext *server_context,
         }
 
         hdr = soup_message_get_header (msg->request_headers, "SID");
-        if (hdr == NULL || strcmp (hdr, proxy->priv->sid) != 0) {
+        if (hdr == NULL ||
+            (proxy->priv->sid && (strcmp (hdr, proxy->priv->sid) != 0))) {
                 /* No SID or not ours */
                 soup_message_set_status (msg, SOUP_STATUS_PRECONDITION_FAILED);
 
                 return;
+        }
+
+        if (!proxy->priv->sid) {
+                GUPnPContext *context;
+                GMainContext *main_context;
+
+                context = gupnp_service_info_get_context
+                                        (GUPNP_SERVICE_INFO (proxy));
+                main_context = gssdp_client_get_main_context
+                                        (GSSDP_CLIENT (context));
+
+                /* Wait. Perhaps the subscription response has not yet
+                 * been processed. */
+                g_main_context_iteration (main_context, TRUE);
+
+                if (!proxy->priv->sid || strcmp (hdr, proxy->priv->sid) != 0) {
+                        /* Really not our SID */
+                        soup_message_set_status
+                                (msg, SOUP_STATUS_PRECONDITION_FAILED);
+
+                        return;
+                }
         }
 
         hdr = soup_message_get_header (msg->request_headers, "SEQ");
@@ -1322,8 +1345,6 @@ subscribe_got_response (SoupMessage       *msg,
         /* Check message status */
         if (SOUP_STATUS_IS_SUCCESSFUL (msg->status_code)) {
                 /* Success. */
-                GUPnPContext *context;
-                SoupServer *server;
                 const char *hdr;
                 int timeout;
 
@@ -1354,18 +1375,6 @@ subscribe_got_response (SoupMessage       *msg,
 
                 proxy->priv->sid = g_strdup (hdr);
 
-                /* Connect to 'server-message-received' signal */
-                context = gupnp_service_info_get_context
-                                                (GUPNP_SERVICE_INFO (proxy));
-
-                server = _gupnp_context_get_server (context);
-                soup_server_add_handler (server,
-                                         proxy->priv->path,
-                                         NULL,
-                                         server_handler,
-                                         NULL,
-                                         proxy);
-
                 /* Figure out when the subscription times out */
                 hdr = soup_message_get_header (msg->response_headers,
                                                "Timeout");
@@ -1393,6 +1402,8 @@ subscribe_got_response (SoupMessage       *msg,
                                                proxy);
                 }
         } else {
+                GUPnPContext *context;
+                SoupServer *server;
                 GError *error;
 
                 /* Subscription failed. */
@@ -1412,6 +1423,13 @@ subscribe_got_response (SoupMessage       *msg,
                                error);
 
                 g_error_free (error);
+
+                /* Remove listener */
+                context = gupnp_service_info_get_context
+                                        (GUPNP_SERVICE_INFO (proxy));
+
+                server = _gupnp_context_get_server (context);
+                soup_server_remove_handler (server, proxy->priv->path);
         }
 }
 
@@ -1424,6 +1442,7 @@ subscribe (GUPnPServiceProxy *proxy)
         GUPnPContext *context;
         SoupMessage *msg;
         SoupSession *session;
+        SoupServer *server;
         const char *server_url;
         char *sub_url, *delivery_url, *timeout;
 
@@ -1457,7 +1476,17 @@ subscribe (GUPnPServiceProxy *proxy)
                                  timeout);
         g_free (timeout);
 
-        /* And send it off */
+        /* Listen for events */
+        server = _gupnp_context_get_server (context);
+
+        soup_server_add_handler (server,
+                                 proxy->priv->path,
+                                 NULL,
+                                 server_handler,
+                                 NULL,
+                                 proxy);
+
+        /* And send our subscription message off */
         session = _gupnp_context_get_session (context);
 
         soup_session_queue_message (session,

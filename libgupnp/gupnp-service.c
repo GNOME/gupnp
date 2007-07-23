@@ -48,6 +48,8 @@ G_DEFINE_TYPE (GUPnPService,
 struct _GUPnPServicePrivate {
         GHashTable *subscriptions;
 
+        GList      *state_variables;
+
         GQueue     *notify_queue;
 
         gboolean    notify_frozen;
@@ -62,10 +64,18 @@ enum {
 
 static guint signals[LAST_SIGNAL];
 
+static xmlChar *
+create_property_set (GQueue *queue);
+
+static void
+notify_subscriber   (gpointer key,
+                     gpointer value,
+                     gpointer user_data);
+
 typedef struct {
         GUPnPService *service;
 
-        char         *callback;
+        GList        *callbacks;
         char         *sid;
 
         int           seq;
@@ -76,7 +86,12 @@ typedef struct {
 static void
 subscription_data_free (SubscriptionData *data)
 {
-        g_free (data->callback);
+        while (data->callbacks) {
+                g_free (data->callbacks->data);
+                data->callbacks = g_list_delete_link (data->callbacks,
+                                                      data->callbacks);
+        }
+
         g_free (data->sid);
 
         if (data->timeout_id)
@@ -787,13 +802,44 @@ subscribe (GUPnPService *service,
            const char   *timeout)
 {
         SubscriptionData *data;
+        char *start, *end, *uri;
         int timeout_seconds;
+        GQueue *queue;
+        xmlChar *mem;
+        GList *l;
 
         data = g_slice_new0 (SubscriptionData);
-        
-        data->service  = service;
-        data->callback = g_strdup (callback);
-        data->sid      = generate_sid ();
+
+        /* Parse callback list */
+        start = (char *) callback;
+        while ((start = strchr (start, '<'))) {
+                start += 1;
+                if (!start || !*start)
+                        break;
+
+                end = strchr (start, '>');
+                if (!end || !*end)
+                        break;
+
+                if (strncmp (start, "http://", strlen ("http://")) == 0) {
+                        uri = g_strndup (start, end - start);
+                        data->callbacks = g_list_append (data->callbacks, uri);
+                }
+
+                start = end;
+        }
+
+        if (!data->callbacks) {
+                soup_message_set_status (msg, SOUP_STATUS_PRECONDITION_FAILED);
+
+                g_slice_free (SubscriptionData, data);
+
+                return;
+        }
+
+        /* Add service and SID */
+        data->service = service;
+        data->sid     = generate_sid ();
 
         /* Add timeout */
         timeout_seconds = parse_timeout (timeout);
@@ -811,8 +857,38 @@ subscribe (GUPnPService *service,
         /* Respond */
         subscription_response (service, msg, data->sid, timeout_seconds);
 
-        /* XXX once we have introspection we should send an initial
-         * event message here. */
+        /* Send initial event message */
+        queue = g_queue_new ();
+
+        for (l = service->priv->state_variables; l; l = l->next) {      
+                NotifyData *ndata;
+
+                ndata = g_slice_new0 (NotifyData);
+
+                g_signal_emit (service,
+                               signals[QUERY_VARIABLE],
+                               g_quark_from_string (l->data),
+                               l->data,
+                               &ndata->value);
+
+                if (!G_IS_VALUE (&ndata->value)) {
+                        g_slice_free (NotifyData, ndata);
+
+                        continue;
+                }
+
+                ndata->variable = g_strdup (l->data);
+
+                g_queue_push_tail (queue, ndata);
+        }
+
+        mem = create_property_set (queue);
+        notify_subscriber (data->sid, data, mem); 
+
+        /* Cleanup */
+        g_queue_free (queue);
+
+        xmlFree (mem);
 }
 
 /* Resubscription request */
@@ -939,7 +1015,11 @@ gupnp_service_constructor (GType                  type,
 {
         GObjectClass *object_class;
         GObject *object;
+        GUPnPService *service;
         GUPnPServiceInfo *info;
+        GError *error;
+        GUPnPServiceIntrospection *introspection;
+        const GSList *state_variables, *l;
         GUPnPContext *context;
         SoupServer *server;
         SoupUri *uri;
@@ -951,7 +1031,33 @@ gupnp_service_constructor (GType                  type,
         object = object_class->constructor (type,
                                             n_construct_params,
                                             construct_params);
-        info = GUPNP_SERVICE_INFO (object);
+
+        service = GUPNP_SERVICE (object);
+        info    = GUPNP_SERVICE_INFO (object);
+
+        /* Get introspection and save state variable names */
+        error = NULL;
+
+        introspection = gupnp_service_info_get_introspection (info, &error);
+        if (introspection) {
+                state_variables =
+                        gupnp_service_introspection_list_state_variable_names
+                                                                (introspection);
+
+                for (l = state_variables; l; l = l->next) {
+                        service->priv->state_variables =
+                                g_list_prepend (service->priv->state_variables,
+                                                g_strdup (l->data));
+                }
+
+                g_object_unref (introspection);
+        } else {
+                g_warning ("Failed to get SCPD: %s\n"
+                           "The initial event message will not be sent.",
+                           error->message);
+
+                g_error_free (error);
+        }
 
         /* Get server */
         context = gupnp_service_info_get_context (info);
@@ -995,6 +1101,14 @@ gupnp_service_finalize (GObject *object)
 
         /* Free subscription hash */
         g_hash_table_destroy (service->priv->subscriptions);
+
+        /* Free state variable list */
+        while (service->priv->state_variables) {
+                g_free (service->priv->state_variables->data);
+                service->priv->state_variables =
+                        g_list_delete_link (service->priv->state_variables,
+                                            service->priv->state_variables);
+        }
 
         /* Free notify queue */
         while ((data = g_queue_pop_head (service->priv->notify_queue)))
@@ -1080,10 +1194,10 @@ gupnp_service_class_init (GUPnPServiceClass *klass)
                                                notify_failed),
                               NULL,
                               NULL,
-                              gupnp_marshal_VOID__STRING_POINTER,
+                              gupnp_marshal_VOID__POINTER_POINTER,
                               G_TYPE_NONE,
                               2,
-                              G_TYPE_STRING,
+                              G_TYPE_POINTER,
                               G_TYPE_POINTER);
 }
 
@@ -1166,20 +1280,46 @@ notify_got_response (SoupMessage *msg,
         data = user_data;
 
         if (!SOUP_STATUS_IS_SUCCESSFUL (msg->status_code)) {
-                /* Emit 'notify-failed' signal */
-                GError *error;
+                if (data->callbacks->next) {
+                        SoupUri *uri;
+                        GUPnPContext *context;
+                        SoupSession *session;
 
-                error = g_error_new (GUPNP_EVENTING_ERROR,
-                                     GUPNP_EVENTING_ERROR_NOTIFY_FAILED,
-                                     "Notify failed");
+                        /* Call next callback */
+                        data->callbacks = data->callbacks->next;
 
-                g_signal_emit (data->service,
-                               signals[NOTIFY_FAILED],
-                               0,
-                               data->callback,
-                               error);
+                        uri = soup_uri_new (data->callbacks->data);
+                        soup_message_set_uri (msg, uri);
+                        soup_uri_free (uri);
 
-                g_error_free (error);
+                        /* And re-queue */
+                        context = gupnp_service_info_get_context
+                                        (GUPNP_SERVICE_INFO (data->service));
+                        session = _gupnp_context_get_session (context);
+
+                        soup_session_requeue_message (session, msg);
+                } else {
+                        /* Emit 'notify-failed' signal */
+                        GError *error;
+
+                        error = g_error_new (GUPNP_EVENTING_ERROR,
+                                             GUPNP_EVENTING_ERROR_NOTIFY_FAILED,
+                                             "Notify failed");
+
+                        g_signal_emit (data->service,
+                                       signals[NOTIFY_FAILED],
+                                       0,
+                                       data->callbacks,
+                                       error);
+
+                        g_error_free (error);
+
+                        /* Reset callbacks pointer */
+                        data->callbacks = g_list_first (data->callbacks);
+                }
+        } else {
+                /* Success: reset callbacks pointer */
+                data->callbacks = g_list_first (data->callbacks);
         }
 }
 
@@ -1200,7 +1340,9 @@ notify_subscriber (gpointer key,
         property_set = user_data;
 
         /* Create message */
-        msg = soup_message_new (GENA_METHOD_NOTIFY, data->callback);
+        msg = soup_message_new (GENA_METHOD_NOTIFY, data->callbacks->data);
+
+        g_assert (msg != NULL);
 
         /* Add headers */
         soup_message_add_header (msg->request_headers,
@@ -1232,9 +1374,9 @@ notify_subscriber (gpointer key,
                 data->seq = 1;
 
         /* Add body */
-        msg->response.owner  = SOUP_BUFFER_SYSTEM_OWNED;
-        msg->response.body   = g_strdup (property_set);
-        msg->response.length = strlen (property_set);
+        msg->request.owner  = SOUP_BUFFER_SYSTEM_OWNED;
+        msg->request.body   = g_strdup (property_set);
+        msg->request.length = strlen (property_set);
 
         /* Queue */
         context = gupnp_service_info_get_context
@@ -1246,9 +1388,9 @@ notify_subscriber (gpointer key,
                                     data);
 }
 
-/* Flush all queued notifications */
-static void
-flush_notifications (GUPnPService *service)
+/* Create a property set from @queue */
+static xmlChar *
+create_property_set (GQueue *queue)
 {
         GValue transformed_value = {0, };
         NotifyData *data;
@@ -1277,7 +1419,7 @@ flush_notifications (GUPnPService *service)
                                 NULL);
 
         /* Add variables */
-        while ((data = g_queue_pop_head (service->priv->notify_queue))) {
+        while ((data = g_queue_pop_head (queue))) {
                 g_value_init (&transformed_value, G_TYPE_STRING);
                 if (g_value_transform (&data->value, &transformed_value)) {
                         /* Add to property set */
@@ -1298,8 +1440,24 @@ flush_notifications (GUPnPService *service)
                 notify_data_free (data);
         }
 
-        /* Dump document to response */
+        /* Dump document */
         xmlDocDumpMemory (doc, &mem, &size);
+
+        /* Cleanup */
+        xmlFreeDoc (doc);
+
+        /* Return */
+        return mem;
+}
+
+/* Flush all queued notifications */
+static void
+flush_notifications (GUPnPService *service)
+{
+        xmlChar *mem;
+
+        /* Create property set */
+        mem = create_property_set (service->priv->notify_queue);
 
         /* And send it off */
         g_hash_table_foreach (service->priv->subscriptions,
@@ -1307,7 +1465,6 @@ flush_notifications (GUPnPService *service)
                               mem);
 
         /* Cleanup */
-        xmlFreeDoc (doc);
         xmlFree (mem);
 }
 
@@ -1331,7 +1488,7 @@ gupnp_service_notify_value (GUPnPService *service,
         /* Queue */
         NotifyData *data;
 
-        data = g_slice_new (NotifyData);
+        data = g_slice_new0 (NotifyData);
 
         data->variable = g_strdup (variable);
 

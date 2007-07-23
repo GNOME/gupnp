@@ -1,3 +1,19 @@
+2007-07-23  Jorn Baayen  <jorn@openedhand.com>
+
+	* libgupnp/gupnp-marshal.list:
+	* libgupnp/gupnp-service-proxy.c: (server_handler),
+	(subscription_expire), (subscribe_got_response), (subscribe):
+	* libgupnp/gupnp-service.c: (parse_timeout), (subscribe),
+	(subscription_server_handler), (gupnp_service_constructor),
+	(gupnp_service_finalize), (gupnp_service_class_init),
+	(gupnp_service_notify), (gupnp_service_notify_valist),
+	(notify_got_response), (notify_subscriber), (create_property_set),
+	(flush_notifications), (gupnp_service_notify_value):
+	* libgupnp/gupnp-service.h:
+
+	Handle multiple callbacks URLs.
+	Send initial event message.
+
 2007-07-23  Zeeshan Ali  <zeenix@gstreamer.net>
 
 	* libgupnp/gupnp-service-introspection.c:
