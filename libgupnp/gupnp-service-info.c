@@ -456,6 +456,7 @@ GUPnPServiceIntrospection *
 gupnp_service_info_get_introspection (GUPnPServiceInfo *info,
                                       GError          **error)
 {
+        GUPnPServiceIntrospection *introspection;
         SoupSession *session;
         SoupMessage *msg;
         int status;
@@ -463,6 +464,8 @@ gupnp_service_info_get_introspection (GUPnPServiceInfo *info,
         xmlDoc *scpd;
 
         g_return_val_if_fail (GUPNP_IS_SERVICE_INFO (info), NULL);
+
+        introspection = NULL;
 
         session = _gupnp_context_get_session (info->priv->context);
 
@@ -495,34 +498,20 @@ gupnp_service_info_get_introspection (GUPnPServiceInfo *info,
 
         g_object_unref (msg);
 
-        if (!scpd) {
+        if (scpd) {
+                introspection = gupnp_service_introspection_new (scpd);
+
+                xmlFreeDoc (scpd);
+        }
+
+        if (!introspection) {
                 g_set_error (error,
                              GUPNP_SERVER_ERROR,
                              GUPNP_SERVER_ERROR_INVALID_RESPONSE,
                              "Could not parse SCPD");
-
-                return NULL;
         }
 
-        return gupnp_service_introspection_new (scpd);
-}
-
-/**
- * SCPD document loaded.
- **/
-static void
-scpd_loaded (GetSCPDURLData *data,
-             xmlDoc         *scpd)
-{
-        GUPnPServiceIntrospection *introspection;
-
-        introspection = gupnp_service_introspection_new (scpd);
-        if (introspection) {
-                data->callback (data->info,
-                                introspection,
-                                data->user_data,
-                                NULL);
-        }
+        return introspection;
 }
 
 /**
@@ -532,16 +521,24 @@ static void
 got_scpd_url (SoupMessage    *msg,
               GetSCPDURLData *data)
 {
-        GError *error = NULL;
+        GUPnPServiceIntrospection *introspection;
+        GError *error;
+
+        introspection = NULL;
+        error = NULL;
 
         if (SOUP_STATUS_IS_SUCCESSFUL (msg->status_code)) {
                 xmlDoc *scpd;
 
                 scpd = xmlParseMemory (msg->response.body,
                                        msg->response.length);
-                if (scpd)
-                        scpd_loaded (data, scpd);
-                else {
+                if (scpd) {
+                        introspection = gupnp_service_introspection_new (scpd);
+
+                        xmlFreeDoc (scpd);
+                }
+
+                if (!introspection) {
                         error = g_error_new
                                         (GUPNP_SERVER_ERROR,
                                          GUPNP_SERVER_ERROR_INVALID_RESPONSE,
@@ -550,14 +547,13 @@ got_scpd_url (SoupMessage    *msg,
         } else
                 error = new_server_error (msg);
 
-        if (error) {
-                data->callback (data->info,
-                                NULL,
-                                data->user_data,
-                                error);
+        data->callback (data->info,
+                        introspection,
+                        data->user_data,
+                        error);
 
+        if (error)
                 g_error_free (error);
-        }
 
         get_scpd_url_data_free (data);
 }

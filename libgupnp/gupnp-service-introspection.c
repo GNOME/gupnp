@@ -56,8 +56,6 @@ G_DEFINE_TYPE (GUPnPServiceIntrospection,
                G_TYPE_OBJECT);
 
 struct _GUPnPServiceIntrospectionPrivate {
-        xmlDoc *scpd;
-        
         /* Intropection data */
         GHashTable *action_hash;
         GHashTable *variable_hash;
@@ -74,7 +72,8 @@ enum {
 };
 
 static void
-construct_introspection_info (GUPnPServiceIntrospection *introspection);
+construct_introspection_info (GUPnPServiceIntrospection *introspection,
+                              xmlDoc                    *scpd);
 
 /**
  * gupnp_service_state_variable_info_free 
@@ -123,11 +122,9 @@ gupnp_service_introspection_set_property (GObject      *object,
 
         switch (property_id) {
         case PROP_SCPD:
-                introspection->priv->scpd =
-                        g_value_get_pointer (value);
-
                 /* Construct introspection data */
-                construct_introspection_info (introspection);
+                construct_introspection_info (introspection,
+                                              g_value_get_pointer (value));
                 break;
         default:
                 G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -174,8 +171,6 @@ gupnp_service_introspection_finalize (GObject *object)
 
         if (introspection->priv->variable_hash)
                 g_hash_table_destroy (introspection->priv->variable_hash);
-
-        xmlFreeDoc (introspection->priv->scpd);
 }
 
 static void
@@ -693,16 +688,16 @@ get_state_variables (xmlNode *list_element)
  *
  * */
 static void
-construct_introspection_info (GUPnPServiceIntrospection *introspection)
+construct_introspection_info (GUPnPServiceIntrospection *introspection,
+                              xmlDoc                    *scpd)
 {
         xmlNode *root_element, *element;
 
-        g_return_if_fail (introspection->priv->scpd != NULL);
+        g_return_if_fail (scpd != NULL);
 
-        root_element = xml_util_get_element (
-                        (xmlNode *) introspection->priv->scpd,
-                        "scpd",
-                        NULL);
+        root_element = xml_util_get_element ((xmlNode *) scpd,
+                                             "scpd",
+                                             NULL);
 
         /* Get actionList element */
         element = xml_util_get_element (root_element,

@@ -1,3 +1,13 @@
+2007-07-23  Jorn Baayen  <jorn@openedhand.com>
+
+	* libgupnp/gupnp-service-info.c:
+	(gupnp_service_info_get_introspection), (got_scpd_url):
+	* libgupnp/gupnp-service-introspection.c:
+	(gupnp_service_introspection_set_property),
+	(gupnp_service_introspection_finalize):
+
+	Don't keep xmlDoc around longer than necessary.
+
 2007-07-23  Zeeshan Ali  <zeenix@gstreamer.net>
             Jorn Baayen  <jorn@openedhand.com>
 
