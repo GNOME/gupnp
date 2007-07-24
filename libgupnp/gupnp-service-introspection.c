@@ -61,10 +61,10 @@ struct _GUPnPServiceIntrospectionPrivate {
         GHashTable *variable_hash;
         
         /* For caching purposes */
-        GSList *variable_list;
-        GSList *variable_names;
-        GSList *action_list;
-        GSList *action_names;
+        GList *variable_list;
+        GList *variable_names;
+        GList *action_list;
+        GList *action_names;
 };
 
 enum {
@@ -94,10 +94,10 @@ gupnp_service_state_variable_info_free
                 g_value_unset (&variable->maximum);
                 g_value_unset (&variable->step);
         }
-        g_slist_foreach (variable->allowed_values,
+        g_list_foreach (variable->allowed_values,
                          (GFunc) g_free,
                          NULL);
-        g_slist_free (variable->allowed_values);
+        g_list_free (variable->allowed_values);
         
         g_slice_free (GUPnPServiceStateVariableInfo, variable);
 }
@@ -143,7 +143,7 @@ gupnp_service_introspection_set_property (GObject      *object,
 static void
 gupnp_service_action_info_free (GUPnPServiceActionInfo *action_info)
 {
-        g_slist_free (action_info->arguments);
+        g_list_free (action_info->arguments);
         g_slice_free (GUPnPServiceActionInfo, action_info);
 }
 
@@ -155,17 +155,17 @@ gupnp_service_introspection_finalize (GObject *object)
         introspection = GUPNP_SERVICE_INTROSPECTION (object);
 
         if (introspection->priv->variable_list)
-                g_slist_free (introspection->priv->variable_list);
+                g_list_free (introspection->priv->variable_list);
         
         if (introspection->priv->action_list) {
-                g_slist_foreach (introspection->priv->action_list,
+                g_list_foreach (introspection->priv->action_list,
                                  (GFunc) gupnp_service_action_info_free,
                                  NULL);
-                g_slist_free (introspection->priv->action_list);
+                g_list_free (introspection->priv->action_list);
         }
         
         if (introspection->priv->action_names)
-                g_slist_free (introspection->priv->action_names);
+                g_list_free (introspection->priv->action_names);
         
         if (introspection->priv->action_hash)
                 g_hash_table_destroy (introspection->priv->action_hash);
@@ -225,7 +225,7 @@ set_default_value (xmlNodePtr                     variable_node,
 
 static void
 set_string_value_limits (xmlNodePtr   limit_node,
-                         GSList     **limits)
+                         GList     **limits)
 {
         xmlNodePtr value_node;
 
@@ -241,7 +241,7 @@ set_string_value_limits (xmlNodePtr   limit_node,
                 if (!allowed_value)
                         continue;
 
-                *limits = g_slist_append (*limits,
+                *limits = g_list_append (*limits,
                                           g_strdup ((char *) allowed_value));
                 xmlFree (allowed_value);
         }
@@ -518,14 +518,14 @@ get_action_argument (xmlNodePtr argument_node)
 
 /**
  *
- * Creates a #GSList of all the arguments (of type #GUPnPServiceActionArgInfo)
+ * Creates a #GList of all the arguments (of type #GUPnPServiceActionArgInfo)
  * from the action node @action_node in the SCPD document
  *
  **/
-static GSList *
+static GList *
 get_action_arguments (xmlNodePtr action_node)
 {
-        GSList *argument_list = NULL;
+        GList *argument_list = NULL;
         xmlNodePtr arglist_node;
         xmlNodePtr argument_node;
         
@@ -546,7 +546,7 @@ get_action_arguments (xmlNodePtr action_node)
 
                 argument = get_action_argument (argument_node);
                 if (argument) {
-                        argument_list = g_slist_append (argument_list,
+                        argument_list = g_list_append (argument_list,
                                                         argument);
                 }
         }
@@ -572,26 +572,26 @@ gupnp_service_action_arg_info_free (GUPnPServiceActionArgInfo *argument)
 
 /**
  *
- * Free's a #GSList of GUPnPServiceActionArgInfo
+ * Free's a #GList of GUPnPServiceActionArgInfo
  *
  **/
 static void
-action_argument_list_free (GSList *argument_list)
+action_argument_list_free (GList *argument_list)
 {
-        GSList *iter;
+        GList *iter;
 
         for (iter = argument_list; iter; iter = iter->next) {
                 gupnp_service_action_arg_info_free (
                                 (GUPnPServiceActionArgInfo *) iter->data);
         }
 
-        g_slist_free (argument_list);
+        g_list_free (argument_list);
 }
 
 /**
  *
  * Creates a #GHashTable of all the actions from the SCPD document with
- * keys being the names of the action and values being lists (of type #GSList)
+ * keys being the names of the action and values being lists (of type #GList)
  * of arguments (of type #GUPnPServiceActionArgInfo).
  *
  **/
@@ -611,7 +611,7 @@ get_actions (xmlNode *list_element)
              action_node;
              action_node = action_node->next) {
                 char *name;
-                GSList *arguments;
+                GList *arguments;
 
                 if (strcmp ("action", (char *) action_node->name) != 0)
                         continue;
@@ -636,7 +636,7 @@ get_actions (xmlNode *list_element)
  *
  * Creates a #GHashTable of all the state variable from the SCPD document with
  * keys being the names of the variables and values being lists (of type 
- * #GSList) of state variable information (of type 
+ * #GList) of state variable information (of type 
  * #GUPnPServiceStateVariableInfo).
  *
  **/
@@ -719,21 +719,21 @@ collect_hash_keys (gpointer key,
                    gpointer value,
                    gpointer user_data)
 {
-        GSList **key_list = (GSList **) user_data;
+        GList **key_list = (GList **) user_data;
        
-        *key_list = g_slist_append (*key_list, key);
+        *key_list = g_list_append (*key_list, key);
 }
 
 static void
 collect_action_arguments (gpointer data,
                           gpointer user_data)
 {
-        GSList **argument_list = (GSList **) user_data;
+        GList **argument_list = (GList **) user_data;
         GUPnPServiceActionArgInfo *argument;
        
         argument = (GUPnPServiceActionArgInfo *) data;
 
-        *argument_list = g_slist_append (*argument_list, argument);
+        *argument_list = g_list_append (*argument_list, argument);
 }
 
 static void
@@ -741,27 +741,27 @@ collect_actions (gpointer key,
                  gpointer value,
                  gpointer user_data)
 {
-        GSList **action_list = (GSList **) user_data;
+        GList **action_list = (GList **) user_data;
         GUPnPServiceActionInfo *action_info;
        
         action_info = g_slice_new0 (GUPnPServiceActionInfo);
 
         action_info->name = (char *) key;
-        g_slist_foreach ((GSList *) value,
+        g_list_foreach ((GList *) value,
                          collect_action_arguments,
                          &action_info->arguments);
         
-        *action_list = g_slist_append (*action_list, action_info);
+        *action_list = g_list_append (*action_list, action_info);
 }
 
 static void
 collect_state_variables (gpointer key, gpointer value, gpointer user_data)
 {
-        GSList **variable_list = (GSList **) user_data;
+        GList **variable_list = (GList **) user_data;
         GUPnPServiceStateVariableInfo *variable;
       
         variable = (GUPnPServiceStateVariableInfo *) value;
-        *variable_list = g_slist_append (*variable_list, variable);
+        *variable_list = g_list_append (*variable_list, variable);
 }
 
 /**
@@ -796,16 +796,16 @@ gupnp_service_introspection_new (xmlDoc *scpd)
  * gupnp_service_introspection_list_action_names
  * @introspection: A #GUPnPServiceIntrospection
  *
- * Returns a GSList of names of all the actions in this service.
+ * Returns a GList of names of all the actions in this service.
  *
  * Note that this function retreives the needed information from the service
  * description document provided by the service and hence the list of actions
  * reported by this function is not guaranteed to be complete.
  * 
- * Return value: A GSList of names of all the actions or NULL. Do not modify
+ * Return value: A GList of names of all the actions or NULL. Do not modify
  * or free it or its contents.
  **/
-const GSList *
+const GList *
 gupnp_service_introspection_list_action_names
                         (GUPnPServiceIntrospection *introspection)
 {
@@ -825,18 +825,18 @@ gupnp_service_introspection_list_action_names
  * gupnp_service_introspection_list_action_arguments
  * @introspection: A #GUPnPServiceIntrospection
  *
- * Returns a GSList of all the arguments (of type #GUPnPServiceActionArgInfo)
+ * Returns a GList of all the arguments (of type #GUPnPServiceActionArgInfo)
  * of @action_name. 
  *
  * Note that this function retreives the needed information from the service
  * description document provided by the service and hence the list of arguments
  * reported by this function is not guaranteed to be complete.
  * 
- * Return value: A GSList of all the arguments of the @action_name or NULL. Do
+ * Return value: A GList of all the arguments of the @action_name or NULL. Do
  * not modify or free it or its contents.
  *
 **/
-const GSList *
+const GList *
 gupnp_service_introspection_list_action_arguments
                         (GUPnPServiceIntrospection *introspection,
                          const char                *action_name)
@@ -852,18 +852,18 @@ gupnp_service_introspection_list_action_arguments
  * gupnp_service_introspection_list_actions
  * @introspection: A #GUPnPServiceIntrospection
  *
- * Returns a GSList of all the actions (of type #GUPnPServiceActionInfo) in
+ * Returns a GList of all the actions (of type #GUPnPServiceActionInfo) in
  * this service.
  *
  * Note that this function retreives the needed information from the service
  * description document provided by the service and hence the list of actions
  * reported by this function is not guaranteed to be complete.
  * 
- * Return value: A GSList of all the actions or NULL. Do not modify or free it
+ * Return value: A GList of all the actions or NULL. Do not modify or free it
  * or its contents.
  *
  **/
-const GSList *
+const GList *
 gupnp_service_introspection_list_actions
                         (GUPnPServiceIntrospection *introspection)
 {
@@ -883,18 +883,18 @@ gupnp_service_introspection_list_actions
  * gupnp_service_introspection_list_state_variables
  * @introspection: A #GUPnPServiceIntrospection
  *
- * Returns a GSList of all the state variables (of type
+ * Returns a GList of all the state variables (of type
  * #GUPnPServiceStateVariableInfo) in this service.
  *
  * Note that this function retreives the needed information from the service
  * description document provided by the service and hence the list of state
  * variables reported by this function is not guaranteed to be complete.
  * 
- * Return value: A GSList of all the state variables or NULL. Do not modify or
+ * Return value: A GList of all the state variables or NULL. Do not modify or
  * free it or its contents.
  * 
  **/
-const GSList *
+const GList *
 gupnp_service_introspection_list_state_variables
                         (GUPnPServiceIntrospection *introspection)
 {
@@ -939,12 +939,12 @@ gupnp_service_introspection_get_state_variable
  * gupnp_service_introspection_list_state_variable_names
  * @introspection: A #GUPnPServiceIntrospection
  *
- * Returns a GSList of names of all the state_variables in this service.
+ * Returns a GList of names of all the state_variables in this service.
  *
- * Return value: A GSList of names of all the state_variables or NULL. Do not
+ * Return value: A GList of names of all the state_variables or NULL. Do not
  * modify or free it or its contents.
  **/
-const GSList *
+const GList *
 gupnp_service_introspection_list_state_variable_names
                         (GUPnPServiceIntrospection *introspection)
 {

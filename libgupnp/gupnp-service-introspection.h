@@ -54,8 +54,8 @@ gupnp_service_introspection_get_type (void) G_GNUC_CONST;
 
 typedef enum
 {
-  GUPNP_SERVICE_ACTION_ARG_DIRECTION_IN,
-  GUPNP_SERVICE_ACTION_ARG_DIRECTION_OUT
+        GUPNP_SERVICE_ACTION_ARG_DIRECTION_IN,
+        GUPNP_SERVICE_ACTION_ARG_DIRECTION_OUT
 } GUPnPServiceActionArgDirection;
 
 typedef struct {
@@ -66,8 +66,8 @@ typedef struct {
 } GUPnPServiceActionArgInfo;
 
 typedef struct {
-        char   *name;
-        GSList *arguments;
+        char  *name;
+        GList *arguments;
 } GUPnPServiceActionInfo;
 
 typedef struct {
@@ -79,7 +79,7 @@ typedef struct {
         GValue   minimum;         /* only for numeric data types           */
         GValue   maximum;         /* only for numeric data types           */
         GValue   step;            /* only for numeric data types           */
-        GSList  *allowed_values;  /* only for string data type; list of    */
+        GList   *allowed_values;  /* only for string data type; list of    */
                                   /* (char *) strings rather than GValues  */
 } GUPnPServiceStateVariableInfo;
 
@@ -96,24 +96,24 @@ typedef struct {
         GObjectClass parent_class;
 } GUPnPServiceIntrospectionClass;
 
-const GSList *
+const GList *
 gupnp_service_introspection_list_action_names
                                 (GUPnPServiceIntrospection *introspection);
 
-const GSList *
+const GList *
 gupnp_service_introspection_list_actions
                                 (GUPnPServiceIntrospection *introspection);
 
-const GSList *
+const GList *
 gupnp_service_introspection_list_action_arguments
                                 (GUPnPServiceIntrospection *introspection,
                                  const char                *action_name);
 
-const GSList *
+const GList *
 gupnp_service_introspection_list_state_variable_names
                                 (GUPnPServiceIntrospection *introspection);
 
-const GSList *
+const GList *
 gupnp_service_introspection_list_state_variables
                                 (GUPnPServiceIntrospection *introspection);
 

@@ -1019,7 +1019,7 @@ gupnp_service_constructor (GType                  type,
         GUPnPServiceInfo *info;
         GError *error;
         GUPnPServiceIntrospection *introspection;
-        const GSList *state_variables, *l;
+        const GList *state_variables, *l;
         GUPnPContext *context;
         SoupServer *server;
         SoupUri *uri;

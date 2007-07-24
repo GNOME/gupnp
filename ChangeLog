@@ -1,3 +1,20 @@
+2007-07-24  Zeeshan Ali  <zeenix@gstreamer.net>
+
+	* libgupnp/gupnp-service-introspection.c:
+	(gupnp_service_state_variable_info_free),
+	(gupnp_service_action_info_free),
+	(gupnp_service_introspection_finalize), (set_string_value_limits),
+	(get_action_arguments), (action_argument_list_free), (get_actions),
+	(collect_hash_keys), (collect_action_arguments), (collect_actions),
+	(collect_state_variables):
+	* libgupnp/gupnp-service-introspection.h:
+	* libgupnp/gupnp-service.c: (gupnp_service_constructor):
+	* tests/test-introspection.c: (print_action_arguments),
+	(print_actions), (print_state_variables):
+
+	Use GList instead of GSList for compatibility with the rest of the
+	library.
+
 2007-07-24  Jorn Baayen  <jorn@openedhand.com>
 
 	* libgupnp/gupnp-service-proxy.c: (server_handler):

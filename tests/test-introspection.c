@@ -43,9 +43,9 @@ interrupt_signal_handler (int signum)
 }
 
 static void
-print_action_arguments (GSList *argument_list)
+print_action_arguments (GList *argument_list)
 {
-        GSList *iter;
+        GList *iter;
 
         g_print ("\targuments:\n");
         for (iter = argument_list; iter; iter = iter->next) {
@@ -66,11 +66,11 @@ print_action_arguments (GSList *argument_list)
 static void
 print_actions (GUPnPServiceIntrospection *introspection)
 {
-        const GSList *action_list;
+        const GList *action_list;
 
         action_list = gupnp_service_introspection_list_actions (introspection);
         if (action_list) {
-                const GSList *iter;
+                const GList *iter;
 
                 g_print ("actions:\n");
                 for (iter = action_list; iter; iter = iter->next) {
@@ -88,13 +88,13 @@ print_actions (GUPnPServiceIntrospection *introspection)
 static void
 print_state_variables (GUPnPServiceIntrospection *introspection)
 {
-        const GSList *variables;
+        const GList *variables;
 
         variables = 
                 gupnp_service_introspection_list_state_variables (
                                 introspection);
         if (variables) {
-                const GSList *iter;
+                const GList *iter;
 
                 g_print ("state variables:\n");
                 for (iter = variables; iter; iter = iter->next) {
@@ -150,7 +150,7 @@ print_state_variables (GUPnPServiceIntrospection *introspection)
                         }
 
                         if (variable->allowed_values) {
-                                GSList *value_iter;
+                                GList *value_iter;
 
                                 g_print ("\tallowed values: ");
                                 for (value_iter = variable->allowed_values;
