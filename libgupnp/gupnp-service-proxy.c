@@ -1161,8 +1161,6 @@ server_handler (SoupServerContext *server_context,
                 }
         }
 
-        g_print ("== GOT NOTIFY! ==\n");
-
         hdr = soup_message_get_header (msg->request_headers, "SEQ");
         if (hdr == NULL) {
                 /* No SEQ header */

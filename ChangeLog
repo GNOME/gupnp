@@ -1,5 +1,11 @@
 2007-07-25  Jorn Baayen  <jorn@openedhand.com>
 
+	* libgupnp/gupnp-service-proxy.c: (server_handler):
+
+	Remove debug spew.
+
+2007-07-25  Jorn Baayen  <jorn@openedhand.com>
+
 	* libgupnp/gupnp-service-introspection.c:
 	* libgupnp/gupnp-types.c:
 
