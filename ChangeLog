@@ -1,5 +1,11 @@
 2007-07-24  Jorn Baayen  <jorn@openedhand.com>
 
+	* libgupnp/gupnp-service-proxy.c: (server_handler):
+
+	Don't allow g_main_context_iteration() to block.
+
+2007-07-24  Jorn Baayen  <jorn@openedhand.com>
+
 	* configure.ac:
 
 	Depend on gssdp 0.3.

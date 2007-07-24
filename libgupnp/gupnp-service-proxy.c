@@ -1150,7 +1150,7 @@ server_handler (SoupServerContext *server_context,
 
                 /* Wait. Perhaps the subscription response has not yet
                  * been processed. */
-                g_main_context_iteration (main_context, TRUE);
+                g_main_context_iteration (main_context, FALSE);
 
                 if (!proxy->priv->sid || strcmp (hdr, proxy->priv->sid) != 0) {
                         /* Really not our SID */
@@ -1160,6 +1160,8 @@ server_handler (SoupServerContext *server_context,
                         return;
                 }
         }
+
+        g_print ("== GOT NOTIFY! ==\n");
 
         hdr = soup_message_get_header (msg->request_headers, "SEQ");
         if (hdr == NULL) {
