@@ -1,3 +1,16 @@
+0.2
+===
+
+- Fully implemented server-side API. [Jorn Baayen]
+- New service introspection support through SCPD documents. [Zeeshan Ali]
+- M-POST support. [Jorn Baayen]
+- More error codes split out into several error domains. [Jorn Baayen]
+- Use Accept-Language header for internationalisation. [Jorn Baayen]
+- Subresource retreival moved from DeviceProxy to DeviceInfo [Jorn Baayen]
+- Bug fixes.
+
+GUPnP is now feature complete.
+
 0.1
 ===
 
