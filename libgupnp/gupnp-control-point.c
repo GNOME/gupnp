@@ -619,7 +619,7 @@ gupnp_control_point_resource_unavailable
 {
         GUPnPControlPoint *control_point;
         char *udn, *service_type;
-        GList *l;
+        GList *l, *cur_l;
         DescriptionDoc *doc;
 
         control_point = GUPNP_CONTROL_POINT (resource_browser);
@@ -630,7 +630,9 @@ gupnp_control_point_resource_unavailable
 
         /* Find proxy */
         if (service_type) {
-                for (l = control_point->priv->services; l; l = l->next) {
+                l = control_point->priv->services;
+
+                while (l) {
                         GUPnPServiceInfo *info;
                         GUPnPServiceProxy *proxy;
                         const char *location;
@@ -645,17 +647,21 @@ gupnp_control_point_resource_unavailable
                             (strcmp (service_type, tmp) != 0)) {
                                 g_free (tmp);
 
+                                l = l->next;
+
                                 continue;
                         }
 
                         g_free (tmp);
 
-                        proxy = GUPNP_SERVICE_PROXY (l->data);
+                        proxy = GUPNP_SERVICE_PROXY (info);
+
+                        cur_l = l;
+                        l = l->next;
 
                         control_point->priv->services =
                                 g_list_delete_link
-                                        (control_point->priv->services,
-                                         l);
+                                        (control_point->priv->services, cur_l);
 
                         g_signal_emit (control_point,
                                        signals[SERVICE_PROXY_UNAVAILABLE],
@@ -683,7 +689,9 @@ gupnp_control_point_resource_unavailable
                         g_object_unref (proxy);
                 }
         } else {
-                for (l = control_point->priv->devices; l; l = l->next) {
+                l = control_point->priv->devices;
+
+                while (l) {
                         GUPnPDeviceInfo *info;
                         GUPnPDeviceProxy *proxy;
                         const char *location;
@@ -691,14 +699,20 @@ gupnp_control_point_resource_unavailable
                         info = GUPNP_DEVICE_INFO (l->data);
 
                         if (strcmp (udn,
-                                    gupnp_device_info_get_udn (info)) != 0)
-                                continue;
+                                    gupnp_device_info_get_udn (info)) != 0) {
+                                l = l->next;
 
-                        proxy = GUPNP_DEVICE_PROXY (l->data);
+                                continue;
+                        }
+
+                        proxy = GUPNP_DEVICE_PROXY (info);
+
+                        cur_l = l;
+                        l = l->next;
 
                         control_point->priv->devices =
                                  g_list_delete_link
-                                        (control_point->priv->devices, l);
+                                        (control_point->priv->devices, cur_l);
 
                         g_signal_emit (control_point,
                                        signals[DEVICE_PROXY_UNAVAILABLE],

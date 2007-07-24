@@ -12,7 +12,7 @@ AC_PROG_LIBTOOL
 AC_FUNC_MMAP
 
 PKG_CHECK_MODULES(LIBGUPNP, gobject-2.0 >= 2.9.1 \
-                            gssdp-1.0 \
+                            gssdp-1.0 >= 0.3 \
                             libsoup-2.2 \
                             libxml-2.0 \
                             shared-mime-info \

@@ -1,5 +1,16 @@
 2007-07-24  Jorn Baayen  <jorn@openedhand.com>
 
+	* configure.ac:
+
+	Depend on gssdp 0.3.
+
+	* libgupnp/gupnp-control-point.c:
+	(gupnp_control_point_resource_unavailable):
+
+	Don't depend on deleted list items in loop.
+
+2007-07-24  Jorn Baayen  <jorn@openedhand.com>
+
 	* NEWS:
 
 	Added news items for 0.2.
