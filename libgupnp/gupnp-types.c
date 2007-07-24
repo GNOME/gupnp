@@ -20,7 +20,13 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:gupnp-types
+ * @short_description: Special types.
+ */
+
 #include <string.h>
+
 #include "gupnp-types.h"
 
 static void

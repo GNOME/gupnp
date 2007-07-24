@@ -920,7 +920,7 @@ gupnp_service_introspection_list_state_variables
  * in this service with the name @variable_name.
  *
  * Return value: The pointer to the variable by the name @action_name or NULL.
- * Do not modify or free it.
+ * Do not modify or free.
  *
 **/
 const GUPnPServiceStateVariableInfo *
