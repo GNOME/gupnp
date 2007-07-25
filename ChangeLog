@@ -1,3 +1,20 @@
+2007-07-26  Zeeshan Ali  <zeenix@gstreamer.net>
+
+	* libgupnp/gupnp-service-introspection.c:
+	(gupnp_service_action_arg_info_free),
+	(gupnp_service_action_info_free),
+	(gupnp_service_introspection_finalize), (get_actions),
+	(get_state_variables), (construct_introspection_info),
+	(collect_action_names), (collect_variable_names),
+	(gupnp_service_introspection_new),
+	(gupnp_service_introspection_list_action_names),
+	(gupnp_service_introspection_list_actions),
+	(gupnp_service_introspection_list_state_variables),
+	(gupnp_service_introspection_list_state_variable_names):
+
+	Get rid of the hashtables since the function that needed them have
+	been removed.
+
 2007-07-25  Zeeshan Ali  <zeenix@gstreamer.net>
 
 	* libgupnp/gupnp-service-introspection.h:
