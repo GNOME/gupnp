@@ -1,3 +1,11 @@
+2007-07-25  Zeeshan Ali  <zeenix@gstreamer.net>
+
+	* libgupnp/gupnp-service-introspection.c:
+	* libgupnp/gupnp-service-introspection.h:
+
+	Add docs for structs and only mention once the extremely dependency on
+	the availability of SCPD. :)
+
 2007-07-25  Jorn Baayen  <jorn@openedhand.com>
 
 	* libgupnp/gupnp-service-introspection.c:

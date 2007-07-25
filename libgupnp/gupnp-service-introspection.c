@@ -801,10 +801,6 @@ gupnp_service_introspection_new (xmlDoc *scpd)
  *
  * Returns a GList of names of all the actions in this service.
  *
- * Note that this function retreives the needed information from the service
- * description document provided by the service and hence the list of actions
- * reported by this function is not guaranteed to be complete.
- * 
  * Return value: A GList of names of all the actions or NULL. Do not modify
  * or free it or its contents.
  **/
@@ -831,10 +827,6 @@ gupnp_service_introspection_list_action_names
  * Returns a GList of all the actions (of type #GUPnPServiceActionInfo) in
  * this service.
  *
- * Note that this function retreives the needed information from the service
- * description document provided by the service and hence the list of actions
- * reported by this function is not guaranteed to be complete.
- * 
  * Return value: A GList of all the actions or NULL. Do not modify or free it
  * or its contents.
  *
@@ -862,10 +854,6 @@ gupnp_service_introspection_list_actions
  * Returns a GList of all the state variables (of type
  * #GUPnPServiceStateVariableInfo) in this service.
  *
- * Note that this function retreives the needed information from the service
- * description document provided by the service and hence the list of state
- * variables reported by this function is not guaranteed to be complete.
- * 
  * Return value: A GList of all the state variables or NULL. Do not modify or
  * free it or its contents.
  * 
@@ -890,9 +878,9 @@ gupnp_service_introspection_list_state_variables
  * gupnp_service_introspection_list_state_variable_names
  * @introspection: A #GUPnPServiceIntrospection
  *
- * Returns a GList of names of all the state_variables in this service.
+ * Returns a GList of names of all the state variables in this service.
  *
- * Return value: A GList of names of all the state_variables or NULL. Do not
+ * Return value: A GList of names of all the state variables or NULL. Do not
  * modify or free it or its contents.
  **/
 const GList *

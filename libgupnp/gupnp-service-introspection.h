@@ -52,35 +52,81 @@ gupnp_service_introspection_get_type (void) G_GNUC_CONST;
                  GUPNP_TYPE_SERVICE_INTROSPECTION, \
                  GUPnPServiceIntrospectionClass))
 
+/**
+ * GUPnPServiceActionArgDirection
+ *
+ * Represents the direction of a service state variable.
+ *
+ **/
 typedef enum
 {
         GUPNP_SERVICE_ACTION_ARG_DIRECTION_IN,
         GUPNP_SERVICE_ACTION_ARG_DIRECTION_OUT
 } GUPnPServiceActionArgDirection;
 
+/**
+ * GUPnPServiceActionArgInfo:
+ *
+ * This structure contains information about the argument of service action.
+ *
+ * @name: The name of the action argument.
+ * @direction: The direction of the action argument.
+ * @related_state_variable: The name of the state variable associated with this
+ * argument.
+ * @retval: Whether this argument is the return value of the action.
+ **/
 typedef struct {
         char                          *name;
         GUPnPServiceActionArgDirection direction;
         char                          *related_state_variable;
-        gboolean                       retval; /* Is this the return value? */
+        gboolean                       retval;
 } GUPnPServiceActionArgInfo;
 
+/**
+ * GUPnPServiceActionInfo:
+ *
+ * This structure contains information about a service action.
+ *
+ * @name: The name of the action argument.
+ * @arguments: A GList of all the arguments
+ * (of type #GUPnPServiceActionArgInfo) of this action.
+ **/
 typedef struct {
         char  *name;
         GList *arguments; /* list of #GUPnPServiceActionArgInfo */
 } GUPnPServiceActionInfo;
 
+/**
+ * GUPnPServiceStateVariableInfo:
+ *
+ * This structure contains information about service state variable.
+ *
+ * @name: The name of the state variable.
+ * @send_events: Whether this state variable can source events.
+ * @is_numeric: Wether this state variable is a numeric type (integer and
+ * float).
+ * @type: The GType of this state variable.
+ * @default_value: The default value of this state variable.
+ * @minimum: The minimum value of this state variable. Only applies to numeric
+ * data types.
+ * @maximum: The maximum value of this state variable. Only applies to numeric
+ * data types.
+ * @step: The step value of this state variable. Only applies to numeric
+ * data types.
+ * @allowed_values: The allowed values of this state variable. Only applies to
+ * string data types. Unlike the other fields in this structure, this field
+ * contains a list of (char *) strings rather than GValues.
+ **/
 typedef struct {
         char    *name;
-        gboolean send_events;     /* Capable of sourcing events?           */
-        gboolean is_numeric;      /* Is this a numeric type?               */
+        gboolean send_events;
+        gboolean is_numeric;
         GType    type;
         GValue   default_value;
-        GValue   minimum;         /* only for numeric data types           */
-        GValue   maximum;         /* only for numeric data types           */
-        GValue   step;            /* only for numeric data types           */
-        GList   *allowed_values;  /* only for string data type; list of    */
-                                  /* (char *) strings rather than GValues  */
+        GValue   minimum;
+        GValue   maximum;
+        GValue   step;
+        GList   *allowed_values;
 } GUPnPServiceStateVariableInfo;
 
 typedef struct _GUPnPServiceIntrospectionPrivate
