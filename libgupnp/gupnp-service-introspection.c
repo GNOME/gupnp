@@ -37,6 +37,9 @@
  * guaranteed to be complete. A UPnP service is required to provide an SCPD but
  * unfortunately, many services either do not provide this document or the
  * document does not provide any or all of the introspection information.
+ *
+ * This class exposes internals of the UPnP protocol and should not need
+ * to be used for regular device or control point development.
  * 
  **/
 

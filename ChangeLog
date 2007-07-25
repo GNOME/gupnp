@@ -1,5 +1,12 @@
 2007-07-25  Jorn Baayen  <jorn@openedhand.com>
 
+	* libgupnp/gupnp-service-introspection.c:
+
+	Added a comment warning people against using introspection in
+	regular apps.
+
+2007-07-25  Jorn Baayen  <jorn@openedhand.com>
+
 	A doc/gupnp-sections.txt:
 	* libgupnp/gupnp-error.c:
 	* libgupnp/gupnp-service-introspection.h:
