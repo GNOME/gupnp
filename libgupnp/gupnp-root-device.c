@@ -439,6 +439,7 @@ gupnp_root_device_new (GUPnPContext *context,
 {
         return g_object_new (GUPNP_TYPE_ROOT_DEVICE,
                              "context", context,
+                             "root-device", NULL,
                              "description-doc", description_doc,
                              "relative-location", relative_location,
                              NULL);

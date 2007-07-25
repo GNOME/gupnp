@@ -46,13 +46,22 @@ G_DEFINE_TYPE (GUPnPService,
                GUPNP_TYPE_SERVICE_INFO);
 
 struct _GUPnPServicePrivate {
-        GHashTable *subscriptions;
+        GUPnPRootDevice *root_device;
 
-        GList      *state_variables;
+        guint            notify_available_id;
 
-        GQueue     *notify_queue;
+        GHashTable      *subscriptions;
 
-        gboolean    notify_frozen;
+        GList           *state_variables;
+
+        GQueue          *notify_queue;
+
+        gboolean         notify_frozen;
+};
+
+enum {
+        PROP_0,
+        PROP_ROOT_DEVICE
 };
 
 enum {
@@ -472,19 +481,19 @@ gupnp_service_action_return_error (GUPnPServiceAction *action,
 }
 
 static void
-gupnp_service_init (GUPnPService *proxy)
+gupnp_service_init (GUPnPService *device)
 {
-        proxy->priv = G_TYPE_INSTANCE_GET_PRIVATE (proxy,
-                                                   GUPNP_TYPE_SERVICE,
-                                                   GUPnPServicePrivate);
+        device->priv = G_TYPE_INSTANCE_GET_PRIVATE (device,
+                                                    GUPNP_TYPE_SERVICE,
+                                                    GUPnPServicePrivate);
 
-        proxy->priv->subscriptions =
+        device->priv->subscriptions =
                 g_hash_table_new_full (g_str_hash,
                                        g_str_equal,
                                        NULL,
                                        (GDestroyNotify) subscription_data_free);
 
-        proxy->priv->notify_queue = g_queue_new ();
+        device->priv->notify_queue = g_queue_new ();
 }
 
 /* Generate a new action response node for @action_name */
@@ -1092,6 +1101,108 @@ gupnp_service_constructor (GType                  type,
         return object;
 }
 
+static gboolean
+say_yes (gpointer key,
+         gpointer value,
+         gpointer user_data)
+{
+        return TRUE;
+}
+
+/* Root device availability changed. */
+static void
+notify_available_cb (GObject *object,
+                     GParamSpec *pspec,
+                     gpointer    user_data)
+{
+        GUPnPService *service;
+
+        service = GUPNP_SERVICE (user_data);
+
+        if (!gupnp_root_device_get_available (GUPNP_ROOT_DEVICE (object))) {
+                /* Root device now unavailable: Purge subscriptions */
+                g_hash_table_foreach_remove (service->priv->subscriptions,
+                                             say_yes,
+                                             NULL);
+        }
+}
+
+static void
+gupnp_service_set_property (GObject      *object,
+                            guint         property_id,
+                            const GValue *value,
+                            GParamSpec   *pspec)
+{
+        GUPnPService *service;
+
+        service = GUPNP_SERVICE (object);
+
+        switch (property_id) {
+        case PROP_ROOT_DEVICE:
+                service->priv->root_device =
+                        g_object_ref (g_value_get_object (value));
+
+                service->priv->notify_available_id =
+                        g_signal_connect_object (service->priv->root_device,
+                                                 "notify::available",
+                                                 G_CALLBACK
+                                                        (notify_available_cb),
+                                                 object,
+                                                 0);
+
+                break;
+        default:
+                G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
+                break;
+        }
+}
+
+static void
+gupnp_service_get_property (GObject    *object,
+                            guint       property_id,
+                            GValue     *value,
+                            GParamSpec *pspec)
+{
+        GUPnPService *service;
+
+        service = GUPNP_SERVICE (object);
+
+        switch (property_id) {
+        case PROP_ROOT_DEVICE:
+                g_value_set_object (value, service->priv->root_device);
+                break;
+        default:
+                G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
+                break;
+        }
+}
+
+static void
+gupnp_service_dispose (GObject *object)
+{
+        GUPnPService *service;
+        GObjectClass *object_class;
+
+        service = GUPNP_SERVICE (object);
+
+        if (service->priv->root_device) {
+                if (g_signal_handler_is_connected
+                        (service->priv->root_device,
+                         service->priv->notify_available_id)) {
+                        g_signal_handler_disconnect
+                                (service->priv->root_device,
+                                 service->priv->notify_available_id);
+                }
+                
+                g_object_unref (service->priv->root_device);
+                service->priv->root_device = NULL;
+        }
+
+        /* Call super */
+        object_class = G_OBJECT_CLASS (gupnp_service_parent_class);
+        object_class->dispose (object);
+}
+
 static void
 gupnp_service_finalize (GObject *object)
 {
@@ -1131,12 +1242,33 @@ gupnp_service_class_init (GUPnPServiceClass *klass)
 
         object_class = G_OBJECT_CLASS (klass);
 
-        object_class->constructor = gupnp_service_constructor;
-        object_class->finalize    = gupnp_service_finalize;
+        object_class->set_property = gupnp_service_set_property;
+        object_class->get_property = gupnp_service_get_property;
+        object_class->constructor  = gupnp_service_constructor;
+        object_class->dispose      = gupnp_service_dispose;
+        object_class->finalize     = gupnp_service_finalize;
 
         info_class = GUPNP_SERVICE_INFO_CLASS (klass);
         
         g_type_class_add_private (klass, sizeof (GUPnPServicePrivate));
+
+        /**
+         * GUPnPService:root-device
+         *
+         * The containing #GUPnPRootDevice.
+         **/
+        g_object_class_install_property
+                (object_class,
+                 PROP_ROOT_DEVICE,
+                 g_param_spec_object ("root-device",
+                                      "Root device",
+                                      "The GUPnPRootDevice",
+                                      GUPNP_TYPE_ROOT_DEVICE,
+                                      G_PARAM_READWRITE |
+                                      G_PARAM_CONSTRUCT_ONLY |
+                                      G_PARAM_STATIC_NAME |
+                                      G_PARAM_STATIC_NICK |
+                                      G_PARAM_STATIC_BLURB));
 
         /**
          * GUPnPService::action-invoked
@@ -1411,6 +1543,7 @@ create_property_set (GQueue *queue)
 
         /* Compose property set */
         doc = xmlNewDoc ((const xmlChar *) "1.0");
+
         node = xmlNewDocNode (doc,
                               NULL,
                               (const xmlChar *) "propertyset",
@@ -1548,20 +1681,22 @@ gupnp_service_thaw_notify (GUPnPService *service)
 /**
  * _gupnp_service_new
  * @context: A #GUPnPContext
+ * @root_device: The #GUPnPRootDevice
  * @element: The #xmlNode ponting to the right service element
- * @location: The location of the service description file
  * @udn: The UDN of the device the service is contained in
+ * @location: The location of the service description file
  * @url_base: The URL base for this service
  *
  * Return value: A #GUPnPService for the service with element @element, as
  * read from the service description file specified by @location.
  **/
 GUPnPService *
-_gupnp_service_new (GUPnPContext *context,
-                    xmlNode      *element,
-                    const char   *udn,
-                    const char   *location,
-                    SoupUri      *url_base)
+_gupnp_service_new (GUPnPContext    *context,
+                    GUPnPRootDevice *root_device,
+                    xmlNode         *element,
+                    const char      *udn,
+                    const char      *location,
+                    SoupUri         *url_base)
 {
         GUPnPService *service;
 
@@ -1572,6 +1707,7 @@ _gupnp_service_new (GUPnPContext *context,
 
         service = g_object_new (GUPNP_TYPE_SERVICE,
                                 "context", context,
+                                "root-device", root_device,
                                 "location", location,
                                 "udn", udn,
                                 "url-base", url_base,

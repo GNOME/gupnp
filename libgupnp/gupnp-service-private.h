@@ -26,12 +26,14 @@
 
 #include "gupnp-context.h"
 #include "gupnp-service.h"
+#include "gupnp-root-device.h"
 
 GUPnPService *
-_gupnp_service_new (GUPnPContext *context,
-                    xmlNode      *element,
-                    const char   *location,
-                    const char   *udn,
-                    SoupUri      *url_base);
+_gupnp_service_new (GUPnPContext    *context,
+                    GUPnPRootDevice *root_device,
+                    xmlNode         *element,
+                    const char      *location,
+                    const char      *udn,
+                    SoupUri         *url_base);
 
 #endif /* __GUPNP_SERVICE_PRIVATE_H__ */

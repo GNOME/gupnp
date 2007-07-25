@@ -1,5 +1,29 @@
 2007-07-25  Jorn Baayen  <jorn@openedhand.com>
 
+	* libgupnp/gupnp-device.c: (gupnp_device_get_device),
+	(gupnp_device_get_service), (gupnp_device_get_property),
+	(gupnp_device_dispose), (gupnp_device_init),
+	(gupnp_device_class_init), (_gupnp_device_find_element_for_udn):
+	* libgupnp/gupnp-root-device.c: (gupnp_root_device_new):
+	* libgupnp/gupnp-service-private.h:
+	* libgupnp/gupnp-service.c: (gupnp_service_action_return_error),
+	(gupnp_service_constructor), (gupnp_service_set_property),
+	(gupnp_service_get_property), (gupnp_service_dispose),
+	(gupnp_service_finalize), (gupnp_service_class_init),
+	(notify_got_response), (notify_subscriber), (create_property_set),
+	(flush_notifications), (gupnp_service_notify_value),
+	(gupnp_service_freeze_notify), (gupnp_service_thaw_notify),
+	(_gupnp_service_new):
+
+	Devices and Services reference their RootDevice.
+	On RootDevice unavailability Service purges its subscriptions.
+
+	* tests/test-server.c: (main):
+
+	Unref content_dir.
+
+2007-07-25  Jorn Baayen  <jorn@openedhand.com>
+
 	* libgupnp/gupnp-control-point.c: (gupnp_control_point_dispose):
 	* libgupnp/gupnp-service-proxy-private.h:
 	* libgupnp/gupnp-service-proxy.c: (gupnp_service_proxy_dispose),

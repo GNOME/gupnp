@@ -183,6 +183,9 @@ main (int argc, char **argv)
         g_main_loop_run (main_loop);
         g_main_loop_unref (main_loop);
 
+        if (content_dir)
+                g_object_unref (content_dir);
+
         g_object_unref (dev);
         g_object_unref (context);
 
