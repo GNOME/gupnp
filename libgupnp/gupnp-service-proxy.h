@@ -80,16 +80,28 @@ typedef struct {
  **/
 typedef struct _GUPnPServiceProxyAction GUPnPServiceProxyAction;
 
-typedef void
-(* GUPnPServiceProxyActionCallback) (GUPnPServiceProxy       *proxy,
+/**
+ * GUPnPServiceProxyActionCallback:
+ * @proxy: The #GUPnPServiceProxy @action is called from
+ * @action: The #GUPnPServiceProxyAction in progress
+ * @user_data: User data
+ **/
+typedef void (* GUPnPServiceProxyActionCallback) (
+                                     GUPnPServiceProxy       *proxy,
                                      GUPnPServiceProxyAction *action,
                                      gpointer                 user_data);
 
-typedef void
-(* GUPnPServiceProxyNotifyCallback) (GUPnPServiceProxy       *proxy,
-                                     const char              *variable,
-                                     GValue                  *value,
-                                     gpointer                 user_data);
+/**
+ * GUPnPServiceProxyNotifyCallback:
+ * @proxy: The #GUPnPServiceProxy the notification originates from
+ * @variable: The name of the variable being notified
+ * @value: The #GValue of the variable being notified
+ * @user_data: User data
+ **/
+typedef void (* GUPnPServiceProxyNotifyCallback) (GUPnPServiceProxy *proxy,
+                                                  const char        *variable,
+                                                  GValue            *value,
+                                                  gpointer           user_data);
 
 gboolean
 gupnp_service_proxy_send_action    (GUPnPServiceProxy              *proxy,

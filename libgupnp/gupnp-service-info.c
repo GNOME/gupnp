@@ -552,8 +552,8 @@ got_scpd_url (SoupMessage    *msg,
 
         data->callback (data->info,
                         introspection,
-                        data->user_data,
-                        error);
+                        error,
+                        data->user_data);
 
         if (error)
                 g_error_free (error);
@@ -603,7 +603,7 @@ gupnp_service_info_get_introspection_async
                                  GUPNP_SERVER_ERROR_INVALID_URL,
                                  "No valid SCPD URL defined");
 
-                callback (info, NULL, user_data, error);
+                callback (info, NULL, error, user_data);
 
                 g_error_free (error);
 

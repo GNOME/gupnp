@@ -73,11 +73,18 @@ typedef struct {
         void (* _gupnp_reserved4) (void);
 } GUPnPServiceInfoClass;
 
-typedef void (* GUPnPServiceIntrospectionCallback)
-                                (GUPnPServiceInfo           *info,
+/**
+ * GUPnPServiceIntrospectionCallback
+ * @info: The #GUPnPServiceInfo introspection was requested for
+ * @introspection: The new #GUPnPServiceIntrospection object, or NULL
+ * @error: The #GError that occurred, or NULL
+ * @user_data: User data
+ **/
+typedef void (* GUPnPServiceIntrospectionCallback) (
+                                 GUPnPServiceInfo           *info,
                                  GUPnPServiceIntrospection  *introspection,
-                                 gpointer                    user_data,
-                                 GError                     *error);
+                                 GError                     *error,
+                                 gpointer                    user_data);
 
 GUPnPContext *
 gupnp_service_info_get_context                (GUPnPServiceInfo *info);

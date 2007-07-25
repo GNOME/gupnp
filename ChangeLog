@@ -1,5 +1,21 @@
 2007-07-26  Jorn Baayen  <jorn@openedhand.com>
 
+	* doc/gupnp-sections.txt:
+	* libgupnp/gupnp-service-info.h:
+	* libgupnp/gupnp-service-proxy.h:
+
+	Document callback prototypes.
+
+	* libgupnp/gupnp-service-info.c: (got_scpd_url),
+	(gupnp_service_info_get_introspection_async):
+	* tests/test-introspection.c: (print_state_variables):
+
+	Switch the order of the 'error' and 'user-data' arguments in the
+	async introspection retrieval callback, so that 'user-data' is now
+	last for consistency.
+
+2007-07-26  Jorn Baayen  <jorn@openedhand.com>
+
 	* gupnp-1.0.pc.in:
 
 	List all dependencies.

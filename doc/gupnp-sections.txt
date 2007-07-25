@@ -60,6 +60,8 @@ GUPnPDeviceInfoPrivate
 <TITLE>GUPnPServiceProxy</TITLE>
 GUPnPServiceProxy
 GUPnPServiceProxyAction
+GUPnPServiceProxyActionCallback
+GUPnPServiceProxyNotifyCallback
 gupnp_service_proxy_send_action
 gupnp_service_proxy_send_action_valist
 gupnp_service_proxy_begin_action
@@ -81,7 +83,6 @@ GUPNP_IS_SERVICE_PROXY_CLASS
 GUPNP_SERVICE_PROXY_GET_CLASS
 <SUBSECTION Private>
 GUPnPServiceProxyPrivate
-void
 </SECTION>
 
 <SECTION>
@@ -201,6 +202,7 @@ GUPNP_SERVICE_INTROSPECTION_GET_CLASS
 <FILE>gupnp-service-info</FILE>
 <TITLE>GUPnPServiceInfo</TITLE>
 GUPnPServiceInfo
+GUPnPServiceIntrospectionCallback
 gupnp_service_info_get_context
 gupnp_service_info_get_location
 gupnp_service_info_get_url_base

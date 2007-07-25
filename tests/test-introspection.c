@@ -31,9 +31,9 @@ GMainLoop *main_loop;
 static gboolean async = FALSE;
 static GOptionEntry entries[] = 
 {
-   { "async", 'a', 0, G_OPTION_ARG_NONE, &async, 
-     "Asynchronously create intropection object", NULL },
-   { NULL }
+       { "async", 'a', 0, G_OPTION_ARG_NONE, &async, 
+         "Asynchronously create intropection object", NULL },
+       { NULL }
 };
 
 static void
@@ -156,7 +156,8 @@ print_state_variables (GUPnPServiceIntrospection *introspection)
                                 for (value_iter = variable->allowed_values;
                                      value_iter;
                                      value_iter = value_iter->next) {
-                                        g_print ("\"%s\" ", (gchar *) value_iter->data);
+                                        g_print ("\"%s\" ",
+                                                 (gchar *) value_iter->data);
                                 }
                         }
                         
@@ -169,8 +170,8 @@ print_state_variables (GUPnPServiceIntrospection *introspection)
 static void
 got_introspection (GUPnPServiceInfo *info,
                    GUPnPServiceIntrospection *introspection,
-                   gpointer user_data,
-                   GError *error)
+                   GError *error,
+                   gpointer user_data)
 {
         if (error) {
                 g_warning ("Failed to create introspection for '%s': %s",
