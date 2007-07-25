@@ -58,6 +58,16 @@ browse_cb (GUPnPService       *service,
         gupnp_service_action_return (action);
 }
 
+static void
+query_cb (GUPnPService *service,
+          const char   *variable_name,
+          GValue       *value,
+          gpointer      user_data)
+{
+        g_value_init (value, G_TYPE_UINT);
+        g_value_set_uint (value, 31415927);
+}
+
 int
 main (int argc, char **argv)
 {
@@ -112,6 +122,11 @@ main (int argc, char **argv)
                 g_signal_connect (content_dir,
                                   "action-invoked::Browse",
                                   G_CALLBACK (browse_cb),
+                                  NULL);
+
+                g_signal_connect (content_dir,
+                                  "query-variable::SystemUpdateID",
+                                  G_CALLBACK (query_cb),
                                   NULL);
         }
 

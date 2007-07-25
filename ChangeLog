@@ -1,5 +1,17 @@
 2007-07-25  Jorn Baayen  <jorn@openedhand.com>
 
+	* libgupnp/gupnp-marshal.list:
+	* libgupnp/gupnp-service.c: (gupnp_service_class_init):
+
+	Don't box the to-be-filled GValue.
+
+	* tests/test-client.c: (notify_cb), (service_proxy_available_cb):
+	* tests/test-server.c: (browse_cb), (main):
+
+	Test event notification.
+
+2007-07-25  Jorn Baayen  <jorn@openedhand.com>
+
 	* libgupnp/gupnp-service-proxy.c: (server_handler):
 
 	Remove debug spew.

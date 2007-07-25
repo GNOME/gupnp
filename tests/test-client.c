@@ -73,7 +73,7 @@ notify_cb (GUPnPServiceProxy *proxy,
            gpointer           user_data)
 {
         g_print ("Received a notification for variable '%s':\n", variable);
-        g_print ("\tvalue:     %d\n", g_value_get_int (value));
+        g_print ("\tvalue:     %d\n", g_value_get_uint (value));
         g_print ("\tuser_data: %s\n", (const char *) user_data);
 }
 
@@ -98,11 +98,11 @@ service_proxy_available_cb (GUPnPControlPoint *cp,
                 guint count, total;
                 GError *error = NULL;
 
-                /* We want to be notified whenever SystemUpdateID (of type int)
+                /* We want to be notified whenever SystemUpdateID (of type uint)
                  * changes */
                 gupnp_service_proxy_add_notify (proxy,
                                                 "SystemUpdateID",
-                                                G_TYPE_INT,
+                                                G_TYPE_UINT,
                                                 notify_cb,
                                                 "Test");
 
