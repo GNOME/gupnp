@@ -6,7 +6,7 @@
 - M-POST support. [Jorn Baayen]
 - More error codes split out into several error domains. [Jorn Baayen]
 - Use Accept-Language header for internationalisation. [Jorn Baayen]
-- Subresource retreival moved from DeviceProxy to DeviceInfo [Jorn Baayen]
+- Subresource retreival moved from DeviceProxy to DeviceInfo. [Jorn Baayen]
 - Bug fixes.
 
 GUPnP is now feature complete.
