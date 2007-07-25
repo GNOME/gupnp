@@ -480,7 +480,8 @@ load_description (GUPnPControlPoint *control_point,
                 data->message = soup_message_new (SOUP_METHOD_GET,
                                                   description_url);
                 if (data->message == NULL) {
-                        g_warning ("Invalid URL: %s", description_url);
+                        g_warning ("Invalid description URL: %s",
+                                   description_url);
 
                         g_slice_free (GetDescriptionURLData, data);
 
@@ -635,8 +636,7 @@ gupnp_control_point_resource_unavailable
                 while (l) {
                         GUPnPServiceInfo *info;
                         GUPnPServiceProxy *proxy;
-                        const char *location;
-                        char *tmp;
+                        char *location, *tmp;
 
                         info = GUPNP_SERVICE_INFO (l->data);
 
@@ -654,6 +654,7 @@ gupnp_control_point_resource_unavailable
 
                         g_free (tmp);
 
+                        /* Remove proxy */
                         proxy = GUPNP_SERVICE_PROXY (info);
 
                         cur_l = l;
@@ -668,13 +669,19 @@ gupnp_control_point_resource_unavailable
                                        0,
                                        proxy);
 
-                        /* Unref description doc */
-                        location = gupnp_service_info_get_location
+                        location = (char *) gupnp_service_info_get_location
                                         (GUPNP_SERVICE_INFO (proxy));
 
-                        doc = g_hash_table_lookup
-                                        (control_point->priv->doc_cache,
-                                         location);
+                        doc = NULL;
+                        g_hash_table_lookup_extended
+                                (control_point->priv->doc_cache,
+                                 location,
+                                 (gpointer) &location,
+                                 (gpointer) &doc);
+
+                        g_object_unref (proxy);
+
+                        /* Unref description doc */
                         if (doc) {
                                 doc->ref_count--;
 
@@ -684,9 +691,6 @@ gupnp_control_point_resource_unavailable
                                                  location);
                                 }
                         }
-
-                        /* Unref proxy */
-                        g_object_unref (proxy);
                 }
         } else {
                 l = control_point->priv->devices;
@@ -694,7 +698,7 @@ gupnp_control_point_resource_unavailable
                 while (l) {
                         GUPnPDeviceInfo *info;
                         GUPnPDeviceProxy *proxy;
-                        const char *location;
+                        char *location;
 
                         info = GUPNP_DEVICE_INFO (l->data);
 
@@ -705,6 +709,7 @@ gupnp_control_point_resource_unavailable
                                 continue;
                         }
 
+                        /* Remove proxy */
                         proxy = GUPNP_DEVICE_PROXY (info);
 
                         cur_l = l;
@@ -719,13 +724,19 @@ gupnp_control_point_resource_unavailable
                                        0,
                                        proxy);
 
-                        /* Unref description doc */
-                        location = gupnp_device_info_get_location
-                                        (GUPNP_DEVICE_INFO (proxy));
+                        location = (char *) gupnp_device_info_get_location
+                                                (GUPNP_DEVICE_INFO (proxy));
 
-                        doc = g_hash_table_lookup
-                                        (control_point->priv->doc_cache,
-                                         location);
+                        doc = NULL;
+                        g_hash_table_lookup_extended
+                                (control_point->priv->doc_cache,
+                                 location,
+                                 (gpointer) &location,
+                                 (gpointer) &doc);
+
+                        g_object_unref (proxy);
+
+                        /* Unref description doc */
                         if (doc) {
                                 doc->ref_count--;
 
@@ -735,9 +746,6 @@ gupnp_control_point_resource_unavailable
                                                  location);
                                 }
                         }
-
-                        /* Unref proxy */
-                        g_object_unref (proxy);
                 }
         }
 

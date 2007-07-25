@@ -513,21 +513,24 @@ gupnp_service_proxy_begin_action_valist
         /* Create message */
         control_url = gupnp_service_info_get_control_url
                                         (GUPNP_SERVICE_INFO (proxy));
-        if (!control_url) {
+
+        msg = NULL;
+        if (control_url != NULL) {
+                msg = soup_soap_message_new (SOUP_METHOD_POST,
+		        		     control_url,
+			        	     FALSE, NULL, NULL, NULL);
+
+                g_free (control_url);
+        }
+
+        if (msg == NULL) {
                 g_set_error (error,
                              GUPNP_SERVER_ERROR,
-                             GUPNP_SERVER_ERROR_OTHER,
-                             "No control URL defined");
+                             GUPNP_SERVER_ERROR_INVALID_URL,
+                             "No valid control URL defined");
 
                 return NULL;
         }
-
-        msg = soup_soap_message_new (SOUP_METHOD_POST,
-				     control_url,
-				     FALSE, NULL, NULL, NULL);
-        g_free (control_url);
-
-        g_assert (msg != NULL);
 
         /* Specify language */
         lang = accept_language_get_header ();
@@ -1305,13 +1308,6 @@ subscription_expire (gpointer user_data)
                                                 (GUPNP_SERVICE_INFO (proxy));
 
         msg = soup_message_new (GENA_METHOD_SUBSCRIBE, sub_url);
-        if (msg == NULL) {
-                g_warning ("Invalid URL: %s", sub_url);
-
-                g_free (sub_url);
-
-                return FALSE;
-        }
 
         g_free (sub_url);
 
@@ -1449,16 +1445,35 @@ subscribe (GUPnPServiceProxy *proxy)
         sub_url = gupnp_service_info_get_event_subscription_url
                                                 (GUPNP_SERVICE_INFO (proxy));
 
-        msg = soup_message_new (GENA_METHOD_SUBSCRIBE, sub_url);
-        if (msg == NULL) {
-                g_warning ("Invalid URL: %s", sub_url);
+        msg = NULL;
+        if (sub_url != NULL) {
+                msg = soup_message_new (GENA_METHOD_SUBSCRIBE, sub_url);
 
                 g_free (sub_url);
+        }
+
+        if (msg == NULL) {
+                GError *error;
+
+                /* Subscription failed. */
+                proxy->priv->subscribed = FALSE;
+
+                g_object_notify (G_OBJECT (proxy), "subscribed");
+
+                /* Emit subscription-lost */
+                error = g_error_new (GUPNP_SERVER_ERROR,
+                                     GUPNP_SERVER_ERROR_INVALID_URL,
+                                     "No valid subscription URL defined");
+
+                g_signal_emit (proxy,
+                               signals[SUBSCRIPTION_LOST],
+                               0,
+                               error);
+
+                g_error_free (error);
 
                 return;
         }
-
-        g_free (sub_url);
 
         /* Add headers */
         server_url = _gupnp_context_get_server_url (context);
@@ -1520,14 +1535,8 @@ unsubscribe (GUPnPServiceProxy *proxy, gboolean sync)
         /* Create unsubscription message */
         sub_url = gupnp_service_info_get_event_subscription_url
                                                 (GUPNP_SERVICE_INFO (proxy));
+
         msg = soup_message_new (GENA_METHOD_UNSUBSCRIBE, sub_url);
-        if (msg == NULL) {
-                g_warning ("Invalid URL: %s", sub_url);
-
-                g_free (sub_url);
-
-                return;
-        }
 
         g_free (sub_url);
 

@@ -1347,7 +1347,8 @@ notify_subscriber (gpointer key,
         /* Create message */
         msg = soup_message_new (GENA_METHOD_NOTIFY, data->callbacks->data);
         if (!msg) {
-                g_warning ("Invalid URL: %s", (char *) data->callbacks->data);
+                g_warning ("Invalid callback URL: %s",
+                           (char *) data->callbacks->data);
 
                 return;
         }

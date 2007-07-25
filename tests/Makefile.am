@@ -1,9 +1,15 @@
 AM_CFLAGS = $(LIBGUPNP_CFLAGS) -I$(top_srcdir)
 
-noinst_PROGRAMS = test-client test-server test-introspection
+noinst_PROGRAMS = test-browsing      \
+		  test-proxy         \
+		  test-server        \
+		  test-introspection
 
-test_client_SOURCES = test-client.c
-test_client_LDADD   = $(top_builddir)/libgupnp/libgupnp-1.0.la
+test_browsing_SOURCES = test-browsing.c
+test_browsing_LDADD   = $(top_builddir)/libgupnp/libgupnp-1.0.la
+
+test_proxy_SOURCES = test-proxy.c
+test_proxy_LDADD   = $(top_builddir)/libgupnp/libgupnp-1.0.la
 
 test_introspection_SOURCES = test-introspection.c
 test_introspection_LDADD   = $(top_builddir)/libgupnp/libgupnp-1.0.la

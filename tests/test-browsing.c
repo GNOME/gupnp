@@ -67,25 +67,6 @@ device_proxy_unavailable_cb (GUPnPControlPoint *cp,
 }
 
 static void
-subscription_lost_cb (GUPnPServiceProxy *proxy,
-                      const GError      *reason,
-                      gpointer           user_data)
-{
-        g_print ("Lost subscription: %s\n", reason->message);
-}
-
-static void
-notify_cb (GUPnPServiceProxy *proxy,
-           const char        *variable,
-           GValue            *value,
-           gpointer           user_data)
-{
-        g_print ("Received a notification for variable '%s':\n", variable);
-        g_print ("\tvalue:     %d\n", g_value_get_uint (value));
-        g_print ("\tuser_data: %s\n", (const char *) user_data);
-}
-
-static void
 service_proxy_available_cb (GUPnPControlPoint *cp,
                             GUPnPServiceProxy *proxy)
 {
@@ -98,82 +79,6 @@ service_proxy_available_cb (GUPnPControlPoint *cp,
         g_print ("Service available:\n");
         g_print ("\ttype:     %s\n", type);
         g_print ("\tlocation: %s\n", location);
-
-        if (strcmp (type,
-                    "urn:schemas-upnp-org:service:ContentDirectory:1") == 0) {
-                /* We have a ContentDirectory - yay! Run some tests. */
-                char *result = NULL;;
-                guint count, total;
-                GError *error = NULL;
-
-                /* We want to be notified whenever SystemUpdateID (of type uint)
-                 * changes */
-                gupnp_service_proxy_add_notify (proxy,
-                                                "SystemUpdateID",
-                                                G_TYPE_UINT,
-                                                notify_cb,
-                                                "Test");
-
-                /* Subscribe */
-                g_signal_connect (proxy,
-                                  "subscription-lost",
-                                  G_CALLBACK (subscription_lost_cb),
-                                  NULL);
-
-                gupnp_service_proxy_set_subscribed (proxy, TRUE);
-
-                /* And test action IO */
-                gupnp_service_proxy_send_action (proxy,
-                                                 "Browse",
-                                                 &error,
-                                                 /* IN args */
-                                                 "ObjectID",
-                                                        G_TYPE_STRING,
-                                                        "0",
-                                                 "BrowseFlag",
-                                                        G_TYPE_STRING,
-                                                        "BrowseDirectChildren",
-                                                 "Filter",
-                                                        G_TYPE_STRING,
-                                                        "*",
-                                                 "StartingIndex",
-                                                        G_TYPE_UINT,
-                                                        0,
-                                                 "RequestedCount",
-                                                        G_TYPE_UINT,
-                                                        0,
-                                                 "SortCriteria",
-                                                        G_TYPE_STRING,
-                                                        "",
-                                                 NULL,
-                                                 /* OUT args */
-                                                 "Result",
-                                                        G_TYPE_STRING,
-                                                        &result,
-                                                 "NumberReturned",
-                                                        G_TYPE_UINT,
-                                                        &count,
-                                                 "TotalMatches",
-                                                        G_TYPE_UINT,
-                                                        &total,
-                                                 NULL);
-
-                if (error) {
-                        g_printerr ("Error: %s\n", error->message);
-                        g_error_free (error);
-
-                        g_free (type);
-
-                        return;
-                }
-
-                g_print ("Browse returned:\n");
-                g_print ("\tResult:         %s\n", result);
-                g_print ("\tNumberReturned: %u\n", count);
-                g_print ("\tTotalMatches:   %u\n", total);
-
-                g_free (result);
-        }
 
         g_free (type);
 }

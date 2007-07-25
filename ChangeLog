@@ -1,5 +1,31 @@
 2007-07-25  Jorn Baayen  <jorn@openedhand.com>
 
+	* libgupnp/gupnp-control-point.c: (load_description),
+	(gupnp_control_point_resource_unavailable):
+
+	Destroy proxy before destroying the associated xmlDoc.
+
+	* libgupnp/gupnp-error.h:
+	* libgupnp/gupnp-service-info.c:
+	(gupnp_service_info_get_introspection),
+	(gupnp_service_info_get_introspection_async):
+	* libgupnp/gupnp-service-proxy.c:
+	(gupnp_service_proxy_begin_action_valist), (subscription_expire),
+	(subscribe), (unsubscribe):
+	* libgupnp/gupnp-service.c: (notify_subscriber):
+
+	Better invalid URL error handling.
+
+	* tests/Makefile.am:
+	R tests/test-client.c:
+	A tests/test-browsing.c: (device_proxy_unavailable_cb):
+	A tests/test-proxy.c:
+
+	Split out test-client into test-browsing and test-proxy better
+	illustrating how to use the API.
+
+2007-07-25  Jorn Baayen  <jorn@openedhand.com>
+
 	* libgupnp/gupnp-service.c: (gupnp_service_init),
 	(gupnp_service_finalize), (notify_got_response):
 
