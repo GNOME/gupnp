@@ -1,5 +1,11 @@
 2007-07-25  Jorn Baayen  <jorn@openedhand.com>
 
+	* README:
+	
+	Added text from website.
+
+2007-07-25  Jorn Baayen  <jorn@openedhand.com>
+
 	* libgupnp/gupnp-device.c: (gupnp_device_get_device),
 	(gupnp_device_get_service), (gupnp_device_get_property),
 	(gupnp_device_dispose), (gupnp_device_init),
