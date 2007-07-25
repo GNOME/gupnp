@@ -39,14 +39,26 @@ browse_cb (GUPnPService       *service,
            GUPnPServiceAction *action,
            gpointer            user_data)
 {
+        GList *locales;
         char *filter;
 
         g_print ("The \"Browse\" action was invoked.\n");
 
+        g_print ("\tLocales: ");
+        locales = gupnp_service_action_get_locales (action);
+        while (locales) {
+                g_print ("%s", (char *) locales->data);
+                g_free (locales->data);
+                locales = g_list_delete_link (locales, locales);
+                if (locales)
+                        g_print (", ");
+        }
+        g_print ("\n");
+
         gupnp_service_action_get (action,
                                   "Filter", G_TYPE_STRING, &filter,
                                   NULL);
-        g_print ("\tFilter: %s\n", filter);
+        g_print ("\tFilter:  %s\n", filter);
         g_free (filter);
 
         gupnp_service_action_set (action,
@@ -66,6 +78,27 @@ query_cb (GUPnPService *service,
 {
         g_value_init (value, G_TYPE_UINT);
         g_value_set_uint (value, 31415927);
+}
+
+static void
+notify_failed_cb (GUPnPService *service,
+                  const GList  *callback_urls,
+                  const GError *reason,
+                  gpointer      user_data)
+{
+        g_print ("NOTIFY failed: %s\n", reason->message);
+}
+
+static gboolean
+timeout (gpointer user_data)
+{
+        gupnp_service_notify (GUPNP_SERVICE (user_data),
+                              "SystemUpdateID",
+                              G_TYPE_UINT,
+                              27182818,
+                              NULL);
+
+        return FALSE;
 }
 
 int
@@ -128,6 +161,13 @@ main (int argc, char **argv)
                                   "query-variable::SystemUpdateID",
                                   G_CALLBACK (query_cb),
                                   NULL);
+
+                g_signal_connect (content_dir,
+                                  "notify-failed",
+                                  G_CALLBACK (notify_failed_cb),
+                                  NULL);
+
+                g_timeout_add (5000, timeout, content_dir);
         }
 
         /* Run */

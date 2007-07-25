@@ -73,8 +73,8 @@ typedef struct {
                                  GValue             *value);
 
         void (* notify_failed)  (GUPnPService       *service,
-                                 GList              *callback_urls,
-                                 GError             *reason);
+                                 const GList        *callback_urls,
+                                 const GError       *reason);
 
         /* future padding */
         void (* _gupnp_reserved1) (void);

@@ -1,5 +1,27 @@
 2007-07-25  Jorn Baayen  <jorn@openedhand.com>
 
+	* libgupnp/gupnp-service.c: (gupnp_service_init),
+	(gupnp_service_finalize), (notify_got_response):
+
+	Create & destroy notify queue.
+
+	* libgupnp/gupnp-service.h:
+
+	Added 'const' to constant signal arguments.
+
+	* tests/test-client.c: (device_proxy_unavailable_cb),
+	(service_proxy_available_cb):
+
+	Connect to 'subscription-lost' signal.
+
+	* tests/test-server.c: (browse_cb), (query_cb), (main):
+
+	Connect to 'notify-failed' signal.
+	Print action locales.
+	Test gupnp_service_notify().
+
+2007-07-25  Jorn Baayen  <jorn@openedhand.com>
+
 	* libgupnp/gupnp-service-proxy.c: (subscribe_got_response):
 
 	Remove server handler on all subscription errors.

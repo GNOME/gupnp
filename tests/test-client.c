@@ -67,6 +67,14 @@ device_proxy_unavailable_cb (GUPnPControlPoint *cp,
 }
 
 static void
+subscription_lost_cb (GUPnPServiceProxy *proxy,
+                      const GError      *reason,
+                      gpointer           user_data)
+{
+        g_print ("Lost subscription: %s\n", reason->message);
+}
+
+static void
 notify_cb (GUPnPServiceProxy *proxy,
            const char        *variable,
            GValue            *value,
@@ -107,6 +115,11 @@ service_proxy_available_cb (GUPnPControlPoint *cp,
                                                 "Test");
 
                 /* Subscribe */
+                g_signal_connect (proxy,
+                                  "subscription-lost",
+                                  G_CALLBACK (subscription_lost_cb),
+                                  NULL);
+
                 gupnp_service_proxy_set_subscribed (proxy, TRUE);
 
                 /* And test action IO */

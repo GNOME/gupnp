@@ -483,6 +483,8 @@ gupnp_service_init (GUPnPService *proxy)
                                        g_str_equal,
                                        NULL,
                                        (GDestroyNotify) subscription_data_free);
+
+        proxy->priv->notify_queue = g_queue_new ();
 }
 
 /* Generate a new action response node for @action_name */
@@ -1114,6 +1116,8 @@ gupnp_service_finalize (GObject *object)
         while ((data = g_queue_pop_head (service->priv->notify_queue)))
                 notify_data_free (data);
 
+        g_queue_free (service->priv->notify_queue);
+
         /* Call super */
         object_class = G_OBJECT_CLASS (gupnp_service_parent_class);
         object_class->finalize (object);
@@ -1279,7 +1283,11 @@ notify_got_response (SoupMessage *msg,
 
         data = user_data;
 
-        if (!SOUP_STATUS_IS_SUCCESSFUL (msg->status_code)) {
+        if (SOUP_STATUS_IS_SUCCESSFUL (msg->status_code)) {
+                /* Success: reset callbacks pointer */
+                data->callbacks = g_list_first (data->callbacks);
+        } else {
+                /* Notify failed */
                 if (data->callbacks->next) {
                         SoupUri *uri;
                         GUPnPContext *context;
@@ -1317,9 +1325,6 @@ notify_got_response (SoupMessage *msg,
                         /* Reset callbacks pointer */
                         data->callbacks = g_list_first (data->callbacks);
                 }
-        } else {
-                /* Success: reset callbacks pointer */
-                data->callbacks = g_list_first (data->callbacks);
         }
 }
 
