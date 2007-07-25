@@ -62,18 +62,18 @@ typedef struct {
         char                          *name;
         GUPnPServiceActionArgDirection direction;
         char                          *related_state_variable;
-        gboolean                       retval;
+        gboolean                       retval; /* Is this the return value? */
 } GUPnPServiceActionArgInfo;
 
 typedef struct {
         char  *name;
-        GList *arguments;
+        GList *arguments; /* list of #GUPnPServiceActionArgInfo */
 } GUPnPServiceActionInfo;
 
 typedef struct {
         char    *name;
-        gboolean send_events;
-        gboolean is_numeric;
+        gboolean send_events;     /* Capable of sourcing events?           */
+        gboolean is_numeric;      /* Is this a numeric type?               */
         GType    type;
         GValue   default_value;
         GValue   minimum;         /* only for numeric data types           */

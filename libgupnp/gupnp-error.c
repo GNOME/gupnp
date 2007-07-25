@@ -19,11 +19,6 @@
  * Boston, MA 02111-1307, USA.
  */
 
-/**
- * SECTION:gupnp-error
- * @short_description: Error information.
- */
-
 #include "gupnp-error.h"
 #include "gupnp-error-private.h"
 
