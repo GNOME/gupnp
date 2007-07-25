@@ -66,14 +66,13 @@ typedef enum
 
 /**
  * GUPnPServiceActionArgInfo:
- *
- * This structure contains information about the argument of service action.
- *
  * @name: The name of the action argument.
  * @direction: The direction of the action argument.
  * @related_state_variable: The name of the state variable associated with this
  * argument.
  * @retval: Whether this argument is the return value of the action.
+ *
+ * This structure contains information about the argument of service action.
  **/
 typedef struct {
         char                          *name;
@@ -84,12 +83,11 @@ typedef struct {
 
 /**
  * GUPnPServiceActionInfo:
- *
- * This structure contains information about a service action.
- *
  * @name: The name of the action argument.
  * @arguments: A GList of all the arguments
  * (of type #GUPnPServiceActionArgInfo) of this action.
+ *
+ * This structure contains information about a service action.
  **/
 typedef struct {
         char  *name;
@@ -98,9 +96,6 @@ typedef struct {
 
 /**
  * GUPnPServiceStateVariableInfo:
- *
- * This structure contains information about service state variable.
- *
  * @name: The name of the state variable.
  * @send_events: Whether this state variable can source events.
  * @is_numeric: Wether this state variable is a numeric type (integer and
@@ -116,6 +111,8 @@ typedef struct {
  * @allowed_values: The allowed values of this state variable. Only applies to
  * string data types. Unlike the other fields in this structure, this field
  * contains a list of (char *) strings rather than GValues.
+ *
+ * This structure contains information about service state variable.
  **/
 typedef struct {
         char    *name;
