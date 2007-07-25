@@ -1347,6 +1347,8 @@ static void
 subscribe_got_response (SoupMessage       *msg,
                         GUPnPServiceProxy *proxy)
 {
+        GError *error;
+
         /* Reset SID */
         g_free (proxy->priv->sid);
         proxy->priv->sid = NULL;
@@ -1360,26 +1362,12 @@ subscribe_got_response (SoupMessage       *msg,
                 /* Save SID. */
                 hdr = soup_message_get_header (msg->response_headers, "SID");
                 if (hdr == NULL) {
-                        GError *error;
-
-                        proxy->priv->subscribed = FALSE;
-
-                        g_object_notify (G_OBJECT (proxy), "subscribed");
-
-                        /* Emit subscription-lost */
                         error = g_error_new
                                         (GUPNP_EVENTING_ERROR,
                                          GUPNP_EVENTING_ERROR_SUBSCRIPTION_LOST,
                                          "No SID in SUBSCRIBE response");
 
-                        g_signal_emit (proxy,
-                                       signals[SUBSCRIPTION_LOST],
-                                       0,
-                                       error);
-
-                        g_error_free (error);
-
-                        return;
+                        goto ERROR;
                 }
 
                 proxy->priv->sid = g_strdup (hdr);
@@ -1413,19 +1401,19 @@ subscribe_got_response (SoupMessage       *msg,
         } else {
                 GUPnPContext *context;
                 SoupServer *server;
-                GError *error;
 
                 /* Subscription failed. */
-                proxy->priv->subscribed = FALSE;
-
-                g_object_notify (G_OBJECT (proxy), "subscribed");
-
-                /* Emit subscription-lost */
                 error = g_error_new (GUPNP_EVENTING_ERROR,
                                      GUPNP_EVENTING_ERROR_SUBSCRIPTION_FAILED,
                                      "(Re)subscription failed: %d",
                                      msg->status_code);
 
+ ERROR:
+                proxy->priv->subscribed = FALSE;
+
+                g_object_notify (G_OBJECT (proxy), "subscribed");
+
+                /* Emit subscription-lost */
                 g_signal_emit (proxy,
                                signals[SUBSCRIPTION_LOST],
                                0,

@@ -1,5 +1,11 @@
 2007-07-25  Jorn Baayen  <jorn@openedhand.com>
 
+	* libgupnp/gupnp-service-proxy.c: (subscribe_got_response):
+
+	Remove server handler on all subscription errors.
+
+2007-07-25  Jorn Baayen  <jorn@openedhand.com>
+
 	* libgupnp/gupnp-marshal.list:
 	* libgupnp/gupnp-service.c: (gupnp_service_class_init):
 
