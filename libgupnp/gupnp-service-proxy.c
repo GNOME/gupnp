@@ -204,15 +204,6 @@ gupnp_service_proxy_dispose (GObject *object)
                 gupnp_service_proxy_cancel_action (proxy, action);
         }
 
-        /* Unsubscribe */
-        if (proxy->priv->subscribed) {
-                /* We force unsubscribe to be sync as we want to make sure
-                 * the message is sent before the application quits. */
-                unsubscribe (proxy, TRUE);
-
-                proxy->priv->subscribed = FALSE;
-        }
-
         /* Call super */
         object_class = G_OBJECT_CLASS (gupnp_service_proxy_parent_class);
         object_class->dispose (object);
@@ -1345,6 +1336,10 @@ subscribe_got_response (SoupMessage       *msg,
 {
         GError *error;
 
+        /* Check whether the subscription is still wanted */
+        if (!proxy->priv->subscribed)
+                return;
+
         /* Reset SID */
         g_free (proxy->priv->sid);
         proxy->priv->sid = NULL;
@@ -1571,6 +1566,16 @@ unsubscribe (GUPnPServiceProxy *proxy, gboolean sync)
         soup_server_remove_handler (server, proxy->priv->path);
 }
 
+void
+_gupnp_service_proxy_unsubscribe_sync (GUPnPServiceProxy *proxy)
+{
+        if (proxy->priv->subscribed) {
+                unsubscribe (proxy, TRUE);
+
+                proxy->priv->subscribed = FALSE;
+        }
+}
+
 /**
  * gupnp_service_proxy_set_subscribed
  * @proxy: A #GUPnPServiceProxy
@@ -1592,12 +1597,12 @@ gupnp_service_proxy_set_subscribed (GUPnPServiceProxy *proxy,
         if (proxy->priv->subscribed == subscribed)
                 return;
 
+        proxy->priv->subscribed = subscribed;
+
         if (subscribed)
                 subscribe (proxy);
         else
                 unsubscribe (proxy, FALSE);
-
-        proxy->priv->subscribed = subscribed;
 
         g_object_notify (G_OBJECT (proxy), "subscribed");
 }

@@ -1,5 +1,14 @@
 2007-07-25  Jorn Baayen  <jorn@openedhand.com>
 
+	* libgupnp/gupnp-control-point.c: (gupnp_control_point_dispose):
+	* libgupnp/gupnp-service-proxy-private.h:
+	* libgupnp/gupnp-service-proxy.c: (gupnp_service_proxy_dispose),
+	(subscribe_got_response), (gupnp_service_proxy_set_subscribed):
+
+	Unsubscribe proxies automatically only at control point dispose.
+
+2007-07-25  Jorn Baayen  <jorn@openedhand.com>
+
 	* libgupnp/gupnp-control-point.c: (load_description),
 	(gupnp_control_point_resource_unavailable):
 

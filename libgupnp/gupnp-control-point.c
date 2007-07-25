@@ -130,7 +130,14 @@ gupnp_control_point_dispose (GObject *object)
         }
 
         while (control_point->priv->services) {
-                g_object_unref (control_point->priv->services->data);
+                GUPnPServiceProxy *proxy;
+
+                proxy = GUPNP_SERVICE_PROXY
+                                (control_point->priv->services->data);
+
+                _gupnp_service_proxy_unsubscribe_sync (proxy);
+
+                g_object_unref (proxy);
                 control_point->priv->services =
                         g_list_delete_link (control_point->priv->services,
                                             control_point->priv->services);
