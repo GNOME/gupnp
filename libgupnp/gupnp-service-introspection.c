@@ -822,33 +822,6 @@ gupnp_service_introspection_list_action_names
 }
 
 /**
- * gupnp_service_introspection_list_action_arguments
- * @introspection: A #GUPnPServiceIntrospection
- *
- * Returns a GList of all the arguments (of type #GUPnPServiceActionArgInfo)
- * of @action_name. 
- *
- * Note that this function retreives the needed information from the service
- * description document provided by the service and hence the list of arguments
- * reported by this function is not guaranteed to be complete.
- * 
- * Return value: A GList of all the arguments of the @action_name or NULL. Do
- * not modify or free it or its contents.
- *
-**/
-const GList *
-gupnp_service_introspection_list_action_arguments
-                        (GUPnPServiceIntrospection *introspection,
-                         const char                *action_name)
-{
-        if (introspection->priv->action_hash == NULL)
-                return NULL;
-
-        return g_hash_table_lookup (introspection->priv->action_hash,
-                                    action_name);
-}
-
-/**
  * gupnp_service_introspection_list_actions
  * @introspection: A #GUPnPServiceIntrospection
  *
@@ -908,31 +881,6 @@ gupnp_service_introspection_list_state_variables
         }
 
         return introspection->priv->variable_list;
-}
-
-/**
- * gupnp_service_introspection_get_state_variable
- * @introspection: A #GUPnPServiceIntrospection
- * @variable_name: The name of the variable whose information is being
- * requested.
- *
- * Returns a pointer to the state variable (of type #GUPnPServiceStateVariable)
- * in this service with the name @variable_name.
- *
- * Return value: The pointer to the variable by the name @action_name or NULL.
- * Do not modify or free.
- *
-**/
-const GUPnPServiceStateVariableInfo *
-gupnp_service_introspection_get_state_variable
-                                (GUPnPServiceIntrospection *introspection,
-                                 const char                *variable_name)
-{
-        if (introspection->priv->variable_hash == NULL)
-                return NULL;
-
-        return g_hash_table_lookup (introspection->priv->variable_hash,
-                                    variable_name);
 }
 
 /**

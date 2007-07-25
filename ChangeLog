@@ -1,3 +1,10 @@
+2007-07-25  Zeeshan Ali  <zeenix@gstreamer.net>
+
+	* libgupnp/gupnp-service-introspection.c:
+	* libgupnp/gupnp-service-introspection.h:
+
+	Remove unneeded functions.
+
 2007-07-25  Jorn Baayen  <jorn@openedhand.com>
 
 	* README:
