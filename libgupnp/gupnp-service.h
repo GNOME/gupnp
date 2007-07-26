@@ -55,7 +55,7 @@ gupnp_service_get_type (void) G_GNUC_CONST;
 /**
  * GUPnPServiceAction
  *
- * An opaque structure for holding in-progress action data.
+ * Opaque structure for holding in-progress action data.
  **/
 typedef struct _GUPnPServiceAction GUPnPServiceAction;
 

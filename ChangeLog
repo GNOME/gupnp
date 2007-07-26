@@ -1,5 +1,12 @@
 2007-07-26  Jorn Baayen  <jorn@openedhand.com>
 
+	* libgupnp/gupnp-service-proxy.h:
+	* libgupnp/gupnp-service.h:
+
+	Cosmetic changes.
+
+2007-07-26  Jorn Baayen  <jorn@openedhand.com>
+
 	* doc/gupnp-sections.txt:
 	* libgupnp/gupnp-service-info.h:
 	* libgupnp/gupnp-service-proxy.h:

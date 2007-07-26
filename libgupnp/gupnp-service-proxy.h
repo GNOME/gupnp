@@ -76,7 +76,7 @@ typedef struct {
 /**
  * GUPnPServiceProxyAction
  *
- * An opaque structure for holding in-progress action data.
+ * Opaque structure for holding in-progress action data.
  **/
 typedef struct _GUPnPServiceProxyAction GUPnPServiceProxyAction;
 
