@@ -1,3 +1,9 @@
+2007-07-26  Jorn Baayen  <jorn@openedhand.com>
+
+	* configure.ac:
+
+	Bump version number to 0.2.
+
 2007-07-26  Zeeshan Ali  <zeenix@gstreamer.net>
 
 	* libgupnp/gupnp-service.c: (new_action_response_node):
