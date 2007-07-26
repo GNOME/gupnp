@@ -502,18 +502,19 @@ new_action_response_node (GUPnPService *service,
                           const char   *action_name)
 {
         xmlNode *node;
-        const char *tmp;
+        const char *type;
+        char *tmp;
 
         tmp = g_strdup_printf ("%sResponse", action_name);
         node = xmlNewNode (NULL, (const xmlChar *) tmp);
         g_free (tmp);
 
-        tmp = gupnp_service_info_get_service_type
+        type = gupnp_service_info_get_service_type
                                         (GUPNP_SERVICE_INFO (service));
-        if (tmp != NULL) {
+        if (type != NULL) {
                 xmlNs *ns;
 
-                ns = xmlNewNs (node, (xmlChar *) tmp, (const xmlChar *) "u");
+                ns = xmlNewNs (node, (xmlChar *) type, (const xmlChar *) "u");
                 xmlSetNs (node, ns);
         } else {
                 g_warning ("No serviceType defined. Control may not work "
