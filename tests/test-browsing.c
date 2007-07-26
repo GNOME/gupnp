@@ -36,8 +36,7 @@ static void
 device_proxy_available_cb (GUPnPControlPoint *cp,
                            GUPnPDeviceProxy  *proxy)
 {
-        char *type;
-        const char *location;
+        const char *type, *location;
 
         type = gupnp_device_info_get_device_type (GUPNP_DEVICE_INFO (proxy));
         location = gupnp_device_info_get_location (GUPNP_DEVICE_INFO (proxy));
@@ -45,16 +44,13 @@ device_proxy_available_cb (GUPnPControlPoint *cp,
         g_print ("Device available:\n");
         g_print ("\ttype:     %s\n", type);
         g_print ("\tlocation: %s\n", location);
-
-        g_free (type);
 }
 
 static void
 device_proxy_unavailable_cb (GUPnPControlPoint *cp,
                              GUPnPDeviceProxy  *proxy)
 {
-        char *type;
-        const char *location;
+        const char *type, *location;
 
         type = gupnp_device_info_get_device_type (GUPNP_DEVICE_INFO (proxy));
         location = gupnp_device_info_get_location (GUPNP_DEVICE_INFO (proxy));
@@ -62,16 +58,13 @@ device_proxy_unavailable_cb (GUPnPControlPoint *cp,
         g_print ("Device unavailable:\n");
         g_print ("\ttype:     %s\n", type);
         g_print ("\tlocation: %s\n", location);
-
-        g_free (type);
 }
 
 static void
 service_proxy_available_cb (GUPnPControlPoint *cp,
                             GUPnPServiceProxy *proxy)
 {
-        char *type;
-        const char *location;
+        const char *type, *location;
 
         type = gupnp_service_info_get_service_type (GUPNP_SERVICE_INFO (proxy));
         location = gupnp_service_info_get_location (GUPNP_SERVICE_INFO (proxy));
@@ -79,16 +72,13 @@ service_proxy_available_cb (GUPnPControlPoint *cp,
         g_print ("Service available:\n");
         g_print ("\ttype:     %s\n", type);
         g_print ("\tlocation: %s\n", location);
-
-        g_free (type);
 }
 
 static void
 service_proxy_unavailable_cb (GUPnPControlPoint *cp,
                               GUPnPServiceProxy *proxy)
 {
-        char *type;
-        const char *location;
+        const char *type, *location;
 
         type = gupnp_service_info_get_service_type (GUPNP_SERVICE_INFO (proxy));
         location = gupnp_service_info_get_location (GUPNP_SERVICE_INFO (proxy));
@@ -96,8 +86,6 @@ service_proxy_unavailable_cb (GUPnPControlPoint *cp,
         g_print ("Service unavailable:\n");
         g_print ("\ttype:     %s\n", type);
         g_print ("\tlocation: %s\n", location);
-
-        g_free (type);
 }
 
 int

@@ -224,20 +224,20 @@ process_service_list (xmlNode           *element,
                 proxy = _gupnp_service_proxy_new (context,
                                                   element,
                                                   udn,
+                                                  service_type,
                                                   description_url,
                                                   url_base);
-                if (proxy) {
-                        control_point->priv->services =
-                                g_list_prepend (control_point->priv->services,
-                                                proxy);
 
-                        g_signal_emit (control_point,
-                                       signals[SERVICE_PROXY_AVAILABLE],
-                                       0,
-                                       proxy);
+                control_point->priv->services =
+                        g_list_prepend (control_point->priv->services,
+                                        proxy);
 
-                        matches++;
-                }
+                g_signal_emit (control_point,
+                               signals[SERVICE_PROXY_AVAILABLE],
+                               0,
+                               proxy);
+
+                matches++;
         }
 
         return matches;
@@ -320,19 +320,18 @@ process_device_list (xmlNode           *element,
                                                          udn,
                                                          description_url,
                                                          url_base);
-                        if (proxy) {
-                                control_point->priv->devices =
-                                        g_list_prepend
-                                                (control_point->priv->devices,
-                                                 proxy);
 
-                                g_signal_emit (control_point,
-                                               signals[DEVICE_PROXY_AVAILABLE],
-                                               0,
-                                               proxy);
+                        control_point->priv->devices =
+                                g_list_prepend
+                                        (control_point->priv->devices,
+                                         proxy);
 
-                                matches++;
-                        }
+                        g_signal_emit (control_point,
+                                       signals[DEVICE_PROXY_AVAILABLE],
+                                       0,
+                                       proxy);
+
+                        matches++;
                 }
         }
 
@@ -643,23 +642,19 @@ gupnp_control_point_resource_unavailable
                 while (l) {
                         GUPnPServiceInfo *info;
                         GUPnPServiceProxy *proxy;
-                        char *location, *tmp;
+                        char *location;
 
                         info = GUPNP_SERVICE_INFO (l->data);
 
-                        tmp = gupnp_service_info_get_service_type (info);
-
                         if ((strcmp (udn,
                                      gupnp_service_info_get_udn (info)) != 0) ||
-                            (strcmp (service_type, tmp) != 0)) {
-                                g_free (tmp);
-
+                            (strcmp (service_type,
+                                     gupnp_service_info_get_service_type (info))
+                                     != 0)) {
                                 l = l->next;
 
                                 continue;
                         }
-
-                        g_free (tmp);
 
                         /* Remove proxy */
                         proxy = GUPNP_SERVICE_PROXY (info);

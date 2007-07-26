@@ -41,6 +41,7 @@ struct _GUPnPDeviceInfoPrivate {
 
         char *location;
         char *udn;
+        char *device_type;
 
         SoupUri *url_base;
 
@@ -52,6 +53,7 @@ enum {
         PROP_CONTEXT,
         PROP_LOCATION,
         PROP_UDN,
+        PROP_DEVICE_TYPE,
         PROP_URL_BASE,
         PROP_ELEMENT
 };
@@ -87,6 +89,10 @@ gupnp_device_info_set_property (GObject      *object,
                 info->priv->udn =
                         g_value_dup_string (value);
                 break;
+        case PROP_DEVICE_TYPE:
+                info->priv->device_type =
+                        g_value_dup_string (value);
+                break;
         case PROP_URL_BASE:
                 info->priv->url_base = 
                         g_value_get_pointer (value);
@@ -99,13 +105,6 @@ gupnp_device_info_set_property (GObject      *object,
         case PROP_ELEMENT:
                 info->priv->element =
                         g_value_get_pointer (value);
-
-                if (!info->priv->udn) {
-                        info->priv->udn =
-                                xml_util_get_child_element_content_glib
-                                        (info->priv->element, "UDN");
-                }
-
                 break;
         default:
                 G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -134,7 +133,11 @@ gupnp_device_info_get_property (GObject    *object,
                 break;
         case PROP_UDN:
                 g_value_set_string (value,
-                                    info->priv->udn);
+                                    gupnp_device_info_get_udn (info));
+                break;
+        case PROP_DEVICE_TYPE:
+                g_value_set_string (value,
+                                    gupnp_device_info_get_device_type (info));
                 break;
         case PROP_URL_BASE:
                 g_value_set_pointer (value,
@@ -168,6 +171,7 @@ gupnp_device_info_finalize (GObject *object)
 
         g_free (info->priv->location);
         g_free (info->priv->udn);
+        g_free (info->priv->device_type);
 
         soup_uri_free (info->priv->url_base);
 }
@@ -234,6 +238,24 @@ gupnp_device_info_class_init (GUPnPDeviceInfoClass *klass)
                  g_param_spec_string ("udn",
                                       "UDN",
                                       "The UDN",
+                                      NULL,
+                                      G_PARAM_READWRITE |
+                                      G_PARAM_CONSTRUCT_ONLY |
+                                      G_PARAM_STATIC_NAME |
+                                      G_PARAM_STATIC_NICK |
+                                      G_PARAM_STATIC_BLURB));
+
+        /**
+         * GUPnPDeviceInfo:device-type
+         *
+         * The device type.
+         **/
+        g_object_class_install_property
+                (object_class,
+                 PROP_DEVICE_TYPE,
+                 g_param_spec_string ("device-type",
+                                      "Device type",
+                                      "The device type",
                                       NULL,
                                       G_PARAM_READWRITE |
                                       G_PARAM_CONSTRUCT_ONLY |
@@ -332,6 +354,12 @@ gupnp_device_info_get_udn (GUPnPDeviceInfo *info)
 {
         g_return_val_if_fail (GUPNP_IS_DEVICE_INFO (info), NULL);
 
+        if (!info->priv->udn) {
+                info->priv->udn =
+                        xml_util_get_child_element_content_glib
+                                (info->priv->element, "UDN");
+        }
+
         return info->priv->udn;
 }
 
@@ -339,13 +367,20 @@ gupnp_device_info_get_udn (GUPnPDeviceInfo *info)
  * gupnp_device_info_get_device_type
  * @info: A #GUPnPDeviceInfo
  *
- * Return value: The UPnP device type, or NULL. g_free() after use.
+ * Return value: The UPnP device type, or NULL.
  **/
-char *
+const char *
 gupnp_device_info_get_device_type (GUPnPDeviceInfo *info)
 {
-        return xml_util_get_child_element_content_glib (info->priv->element,
-                                                        "deviceType");
+        g_return_val_if_fail (GUPNP_IS_DEVICE_INFO (info), NULL);
+
+        if (!info->priv->device_type) {
+                info->priv->device_type =
+                        xml_util_get_child_element_content_glib
+                                (info->priv->element, "deviceType");
+        }
+
+        return info->priv->device_type;
 }
 
 /**
@@ -357,6 +392,8 @@ gupnp_device_info_get_device_type (GUPnPDeviceInfo *info)
 char *
 gupnp_device_info_get_friendly_name (GUPnPDeviceInfo *info)
 {
+        g_return_val_if_fail (GUPNP_IS_DEVICE_INFO (info), NULL);
+
         return xml_util_get_child_element_content_glib (info->priv->element,
                                                         "friendlyName");
 }
@@ -370,6 +407,8 @@ gupnp_device_info_get_friendly_name (GUPnPDeviceInfo *info)
 char *
 gupnp_device_info_get_manufacturer (GUPnPDeviceInfo *info)
 {
+        g_return_val_if_fail (GUPNP_IS_DEVICE_INFO (info), NULL);
+
         return xml_util_get_child_element_content_glib (info->priv->element,
                                                         "manufacturer");
 }
@@ -384,6 +423,8 @@ gupnp_device_info_get_manufacturer (GUPnPDeviceInfo *info)
 char *
 gupnp_device_info_get_manufacturer_url (GUPnPDeviceInfo *info)
 {
+        g_return_val_if_fail (GUPNP_IS_DEVICE_INFO (info), NULL);
+
         return xml_util_get_child_element_content_url (info->priv->element,
                                                        "manufacturerURL",
                                                        info->priv->url_base);
@@ -399,6 +440,8 @@ gupnp_device_info_get_manufacturer_url (GUPnPDeviceInfo *info)
 char *
 gupnp_device_info_get_model_description (GUPnPDeviceInfo *info)
 {
+        g_return_val_if_fail (GUPNP_IS_DEVICE_INFO (info), NULL);
+
         return xml_util_get_child_element_content_glib (info->priv->element,
                                                         "modelDescription");
 }
@@ -412,6 +455,8 @@ gupnp_device_info_get_model_description (GUPnPDeviceInfo *info)
 char *
 gupnp_device_info_get_model_name (GUPnPDeviceInfo *info)
 {
+        g_return_val_if_fail (GUPNP_IS_DEVICE_INFO (info), NULL);
+
         return xml_util_get_child_element_content_glib (info->priv->element,
                                                         "modelName");
 }
@@ -425,6 +470,8 @@ gupnp_device_info_get_model_name (GUPnPDeviceInfo *info)
 char *
 gupnp_device_info_get_model_number (GUPnPDeviceInfo *info)
 {
+        g_return_val_if_fail (GUPNP_IS_DEVICE_INFO (info), NULL);
+
         return xml_util_get_child_element_content_glib (info->priv->element,
                                                         "modelDescription");
 }
@@ -439,6 +486,8 @@ gupnp_device_info_get_model_number (GUPnPDeviceInfo *info)
 char *
 gupnp_device_info_get_model_url (GUPnPDeviceInfo *info)
 {
+        g_return_val_if_fail (GUPNP_IS_DEVICE_INFO (info), NULL);
+
         return xml_util_get_child_element_content_url (info->priv->element,
                                                        "modelURL",
                                                        info->priv->url_base);
@@ -453,6 +502,8 @@ gupnp_device_info_get_model_url (GUPnPDeviceInfo *info)
 char *
 gupnp_device_info_get_serial_number (GUPnPDeviceInfo *info)
 {
+        g_return_val_if_fail (GUPNP_IS_DEVICE_INFO (info), NULL);
+
         return xml_util_get_child_element_content_glib (info->priv->element,
                                                         "serialNumber");
 }
@@ -466,6 +517,8 @@ gupnp_device_info_get_serial_number (GUPnPDeviceInfo *info)
 char *
 gupnp_device_info_get_upc (GUPnPDeviceInfo *info)
 {
+        g_return_val_if_fail (GUPNP_IS_DEVICE_INFO (info), NULL);
+
         return xml_util_get_child_element_content_glib (info->priv->element,
                                                         "UPC");
 }

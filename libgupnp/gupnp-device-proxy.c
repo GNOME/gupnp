@@ -83,6 +83,7 @@ gupnp_device_proxy_get_service (GUPnPDeviceInfo *info,
         service = _gupnp_service_proxy_new (context,
                                             element,
                                             udn,
+                                            NULL,
                                             location,
                                             url_base);
 

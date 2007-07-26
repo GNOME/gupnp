@@ -92,7 +92,7 @@ gupnp_device_info_get_url_base          (GUPnPDeviceInfo *info);
 const char *
 gupnp_device_info_get_udn               (GUPnPDeviceInfo *info);
 
-char *
+const char *
 gupnp_device_info_get_device_type       (GUPnPDeviceInfo *info);
 
 char *

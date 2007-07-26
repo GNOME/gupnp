@@ -490,8 +490,8 @@ gupnp_service_proxy_begin_action_valist
                                     GError                        **error,
                                     va_list                         var_args)
 {
-        char *control_url, *service_type, *full_action, *lang;
-        const char *arg_name;
+        char *control_url, *full_action, *lang;
+        const char *service_type, *arg_name;
         SoupSoapMessage *msg;
         GUPnPServiceProxyAction *ret;
         GUPnPContext *context;
@@ -536,6 +536,15 @@ gupnp_service_proxy_begin_action_valist
         /* Specify action */
         service_type = gupnp_service_info_get_service_type
                                         (GUPNP_SERVICE_INFO (proxy));
+        if (service_type == NULL) {
+                g_set_error (error,
+                             GUPNP_SERVER_ERROR,
+                             GUPNP_SERVER_ERROR_OTHER,
+                             "No service type defined");
+
+                return NULL;
+        }
+
         full_action = g_strdup_printf ("\"%s#%s\"", service_type, action);
         soup_message_add_header (SOUP_MESSAGE (msg)->request_headers,
 				 "SOAPAction",
@@ -551,8 +560,6 @@ gupnp_service_proxy_begin_action_valist
                                          action,
                                          "u",
                                          service_type);
-
-        g_free (service_type);
 
         /* Arguments */
         arg_name = va_arg (var_args, const char *);
@@ -1627,6 +1634,7 @@ gupnp_service_proxy_get_subscribed (GUPnPServiceProxy *proxy)
  * @element: The #xmlNode ponting to the right service element
  * @location: The location of the service description file
  * @udn: The UDN of the device the service is contained in
+ * @service_type: The service type
  * @url_base: The URL base for this service, or NULL if none
  *
  * Return value: A #GUPnPServiceProxy for the service with element @element, as
@@ -1636,6 +1644,7 @@ GUPnPServiceProxy *
 _gupnp_service_proxy_new (GUPnPContext  *context,
                           xmlNode       *element,
                           const char    *udn,
+                          const char    *service_type,
                           const char    *location,
                           const SoupUri *url_base)
 {
@@ -1650,6 +1659,7 @@ _gupnp_service_proxy_new (GUPnPContext  *context,
                               "context", context,
                               "location", location,
                               "udn", udn,
+                              "service-type", service_type,
                               "url-base", url_base,
                               "element", element,
                               NULL);

@@ -46,6 +46,7 @@ struct _GUPnPServiceInfoPrivate {
 
         char *location;
         char *udn;
+        char *service_type;
 
         SoupUri *url_base;
 
@@ -60,6 +61,7 @@ enum {
         PROP_CONTEXT,
         PROP_LOCATION,
         PROP_UDN,
+        PROP_SERVICE_TYPE,
         PROP_URL_BASE,
         PROP_ELEMENT
 };
@@ -113,6 +115,10 @@ gupnp_service_info_set_property (GObject      *object,
                 info->priv->udn =
                         g_value_dup_string (value);
                 break;
+        case PROP_SERVICE_TYPE:
+                info->priv->service_type =
+                        g_value_dup_string (value);
+                break;
         case PROP_URL_BASE:
                 info->priv->url_base =
                         g_value_get_pointer (value);
@@ -154,6 +160,10 @@ gupnp_service_info_get_property (GObject    *object,
         case PROP_UDN:
                 g_value_set_string (value,
                                     info->priv->udn);
+                break;
+        case PROP_SERVICE_TYPE:
+                g_value_set_string (value,
+                                    gupnp_service_info_get_service_type (info));
                 break;
         case PROP_URL_BASE:
                 g_value_set_pointer (value,
@@ -205,6 +215,7 @@ gupnp_service_info_finalize (GObject *object)
 
         g_free (info->priv->location);
         g_free (info->priv->udn);
+        g_free (info->priv->service_type);
 
         soup_uri_free (info->priv->url_base);
 }
@@ -271,6 +282,24 @@ gupnp_service_info_class_init (GUPnPServiceInfoClass *klass)
                  g_param_spec_string ("udn",
                                       "UDN",
                                       "The UDN of the containing device",
+                                      NULL,
+                                      G_PARAM_READWRITE |
+                                      G_PARAM_CONSTRUCT_ONLY |
+                                      G_PARAM_STATIC_NAME |
+                                      G_PARAM_STATIC_NICK |
+                                      G_PARAM_STATIC_BLURB));
+
+        /**
+         * GUPnPServiceInfo:service-type
+         *
+         * The service type.
+         **/
+        g_object_class_install_property
+                (object_class,
+                 PROP_SERVICE_TYPE,
+                 g_param_spec_string ("service-type",
+                                      "Service type",
+                                      "The service type",
                                       NULL,
                                       G_PARAM_READWRITE |
                                       G_PARAM_CONSTRUCT_ONLY |
@@ -376,13 +405,20 @@ gupnp_service_info_get_udn (GUPnPServiceInfo *info)
  * gupnp_service_info_get_service_type
  * @info: A #GUPnPServiceInfo
  *
- * Return value: The UPnP service type, or NULL. g_free() after use.
+ * Return value: The UPnP service type, or NULL.
  **/
-char *
+const char *
 gupnp_service_info_get_service_type (GUPnPServiceInfo *info)
 {
-        return xml_util_get_child_element_content_glib (info->priv->element,
-                                                        "serviceType");
+        g_return_val_if_fail (GUPNP_IS_SERVICE_INFO (info), NULL);
+
+        if (!info->priv->service_type) {
+                info->priv->service_type =
+                        xml_util_get_child_element_content_glib
+                                (info->priv->element, "serviceType");
+        }
+
+        return info->priv->service_type;
 }
 
 /**
@@ -394,6 +430,8 @@ gupnp_service_info_get_service_type (GUPnPServiceInfo *info)
 char *
 gupnp_service_info_get_id (GUPnPServiceInfo *info)
 {
+        g_return_val_if_fail (GUPNP_IS_SERVICE_INFO (info), NULL);
+
         return xml_util_get_child_element_content_glib (info->priv->element,
                                                         "serviceId");
 }
@@ -407,6 +445,8 @@ gupnp_service_info_get_id (GUPnPServiceInfo *info)
 char *
 gupnp_service_info_get_scpd_url (GUPnPServiceInfo *info)
 {
+        g_return_val_if_fail (GUPNP_IS_SERVICE_INFO (info), NULL);
+
         return xml_util_get_child_element_content_url (info->priv->element,
                                                        "SCPDURL",
                                                        info->priv->url_base);
@@ -421,6 +461,8 @@ gupnp_service_info_get_scpd_url (GUPnPServiceInfo *info)
 char *
 gupnp_service_info_get_control_url (GUPnPServiceInfo *info)
 {
+        g_return_val_if_fail (GUPNP_IS_SERVICE_INFO (info), NULL);
+
         return xml_util_get_child_element_content_url (info->priv->element,
                                                        "controlURL",
                                                        info->priv->url_base);
@@ -435,6 +477,8 @@ gupnp_service_info_get_control_url (GUPnPServiceInfo *info)
 char *
 gupnp_service_info_get_event_subscription_url (GUPnPServiceInfo *info)
 {
+        g_return_val_if_fail (GUPNP_IS_SERVICE_INFO (info), NULL);
+
         return xml_util_get_child_element_content_url (info->priv->element,
                                                        "eventSubURL",
                                                        info->priv->url_base);
