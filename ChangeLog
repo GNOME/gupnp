@@ -1,3 +1,23 @@
+2007-07-26  Zeeshan Ali  <zeenix@gstreamer.net>
+
+	* libgupnp/gupnp-device-info.c:
+	* libgupnp/gupnp-device-info.h:
+	* libgupnp/gupnp-device-proxy-private.h:
+	* libgupnp/gupnp-device-proxy.c: (gupnp_device_proxy_get_device),
+	(gupnp_device_proxy_get_service), (_gupnp_device_proxy_new):
+	* libgupnp/gupnp-device.c: (gupnp_device_get_device),
+	(gupnp_device_get_service), (_gupnp_device_new):
+	* libgupnp/gupnp-service-info.c:
+	* libgupnp/gupnp-service-info.h:
+	* libgupnp/gupnp-service-private.h:
+	* libgupnp/gupnp-service-proxy-private.h:
+	* libgupnp/gupnp-service-proxy.c: (_gupnp_service_proxy_new):
+	* libgupnp/gupnp-service.c: (_gupnp_service_new):
+
+	Make it clear to the user that return value of
+	gupnp_{device,service}_info_get_url_base() must not be freed o
+	modified.
+
 2007-07-26  Jorn Baayen  <jorn@openedhand.com>
 
 	* libgupnp/gupnp-service-proxy.h:

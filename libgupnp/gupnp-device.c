@@ -42,7 +42,7 @@ _gupnp_device_new (GUPnPContext    *context,
                    xmlNode         *element,
                    const char      *udn,
                    const char      *location,
-                   SoupUri         *url_base);
+                   const SoupUri   *url_base);
 
 G_DEFINE_TYPE (GUPnPDevice,
                gupnp_device,
@@ -65,7 +65,7 @@ gupnp_device_get_device (GUPnPDeviceInfo *info,
         GUPnPContext *context;
         GUPnPRootDevice *root_device;
         const char *location, *udn;
-        SoupUri *url_base;
+        const SoupUri *url_base;
 
         device = GUPNP_DEVICE (info);
 
@@ -96,7 +96,7 @@ gupnp_device_get_service (GUPnPDeviceInfo *info,
         GUPnPContext *context;
         GUPnPRootDevice *root_device;
         const char *location, *udn;
-        SoupUri *url_base;
+        const SoupUri *url_base;
 
         device = GUPNP_DEVICE (info);
                                 
@@ -291,7 +291,7 @@ _gupnp_device_new (GUPnPContext    *context,
                    xmlNode         *element,
                    const char      *udn,
                    const char      *location,
-                   SoupUri         *url_base)
+                   const SoupUri   *url_base)
 {
         GUPnPDevice *device;
 

@@ -1696,7 +1696,7 @@ _gupnp_service_new (GUPnPContext    *context,
                     xmlNode         *element,
                     const char      *udn,
                     const char      *location,
-                    SoupUri         *url_base)
+                    const SoupUri   *url_base)
 {
         GUPnPService *service;
 

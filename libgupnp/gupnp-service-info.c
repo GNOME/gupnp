@@ -350,7 +350,7 @@ gupnp_service_info_get_location (GUPnPServiceInfo *info)
  *
  * Return value: The URL base.
  **/
-SoupUri *
+const SoupUri *
 gupnp_service_info_get_url_base (GUPnPServiceInfo *info)
 {
         g_return_val_if_fail (GUPNP_IS_SERVICE_INFO (info), NULL);

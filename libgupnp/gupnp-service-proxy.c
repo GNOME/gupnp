@@ -1633,11 +1633,11 @@ gupnp_service_proxy_get_subscribed (GUPnPServiceProxy *proxy)
  * read from the service description file specified by @location.
  **/
 GUPnPServiceProxy *
-_gupnp_service_proxy_new (GUPnPContext *context,
-                          xmlNode      *element,
-                          const char   *udn,
-                          const char   *location,
-                          SoupUri      *url_base)
+_gupnp_service_proxy_new (GUPnPContext  *context,
+                          xmlNode       *element,
+                          const char    *udn,
+                          const char    *location,
+                          const SoupUri *url_base)
 {
         GUPnPServiceProxy *proxy;
 

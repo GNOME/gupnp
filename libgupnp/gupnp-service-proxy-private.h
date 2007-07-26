@@ -32,7 +32,7 @@ _gupnp_service_proxy_new              (GUPnPContext      *context,
                                        xmlNode           *element,
                                        const char        *udn,
                                        const char        *location,
-                                       SoupUri           *url_base);
+                                       const SoupUri     *url_base);
 
 void
 _gupnp_service_proxy_unsubscribe_sync (GUPnPServiceProxy *proxy);

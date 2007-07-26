@@ -45,7 +45,7 @@ gupnp_device_proxy_get_device (GUPnPDeviceInfo *info,
         GUPnPDeviceProxy *proxy, *device;
         GUPnPContext *context;
         const char *location, *udn;
-        SoupUri *url_base;
+        const SoupUri *url_base;
 
         proxy = GUPNP_DEVICE_PROXY (info);
                                 
@@ -71,7 +71,7 @@ gupnp_device_proxy_get_service (GUPnPDeviceInfo *info,
         GUPnPServiceProxy *service;
         GUPnPContext *context;
         const char *location, *udn;
-        SoupUri *url_base;
+        const SoupUri *url_base;
 
         proxy = GUPNP_DEVICE_PROXY (info);
                                 
@@ -117,11 +117,11 @@ gupnp_device_proxy_class_init (GUPnPDeviceProxyClass *klass)
  * read from the device description file specified by @location.
  **/
 GUPnPDeviceProxy *
-_gupnp_device_proxy_new (GUPnPContext *context,
-                         xmlNode      *element,
-                         const char   *udn,
-                         const char   *location,
-                         SoupUri      *url_base)
+_gupnp_device_proxy_new (GUPnPContext  *context,
+                         xmlNode       *element,
+                         const char    *udn,
+                         const char    *location,
+                         const SoupUri *url_base)
 {
         GUPnPDeviceProxy *proxy;
 
