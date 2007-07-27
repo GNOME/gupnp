@@ -1,3 +1,10 @@
+2007-07-27  Priit Laes  <plaes@plaes.org>
+
+	* libgupnp/gupnp-service-proxy.c: 
+	(gupnp_service_proxy_begin_action_valist):
+	
+	Use G_VA_COPY to get things build on some weird architectures.
+
 2007-07-26  Jorn Baayen  <jorn@openedhand.com>
 
 	* configure.ac:

@@ -650,7 +650,7 @@ gupnp_service_proxy_begin_action_valist
                                     ret);
 
         /* Save the current position in the va_list for send_action_valist() */
-        ret->var_args = var_args;
+        G_VA_COPY (ret->var_args, var_args);
 
         return ret;
 }
