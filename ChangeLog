@@ -1,3 +1,10 @@
+2007-08-01  Jorn Baayen  <jorn@openedhand.com>
+
+	* libgupnp/gupnp-device-proxy.c: (gupnp_device_proxy_get_device):
+	* libgupnp/gupnp-device.c: (gupnp_device_get_device):
+
+	Allow embedded devices to have their own UDNs.
+
 2007-07-27  Priit Laes  <plaes@plaes.org>
 
 	* libgupnp/gupnp-service-proxy.c: 

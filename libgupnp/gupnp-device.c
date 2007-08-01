@@ -64,7 +64,7 @@ gupnp_device_get_device (GUPnPDeviceInfo *info,
         GUPnPDevice *device;
         GUPnPContext *context;
         GUPnPRootDevice *root_device;
-        const char *location, *udn;
+        const char *location;
         const SoupUri *url_base;
 
         device = GUPNP_DEVICE (info);
@@ -73,14 +73,13 @@ gupnp_device_get_device (GUPnPDeviceInfo *info,
                       device->priv->root_device : GUPNP_ROOT_DEVICE (device);
                                 
         context = gupnp_device_info_get_context (info);
-        udn = gupnp_device_info_get_udn (info);
         location = gupnp_device_info_get_location (info);
         url_base = gupnp_device_info_get_url_base (info);
 
         device = _gupnp_device_new (context,
                                     root_device,
                                     element,
-                                    udn,
+                                    NULL,
                                     location,
                                     url_base);
 

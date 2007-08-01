@@ -44,19 +44,18 @@ gupnp_device_proxy_get_device (GUPnPDeviceInfo *info,
 {
         GUPnPDeviceProxy *proxy, *device;
         GUPnPContext *context;
-        const char *location, *udn;
+        const char *location;
         const SoupUri *url_base;
 
         proxy = GUPNP_DEVICE_PROXY (info);
                                 
         context = gupnp_device_info_get_context (info);
-        udn = gupnp_device_info_get_udn (info);
         location = gupnp_device_info_get_location (info);
         url_base = gupnp_device_info_get_url_base (info);
 
         device = _gupnp_device_proxy_new (context,
                                           element,
-                                          udn,
+                                          NULL,
                                           location,
                                           url_base);
 
