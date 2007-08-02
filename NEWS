@@ -1,3 +1,9 @@
+0.3
+===
+
+- Allow embedded devices to have their own UDNs. [Jorn Baayen]
+- Portability fix. [Priit Laes]
+
 0.2
 ===
 

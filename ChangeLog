@@ -1,3 +1,10 @@
+2007-08-02  Jorn Baayen  <jorn@openedhand.com>
+
+	* NEWS:
+	* configure.ac:
+
+	Release 0.3.
+
 2007-08-01  Jorn Baayen  <jorn@openedhand.com>
 
 	* libgupnp/gupnp-device-proxy.c: (gupnp_device_proxy_get_device):
