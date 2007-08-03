@@ -1,3 +1,9 @@
+2007-08-03  Jorn Baayen  <jorn@openedhand.com>
+
+	* libgupnp/gupnp-service.c: (gupnp_service_constructor):
+
+	Only include evented state variables in the initial event message.
+
 2007-08-02  Jorn Baayen  <jorn@openedhand.com>
 
 	* NEWS:

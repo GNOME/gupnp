@@ -1057,13 +1057,20 @@ gupnp_service_constructor (GType                  type,
         introspection = gupnp_service_info_get_introspection (info, &error);
         if (introspection) {
                 state_variables =
-                        gupnp_service_introspection_list_state_variable_names
+                        gupnp_service_introspection_list_state_variables
                                                                 (introspection);
 
                 for (l = state_variables; l; l = l->next) {
+                        GUPnPServiceStateVariableInfo *variable;
+                        
+                        variable = l->data;
+
+                        if (!variable->send_events)
+                                continue;
+
                         service->priv->state_variables =
                                 g_list_prepend (service->priv->state_variables,
-                                                g_strdup (l->data));
+                                                g_strdup (variable->name));
                 }
 
                 g_object_unref (introspection);
