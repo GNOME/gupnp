@@ -1,0 +1,11 @@
+prefix=
+exec_prefix=
+libdir=${pcfiledir}/libgupnp
+includedir=${pcfiledir}/
+
+Name: gupnp-1.0
+Description: GObject-based UPnP library
+Version: @VERSION@
+Libs: ${libdir}/libgupnp-1.0.la
+Cflags: -I${includedir}
+Requires: gssdp-1.0 libsoup-2.2 libxml-2.0 shared-mime-info uuid

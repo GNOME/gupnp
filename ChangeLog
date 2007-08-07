@@ -1,3 +1,11 @@
+2007-08-07  Zeeshan Ali  <zeenix@gstreamer.net>
+
+	* Makefile.am:
+	* configure.ac:
+	* gupnp-1.0-uninstalled.pc.in:
+
+	Enable the users to build/link against uninstalled gupnp.
+
 2007-08-03  Jorn Baayen  <jorn@openedhand.com>
 
 	* libgupnp/gupnp-service.c: (gupnp_service_constructor):
