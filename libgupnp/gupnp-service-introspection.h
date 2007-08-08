@@ -147,6 +147,11 @@ const GList *
 gupnp_service_introspection_list_actions
                                 (GUPnPServiceIntrospection *introspection);
 
+const GUPnPServiceActionInfo *
+gupnp_service_introspection_get_action
+                                (GUPnPServiceIntrospection *introspection,
+                                 const gchar               *action_name);
+
 const GList *
 gupnp_service_introspection_list_state_variable_names
                                 (GUPnPServiceIntrospection *introspection);
@@ -154,6 +159,11 @@ gupnp_service_introspection_list_state_variable_names
 const GList *
 gupnp_service_introspection_list_state_variables
                                 (GUPnPServiceIntrospection *introspection);
+
+const GUPnPServiceStateVariableInfo *
+gupnp_service_introspection_get_state_variable
+                                (GUPnPServiceIntrospection *introspection,
+                                 const gchar               *variable_name);
 
 G_END_DECLS
 

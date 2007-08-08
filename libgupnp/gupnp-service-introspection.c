@@ -352,6 +352,8 @@ set_variable_type (GUPnPServiceStateVariableInfo *variable,
                 g_value_set_int (&variable->minimum, G_MININT8);
                 g_value_init (&variable->maximum, type);
                 g_value_set_int (&variable->maximum, G_MAXINT8);
+                g_value_init (&variable->step, type);
+                g_value_set_int (&variable->step, 1);
                 variable->is_numeric = TRUE;
         }
          
@@ -361,6 +363,8 @@ set_variable_type (GUPnPServiceStateVariableInfo *variable,
                 g_value_set_int (&variable->minimum, G_MININT16);
                 g_value_init (&variable->maximum, type);
                 g_value_set_int (&variable->maximum, G_MAXINT16);
+                g_value_init (&variable->step, type);
+                g_value_set_int (&variable->step, 1);
                 variable->is_numeric = TRUE;
         }
         
@@ -371,6 +375,8 @@ set_variable_type (GUPnPServiceStateVariableInfo *variable,
                 g_value_set_int (&variable->minimum, G_MININT32);
                 g_value_init (&variable->maximum, type);
                 g_value_set_int (&variable->maximum, G_MAXINT32);
+                g_value_init (&variable->step, type);
+                g_value_set_int (&variable->step, 1);
                 variable->is_numeric = TRUE;
         }
 
@@ -380,6 +386,8 @@ set_variable_type (GUPnPServiceStateVariableInfo *variable,
                 g_value_set_uint (&variable->minimum, 0);
                 g_value_init (&variable->maximum, type);
                 g_value_set_uint (&variable->maximum, G_MAXUINT8);
+                g_value_init (&variable->step, type);
+                g_value_set_uint (&variable->step, 1);
                 variable->is_numeric = TRUE;
         }
         
@@ -389,6 +397,8 @@ set_variable_type (GUPnPServiceStateVariableInfo *variable,
                 g_value_set_uint (&variable->minimum, 0);
                 g_value_init (&variable->maximum, type);
                 g_value_set_uint (&variable->maximum, G_MAXUINT16);
+                g_value_init (&variable->step, type);
+                g_value_set_uint (&variable->step, 1);
                 variable->is_numeric = TRUE;
         }
         
@@ -398,6 +408,8 @@ set_variable_type (GUPnPServiceStateVariableInfo *variable,
                 g_value_set_uint (&variable->minimum, 0);
                 g_value_init (&variable->maximum, type);
                 g_value_set_uint (&variable->maximum, G_MAXUINT32);
+                g_value_init (&variable->step, type);
+                g_value_set_uint (&variable->step, 1);
                 variable->is_numeric = TRUE;
         }
         
@@ -407,6 +419,8 @@ set_variable_type (GUPnPServiceStateVariableInfo *variable,
                 g_value_set_float (&variable->minimum, -G_MAXFLOAT);
                 g_value_init (&variable->maximum, type);
                 g_value_set_float (&variable->maximum, G_MAXFLOAT);
+                g_value_init (&variable->step, type);
+                g_value_set_float (&variable->step, 1.0);
                 variable->is_numeric = TRUE;
         }
         
@@ -417,6 +431,8 @@ set_variable_type (GUPnPServiceStateVariableInfo *variable,
                 g_value_set_double (&variable->minimum,  -G_MAXDOUBLE);
                 g_value_init (&variable->maximum, type);
                 g_value_set_double (&variable->maximum, G_MAXDOUBLE);
+                g_value_init (&variable->step, type);
+                g_value_set_double (&variable->step, 1.0);
                 variable->is_numeric = TRUE;
         }
         
@@ -427,6 +443,8 @@ set_variable_type (GUPnPServiceStateVariableInfo *variable,
                 g_value_set_double (&variable->minimum,  -MAX_FIXED_14_4);
                 g_value_init (&variable->maximum, type);
                 g_value_set_double (&variable->maximum, MAX_FIXED_14_4);
+                g_value_init (&variable->step, type);
+                g_value_set_double (&variable->step, 1.0);
                 variable->is_numeric = TRUE;
         }
 
@@ -439,8 +457,6 @@ set_variable_type (GUPnPServiceStateVariableInfo *variable,
                 return FALSE;
         }
 
-        if (variable->is_numeric)
-                g_value_init (&variable->step, type);
         g_value_init (&variable->default_value, type);
         variable->type = type;
         
@@ -829,5 +845,73 @@ gupnp_service_introspection_list_state_variable_names
         }
 
         return introspection->priv->variable_names;
+}
+
+static gint
+state_variable_search_func (GUPnPServiceStateVariableInfo *variable,
+                            const gchar                   *variable_name)
+{
+        return strcmp (variable->name, variable_name);
+}
+
+/**
+ * gupnp_service_introspection_get_state_variable
+ * @introspection: A #GUPnPServiceIntrospection
+ * @variable_name: The name of the variable to retreive
+ *
+ * Returns the state variable by the name @variable_name in this service.
+ *
+ * Return value: the state variable or NULL. Do not modify or free it.
+ **/
+const GUPnPServiceStateVariableInfo *
+gupnp_service_introspection_get_state_variable
+                        (GUPnPServiceIntrospection *introspection,
+                         const gchar               *variable_name)     
+{
+        GList *variable_node;
+
+        if (introspection->priv->variables == NULL)
+                return NULL;
+
+        variable_node = g_list_find_custom (
+                                introspection->priv->variables,
+                                (gpointer) variable_name,
+                                (GCompareFunc) state_variable_search_func);
+
+        return (GUPnPServiceStateVariableInfo *) variable_node->data;
+}
+
+static gint
+action_search_func (GUPnPServiceActionInfo *action,
+                    const gchar            *action_name)
+{
+        return strcmp (action->name, action_name);
+}
+
+/**
+ * gupnp_service_introspection_get_action
+ * @introspection: A #GUPnPServiceIntrospection
+ * @action_name: The name of the action to retreive
+ *
+ * Returns the action by the name @action_name in this service.
+ *
+ * Return value: the action or NULL. Do not modify or free it.
+ **/
+const GUPnPServiceActionInfo *
+gupnp_service_introspection_get_action
+                        (GUPnPServiceIntrospection *introspection,
+                         const gchar               *action_name)     
+{
+        GList *action_node;
+
+        if (introspection->priv->variables == NULL)
+                return NULL;
+
+        action_node = g_list_find_custom (
+                                introspection->priv->actions,
+                                (gpointer) action_name,
+                                (GCompareFunc) action_search_func);
+
+        return (GUPnPServiceActionInfo *) action_node->data;
 }
 

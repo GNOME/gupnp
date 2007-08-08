@@ -1,3 +1,15 @@
+2007-08-08  Zeeshan Ali  <zeenix@gstreamer.net>
+
+	* libgupnp/gupnp-service-introspection.c: (set_variable_type),
+	(state_variable_search_func),
+	(gupnp_service_introspection_get_state_variable),
+	(action_search_func), (gupnp_service_introspection_get_action):
+	* libgupnp/gupnp-service-introspection.h:
+
+	- Add methods to reteive state variable and action by name.
+	- Default value of 'step' in state variable info should be '1' for
+	  compatibility with GtkSpinButton API.
+
 2007-08-07  Zeeshan Ali  <zeenix@gstreamer.net>
 
 	* Makefile.am:
