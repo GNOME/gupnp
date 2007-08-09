@@ -383,6 +383,66 @@ gupnp_service_proxy_send_action_valist (GUPnPServiceProxy *proxy,
 }
 
 /**
+ * gupnp_service_proxy_send_action_hash
+ * @proxy: A #GUPnPServiceProxy
+ * @action: An action
+ * @error: The location where to store any error, or NULL
+ * @in_hash: A #GHashTable of in parameter name and #GValue pairs
+ * @out_hash: A #GHashTable of out parameter name and initialized
+ * #GValue pairs
+ *
+ * See gupnp_service_proxy_send_action(); this version takes a pair of
+ * #GHashTable<!-- -->s for runtime determined parameter lists.
+ *
+ * Return value: TRUE if sending the action was succesful.
+ **/
+gboolean
+gupnp_service_proxy_send_action_hash (GUPnPServiceProxy *proxy,
+                                      const char        *action,
+                                      GError           **error,
+                                      GHashTable        *in_hash,
+                                      GHashTable        *out_hash)
+{
+        GUPnPContext *context;
+        GMainContext *main_context;
+        GMainLoop *main_loop;
+        GUPnPServiceProxyAction *handle;
+        
+        g_return_val_if_fail (GUPNP_IS_SERVICE_PROXY (proxy), FALSE);
+        g_return_val_if_fail (action, FALSE);
+
+        context = gupnp_service_info_get_context (GUPNP_SERVICE_INFO (proxy));
+        main_context = gssdp_client_get_main_context (GSSDP_CLIENT (context));
+        main_loop = g_main_loop_new (main_context, TRUE);
+
+        handle = gupnp_service_proxy_begin_action_hash (proxy,
+                                                        action,
+                                                        stop_main_loop,
+                                                        main_loop,
+                                                        error,
+                                                        in_hash);
+        if (!handle) {
+                g_main_loop_unref (main_loop);
+
+                return FALSE;
+        }
+
+        /* Loop till we get a reply (or time out) */
+        if (g_main_loop_is_running (main_loop))
+                g_main_loop_run (main_loop);
+
+        g_main_loop_unref (main_loop);
+
+        if (!gupnp_service_proxy_end_action_hash (proxy,
+                                                  handle,
+                                                  error,
+                                                  out_hash))
+                return FALSE;
+
+        return TRUE;
+}
+
+/**
  * gupnp_service_proxy_begin_action
  * @proxy: A #GUPnPServiceProxy
  * @action: An action
@@ -424,82 +484,15 @@ gupnp_service_proxy_begin_action (GUPnPServiceProxy              *proxy,
         return ret;
 }
 
-/* Received response to action message */
-static void
-action_got_response (SoupMessage             *msg,
-                     GUPnPServiceProxyAction *action)
+/* Begins a basic action message */
+static SoupSoapMessage *
+begin_action_msg (GUPnPServiceProxy *proxy,
+                  const char        *action,
+                  GError           **error)
 {
-        if (msg->status == SOUP_STATUS_METHOD_NOT_ALLOWED) {
-                /* Not allowed .. */
-                const char *full_action;
-                GUPnPContext *context;
-                SoupSession *session;
-
-                /* Retry with M-POST */
-                msg->method = "M-POST";
-
-                soup_message_add_header
-                        (msg->request_headers,
-                         "Man",
-                         "\"http://schemas.xmlsoap.org/soap/envelope/\"; ns=s");
-
-                /* Rename "SOAPAction" to "s-SOAPAction" */
-                full_action = soup_message_get_header (msg->request_headers,
-                                                       "SOAPAction");
-                soup_message_add_header (msg->request_headers,
-                                         "s-SOAPAction",
-                                         full_action);
-                soup_message_remove_header (msg->request_headers,
-                                            "SOAPAction");
-
-                /* And re-queue */
-                context = gupnp_service_info_get_context
-                                (GUPNP_SERVICE_INFO (action->proxy));
-                session = _gupnp_context_get_session (context);
-
-                soup_session_requeue_message (session, msg);
-        } else {
-                /* Success: Call callback */
-                action->callback (action->proxy, action, action->user_data);
-        }
-}
-
-/**
- * gupnp_service_proxy_begin_action_valist
- * @proxy: A #GUPnPServiceProxy
- * @action: An action
- * @callback: The callback to call when sending the action has succeeded
- * or failed
- * @user_data: User data for @callback
- * @error: The location where to store any error, or NULL
- * @var_args: A va_list of tuples of in parameter name, in paramater type, and 
- * in parameter value
- *
- * See gupnp_service_proxy_begin_action(); this version takes a va_list for
- * use by language bindings.
- *
- * Return value: A #GUPnPServiceProxyAction handle, or NULL on error. This will
- * be freed automatically on @callback calling.
- **/
-GUPnPServiceProxyAction *
-gupnp_service_proxy_begin_action_valist
-                                   (GUPnPServiceProxy              *proxy,
-                                    const char                     *action,
-                                    GUPnPServiceProxyActionCallback callback,
-                                    gpointer                        user_data,
-                                    GError                        **error,
-                                    va_list                         var_args)
-{
-        char *control_url, *full_action, *lang;
-        const char *service_type, *arg_name;
         SoupSoapMessage *msg;
-        GUPnPServiceProxyAction *ret;
-        GUPnPContext *context;
-        SoupSession *session;
-
-        g_return_val_if_fail (GUPNP_IS_SERVICE_PROXY (proxy), NULL);
-        g_return_val_if_fail (action, NULL);
-        g_return_val_if_fail (callback, NULL);
+        char *control_url, *lang, *full_action;
+        const char *service_type;
 
         /* Create message */
         control_url = gupnp_service_info_get_control_url
@@ -542,6 +535,8 @@ gupnp_service_proxy_begin_action_valist
                              GUPNP_SERVER_ERROR_OTHER,
                              "No service type defined");
 
+                g_object_unref (msg);
+
                 return NULL;
         }
 
@@ -561,62 +556,61 @@ gupnp_service_proxy_begin_action_valist
                                          "u",
                                          service_type);
 
-        /* Arguments */
-        arg_name = va_arg (var_args, const char *);
-        while (arg_name) {
-                GType arg_type;
-                GValue value = { 0, }, transformed_value = { 0, };
-                char *collect_error = NULL;
-                const char *str;
+        return msg;
+}
 
-                arg_type = va_arg (var_args, GType);
-                g_value_init (&value, arg_type);
+/* Received response to action message */
+static void
+action_got_response (SoupMessage             *msg,
+                     GUPnPServiceProxyAction *action)
+{
+        if (msg->status == SOUP_STATUS_METHOD_NOT_ALLOWED) {
+                /* Not allowed .. */
+                const char *full_action;
+                GUPnPContext *context;
+                SoupSession *session;
 
-                G_VALUE_COLLECT (&value, var_args, 0, &collect_error);
-                if (collect_error) {
-                        g_warning ("Error collecting value: %s\n",
-                                   collect_error);
+                /* Retry with M-POST */
+                msg->method = "M-POST";
 
-                        g_free (collect_error);
-                        
-                        /* we purposely leak the value here, it might not be
-	                 * in a sane state if an error condition occoured
-	                 */
+                soup_message_add_header
+                        (msg->request_headers,
+                         "Man",
+                         "\"http://schemas.xmlsoap.org/soap/envelope/\"; ns=s");
 
-                        g_object_unref (msg);
+                /* Rename "SOAPAction" to "s-SOAPAction" */
+                full_action = soup_message_get_header (msg->request_headers,
+                                                       "SOAPAction");
+                soup_message_add_header (msg->request_headers,
+                                         "s-SOAPAction",
+                                         full_action);
+                soup_message_remove_header (msg->request_headers,
+                                            "SOAPAction");
 
-                        return NULL;
-                }
+                /* And re-queue */
+                context = gupnp_service_info_get_context
+                                (GUPNP_SERVICE_INFO (action->proxy));
+                session = _gupnp_context_get_session (context);
 
-                g_value_init (&transformed_value, G_TYPE_STRING);
-                if (!g_value_transform (&value, &transformed_value)) {
-                        g_warning ("Failed to transform value of type %s "
-                                   "to a string", g_type_name (arg_type));
-                        
-                        g_value_unset (&value);
-                        g_value_unset (&transformed_value);
-
-                        g_object_unref (msg);
-
-                        return NULL;
-                }
-
-                soup_soap_message_start_element (msg,
-                                                 arg_name,
-                                                 NULL,
-                                                 NULL);
-
-                str = g_value_get_string (&transformed_value);
-                soup_soap_message_write_string (msg, str); 
-
-                soup_soap_message_end_element (msg);
-
-                g_value_unset (&value);
-                g_value_unset (&transformed_value);
-                
-                arg_name = va_arg (var_args, const char *);
+                soup_session_requeue_message (session, msg);
+        } else {
+                /* Success: Call callback */
+                action->callback (action->proxy, action, action->user_data);
         }
+}
 
+/* Finishes an action message and sends it off */
+static GUPnPServiceProxyAction *
+finish_action_msg (GUPnPServiceProxy              *proxy,
+                   SoupSoapMessage                *msg,
+                   GUPnPServiceProxyActionCallback callback,
+                   gpointer                        user_data)
+{
+        GUPnPServiceProxyAction *ret;
+        GUPnPContext *context;
+        SoupSession *session;
+
+        /* Finish message */
         soup_soap_message_end_element (msg);
         
 	soup_soap_message_end_body (msg);
@@ -628,9 +622,9 @@ gupnp_service_proxy_begin_action_valist
 
         ret->proxy = proxy;
 
-        ret->msg = msg;
+        ret->msg   = msg;
 
-        ret->callback = callback;
+        ret->callback  = callback;
         ret->user_data = user_data;
 
         proxy->priv->pending_actions =
@@ -649,10 +643,160 @@ gupnp_service_proxy_begin_action_valist
                                         action_got_response,
                                     ret);
 
+        return ret;
+}
+
+/* Writes a parameter name and GValue pair to @msg */
+static void
+write_in_parameter (const char      *arg_name,
+                    GValue          *value,
+                    SoupSoapMessage *msg)
+{
+        GValue transformed_value = { 0, };
+        const char *str;
+
+        g_value_init (&transformed_value, G_TYPE_STRING);
+        if (!g_value_transform (value, &transformed_value)) {
+                g_warning ("Failed to transform value of type %s "
+                           "to a string", G_VALUE_TYPE_NAME (value));
+                
+                g_value_unset (&transformed_value);
+
+                return;
+        }
+
+        soup_soap_message_start_element (msg,
+                                         arg_name,
+                                         NULL,
+                                         NULL);
+
+        str = g_value_get_string (&transformed_value);
+        soup_soap_message_write_string (msg, str); 
+
+        soup_soap_message_end_element (msg);
+
+        g_value_unset (&transformed_value);
+}
+
+/**
+ * gupnp_service_proxy_begin_action_valist
+ * @proxy: A #GUPnPServiceProxy
+ * @action: An action
+ * @callback: The callback to call when sending the action has succeeded
+ * or failed
+ * @user_data: User data for @callback
+ * @error: The location where to store any error, or NULL
+ * @var_args: A va_list of tuples of in parameter name, in paramater type, and 
+ * in parameter value
+ *
+ * See gupnp_service_proxy_begin_action(); this version takes a va_list for
+ * use by language bindings.
+ *
+ * Return value: A #GUPnPServiceProxyAction handle, or NULL on error. This will
+ * be freed automatically on @callback calling.
+ **/
+GUPnPServiceProxyAction *
+gupnp_service_proxy_begin_action_valist
+                                   (GUPnPServiceProxy              *proxy,
+                                    const char                     *action,
+                                    GUPnPServiceProxyActionCallback callback,
+                                    gpointer                        user_data,
+                                    GError                        **error,
+                                    va_list                         var_args)
+{
+        const char *arg_name;
+        SoupSoapMessage *msg;
+        GUPnPServiceProxyAction *ret;
+
+        g_return_val_if_fail (GUPNP_IS_SERVICE_PROXY (proxy), NULL);
+        g_return_val_if_fail (action, NULL);
+        g_return_val_if_fail (callback, NULL);
+
+        /* Create message */
+        msg = begin_action_msg (proxy, action, error);
+        if (msg == NULL)
+                return NULL;
+
+        /* Arguments */
+        arg_name = va_arg (var_args, const char *);
+        while (arg_name) {
+                GType arg_type;
+                GValue value = { 0, };
+                char *collect_error = NULL;
+
+                arg_type = va_arg (var_args, GType);
+                g_value_init (&value, arg_type);
+
+                G_VALUE_COLLECT (&value, var_args, 0, &collect_error);
+                if (!collect_error) {
+                        write_in_parameter (arg_name, &value, msg);
+
+                        g_value_unset (&value);
+
+                } else {
+                        g_warning ("Error collecting value: %s\n",
+                                   collect_error);
+
+                        g_free (collect_error);
+                        
+                        /* we purposely leak the value here, it might not be
+	                 * in a sane state if an error condition occoured
+	                 */
+                }
+
+                arg_name = va_arg (var_args, const char *);
+        }
+
+        /* Finish and send off */
+        ret = finish_action_msg (proxy, msg, callback, user_data);
+
         /* Save the current position in the va_list for send_action_valist() */
         G_VA_COPY (ret->var_args, var_args);
 
         return ret;
+}
+
+/**
+ * gupnp_service_proxy_begin_action_hash
+ * @proxy: A #GUPnPServiceProxy
+ * @action: An action
+ * @callback: The callback to call when sending the action has succeeded
+ * or failed
+ * @user_data: User data for @callback
+ * @error: The location where to store any error, or NULL
+ * @hash: A #GHashTable of in parameter name and #GValue pairs
+ *
+ * See gupnp_service_proxy_begin_action(); this version takes a #GHashTable
+ * for runtime generated parameter lists.
+ *
+ * Return value: A #GUPnPServiceProxyAction handle, or NULL on error. This will
+ * be freed automatically on @callback calling.
+ **/
+GUPnPServiceProxyAction *
+gupnp_service_proxy_begin_action_hash
+                                   (GUPnPServiceProxy              *proxy,
+                                    const char                     *action,
+                                    GUPnPServiceProxyActionCallback callback,
+                                    gpointer                        user_data,
+                                    GError                        **error,
+                                    GHashTable                     *hash)
+{
+        SoupSoapMessage *msg;
+
+        g_return_val_if_fail (GUPNP_IS_SERVICE_PROXY (proxy), NULL);
+        g_return_val_if_fail (action, NULL);
+        g_return_val_if_fail (callback, NULL);
+
+        /* Create message */
+        msg = begin_action_msg (proxy, action, error);
+        if (msg == NULL)
+                return NULL;
+
+        /* Arguments */
+        g_hash_table_foreach (hash, (GHFunc) write_in_parameter, msg);
+
+        /* Finish and send off */
+        return finish_action_msg (proxy, msg, callback, user_data);
 }
 
 /**
@@ -689,34 +833,17 @@ gupnp_service_proxy_end_action (GUPnPServiceProxy       *proxy,
         return ret;
 }
 
-/**
- * gupnp_service_proxy_end_action_valist
- * @proxy: A #GUPnPServiceProxy
- * @action: A #GUPnPServiceProxyAction handle
- * @error: The location where to store any error, or NULL
- * @var_args: A va_list of tuples of out parameter name, out paramater type, 
- * and out parameter value location. The out parameter values should be
- * freed after use
- *
- * See gupnp_service_proxy_end_action(); this version takes a va_list for
- * use by language bindings.
- *
- * Return value: TRUE on success.
- **/
-gboolean
-gupnp_service_proxy_end_action_valist (GUPnPServiceProxy       *proxy,
-                                       GUPnPServiceProxyAction *action,
-                                       GError                 **error,
-                                       va_list                  var_args)
+/* Checks an action response for errors and returns the parsed
+ * SoupSoapResponse object. */
+static SoupSoapResponse *
+check_action_response (GUPnPServiceProxy       *proxy,
+                       GUPnPServiceProxyAction *action,
+                       GError                 **error)
 {
         SoupMessage *soup_msg;
         SoupSoapResponse *response;
         SoupSoapParameter *param;
-        const char *arg_name;
         int code;
-
-        g_return_val_if_fail (GUPNP_IS_SERVICE_PROXY (proxy), FALSE);
-        g_return_val_if_fail (action, FALSE);
 
         soup_msg = SOUP_MESSAGE (action->msg);
 
@@ -730,7 +857,7 @@ gupnp_service_proxy_end_action_valist (GUPnPServiceProxy       *proxy,
                 
                 gupnp_service_proxy_action_free (action);
 
-                return FALSE;
+                return NULL;
         }
 
         /* Parse response */
@@ -751,7 +878,7 @@ gupnp_service_proxy_end_action_valist (GUPnPServiceProxy       *proxy,
                 
                 gupnp_service_proxy_action_free (action);
 
-                return FALSE;
+                return NULL;
 	}
 
         /* Check whether we have a Fault */
@@ -776,7 +903,7 @@ gupnp_service_proxy_end_action_valist (GUPnPServiceProxy       *proxy,
 
                         g_object_unref (response);
 
-                        return FALSE;
+                        return NULL;
                 }
 
                 /* Code */
@@ -794,7 +921,7 @@ gupnp_service_proxy_end_action_valist (GUPnPServiceProxy       *proxy,
 
                         g_object_unref (response);
 
-                        return FALSE;
+                        return NULL;
                 }
 
                 /* Description */
@@ -817,94 +944,129 @@ gupnp_service_proxy_end_action_valist (GUPnPServiceProxy       *proxy,
 
                 g_object_unref (response);
 
-                return FALSE;
+                return NULL;
         }
+
+        return response;
+}
+
+/* Reads a value into the parameter name and initialised GValue pair 
+ * from @response */
+static void
+read_out_parameter (const char       *arg_name,
+                    GValue           *value,
+                    SoupSoapResponse *response)
+{
+        SoupSoapParameter *param;
+        GValue tmp_value = { 0, };
+        char *str;
+        int i;
+
+        /* Try to find a matching paramater in the response */
+        param = soup_soap_response_get_first_parameter_by_name
+                                                (response, arg_name);
+        if (!param) {
+                g_warning ("Could not find variable \"%s\" in response",
+                           arg_name);
+
+                return;
+        }
+
+        /* Parse into @value */
+        switch (G_VALUE_TYPE (value)) {
+        case G_TYPE_STRING:
+                str = soup_soap_parameter_get_string_value (param);
+
+                g_value_set_string_take_ownership (value, str);
+
+                break;
+        case G_TYPE_INT:
+                i = soup_soap_parameter_get_int_value (param);
+
+                g_value_set_int (value, i);
+
+                break;
+        default:
+                /* Try to convert */
+                if (g_value_type_transformable (G_TYPE_STRING,
+                                                G_VALUE_TYPE (value))) {
+                        str = soup_soap_parameter_get_string_value
+                                                                (param);
+
+                        g_value_init (&tmp_value, G_TYPE_STRING);
+                        g_value_set_string_take_ownership (&tmp_value,
+                                                           str);
+
+                        g_value_transform (&tmp_value, value);
+
+                        g_value_unset (&tmp_value);
+
+                } else if (g_value_type_transformable (G_TYPE_INT,
+                                                       G_VALUE_TYPE (value))) {
+                        i = soup_soap_parameter_get_int_value (param);
+
+                        g_value_init (&tmp_value, G_TYPE_INT);
+                        g_value_set_int (&tmp_value, i);
+
+                        g_value_transform (&tmp_value, value);
+
+                        g_value_unset (&tmp_value);
+
+                } else {
+                        g_warning ("Failed to transform integer "
+                                   "value to type %s",
+                                   G_VALUE_TYPE_NAME (value));
+                }
+
+                break;
+        }
+
+        return;
+}
+
+/**
+ * gupnp_service_proxy_end_action_valist
+ * @proxy: A #GUPnPServiceProxy
+ * @action: A #GUPnPServiceProxyAction handle
+ * @error: The location where to store any error, or NULL
+ * @var_args: A va_list of tuples of out parameter name, out paramater type, 
+ * and out parameter value location. The out parameter values should be
+ * freed after use
+ *
+ * See gupnp_service_proxy_end_action(); this version takes a va_list for
+ * use by language bindings.
+ *
+ * Return value: TRUE on success.
+ **/
+gboolean
+gupnp_service_proxy_end_action_valist (GUPnPServiceProxy       *proxy,
+                                       GUPnPServiceProxyAction *action,
+                                       GError                 **error,
+                                       va_list                  var_args)
+{
+        SoupSoapResponse *response;
+        const char *arg_name;
+
+        g_return_val_if_fail (GUPNP_IS_SERVICE_PROXY (proxy), FALSE);
+        g_return_val_if_fail (action, FALSE);
+
+        /* Check response for errors and do initial parsing */
+        response = check_action_response (proxy, action, error);
+        if (response == NULL)
+                return FALSE;
 
         /* Arguments */
         arg_name = va_arg (var_args, const char *);
         while (arg_name) {
                 GType arg_type;
-                GValue value = { 0, }, tmp_value = { 0, };
+                GValue value = { 0, };
                 char *copy_error = NULL;
-                char *str;
-                int i;
-
-                param = soup_soap_response_get_first_parameter_by_name
-                                                        (response, arg_name);
-                if (!param) {
-                        g_set_error (error,
-                                     GUPNP_CONTROL_ERROR,
-                                     GUPNP_CONTROL_ERROR_INVALID_ARGS,
-                                     "Could not find variable \"%s\" in "
-                                     "response",
-                                     arg_name);
-
-                        gupnp_service_proxy_action_free (action);
-
-                        g_object_unref (response);
-
-                        return FALSE;
-                }
 
                 arg_type = va_arg (var_args, GType);
 
                 g_value_init (&value, arg_type);
 
-                switch (arg_type) {
-                case G_TYPE_STRING:
-                        str = soup_soap_parameter_get_string_value (param);
-
-                        g_value_set_string_take_ownership (&value, str);
-
-                        break;
-                case G_TYPE_INT:
-                        i = soup_soap_parameter_get_int_value (param);
-
-                        g_value_set_int (&value, i);
-
-                        break;
-                default:
-                        /* Try to convert */
-                        if (g_value_type_transformable (G_TYPE_STRING,
-                                                        arg_type)) {
-                                str = soup_soap_parameter_get_string_value
-                                                                        (param);
-
-                                g_value_init (&tmp_value, G_TYPE_STRING);
-                                g_value_set_string_take_ownership (&tmp_value,
-                                                                   str);
-
-                                g_value_transform (&tmp_value, &value);
-
-                                g_value_unset (&tmp_value);
-
-                        } else if (g_value_type_transformable (G_TYPE_INT,
-                                                               arg_type)) {
-                                i = soup_soap_parameter_get_int_value (param);
-
-                                g_value_init (&tmp_value, G_TYPE_INT);
-                                g_value_set_int (&tmp_value, i);
-
-                                g_value_transform (&tmp_value, &value);
-
-                                g_value_unset (&tmp_value);
-
-                        } else {
-                                g_warning ("Failed to transform integer "
-                                           "value to type %s",
-                                           g_type_name (arg_type));
-
-                                g_value_unset (&value);
-
-                                gupnp_service_proxy_action_free (action);
-
-                                g_object_unref (response);
-
-                                return FALSE;
-                        }
-
-                        break;
-                }
+                read_out_parameter (arg_name, &value, response);
                 
                 G_VALUE_LCOPY (&value, var_args, 0, &copy_error);
 
@@ -914,16 +1076,49 @@ gupnp_service_proxy_end_action_valist (GUPnPServiceProxy       *proxy,
                         g_warning ("Error copying value: %s", copy_error);
 
                         g_free (copy_error);
-                        
-                        gupnp_service_proxy_action_free (action);
-
-                        g_object_unref (response);
-
-                        return FALSE;
                 }
 
                 arg_name = va_arg (var_args, const char *);
         }
+
+        /* Cleanup */
+        gupnp_service_proxy_action_free (action);
+
+        g_object_unref (response);
+
+        return TRUE;
+}
+
+/**
+ * gupnp_service_proxy_end_action_hash
+ * @proxy: A #GUPnPServiceProxy
+ * @action: A #GUPnPServiceProxyAction handle
+ * @error: The location where to store any error, or NULL
+ * @hash: A #GHashTable of out parameter name and initialised #GValue pairs
+ *
+ * See gupnp_service_proxy_end_action(); this version takes a #GHashTable
+ * for runtime generated parameter lists.
+ *
+ * Return value: TRUE on success.
+ **/
+gboolean
+gupnp_service_proxy_end_action_hash (GUPnPServiceProxy       *proxy,
+                                     GUPnPServiceProxyAction *action,
+                                     GError                 **error,
+                                     GHashTable              *hash)
+{
+        SoupSoapResponse *response;
+
+        g_return_val_if_fail (GUPNP_IS_SERVICE_PROXY (proxy), FALSE);
+        g_return_val_if_fail (action, FALSE);
+
+        /* Check response for errors and do initial parsing */
+        response = check_action_response (proxy, action, error);
+        if (response == NULL)
+                return FALSE;
+
+        /* Read arguments */
+        g_hash_table_foreach (hash, (GHFunc) read_out_parameter, response);
 
         /* Cleanup */
         gupnp_service_proxy_action_free (action);

@@ -116,6 +116,14 @@ gupnp_service_proxy_send_action_valist
                                     GError                        **error,
                                     va_list                         var_args);
 
+gboolean
+gupnp_service_proxy_send_action_hash
+                                   (GUPnPServiceProxy              *proxy,
+                                    const char                     *action,
+                                    GError                        **error,
+                                    GHashTable                     *in_hash,
+                                    GHashTable                     *out_hash);
+
 GUPnPServiceProxyAction *
 gupnp_service_proxy_begin_action   (GUPnPServiceProxy              *proxy,
                                     const char                     *action,
@@ -133,6 +141,15 @@ gupnp_service_proxy_begin_action_valist
                                     GError                        **error,
                                     va_list                         var_args);
 
+GUPnPServiceProxyAction *
+gupnp_service_proxy_begin_action_hash
+                                   (GUPnPServiceProxy              *proxy,
+                                    const char                     *action,
+                                    GUPnPServiceProxyActionCallback callback,
+                                    gpointer                        user_data,
+                                    GError                        **error,
+                                    GHashTable                     *args);
+
 gboolean
 gupnp_service_proxy_end_action     (GUPnPServiceProxy              *proxy,
                                     GUPnPServiceProxyAction        *action,
@@ -145,6 +162,13 @@ gupnp_service_proxy_end_action_valist
                                     GUPnPServiceProxyAction        *action,
                                     GError                        **error,
                                     va_list                         var_args);
+
+gboolean
+gupnp_service_proxy_end_action_hash
+                                   (GUPnPServiceProxy              *proxy,
+                                    GUPnPServiceProxyAction        *action,
+                                    GError                        **error,
+                                    GHashTable                     *hash);
 
 void
 gupnp_service_proxy_cancel_action  (GUPnPServiceProxy              *proxy,

@@ -1,3 +1,32 @@
+2007-08-09  Jorn Baayen  <jorn@openedhand.com>
+
+	* configure.ac:
+
+	Bump version number to 0.3.99.
+
+	* libgupnp/gupnp-service-proxy.c:
+	(gupnp_service_proxy_send_action_valist),
+	(gupnp_service_proxy_send_action_hash),
+	(gupnp_service_proxy_begin_action), (begin_action_msg),
+	(action_got_response), (finish_action_msg), (write_in_parameter),
+	(gupnp_service_proxy_begin_action_valist),
+	(gupnp_service_proxy_begin_action_hash),
+	(gupnp_service_proxy_end_action), (check_action_response),
+	(read_out_parameter), (gupnp_service_proxy_end_action_valist):
+	* libgupnp/gupnp-service-proxy.h:
+
+	Added a new series of functions for sending actions taking hash 
+	tables of parameter name-GValue pairs.
+
+	* libgupnp/gupnp-service.c: (gupnp_service_action_get_valist),
+	(gupnp_service_action_set_valist), (gupnp_service_notify_valist):
+
+	Don't fail completely on GValue collection errors.
+
+	* doc/gupnp-sections.txt:
+
+	Added the new _hash() functions.
+
 2007-08-08  Zeeshan Ali  <zeenix@gstreamer.net>
 
 	* libgupnp/gupnp-service-introspection.c: (set_variable_type),

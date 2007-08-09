@@ -220,8 +220,6 @@ gupnp_service_action_get_valist (GUPnPServiceAction *action,
                         g_warning ("Error lcopying value: %s\n", copy_error);
 
                         g_free (copy_error);
-
-                        return;
                 }
 
                 arg_name = va_arg (var_args, const char *);
@@ -307,20 +305,18 @@ gupnp_service_action_set_valist (GUPnPServiceAction *action,
                 g_value_init (&value, arg_type);
 
                 G_VALUE_COLLECT (&value, var_args, 0, &collect_error);
-                if (collect_error) {
+                if (!collect_error) {
+                        gupnp_service_action_set_value (action,
+                                                        arg_name, &value);
+
+                        g_value_unset (&value);
+
+                } else {
                         g_warning ("Error collecting value: %s\n",
                                    collect_error);
 
                         g_free (collect_error);
-
-                        g_value_unset (&value);
-
-                        return;
                 }
-
-                gupnp_service_action_set_value (action, arg_name, &value);
-
-                g_value_unset (&value);
 
                 arg_name = va_arg (var_args, const char *);
         }
@@ -1399,20 +1395,17 @@ gupnp_service_notify_valist (GUPnPService *service,
                 g_value_init (&value, var_type);
 
                 G_VALUE_COLLECT (&value, var_args, 0, &collect_error);
-                if (collect_error) {
+                if (!collect_error) {
+                        gupnp_service_notify_value (service, var_name, &value);
+
+                        g_value_unset (&value);
+
+                } else {
                         g_warning ("Error collecting value: %s\n",
                                    collect_error);
 
                         g_free (collect_error);
-
-                        g_value_unset (&value);
-
-                        return;
                 }
-
-                gupnp_service_notify_value (service, var_name, &value);
-
-                g_value_unset (&value);
 
                 var_name = va_arg (var_args, const char *);
         }
