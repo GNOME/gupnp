@@ -49,6 +49,8 @@ libgupnp_1_0_la_SOURCES = accept-language.c			\
 			  gupnp-service-proxy-private.h 	\
 	                  gupnp-types.c				\
 	                  gupnp-types-private.h			\
+			  gvalue-util.c				\
+			  gvalue-util.h				\
 			  xml-util.c				\
 			  xml-util.h				\
 			  gena-protocol.h			\

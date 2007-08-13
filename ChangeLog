@@ -1,3 +1,17 @@
+2007-08-13  Jorn Baayen  <jorn@openedhand.com>
+
+	* libgupnp/Makefile.am:
+	* libgupnp/gupnp-service-proxy.c: (write_in_parameter),
+	(read_out_parameter):
+	* libgupnp/gupnp-service.c: (gupnp_service_action_set_value),
+	(create_property_set):
+	* libgupnp/gvalue-util.c:
+	* libgupnp/gvalue-util.h:
+	* libgupnp/xml-util.c: (xml_util_node_get_content_value):
+
+	Add more elaborate GValue conversion functions and use them
+	instead of old conversion code.
+
 2007-08-09  Jorn Baayen  <jorn@openedhand.com>
 
 	* configure.ac:

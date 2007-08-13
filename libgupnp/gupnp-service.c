@@ -40,6 +40,7 @@
 #include "accept-language.h"
 #include "gena-protocol.h"
 #include "xml-util.h"
+#include "gvalue-util.h"
 
 G_DEFINE_TYPE (GUPnPService,
                gupnp_service,
@@ -335,7 +336,7 @@ gupnp_service_action_set_value (GUPnPServiceAction *action,
                                 const char         *argument,
                                 const GValue       *value)
 {
-        GValue transformed_value = {0, };
+        char *str;
 
         g_return_if_fail (action != NULL);
         g_return_if_fail (argument != NULL);
@@ -350,21 +351,16 @@ gupnp_service_action_set_value (GUPnPServiceAction *action,
         }
 
         /* Transform to string */
-        g_value_init (&transformed_value, G_TYPE_STRING);
-        if (g_value_transform (value, &transformed_value)) {
+        str = gvalue_util_value_get_string (value);
+        if (str != NULL) {
                 /* Append to response */
                 xmlNewTextChild (action->response_node,
                                  NULL,
                                  (const xmlChar *) argument,
-                                 (xmlChar *) g_value_get_string
-                                                    (&transformed_value));
-        } else {
-                g_warning ("Failed to transform value of type %s to "
-                           "string.", G_VALUE_TYPE_NAME (value));
-        }
+                                 (xmlChar *) str);
 
-        /* Cleanup */
-        g_value_unset (&transformed_value);
+                g_free (str);
+        }
 }
 
 /**
@@ -1538,13 +1534,13 @@ notify_subscriber (gpointer key,
 static xmlChar *
 create_property_set (GQueue *queue)
 {
-        GValue transformed_value = {0, };
         NotifyData *data;
         xmlDoc *doc;
         xmlNode *node;
         xmlNs *ns;
         xmlChar *mem;
         int size;
+        char *str;
 
         /* Compose property set */
         doc = xmlNewDoc ((const xmlChar *) "1.0");
@@ -1567,23 +1563,18 @@ create_property_set (GQueue *queue)
 
         /* Add variables */
         while ((data = g_queue_pop_head (queue))) {
-                g_value_init (&transformed_value, G_TYPE_STRING);
-                if (g_value_transform (&data->value, &transformed_value)) {
+                str = gvalue_util_value_get_string (&data->value);
+                if (str != NULL) {
                         /* Add to property set */
-                        xmlNewTextChild
-                                (node,
-                                 NULL,
-                                 (const xmlChar *) data->variable,
-                                 (xmlChar *) g_value_get_string
-                                                    (&transformed_value));
-                } else {
-                        g_warning ("Failed to transform value of type %s to "
-                                   "string.", G_VALUE_TYPE_NAME (&data->value));
+                        xmlNewTextChild (node,
+                                         NULL,
+                                         (const xmlChar *) data->variable,
+                                         (xmlChar *) str);
+
+                        g_free (str);
                 }
 
                 /* Cleanup */
-                g_value_unset (&transformed_value);
-
                 notify_data_free (data);
         }
 

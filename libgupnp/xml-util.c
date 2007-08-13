@@ -21,6 +21,7 @@
 
 #include <string.h>
 
+#include "gvalue-util.h"
 #include "xml-util.h"
 
 xmlNode *
@@ -57,55 +58,10 @@ xml_util_node_get_content_value (xmlNode *node,
 {
         xmlChar *content;
         gboolean success;
-        GValue tmp_value = {0, };
-        int i;
 
         content = xmlNodeGetContent (node);
-        success = TRUE;
 
-        switch (G_VALUE_TYPE (value)) {
-        case G_TYPE_STRING:
-                g_value_set_string (value, (char *) content);
-                break;
-        case G_TYPE_INT:
-                i = atoi ((char *) content);
-
-                g_value_set_int (value, i);
-
-                break;
-        default:
-                /* Try to convert */
-                if (g_value_type_transformable (G_TYPE_STRING,
-                                                G_VALUE_TYPE (value))) {
-                        g_value_init (&tmp_value, G_TYPE_STRING);
-                        g_value_set_static_string (&tmp_value,
-                                                   (char *) content);
-
-                        g_value_transform (&tmp_value, value);
-
-                        g_value_unset (&tmp_value);
-
-                } else if (g_value_type_transformable (G_TYPE_INT,
-                                                       G_VALUE_TYPE (value))) {
-                        i = atoi ((char *) content);
-
-                        g_value_init (&tmp_value, G_TYPE_INT);
-                        g_value_set_int (&tmp_value, i);
-
-                        g_value_transform (&tmp_value, value);
-
-                        g_value_unset (&tmp_value);
-
-                } else {
-                        g_warning ("Failed to transform integer "
-                                   "value to type %s",
-                                   G_VALUE_TYPE_NAME (value));
-
-                        success = FALSE;
-                }
-
-                break;
-        }
+        success = gvalue_util_set_value_from_string (value, (char *) content);
 
         xmlFree (content);
 

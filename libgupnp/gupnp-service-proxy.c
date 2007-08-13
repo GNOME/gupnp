@@ -42,6 +42,7 @@
 #include "xml-util.h"
 #include "gena-protocol.h"
 #include "accept-language.h"
+#include "gvalue-util.h"
 
 G_DEFINE_TYPE (GUPnPServiceProxy,
                gupnp_service_proxy,
@@ -652,30 +653,18 @@ write_in_parameter (const char      *arg_name,
                     GValue          *value,
                     SoupSoapMessage *msg)
 {
-        GValue transformed_value = { 0, };
-        const char *str;
-
-        g_value_init (&transformed_value, G_TYPE_STRING);
-        if (!g_value_transform (value, &transformed_value)) {
-                g_warning ("Failed to transform value of type %s "
-                           "to a string", G_VALUE_TYPE_NAME (value));
-                
-                g_value_unset (&transformed_value);
-
-                return;
-        }
+        char *str;
 
         soup_soap_message_start_element (msg,
                                          arg_name,
                                          NULL,
                                          NULL);
 
-        str = g_value_get_string (&transformed_value);
+        str = gvalue_util_value_get_string (value);
         soup_soap_message_write_string (msg, str); 
+        g_free (str);
 
         soup_soap_message_end_element (msg);
-
-        g_value_unset (&transformed_value);
 }
 
 /**
@@ -958,9 +947,7 @@ read_out_parameter (const char       *arg_name,
                     SoupSoapResponse *response)
 {
         SoupSoapParameter *param;
-        GValue tmp_value = { 0, };
         char *str;
-        int i;
 
         /* Try to find a matching paramater in the response */
         param = soup_soap_response_get_first_parameter_by_name
@@ -973,53 +960,11 @@ read_out_parameter (const char       *arg_name,
         }
 
         /* Parse into @value */
-        switch (G_VALUE_TYPE (value)) {
-        case G_TYPE_STRING:
-                str = soup_soap_parameter_get_string_value (param);
+        str = soup_soap_parameter_get_string_value (param);
 
-                g_value_set_string_take_ownership (value, str);
+        gvalue_util_set_value_from_string (value, str);
 
-                break;
-        case G_TYPE_INT:
-                i = soup_soap_parameter_get_int_value (param);
-
-                g_value_set_int (value, i);
-
-                break;
-        default:
-                /* Try to convert */
-                if (g_value_type_transformable (G_TYPE_STRING,
-                                                G_VALUE_TYPE (value))) {
-                        str = soup_soap_parameter_get_string_value
-                                                                (param);
-
-                        g_value_init (&tmp_value, G_TYPE_STRING);
-                        g_value_set_string_take_ownership (&tmp_value,
-                                                           str);
-
-                        g_value_transform (&tmp_value, value);
-
-                        g_value_unset (&tmp_value);
-
-                } else if (g_value_type_transformable (G_TYPE_INT,
-                                                       G_VALUE_TYPE (value))) {
-                        i = soup_soap_parameter_get_int_value (param);
-
-                        g_value_init (&tmp_value, G_TYPE_INT);
-                        g_value_set_int (&tmp_value, i);
-
-                        g_value_transform (&tmp_value, value);
-
-                        g_value_unset (&tmp_value);
-
-                } else {
-                        g_warning ("Failed to transform integer "
-                                   "value to type %s",
-                                   G_VALUE_TYPE_NAME (value));
-                }
-
-                break;
-        }
+        g_free (str);
 
         return;
 }
