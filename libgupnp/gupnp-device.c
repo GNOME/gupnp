@@ -228,51 +228,6 @@ gupnp_device_class_init (GUPnPDeviceClass *klass)
 }
 
 /**
- * @element: An #xmlNode pointing to a "device" element
- * @udn: The UDN of the device element to find
- **/
-xmlNode *
-_gupnp_device_find_element_for_udn (xmlNode    *element,
-                                    const char *udn)
-{
-        xmlNode *tmp;
-
-        tmp = xml_util_get_element (element,
-                                    "UDN",
-                                    NULL);
-        if (tmp) {
-                xmlChar *content;
-                gboolean match;
-
-                content = xmlNodeGetContent (tmp);
-                
-                match = !strcmp (udn, (char *) content);
-
-                xmlFree (content);
-
-                if (match)
-                        return element;
-        }
-
-        tmp = xml_util_get_element (element,
-                                    "deviceList",
-                                    NULL);
-        if (tmp) {
-                /* Recurse into children */
-                for (tmp = tmp->children; tmp; tmp = tmp->next) {
-                        element =
-                                _gupnp_device_find_element_for_udn
-                                        (tmp, udn);
-
-                        if (element)
-                                return element;
-                }
-        }
-
-        return NULL;
-}
-
-/**
  * _gupnp_device_new
  * @context: A #GUPnPContext
  * @root_device: The #GUPnPRootDevice
