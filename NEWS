@@ -1,3 +1,16 @@
+0.4
+===
+
+- A new series of functions for sending actions taking hash tables of parameter
+  name-GValue pairs. [Jorn Baayen]
+- New introspection methods for state variable and action retrieval by name.
+  [Zeeshan Ali]
+- New pkg-config file for building against an uninstalled libgupnp.
+  [Zeeshan Ali]
+- Improved conversion between GValues and UPnP value types. [Jorn Baayen]
+- Only include evented state variables in initial event message.
+  [Jorn Baayen]
+
 0.3
 ===
 
