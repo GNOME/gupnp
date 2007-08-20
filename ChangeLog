@@ -1,3 +1,10 @@
+2007-08-21  Jorn Baayen  <jorn@openedhand.com>
+
+	* NEWS:
+	* configure.ac:
+	
+	Release gupnp 0.4.
+
 2007-08-14  Jorn Baayen  <jorn@openedhand.com>
 
 	* libgupnp/gupnp-device.c: (gupnp_device_class_init):
