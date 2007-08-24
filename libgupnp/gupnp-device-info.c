@@ -540,7 +540,7 @@ icon_parse (GUPnPDeviceInfo *info, xmlNode *element)
 
         icon = g_slice_new0 (Icon);
 
-        icon->mime_type = xml_util_get_child_element_content      (element,
+        icon->mime_type = xml_util_get_child_element_content     (element,
                                                                   "mimetype");
         icon->width     = xml_util_get_child_element_content_int (element,
                                                                   "width");
