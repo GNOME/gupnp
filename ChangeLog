@@ -1,3 +1,11 @@
+2007-08-26  Jorn Baayen  <jorn@openedhand.com>
+
+	* gupnp-1.0-uninstalled.pc.in:
+	* gupnp-1.0.pc.in:
+
+	Move libsoup back into Requires.. we do include it in public
+	headers after all.
+
 2007-08-23  Jorn Baayen  <jorn@openedhand.com>
 
 	* gupnp-1.0-uninstalled.pc.in:
