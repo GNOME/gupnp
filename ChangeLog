@@ -1,3 +1,31 @@
+2007-08-29  Jorn Baayen  <jorn@openedhand.com>
+
+	* configure.in:
+
+	Bump version number to 0.4.99.
+
+2007-08-28  Zeeshan Ali  <zeenix@gstreamer.net>
+	    Jorn Baayen  <jorn@openedhand.com>
+
+	* libgupnp/gupnp-service.c:
+	* libgupnp/gupnp-service.h:
+	* doc/gupnp-sections.txt:
+
+	- Add gupnp_service_signals_autoconnect ()
+	- Remove whitespace
+
+	* configure.ac:
+	* gupnp-1.0.pc.in:
+	* gupnp-1.0-uninstalled.pc.in:
+
+	Require gmodule.
+
+	* tests/Makefile.am:
+	* tests/test-server.c:
+
+	Modify the test server to utilize
+	gupnp_service_signals_autoconnect().
+
 2007-08-26  Jorn Baayen  <jorn@openedhand.com>
 
 	* gupnp-1.0-uninstalled.pc.in:

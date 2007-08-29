@@ -129,23 +129,28 @@ gupnp_service_action_return_error (GUPnPServiceAction *action,
                                    const char         *error_description);
 
 void
-gupnp_service_notify        (GUPnPService *service,
-                             ...) G_GNUC_NULL_TERMINATED;
+gupnp_service_notify              (GUPnPService *service,
+                                   ...) G_GNUC_NULL_TERMINATED;
 
 void
-gupnp_service_notify_valist (GUPnPService *service,
-                             va_list       var_args);
+gupnp_service_notify_valist       (GUPnPService *service,
+                                   va_list       var_args);
 
 void
-gupnp_service_notify_value  (GUPnPService *service,
-                             const char   *variable,
-                             const GValue *value);
+gupnp_service_notify_value        (GUPnPService *service,
+                                   const char   *variable,
+                                   const GValue *value);
 
 void
-gupnp_service_freeze_notify (GUPnPService *service);
+gupnp_service_freeze_notify       (GUPnPService *service);
 
 void
-gupnp_service_thaw_notify   (GUPnPService *service);
+gupnp_service_thaw_notify         (GUPnPService *service);
+
+void
+gupnp_service_signals_autoconnect (GUPnPService *service,
+                                   gpointer      user_data,
+                                   GError      **error);
 
 G_END_DECLS
 

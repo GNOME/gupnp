@@ -108,6 +108,7 @@ gupnp_service_notify_valist
 gupnp_service_notify_value
 gupnp_service_freeze_notify
 gupnp_service_thaw_notify
+gupnp_service_signals_autoconnect
 <SUBSECTION Standard>
 GUPNP_SERVICE
 GUPNP_IS_SERVICE

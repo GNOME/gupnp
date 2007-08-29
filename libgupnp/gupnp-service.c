@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (C) 2007 OpenedHand Ltd.
  *
  * Author: Jorn Baayen <jorn@openedhand.com>
@@ -28,6 +28,7 @@
  */
 
 #include <gobject/gvaluecollector.h>
+#include <gmodule.h>
 #include <libsoup/soup-date.h>
 #include <uuid/uuid.h>
 #include <string.h>
@@ -152,7 +153,7 @@ gupnp_service_action_get_name (GUPnPServiceAction *action)
  * gupnp_service_action_get_locales
  * @action: A #GUPnPServiceAction
  *
- * Return value: An ordered (preferred first) #GList of locales preferred by 
+ * Return value: An ordered (preferred first) #GList of locales preferred by
  * the client. Free list and elements after use.
  **/
 GList *
@@ -295,7 +296,7 @@ gupnp_service_action_set_valist (GUPnPServiceAction *action,
         GType arg_type;
         GValue value = {0, };
         char *collect_error;
-        
+
         g_return_if_fail (action != NULL);
 
         collect_error = NULL;
@@ -868,7 +869,7 @@ subscribe (GUPnPService *service,
         /* Send initial event message */
         queue = g_queue_new ();
 
-        for (l = service->priv->state_variables; l; l = l->next) {      
+        for (l = service->priv->state_variables; l; l = l->next) {
                 NotifyData *ndata;
 
                 ndata = g_slice_new0 (NotifyData);
@@ -891,7 +892,7 @@ subscribe (GUPnPService *service,
         }
 
         mem = create_property_set (queue);
-        notify_subscriber (data->sid, data, mem); 
+        notify_subscriber (data->sid, data, mem);
 
         /* Cleanup */
         g_queue_free (queue);
@@ -1054,7 +1055,7 @@ gupnp_service_constructor (GType                  type,
 
                 for (l = state_variables; l; l = l->next) {
                         GUPnPServiceStateVariableInfo *variable;
-                        
+
                         variable = l->data;
 
                         if (!variable->send_events)
@@ -1197,7 +1198,7 @@ gupnp_service_dispose (GObject *object)
                                 (service->priv->root_device,
                                  service->priv->notify_available_id);
                 }
-                
+
                 g_object_unref (service->priv->root_device);
                 service->priv->root_device = NULL;
         }
@@ -1253,7 +1254,7 @@ gupnp_service_class_init (GUPnPServiceClass *klass)
         object_class->finalize     = gupnp_service_finalize;
 
         info_class = GUPNP_SERVICE_INFO_CLASS (klass);
-        
+
         g_type_class_add_private (klass, sizeof (GUPnPServicePrivate));
 
         /**
@@ -1672,6 +1673,187 @@ gupnp_service_thaw_notify (GUPnPService *service)
                 return; /* Empty notify queue */
 
         flush_notifications (service);
+}
+
+/* Convert a CamelCase string to a lowercase string with underscores */
+static char *
+strip_camel_case (char *camel_str)
+{
+        char *stripped;
+        int i, j;
+
+        /* Keep enough space for underscores */
+        stripped = g_malloc (strlen (camel_str) * 2);
+
+        for (i = 0, j = 0; i <= strlen (camel_str); i++) {
+                /* Convert every upper case letter to lower case and unless
+                 * it's the first character, the last charachter, in the
+                 * middle of an abbreviation or there is already an underscore
+                 * before it, add an underscore before it */
+                if (g_ascii_isupper (camel_str[i])) {
+                        if (i != 0 &&
+                            camel_str[i + 1] != '\0' &&
+                            camel_str[i - 1] != '_' &&
+                            !(g_ascii_isupper (camel_str[i - 1]) &&
+                              g_ascii_isupper (camel_str[i + 1]))) {
+                                stripped[j++] = '_';
+                        }
+                        stripped[j++] = g_ascii_tolower (camel_str[i]);
+                } else
+                        stripped[j++] = camel_str[i];
+        }
+
+        return stripped;
+}
+
+/* Use the strings from @name_list as details to @signal_name, and connect
+ * callbacks with names based on these same strings to @signal_name::string. */
+static void
+connect_names_to_signal_handlers (GUPnPService *service,
+                                  GModule      *module,
+                                  const GList  *name_list,
+                                  const char   *signal_name,
+                                  const char   *callback_prefix,
+                                  gpointer      user_data)
+{
+        const GList *name_node;
+
+        for (name_node = name_list;
+             name_node;
+             name_node = name_node->next) {
+                GCallback callback;
+                char     *callback_name;
+                char     *signal_detail;
+                char     *tmp;
+
+                signal_detail = (char *) name_node->data;
+                tmp = strip_camel_case (signal_detail);
+
+                if (callback_prefix) {
+                        callback_name = g_strjoin ("_",
+                                                   callback_prefix,
+                                                   tmp,
+                                                   NULL);
+                        g_free (tmp);
+                        tmp = callback_name;
+                }
+
+                /* First try with 'on_' prefix */
+                callback_name = g_strjoin ("_",
+                                           "on",
+                                           tmp,
+                                           NULL);
+                if (!g_module_symbol (module,
+                                      callback_name,
+                                      (gpointer) &callback)) {
+                        g_free (callback_name);
+                        /* Now try with '_cb' postfix */
+                        callback_name = g_strjoin ("_",
+                                                   tmp,
+                                                   "cb",
+                                                   NULL);
+                        if (!g_module_symbol (module,
+                                              callback_name,
+                                              (gpointer) &callback)) {
+                                g_free (tmp);
+                                g_free (callback_name);
+
+                                continue;
+                        }
+                }
+
+                g_free (tmp);
+                g_free (callback_name);
+
+                signal_detail = g_strjoin ("::",
+                                           signal_name,
+                                           signal_detail,
+                                           NULL);
+
+                g_signal_connect (service,
+                                  signal_detail,
+                                  callback,
+                                  user_data);
+
+                g_free (signal_detail);
+        }
+}
+
+/**
+ * gupnp_service_signals_autoconnect
+ * @service: A #GUPnPService
+ * @user_data: the data to pass to each of the callbacks
+ * @error: return location for a GError, or NULL
+ *
+ * A convenience function that attempts to connect all possible "action-invoked"
+ * and "query-variable" signals to appropriate callbacks for the service
+ * @service. It uses service introspection and GModule's introspective
+ * features. It is very simillar to glade_xml_signal_autoconnect except that it
+ * attempts to guess the names of the signal handlers on its own.
+ *
+ * For this function to do its magic, the application must name the callback
+ * functions for "action-invoked" signals by striping the CamelCase off the
+ * action names and either prepend "on_" or append "_cb" to them. Same goes
+ * for "query-variable" signals, except that "query_" should be prepended to
+ * the variable name. For example, callback function for "GetSystemUpdateID"
+ * action should be either named as "get_system_update_id_cb" or
+ * "on_get_system_update_id" and callback function for the query of
+ * "SystemUpdateID" state variable should be named "query_system_update_id_cb"
+ * or "on_query_system_update_id".
+ *
+ * Note that this function will not work correctly if GModule is not supported
+ * on the platform or introspection is not available for service @service.
+ *
+ * WARNING: This function can not and therefore does not guarantee that the
+ * resulting signal connections will be correct as it depends heavily on a
+ * particular naming schemes described above.
+ **/
+void
+gupnp_service_signals_autoconnect (GUPnPService *service,
+                                   gpointer      user_data,
+                                   GError      **error)
+{
+        GUPnPServiceIntrospection *introspection;
+        const GList               *names;
+        GModule                   *module;
+
+        g_return_if_fail (GUPNP_IS_SERVICE (service));
+
+        introspection = gupnp_service_info_get_introspection
+                                (GUPNP_SERVICE_INFO (service),
+                                 error);
+        if (!introspection)
+                return;
+
+        /* Get a handle on the main executable -- use this to find symbols */
+        module = g_module_open (NULL, 0);
+        if (module == NULL) {
+                g_error ("Failed to open module: %s", g_module_error ());
+
+                g_object_unref (introspection);
+
+                return;
+        }
+
+        names = gupnp_service_introspection_list_action_names (introspection);
+        connect_names_to_signal_handlers (service,
+                                          module,
+                                          names,
+                                          "action-invoked",
+                                          NULL,
+                                          user_data);
+
+        names = gupnp_service_introspection_list_state_variable_names
+                        (introspection);
+        connect_names_to_signal_handlers (service,
+                                          module,
+                                          names,
+                                          "query-variable",
+                                          "query",
+                                          user_data);
+
+        g_module_close (module);
+        g_object_unref (introspection);
 }
 
 /**

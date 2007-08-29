@@ -34,7 +34,7 @@ interrupt_signal_handler (int signum)
         g_main_loop_quit (main_loop);
 }
 
-static void
+void
 browse_cb (GUPnPService       *service,
            GUPnPServiceAction *action,
            gpointer            user_data)
@@ -70,11 +70,11 @@ browse_cb (GUPnPService       *service,
         gupnp_service_action_return (action);
 }
 
-static void
-query_cb (GUPnPService *service,
-          const char   *variable_name,
-          GValue       *value,
-          gpointer      user_data)
+void
+query_system_update_id_cb (GUPnPService *service,
+                           const char   *variable_name,
+                           GValue       *value,
+                           gpointer      user_data)
 {
         g_value_init (value, G_TYPE_UINT);
         g_value_set_uint (value, 31415927);
@@ -152,15 +152,16 @@ main (int argc, char **argv)
                           "urn:schemas-upnp-org:service:ContentDirectory:1");
 
         if (content_dir) {
-                g_signal_connect (content_dir,
-                                  "action-invoked::Browse",
-                                  G_CALLBACK (browse_cb),
-                                  NULL);
+                gupnp_service_signals_autoconnect (GUPNP_SERVICE (content_dir),
+                                                   NULL,
+                                                   &error);
+                if (error) {
+                        g_warning ("Failed to autoconnect signals: %s",
+                                   error->message);
 
-                g_signal_connect (content_dir,
-                                  "query-variable::SystemUpdateID",
-                                  G_CALLBACK (query_cb),
-                                  NULL);
+                        g_error_free (error);
+                        error = NULL;
+                }
 
                 g_signal_connect (content_dir,
                                   "notify-failed",

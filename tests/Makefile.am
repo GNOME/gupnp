@@ -16,6 +16,7 @@ test_introspection_LDADD   = $(top_builddir)/libgupnp/libgupnp-1.0.la
 
 test_server_SOURCES = test-server.c
 test_server_LDADD   = $(top_builddir)/libgupnp/libgupnp-1.0.la
+test_server_LDFLAGS = -export-dynamic
 
 CLEANFILES = $(BUILT_SOURCES)
 DISTCLEANFILES = $(BUILT_SOURCES)
