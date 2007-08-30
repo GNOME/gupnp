@@ -1,3 +1,12 @@
+2007-08-30  Jorn Baayen  <jorn@openedhand.com>
+
+	* libgupnp/gupnp-device-info.c:
+	(gupnp_device_info_list_device_types),
+	(gupnp_device_info_get_device),
+	(gupnp_device_info_list_service_types):
+
+	Clarify subresource retrieval in docs.
+
 2007-08-29  Jorn Baayen  <jorn@openedhand.com>
 
 	* configure.in:

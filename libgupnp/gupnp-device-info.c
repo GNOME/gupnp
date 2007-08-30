@@ -737,9 +737,14 @@ gupnp_device_info_get_icon_url (GUPnPDeviceInfo *info,
  * gupnp_device_info_list_devices
  * @info: A #GUPnPDeviceInfo
  *
- * Return value: A #GList of objects implementing #GUPnPDeviceInfo representing
- * the devices directly contained in @info. The returned list should be
- * g_list_free()'d and the elements should be g_object_unref()'d.
+ * Return value: A #GList of new objects implementing #GUPnPDeviceInfo
+ * representing the devices directly contained in @info. The returned list
+ * should be g_list_free()'d and the elements should be g_object_unref()'d.
+ *
+ * Note that devices are not cached internally, so that every time you
+ * call this function new objects are created. The application
+ * must cache any used devices if it wishes to keep them around and re-use
+ * them.
  **/
 GList *
 gupnp_device_info_list_devices (GUPnPDeviceInfo *info)
@@ -820,8 +825,13 @@ gupnp_device_info_list_device_types (GUPnPDeviceInfo *info)
  * @type: The type of the device to be retrieved.
  *
  * Return value: The service with type @type directly contained in @info as
- * an object implementing #GUPnPDeviceInfo object, or NULL if no such device
+ * a new object implementing #GUPnPDeviceInfo, or NULL if no such device
  * was found. The returned object should be unreffed when done.
+ *
+ * Note that devices are not cached internally, so that every time you
+ * call this function a new object is created. The application
+ * must cache any used devices if it wishes to keep them around and re-use
+ * them.
  **/
 GUPnPDeviceInfo *
 gupnp_device_info_get_device (GUPnPDeviceInfo *info,
@@ -877,9 +887,14 @@ gupnp_device_info_get_device (GUPnPDeviceInfo *info,
  * gupnp_device_info_list_services
  * @info: A #GUPnPDeviceInfo
  *
- * Return value: A #GList of objects implementing #GUPnPServiceInfo representing
- * the services directly contained in @info. The returned list should be
- * g_list_free()'d and the elements should be g_object_unref()'d.
+ * Return value: A #GList of new objects implementing #GUPnPServiceInfo
+ * representing the services directly contained in @info. The returned list
+ * should be g_list_free()'d and the elements should be g_object_unref()'d.
+ *
+ * Note that services are not cached internally, so that every time you
+ * call this function new objects are created. The application
+ * must cache any used services if it wishes to keep them around and re-use
+ * them.
  **/
 GList *
 gupnp_device_info_list_services (GUPnPDeviceInfo *info)
@@ -960,8 +975,13 @@ gupnp_device_info_list_service_types (GUPnPDeviceInfo *info)
  * @type: The type of the service to be retrieved.
  *
  * Return value: The service with type @type directly contained in @info as
- * an object implementing #GUPnPServiceInfo object, or NULL if no such device
+ * a new object implementing #GUPnPServiceInfo, or NULL if no such device
  * was found. The returned object should be unreffed when done.
+ *
+ * Note that services are not cached internally, so that every time you
+ * call this function a new object is created. The application
+ * must cache any used services if it wishes to keep them around and re-use
+ * them.
  **/
 GUPnPServiceInfo *
 gupnp_device_info_get_service (GUPnPDeviceInfo *info,
