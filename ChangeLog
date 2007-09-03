@@ -1,3 +1,10 @@
+2007-09-03  Zeeshan Ali  <zeenix@gstreamer.net>
+
+	* libgupnp/gupnp-service-introspection.c:
+
+	Use gvalue_util_set_value_from_string() for conversion from
+	G_TYPE_STRING.
+
 2007-08-30  Jorn Baayen  <jorn@openedhand.com>
 
 	* libgupnp/gupnp-device-info.c:

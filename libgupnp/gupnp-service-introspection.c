@@ -49,6 +49,7 @@
 #include "gupnp-service-introspection.h"
 #include "gupnp-service-introspection-private.h"
 #include "xml-util.h"
+#include "gvalue-util.h"
 #include "gupnp-types.h"
 #include "gupnp-types-private.h"
 
@@ -237,14 +238,9 @@ set_default_value (xmlNodePtr                     variable_node,
         default_str = xml_util_get_child_element_content (variable_node,
                                                           "defaultValue");
         if (default_str) {
-                GValue tmp;
+                gvalue_util_set_value_from_string (&variable->default_value,
+                                                   (char *) default_str);
 
-                memset (&tmp, 0, sizeof (GValue));
-                g_value_init (&tmp, G_TYPE_STRING);
-                g_value_set_static_string (&tmp, (char *) default_str);
-                g_value_transform (&tmp, &(variable->default_value));
-
-                g_value_unset (&tmp);
                 xmlFree (default_str);
         }
 }
@@ -283,13 +279,8 @@ set_value_limit_by_name (xmlNodePtr limit_node,
         limit_str = xml_util_get_child_element_content (limit_node,
                                                         limit_name);
         if (limit_str) {
-                GValue tmp;
+                gvalue_util_set_value_from_string (limit, (char *) limit_str);
 
-                g_value_init (&tmp, G_TYPE_STRING);
-                g_value_set_static_string (&tmp, (char *) limit_str);
-                g_value_transform (&tmp, limit);
-
-                g_value_unset (&tmp);
                 xmlFree (limit_str);
         }
 }
@@ -914,4 +905,3 @@ gupnp_service_introspection_get_action
 
         return (GUPnPServiceActionInfo *) action_node->data;
 }
-
