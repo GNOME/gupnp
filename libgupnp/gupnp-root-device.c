@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (C) 2007 OpenedHand Ltd.
  *
  * Author: Jorn Baayen <jorn@openedhand.com>
@@ -23,7 +23,7 @@
  * SECTION:gupnp-root-device
  * @short_description: Class for root device implementations.
  *
- * #GUPnPRootDevice allows for implementing root devices. 
+ * #GUPnPRootDevice allows for implementing root devices.
  */
 
 #include <string.h>
@@ -58,7 +58,7 @@ gupnp_root_device_finalize (GObject *object)
 {
         GUPnPRootDevice *device;
         GObjectClass *object_class;
-        
+
         device = GUPNP_ROOT_DEVICE (object);
 
         g_free (device->priv->relative_location);
@@ -73,7 +73,7 @@ gupnp_root_device_dispose (GObject *object)
 {
         GUPnPRootDevice *device;
         GObjectClass *object_class;
-        
+
         device = GUPNP_ROOT_DEVICE (object);
 
         if (device->priv->group) {
@@ -170,7 +170,7 @@ fill_resource_group (xmlNode            *element,
 
                 return;
         }
-        
+
         gssdp_resource_group_add_resource_simple (group,
                                                   (const char *) udn,
                                                   (const char *) udn,
@@ -250,7 +250,7 @@ gupnp_root_device_constructor (GType                  type,
 
         for (i = 0; i < n_construct_params; i++) {
                 const char *par_name;
-                
+
                 par_name = construct_params[i].pspec->name;
 
                 if (strcmp (par_name, "description-doc") == 0) {
@@ -277,7 +277,7 @@ gupnp_root_device_constructor (GType                  type,
                 return NULL;
         }
 
-        element = xml_util_get_element (root_element, 
+        element = xml_util_get_element (root_element,
                                         "device",
                                         NULL);
         if (!element) {
@@ -289,7 +289,7 @@ gupnp_root_device_constructor (GType                  type,
         /* Set element */
         for (i = 0; i < n_construct_params; i++) {
                 const char *par_name;
-                
+
                 par_name = construct_params[i].pspec->name;
 
                 if (strcmp (par_name, "element") == 0) {

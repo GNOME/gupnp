@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (C) 2006, 2007 OpenedHand Ltd.
  *
  * Author: Jorn Baayen <jorn@openedhand.com>
@@ -201,7 +201,7 @@ gupnp_service_proxy_dispose (GObject *object)
                 GUPnPServiceProxyAction *action;
 
                 action = proxy->priv->pending_actions->data;
-                
+
                 gupnp_service_proxy_cancel_action (proxy, action);
         }
 
@@ -258,7 +258,7 @@ gupnp_service_proxy_class_init (GUPnPServiceProxyClass *klass)
                                        G_PARAM_STATIC_NAME |
                                        G_PARAM_STATIC_NICK |
                                        G_PARAM_STATIC_BLURB));
-                                       
+
         /**
          * GUPnPServiceProxy::subscription-lost
          * @proxy: The #GUPnPServiceProxy that received the signal
@@ -348,7 +348,7 @@ gupnp_service_proxy_send_action_valist (GUPnPServiceProxy *proxy,
         GMainContext *main_context;
         GMainLoop *main_loop;
         GUPnPServiceProxyAction *handle;
-        
+
         g_return_val_if_fail (GUPNP_IS_SERVICE_PROXY (proxy), FALSE);
         g_return_val_if_fail (action, FALSE);
 
@@ -408,7 +408,7 @@ gupnp_service_proxy_send_action_hash (GUPnPServiceProxy *proxy,
         GMainContext *main_context;
         GMainLoop *main_loop;
         GUPnPServiceProxyAction *handle;
-        
+
         g_return_val_if_fail (GUPNP_IS_SERVICE_PROXY (proxy), FALSE);
         g_return_val_if_fail (action, FALSE);
 
@@ -613,7 +613,7 @@ finish_action_msg (GUPnPServiceProxy              *proxy,
 
         /* Finish message */
         soup_soap_message_end_element (msg);
-        
+
 	soup_soap_message_end_body (msg);
 	soup_soap_message_end_envelope (msg);
         soup_soap_message_persist (msg);
@@ -661,7 +661,7 @@ write_in_parameter (const char      *arg_name,
                                          NULL);
 
         str = gvalue_util_value_get_string (value);
-        soup_soap_message_write_string (msg, str); 
+        soup_soap_message_write_string (msg, str);
         g_free (str);
 
         soup_soap_message_end_element (msg);
@@ -675,7 +675,7 @@ write_in_parameter (const char      *arg_name,
  * or failed
  * @user_data: User data for @callback
  * @error: The location where to store any error, or NULL
- * @var_args: A va_list of tuples of in parameter name, in paramater type, and 
+ * @var_args: A va_list of tuples of in parameter name, in paramater type, and
  * in parameter value
  *
  * See gupnp_service_proxy_begin_action(); this version takes a va_list for
@@ -727,7 +727,7 @@ gupnp_service_proxy_begin_action_valist
                                    collect_error);
 
                         g_free (collect_error);
-                        
+
                         /* we purposely leak the value here, it might not be
 	                 * in a sane state if an error condition occoured
 	                 */
@@ -797,7 +797,7 @@ gupnp_service_proxy_begin_action_hash
  * value location, terminated with NULL. The out parameter values should be
  * freed after use
  *
- * Retrieves the result of @action. The out parameters in @Varargs will be 
+ * Retrieves the result of @action. The out parameters in @Varargs will be
  * filled in, and if an error occurred, @error will be set. In case of
  * a UPnPError the error code will be the same in @error.
  *
@@ -843,7 +843,7 @@ check_action_response (GUPnPServiceProxy       *proxy,
                 break;
         default:
                 set_server_error (error, soup_msg);
-                
+
                 gupnp_service_proxy_action_free (action);
 
                 return NULL;
@@ -864,7 +864,7 @@ check_action_response (GUPnPServiceProxy       *proxy,
                                      GUPNP_SERVER_ERROR_INTERNAL_SERVER_ERROR,
                                      soup_msg->reason_phrase);
                 }
-                
+
                 gupnp_service_proxy_action_free (action);
 
                 return NULL;
@@ -927,7 +927,7 @@ check_action_response (GUPnPServiceProxy       *proxy,
                                    desc);
 
                 g_free (desc);
-                
+
                 /* Cleanup */
                 gupnp_service_proxy_action_free (action);
 
@@ -939,7 +939,7 @@ check_action_response (GUPnPServiceProxy       *proxy,
         return response;
 }
 
-/* Reads a value into the parameter name and initialised GValue pair 
+/* Reads a value into the parameter name and initialised GValue pair
  * from @response */
 static void
 read_out_parameter (const char       *arg_name,
@@ -974,7 +974,7 @@ read_out_parameter (const char       *arg_name,
  * @proxy: A #GUPnPServiceProxy
  * @action: A #GUPnPServiceProxyAction handle
  * @error: The location where to store any error, or NULL
- * @var_args: A va_list of tuples of out parameter name, out paramater type, 
+ * @var_args: A va_list of tuples of out parameter name, out paramater type,
  * and out parameter value location. The out parameter values should be
  * freed after use
  *
@@ -1012,7 +1012,7 @@ gupnp_service_proxy_end_action_valist (GUPnPServiceProxy       *proxy,
                 g_value_init (&value, arg_type);
 
                 read_out_parameter (arg_name, &value, response);
-                
+
                 G_VALUE_LCOPY (&value, var_args, 0, &copy_error);
 
                 g_value_unset (&value);
@@ -1092,7 +1092,7 @@ gupnp_service_proxy_cancel_action (GUPnPServiceProxy       *proxy,
 
         context = gupnp_service_info_get_context (GUPNP_SERVICE_INFO (proxy));
         session = _gupnp_context_get_session (context);
-        
+
         soup_message_set_status (SOUP_MESSAGE (action->msg),
                                  SOUP_STATUS_CANCELLED);
         soup_session_cancel_message (session, SOUP_MESSAGE (action->msg));
@@ -1108,7 +1108,7 @@ gupnp_service_proxy_cancel_action (GUPnPServiceProxy       *proxy,
  * @callback: The callback to call when @variable changes
  * @user_data: User data for @callback
  *
- * Sets up @callback to be called whenever a change notification for 
+ * Sets up @callback to be called whenever a change notification for
  * @variable is recieved.
  *
  * Return value: TRUE on success.
@@ -1696,7 +1696,7 @@ unsubscribe (GUPnPServiceProxy *proxy, gboolean sync)
                 soup_session_send_message (session, msg);
         else
                 soup_session_queue_message (session, msg, NULL, NULL);
-        
+
         /* Reset SID */
         g_free (proxy->priv->sid);
         proxy->priv->sid = NULL;

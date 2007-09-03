@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (C) 2006, 2007 OpenedHand Ltd.
  *
  * Author: Jorn Baayen <jorn@openedhand.com>
@@ -35,7 +35,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <sys/utsname.h>
-#include <sys/ioctl.h> 
+#include <sys/ioctl.h>
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -91,7 +91,7 @@ make_server_id (void)
         struct utsname sysinfo;
 
         uname (&sysinfo);
-        
+
         return g_strdup_printf ("%s/%s UPnP/1.0 GUPnP/%s",
                                 sysinfo.sysname,
                                 sysinfo.version,
@@ -140,7 +140,7 @@ get_default_host_ip (void)
         struct if_nameindex *ifs;
         char *ret;
         int i;
-        
+
         /* List network interfaces */
         ifs = if_nameindex ();
         if (ifs == NULL) {
@@ -393,7 +393,7 @@ _gupnp_context_get_server (GUPnPContext *context)
 
                 soup_server_run_async (context->priv->server);
         }
-        
+
         return context->priv->server;
 }
 
@@ -686,7 +686,7 @@ unregister_hosting_server_handler (SoupServer        *server,
  *
  * Start hosting @local_path at @server_path. Files with the path
  * @local_path.LOCALE (if they exist) will be served up when LOCALE is
- * specified in the request's Accept-Language header. 
+ * specified in the request's Accept-Language header.
  **/
 void
 gupnp_context_host_path (GUPnPContext *context,

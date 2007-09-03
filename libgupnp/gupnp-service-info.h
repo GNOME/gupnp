@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (C) 2006, 2007 OpenedHand Ltd.
  *
  * Author: Jorn Baayen <jorn@openedhand.com>
@@ -59,7 +59,7 @@ typedef struct _GUPnPServiceInfoPrivate GUPnPServiceInfoPrivate;
 
 typedef struct {
         GObject parent;
-        
+
         GUPnPServiceInfoPrivate *priv;
 } GUPnPServiceInfo;
 

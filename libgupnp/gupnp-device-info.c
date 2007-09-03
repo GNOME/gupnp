@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (C) 2006, 2007 OpenedHand Ltd.
  *
  * Author: Jorn Baayen <jorn@openedhand.com>
@@ -94,7 +94,7 @@ gupnp_device_info_set_property (GObject      *object,
                         g_value_dup_string (value);
                 break;
         case PROP_URL_BASE:
-                info->priv->url_base = 
+                info->priv->url_base =
                         g_value_get_pointer (value);
 
                 if (info->priv->url_base)
@@ -583,10 +583,10 @@ icon_free (Icon *icon)
  *
  * Return value: A URL pointing to the icon most closely matching the
  * given criteria, or NULL. If @requested_mime_type is set, only icons with
- * this mime type will be returned. If @requested_depth is set, only icons with 
+ * this mime type will be returned. If @requested_depth is set, only icons with
  * this or lower depth will be returned. If @requested_width and/or
  * @requested_height are set, only icons that are this size or smaller are
- * returned, unless @prefer_bigger is set, in which case the next biggest icon 
+ * returned, unless @prefer_bigger is set, in which case the next biggest icon
  * will be returned. The returned strings should be freed.
  **/
 char *
@@ -607,7 +607,7 @@ gupnp_device_info_get_icon_url (GUPnPDeviceInfo *info,
         char *ret;
 
         g_return_val_if_fail (GUPNP_IS_DEVICE_INFO (info), NULL);
-                
+
         /* List available icons */
         icons = NULL;
 
@@ -645,7 +645,7 @@ gupnp_device_info_get_icon_url (GUPnPDeviceInfo *info,
                                                         icon->width;
                                         }
                                 }
-                                
+
                                 if (requested_height >= 0) {
                                         if (prefer_bigger) {
                                                 icon->weight +=
@@ -657,7 +657,7 @@ gupnp_device_info_get_icon_url (GUPnPDeviceInfo *info,
                                                         icon->height;
                                         }
                                 }
-                                
+
                                 icons = g_list_prepend (icons, icon);
                         } else
                                 icon_free (icon);

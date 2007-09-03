@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (C) 2007 Zeeshan Ali <zeenix@gstreamer.net>
  * Copyright (C) 2007 OpenedHand Ltd.
  *
@@ -29,9 +29,9 @@
 GMainLoop *main_loop;
 
 static gboolean async = FALSE;
-static GOptionEntry entries[] = 
+static GOptionEntry entries[] =
 {
-       { "async", 'a', 0, G_OPTION_ARG_NONE, &async, 
+       { "async", 'a', 0, G_OPTION_ARG_NONE, &async,
          "Asynchronously create intropection object", NULL },
        { NULL }
 };
@@ -75,7 +75,7 @@ print_actions (GUPnPServiceIntrospection *introspection)
                 g_print ("actions:\n");
                 for (iter = action_list; iter; iter = iter->next) {
                         GUPnPServiceActionInfo *action_info;
-                        
+
                         action_info = (GUPnPServiceActionInfo *) iter->data;
 
                         g_print ("\tname: %s\n", action_info->name);
@@ -90,7 +90,7 @@ print_state_variables (GUPnPServiceIntrospection *introspection)
 {
         const GList *variables;
 
-        variables = 
+        variables =
                 gupnp_service_introspection_list_state_variables (
                                 introspection);
         if (variables) {
@@ -101,7 +101,7 @@ print_state_variables (GUPnPServiceIntrospection *introspection)
                         GUPnPServiceStateVariableInfo *variable;
                         GValue default_value;
                         const char * default_value_str;
-                        
+
                         variable = (GUPnPServiceStateVariableInfo *) iter->data;
 
                         g_print ("\tname: %s\n"
@@ -121,7 +121,7 @@ print_state_variables (GUPnPServiceIntrospection *introspection)
                                          default_value_str);
                         }
                         g_value_unset (&default_value);
-                        
+
                         if (variable->is_numeric) {
                                 GValue min, max, step;
 
@@ -132,7 +132,7 @@ print_state_variables (GUPnPServiceIntrospection *introspection)
                                 g_value_init (&min, G_TYPE_STRING);
                                 g_value_init (&max, G_TYPE_STRING);
                                 g_value_init (&step, G_TYPE_STRING);
-                                
+
                                 g_value_transform (&variable->minimum, &min);
                                 g_value_transform (&variable->maximum, &max);
                                 g_value_transform (&variable->step, &step);
@@ -140,7 +140,7 @@ print_state_variables (GUPnPServiceIntrospection *introspection)
                                 g_print ("\tminimum: %s\n"
                                          "\tmaximum: %s\n"
                                          "\tstep: %s\n",
-                                         g_value_get_string (&min), 
+                                         g_value_get_string (&min),
                                          g_value_get_string (&max),
                                          g_value_get_string (&step));
 
@@ -160,7 +160,7 @@ print_state_variables (GUPnPServiceIntrospection *introspection)
                                                  (gchar *) value_iter->data);
                                 }
                         }
-                        
+
                         g_print ("\n");
                 }
                 g_print ("\n");
@@ -237,7 +237,7 @@ main (int argc, char **argv)
         g_option_context_add_main_entries (option_context,
                                            entries,
                                            NULL);
-        g_option_context_parse (option_context, 
+        g_option_context_parse (option_context,
                                 &argc,
                                 &argv,
                                 &error);

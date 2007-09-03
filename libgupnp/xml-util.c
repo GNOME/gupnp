@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (C) 2006, 2007 OpenedHand Ltd.
  *
  * Author: Jorn Baayen <jorn@openedhand.com>
@@ -46,7 +46,7 @@ xml_util_get_element (xmlNode *node,
                 if (!node)
                         break;
         }
-        
+
         va_end (var_args);
 
         return node;

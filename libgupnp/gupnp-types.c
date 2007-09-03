@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (C) 2007 Zeeshan Ali <zeenix@gstreamer.net>
  * Copyright (C) 2006, 2007 OpenedHand Ltd.
  *
@@ -57,12 +57,12 @@ gupnp_bin_base64_get_type (void)
                                 (GBoxedCopyFunc) g_strdup,
                                 (GBoxedFreeFunc) g_free);
                 g_value_register_transform_func (
-                                type, 
+                                type,
                                 G_TYPE_STRING,
-                                gupnp_type_to_string); 
+                                gupnp_type_to_string);
                 g_value_register_transform_func (
                                 G_TYPE_STRING,
-                                type, 
+                                type,
                                 gupnp_string_to_type);
         }
 
@@ -80,12 +80,12 @@ gupnp_bin_hex_get_type (void)
                                 (GBoxedCopyFunc) g_strdup,
                                 (GBoxedFreeFunc) g_free);
                 g_value_register_transform_func (
-                                type, 
+                                type,
                                 G_TYPE_STRING,
-                                gupnp_type_to_string); 
+                                gupnp_type_to_string);
                 g_value_register_transform_func (
                                 G_TYPE_STRING,
-                                type, 
+                                type,
                                 gupnp_string_to_type);
         }
 
@@ -103,12 +103,12 @@ gupnp_date_get_type (void)
                                 (GBoxedCopyFunc) g_strdup,
                                 (GBoxedFreeFunc) g_free);
                 g_value_register_transform_func (
-                                type, 
+                                type,
                                 G_TYPE_STRING,
-                                gupnp_type_to_string); 
+                                gupnp_type_to_string);
                 g_value_register_transform_func (
                                 G_TYPE_STRING,
-                                type, 
+                                type,
                                 gupnp_string_to_type);
         }
 
@@ -126,12 +126,12 @@ gupnp_date_time_get_type (void)
                                 (GBoxedCopyFunc) g_strdup,
                                 (GBoxedFreeFunc) g_free);
                 g_value_register_transform_func (
-                                type, 
+                                type,
                                 G_TYPE_STRING,
-                                gupnp_type_to_string); 
+                                gupnp_type_to_string);
                 g_value_register_transform_func (
                                 G_TYPE_STRING,
-                                type, 
+                                type,
                                 gupnp_string_to_type);
         }
 
@@ -149,12 +149,12 @@ gupnp_date_time_tz_get_type (void)
                                 (GBoxedCopyFunc) g_strdup,
                                 (GBoxedFreeFunc) g_free);
                 g_value_register_transform_func (
-                                type, 
+                                type,
                                 G_TYPE_STRING,
-                                gupnp_type_to_string); 
+                                gupnp_type_to_string);
                 g_value_register_transform_func (
                                 G_TYPE_STRING,
-                                type, 
+                                type,
                                 gupnp_string_to_type);
         }
 
@@ -172,12 +172,12 @@ gupnp_time_get_type (void)
                                 (GBoxedCopyFunc) g_strdup,
                                 (GBoxedFreeFunc) g_free);
                 g_value_register_transform_func (
-                                type, 
+                                type,
                                 G_TYPE_STRING,
-                                gupnp_type_to_string); 
+                                gupnp_type_to_string);
                 g_value_register_transform_func (
                                 G_TYPE_STRING,
-                                type, 
+                                type,
                                 gupnp_string_to_type);
         }
 
@@ -195,12 +195,12 @@ gupnp_time_tz_get_type (void)
                                 (GBoxedCopyFunc) g_strdup,
                                 (GBoxedFreeFunc) g_free);
                 g_value_register_transform_func (
-                                type, 
+                                type,
                                 G_TYPE_STRING,
-                                gupnp_type_to_string); 
+                                gupnp_type_to_string);
                 g_value_register_transform_func (
                                 G_TYPE_STRING,
-                                type, 
+                                type,
                                 gupnp_string_to_type);
         }
 
@@ -218,12 +218,12 @@ gupnp_uri_get_type (void)
                                 (GBoxedCopyFunc) g_strdup,
                                 (GBoxedFreeFunc) g_free);
                 g_value_register_transform_func (
-                                type, 
+                                type,
                                 G_TYPE_STRING,
-                                gupnp_type_to_string); 
+                                gupnp_type_to_string);
                 g_value_register_transform_func (
                                 G_TYPE_STRING,
-                                type, 
+                                type,
                                 gupnp_string_to_type);
         }
 
@@ -241,12 +241,12 @@ gupnp_uuid_get_type (void)
                                 (GBoxedCopyFunc) g_strdup,
                                 (GBoxedFreeFunc) g_free);
                 g_value_register_transform_func (
-                                type, 
+                                type,
                                 G_TYPE_STRING,
-                                gupnp_type_to_string); 
+                                gupnp_type_to_string);
                 g_value_register_transform_func (
                                 G_TYPE_STRING,
-                                type, 
+                                type,
                                 gupnp_string_to_type);
         }
 
@@ -274,6 +274,6 @@ gupnp_data_type_to_gtype (const char *data_type)
                 return GUPNP_TYPE_BIN_BASE64;
         else if (g_ascii_strcasecmp ("bin.hex", data_type) == 0)
                 return GUPNP_TYPE_BIN_BASE64;
-        else 
+        else
                 return G_TYPE_INVALID;
 }

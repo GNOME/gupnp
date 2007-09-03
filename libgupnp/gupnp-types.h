@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (C) 2007 Zeeshan Ali <zeenix@gstreamer.net>
  * Copyright (C) 2006, 2007 OpenedHand Ltd.
  *

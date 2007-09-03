@@ -1,5 +1,56 @@
 2007-09-03  Zeeshan Ali  <zeenix@gstreamer.net>
 
+	* libgupnp/accept-language.c:
+	* libgupnp/accept-language.h:
+	* libgupnp/gena-protocol.h:
+	* libgupnp/gupnp-context-private.h:
+	* libgupnp/gupnp-context.c:
+	* libgupnp/gupnp-context.h:
+	* libgupnp/gupnp-control-point.c:
+	* libgupnp/gupnp-control-point.h:
+	* libgupnp/gupnp-device-info.c:
+	* libgupnp/gupnp-device-info.h:
+	* libgupnp/gupnp-device-proxy-private.h:
+	* libgupnp/gupnp-device-proxy.c:
+	* libgupnp/gupnp-device-proxy.h:
+	* libgupnp/gupnp-device.c:
+	* libgupnp/gupnp-device.h:
+	* libgupnp/gupnp-error-private.h:
+	* libgupnp/gupnp-error.c:
+	* libgupnp/gupnp-error.h:
+	* libgupnp/gupnp-root-device.c:
+	* libgupnp/gupnp-root-device.h:
+	* libgupnp/gupnp-service-info.c:
+	* libgupnp/gupnp-service-info.h:
+	* libgupnp/gupnp-service-introspection-private.h:
+	* libgupnp/gupnp-service-introspection.c:
+	* libgupnp/gupnp-service-introspection.h:
+	* libgupnp/gupnp-service-private.h:
+	* libgupnp/gupnp-service-proxy-private.h:
+	* libgupnp/gupnp-service-proxy.c:
+	* libgupnp/gupnp-service-proxy.h:
+	* libgupnp/gupnp-service.h:
+	* libgupnp/gupnp-types-private.h:
+	* libgupnp/gupnp-types.c:
+	* libgupnp/gupnp-types.h:
+	* libgupnp/gupnp.h:
+	* libgupnp/gvalue-util.c:
+	* libgupnp/gvalue-util.h:
+	* libgupnp/xml-util.c:
+	* libgupnp/xml-util.h:
+	* tests/test-browsing.c:
+	* tests/test-introspection.c:
+	* tests/test-proxy.c:
+
+	Remove trailing whitespace.
+
+	* tests/test-server.c:
+
+	- Remove trailing whitespace.
+	- Provide "UpdateID" in response of Browse action.
+
+2007-09-03  Zeeshan Ali  <zeenix@gstreamer.net>
+
 	* libgupnp/gupnp-service-introspection.c:
 
 	Use gvalue_util_set_value_from_string() for conversion from

@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (C) 2006, 2007 OpenedHand Ltd.
  *
  * Author: Jorn Baayen <jorn@openedhand.com>
@@ -82,7 +82,7 @@ typedef struct {
         char *udn;
         char *service_type;
         char *description_url;
-        
+
         SoupMessage *message;
 } GetDescriptionURLData;
 
@@ -142,7 +142,7 @@ gupnp_control_point_dispose (GObject *object)
                         g_list_delete_link (control_point->priv->services,
                                             control_point->priv->services);
         }
-        
+
         /* Cancel any pending description file GETs */
         while (control_point->priv->pending_gets) {
                 GetDescriptionURLData *data;
@@ -371,7 +371,7 @@ description_loaded (GUPnPControlPoint *control_point,
                                        udn,
                                        service_type,
                                        description_url,
-                                       url_base); 
+                                       url_base);
 
         /* Cleanup */
         soup_uri_free (url_base);
@@ -427,7 +427,7 @@ got_description_url (SoupMessage           *msg,
 
                                 doc->doc       = xml_doc;
                                 doc->ref_count = ref_count;
-                                
+
                                 g_hash_table_insert
                                         (data->control_point->priv->doc_cache,
                                          g_strdup (data->description_url),
@@ -495,7 +495,7 @@ load_description (GUPnPControlPoint *control_point,
                 }
 
                 data->control_point   = control_point;
-                
+
                 data->udn             = g_strdup (udn);
                 data->service_type    = g_strdup (service_type);
                 data->description_url = g_strdup (description_url);
@@ -530,14 +530,14 @@ parse_usn (const char *usn,
                 g_warning ("Invalid USN: %s", usn);
 
                 return FALSE;
-        } 
+        }
 
         /* Parse USN */
         bits = g_strsplit (usn, "::", -1);
 
         /* Count elements */
         for (count = 0; bits[count]; count++);
-        
+
         if (count == 1) {
                 /* uuid:device-UUID */
 
@@ -570,7 +570,7 @@ parse_usn (const char *usn,
                                 *service_type = bits[1];
 
                                 ret = TRUE;
-                        } 
+                        }
                 }
 
                 g_strfreev (second_bits);
@@ -772,7 +772,7 @@ gupnp_control_point_class_init (GUPnPControlPointClass *klass)
                 gupnp_control_point_resource_available;
         browser_class->resource_unavailable =
                 gupnp_control_point_resource_unavailable;
-        
+
         g_type_class_add_private (klass, sizeof (GUPnPControlPointPrivate));
 
         /**
@@ -801,7 +801,7 @@ gupnp_control_point_class_init (GUPnPControlPointClass *klass)
          * @control_point: The #GUPnPControlPoint that received the signal
          * @proxy: The now unavailable #GUPnPDeviceProxy
          *
-         * The ::device-proxy-unavailable signal is emitted whenever a 
+         * The ::device-proxy-unavailable signal is emitted whenever a
          * device is not available any more.
          **/
         signals[DEVICE_PROXY_UNAVAILABLE] =
@@ -843,7 +843,7 @@ gupnp_control_point_class_init (GUPnPControlPointClass *klass)
          * @control_point: The #GUPnPControlPoint that received the signal
          * @proxy: The now unavailable #GUPnPServiceProxy
          *
-         * The ::service-proxy-unavailable signal is emitted whenever a 
+         * The ::service-proxy-unavailable signal is emitted whenever a
          * service is not available any more.
          **/
         signals[SERVICE_PROXY_UNAVAILABLE] =
@@ -889,7 +889,7 @@ GUPnPContext *
 gupnp_control_point_get_context (GUPnPControlPoint *control_point)
 {
         GSSDPClient *client;
-        
+
         g_return_val_if_fail (GUPNP_IS_CONTROL_POINT (control_point), NULL);
 
         client = gssdp_resource_browser_get_client

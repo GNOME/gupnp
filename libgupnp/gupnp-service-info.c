@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (C) 2006, 2007 OpenedHand Ltd.
  *
  * Author: Jorn Baayen <jorn@openedhand.com>
@@ -68,7 +68,7 @@ enum {
 
 typedef struct {
         GUPnPServiceInfo                 *info;
-        
+
         GUPnPServiceIntrospectionCallback callback;
         gpointer                          user_data;
 
@@ -199,7 +199,7 @@ gupnp_service_info_dispose (GObject *object)
 
                         get_scpd_url_data_free (data);
                 }
-        
+
                 /* Unref context */
                 g_object_unref (info->priv->context);
                 info->priv->context = NULL;
@@ -525,7 +525,7 @@ gupnp_service_info_get_introspection (GUPnPServiceInfo *info,
                              GUPNP_SERVER_ERROR,
                              GUPNP_SERVER_ERROR_INVALID_URL,
                              "No valid SCPD URL defined");
-                             
+
                 return NULL;
         }
 

@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (C) 2007 Zeeshan Ali <zeenix@gstreamer.net>
  * Copyright (C) 2006, 2007 OpenedHand Ltd.
  *
@@ -40,7 +40,7 @@
  *
  * This class exposes internals of the UPnP protocol and should not need
  * to be used for regular device or control point development.
- * 
+ *
  **/
 
 #include <libsoup/soup.h>
@@ -62,7 +62,7 @@ G_DEFINE_TYPE (GUPnPServiceIntrospection,
 struct _GUPnPServiceIntrospectionPrivate {
         GList *variables;
         GList *actions;
-       
+
         /* For caching purposes */
         GList *action_names;
         GList *variable_names;
@@ -78,8 +78,8 @@ construct_introspection_info (GUPnPServiceIntrospection *introspection,
                               xmlDoc                    *scpd);
 
 /**
- * gupnp_service_state_variable_info_free 
- * @argument: A #GUPnPServiceStateVariableInfo 
+ * gupnp_service_state_variable_info_free
+ * @argument: A #GUPnPServiceStateVariableInfo
  *
  * Frees a #GUPnPServiceStateVariableInfo.
  *
@@ -99,14 +99,14 @@ gupnp_service_state_variable_info_free
                          (GFunc) g_free,
                          NULL);
         g_list_free (variable->allowed_values);
-        
+
         g_slice_free (GUPnPServiceStateVariableInfo, variable);
 }
 
 static void
 gupnp_service_introspection_init (GUPnPServiceIntrospection *introspection)
 {
-        introspection->priv = 
+        introspection->priv =
                 G_TYPE_INSTANCE_GET_PRIVATE (introspection,
                                              GUPNP_TYPE_SERVICE_INTROSPECTION,
                                              GUPnPServiceIntrospectionPrivate);
@@ -164,7 +164,7 @@ gupnp_service_action_info_free (GUPnPServiceActionInfo *action_info)
         GList *iter;
 
         g_free (action_info->name);
-        
+
         for (iter = action_info->arguments; iter; iter = iter->next) {
                 gupnp_service_action_arg_info_free (
                                 (GUPnPServiceActionArgInfo *) iter->data);
@@ -186,17 +186,17 @@ gupnp_service_introspection_finalize (GObject *object)
                                 NULL);
                 g_list_free (introspection->priv->variables);
         }
-        
+
         if (introspection->priv->actions) {
                 g_list_foreach (introspection->priv->actions,
                                 (GFunc) gupnp_service_action_info_free,
                                 NULL);
                 g_list_free (introspection->priv->actions);
         }
-        
+
         if (introspection->priv->variable_names)
                 g_list_free (introspection->priv->variable_names);
-        
+
         if (introspection->priv->action_names)
                 g_list_free (introspection->priv->action_names);
 }
@@ -328,7 +328,7 @@ set_variable_type (GUPnPServiceStateVariableInfo *variable,
         if (strcmp ("string", data_type) == 0) {
                 type = G_TYPE_STRING;
         }
-        
+
         else if (strcmp ("char", data_type) == 0) {
                 type = G_TYPE_CHAR;
         }
@@ -347,7 +347,7 @@ set_variable_type (GUPnPServiceStateVariableInfo *variable,
                 g_value_set_int (&variable->step, 1);
                 variable->is_numeric = TRUE;
         }
-         
+
         else if (strcmp ("i2", data_type) == 0) {
                 type = G_TYPE_INT;
                 g_value_init (&variable->minimum, type);
@@ -358,7 +358,7 @@ set_variable_type (GUPnPServiceStateVariableInfo *variable,
                 g_value_set_int (&variable->step, 1);
                 variable->is_numeric = TRUE;
         }
-        
+
         else if (strcmp ("i4", data_type) == 0 ||
                  strcmp ("int", data_type) == 0) {
                 type = G_TYPE_INT;
@@ -381,7 +381,7 @@ set_variable_type (GUPnPServiceStateVariableInfo *variable,
                 g_value_set_uint (&variable->step, 1);
                 variable->is_numeric = TRUE;
         }
-        
+
         else if (strcmp ("ui2", data_type) == 0) {
                 type = G_TYPE_UINT;
                 g_value_init (&variable->minimum, type);
@@ -392,7 +392,7 @@ set_variable_type (GUPnPServiceStateVariableInfo *variable,
                 g_value_set_uint (&variable->step, 1);
                 variable->is_numeric = TRUE;
         }
-        
+
         else if (strcmp ("ui4", data_type) == 0) {
                 type = G_TYPE_UINT;
                 g_value_init (&variable->minimum, type);
@@ -403,7 +403,7 @@ set_variable_type (GUPnPServiceStateVariableInfo *variable,
                 g_value_set_uint (&variable->step, 1);
                 variable->is_numeric = TRUE;
         }
-        
+
         else if (strcmp ("r4", data_type) == 0) {
                 type = G_TYPE_FLOAT;
                 g_value_init (&variable->minimum, type);
@@ -414,7 +414,7 @@ set_variable_type (GUPnPServiceStateVariableInfo *variable,
                 g_value_set_float (&variable->step, 1.0);
                 variable->is_numeric = TRUE;
         }
-        
+
         else if (strcmp ("r8", data_type) == 0 ||
                  strcmp ("number", data_type) == 0) {
                 type = G_TYPE_DOUBLE;
@@ -426,7 +426,7 @@ set_variable_type (GUPnPServiceStateVariableInfo *variable,
                 g_value_set_double (&variable->step, 1.0);
                 variable->is_numeric = TRUE;
         }
-        
+
         else if (strcmp ("fixed.14.4", data_type) == 0) {
                 /* Just how did this get into the UPnP specs? */
                 type = G_TYPE_DOUBLE;
@@ -450,12 +450,12 @@ set_variable_type (GUPnPServiceStateVariableInfo *variable,
 
         g_value_init (&variable->default_value, type);
         variable->type = type;
-        
+
         return TRUE;
 }
 
 /**
- * 
+ *
  * Creates a #GUPnPServiceStateVariableInfo, constructed from the stateVariable
  * node @variable_node in the SCPD document
  *
@@ -475,7 +475,7 @@ get_state_variable (xmlNodePtr variable_node)
                  * is not specified so better not report anything at all */
                 return NULL;
         }
-        
+
         variable = g_slice_new0 (GUPnPServiceStateVariableInfo);
 
         success = set_variable_type (variable, data_type);
@@ -499,12 +499,12 @@ get_state_variable (xmlNodePtr variable_node)
                         variable->send_events = TRUE;
                 xmlFree (send_events);
         }
-        
+
         return variable;
 }
 
 /**
- * 
+ *
  * Creates a #GUPnPServiceActionArgInfo, constructed from the argument node
  * @argument_node in the SCPD document
  *
@@ -515,7 +515,7 @@ get_action_argument (xmlNodePtr argument_node)
         GUPnPServiceActionArgInfo *argument;
         char *name, *state_var;
         xmlChar *direction;
-        
+
         name      = xml_util_get_child_element_content_glib
                                        (argument_node, "name");
         state_var = xml_util_get_child_element_content_glib
@@ -561,7 +561,7 @@ get_action_arguments (xmlNodePtr action_node)
         GList *argument_list = NULL;
         xmlNodePtr arglist_node;
         xmlNodePtr argument_node;
-        
+
         arglist_node = xml_util_get_element ((xmlNode *) action_node,
                                              "argumentList",
                                              NULL);
@@ -569,11 +569,11 @@ get_action_arguments (xmlNodePtr action_node)
                 return NULL;
 
         /* Iterate over all the arguments */
-        for (argument_node = arglist_node->children; 
+        for (argument_node = arglist_node->children;
              argument_node;
              argument_node = argument_node->next) {
                 GUPnPServiceActionArgInfo *argument;
-                
+
                 if (strcmp ("argument", (char *) argument_node->name) != 0)
                         continue;
 
@@ -598,9 +598,9 @@ get_actions (xmlNode *list_element)
 {
         GList *actions = NULL;
         xmlNodePtr action_node;
-        
+
         /* Iterate over all action elements */
-        for (action_node = list_element->children; 
+        for (action_node = list_element->children;
              action_node;
              action_node = action_node->next) {
                 GUPnPServiceActionInfo *action_info;
@@ -625,7 +625,7 @@ get_actions (xmlNode *list_element)
                 action_info = g_slice_new0 (GUPnPServiceActionInfo);
                 action_info->name = name;
                 action_info->arguments = arguments;
-        
+
                 actions = g_list_append (actions, action_info);
         }
 
@@ -645,7 +645,7 @@ get_state_variables (xmlNode *list_element)
         xmlNodePtr variable_node;
 
         /* Iterate over all variable elements */
-        for (variable_node = list_element->children; 
+        for (variable_node = list_element->children;
              variable_node;
              variable_node = variable_node->next) {
                 char *name;
@@ -709,7 +709,7 @@ collect_action_names (gpointer data,
 {
         GList **action_names = (GList **) user_data;
         GUPnPServiceActionInfo *action_info = (GUPnPServiceActionInfo *) data;
-       
+
         *action_names = g_list_append (*action_names, action_info->name);
 }
 
@@ -718,9 +718,9 @@ collect_variable_names (gpointer data,
                         gpointer user_data)
 {
         GList **variable_names = (GList **) user_data;
-        GUPnPServiceStateVariableInfo *variable = 
+        GUPnPServiceStateVariableInfo *variable =
                 (GUPnPServiceStateVariableInfo *) data;
-       
+
         *variable_names = g_list_append (*variable_names, variable->name);
 }
 
@@ -804,7 +804,7 @@ gupnp_service_introspection_list_actions
  *
  * Return value: A GList of all the state variables or NULL. Do not modify or
  * free it or its contents.
- * 
+ *
  **/
 const GList *
 gupnp_service_introspection_list_state_variables
@@ -857,7 +857,7 @@ state_variable_search_func (GUPnPServiceStateVariableInfo *variable,
 const GUPnPServiceStateVariableInfo *
 gupnp_service_introspection_get_state_variable
                         (GUPnPServiceIntrospection *introspection,
-                         const gchar               *variable_name)     
+                         const gchar               *variable_name)
 {
         GList *variable_node;
 
@@ -891,7 +891,7 @@ action_search_func (GUPnPServiceActionInfo *action,
 const GUPnPServiceActionInfo *
 gupnp_service_introspection_get_action
                         (GUPnPServiceIntrospection *introspection,
-                         const gchar               *action_name)     
+                         const gchar               *action_name)
 {
         GList *action_node;
 

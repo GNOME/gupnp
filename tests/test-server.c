@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (C) 2007 OpenedHand Ltd.
  *
  * Author: Jorn Baayen <jorn@openedhand.com>
@@ -65,6 +65,7 @@ browse_cb (GUPnPService       *service,
                                   "Result", G_TYPE_STRING, "Hello world",
                                   "NumberReturned", G_TYPE_INT, 0,
                                   "TotalMatches", G_TYPE_INT, 0,
+                                  "UpdateID", G_TYPE_INT, 31415927,
                                   NULL);
 
         gupnp_service_action_return (action);
@@ -116,7 +117,7 @@ main (int argc, char **argv)
 
                 return 1;
         }
-        
+
         g_thread_init (NULL);
         g_type_init ();
         setlocale (LC_ALL, "");
@@ -175,7 +176,7 @@ main (int argc, char **argv)
         gupnp_root_device_set_available (dev, TRUE);
 
         main_loop = g_main_loop_new (NULL, FALSE);
-        
+
         /* Hook the handler for SIGTERM */
         memset (&sig_action, 0, sizeof (sig_action));
         sig_action.sa_handler = interrupt_signal_handler;

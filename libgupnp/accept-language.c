@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (C) 2007 OpenedHand Ltd.
  *
  * Author: Jorn Baayen <jorn@openedhand.com>
@@ -33,7 +33,7 @@ accept_language_get_header (void)
         char *locale, *lang;
         int dash_index;
         GString *tmp;
-        
+
         locale = setlocale (LC_ALL, NULL);
         if (locale == NULL)
                 return NULL;
@@ -47,7 +47,7 @@ accept_language_get_header (void)
 
         tmp = g_string_new (lang);
         g_string_append (tmp, ";q=1");
-                
+
         /* Append preference for basic (non-country specific) language version
          * if applicable */
         if (dash_index > 0) {
@@ -83,7 +83,7 @@ accept_language_get_locales (SoupMessage *message)
         char **bits;
         int i, j;
         GList *locales;
-        
+
         header = soup_message_get_header (message->request_headers,
                                           "Accept-Language");
         if (header == NULL)
@@ -92,7 +92,7 @@ accept_language_get_locales (SoupMessage *message)
         locales = NULL;
 
         bits = g_strsplit (header, ",", -1);
-        
+
         /* Sort by quality using insertion sort */
         bits[0] = g_strstrip (bits[0]);
         for (i = 1; bits[i] != NULL; i++) {

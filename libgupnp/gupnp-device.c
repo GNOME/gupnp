@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (C) 2007 OpenedHand Ltd.
  *
  * Author: Jorn Baayen <jorn@openedhand.com>
@@ -71,7 +71,7 @@ gupnp_device_get_device (GUPnPDeviceInfo *info,
 
         root_device = device->priv->root_device ?
                       device->priv->root_device : GUPNP_ROOT_DEVICE (device);
-                                
+
         context = gupnp_device_info_get_context (info);
         location = gupnp_device_info_get_location (info);
         url_base = gupnp_device_info_get_url_base (info);
@@ -98,7 +98,7 @@ gupnp_device_get_service (GUPnPDeviceInfo *info,
         const SoupUri *url_base;
 
         device = GUPNP_DEVICE (info);
-                                
+
         root_device = device->priv->root_device ?
                       device->priv->root_device : GUPNP_ROOT_DEVICE (device);
 

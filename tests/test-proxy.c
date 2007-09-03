@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (C) 2007 OpenedHand Ltd.
  *
  * Author: Jorn Baayen <jorn@openedhand.com>
@@ -181,7 +181,7 @@ main (int argc, char **argv)
         gssdp_resource_browser_set_active (GSSDP_RESOURCE_BROWSER (cp), TRUE);
 
         main_loop = g_main_loop_new (NULL, FALSE);
-        
+
         /* Hook the handler for SIGTERM */
         memset (&sig_action, 0, sizeof (sig_action));
         sig_action.sa_handler = interrupt_signal_handler;

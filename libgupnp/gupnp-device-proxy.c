@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (C) 2006, 2007 OpenedHand Ltd.
  *
  * Author: Jorn Baayen <jorn@openedhand.com>
@@ -48,7 +48,7 @@ gupnp_device_proxy_get_device (GUPnPDeviceInfo *info,
         const SoupUri *url_base;
 
         proxy = GUPNP_DEVICE_PROXY (info);
-                                
+
         context = gupnp_device_info_get_context (info);
         location = gupnp_device_info_get_location (info);
         url_base = gupnp_device_info_get_url_base (info);
@@ -73,7 +73,7 @@ gupnp_device_proxy_get_service (GUPnPDeviceInfo *info,
         const SoupUri *url_base;
 
         proxy = GUPNP_DEVICE_PROXY (info);
-                                
+
         context = gupnp_device_info_get_context (info);
         udn = gupnp_device_info_get_udn (info);
         location = gupnp_device_info_get_location (info);
