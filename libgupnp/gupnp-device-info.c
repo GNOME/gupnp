@@ -614,6 +614,8 @@ gupnp_device_info_get_icon_url (GUPnPDeviceInfo *info,
         element = xml_util_get_element (info->priv->element,
                                         "iconList",
                                         NULL);
+        if (!element)
+                return NULL;
 
         for (element = element->children; element; element = element->next) {
                 if (!strcmp ("icon", (char *) element->name)) {

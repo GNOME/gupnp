@@ -1,3 +1,9 @@
+2007-09-05  Zeeshan Ali  <zeenix@gstreamer.net>
+
+	* libgupnp/gupnp-device-info.c:
+
+	BUGFIX: Don't use a NULL pointer.
+
 2007-09-03  Zeeshan Ali  <zeenix@gstreamer.net>
 
 	* libgupnp/accept-language.c:
