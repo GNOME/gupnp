@@ -1,3 +1,10 @@
+2007-09-08  Zeeshan Ali  <zeenix@gstreamer.net>
+
+	* libgupnp/gupnp-device-info.c:
+
+	gupnp_device_info_get_model_number() returns model number and not
+	model description.
+
 2007-09-08  Jorn Baayen  <jorn@openedhand.com>
 
 	* libgupnp/gupnp-control-point.c: (got_description_url):

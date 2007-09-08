@@ -473,7 +473,7 @@ gupnp_device_info_get_model_number (GUPnPDeviceInfo *info)
         g_return_val_if_fail (GUPNP_IS_DEVICE_INFO (info), NULL);
 
         return xml_util_get_child_element_content_glib (info->priv->element,
-                                                        "modelDescription");
+                                                        "modelNumber");
 }
 
 /**
