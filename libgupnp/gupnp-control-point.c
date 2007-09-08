@@ -389,6 +389,9 @@ got_description_url (SoupMessage           *msg,
         DescriptionDoc *doc;
         int ref_count;
 
+        if (msg->status_code == SOUP_STATUS_CANCELLED)
+                return;
+
         /* Now, make sure again this document is not already cached. If it is,
          * we re-use the cached one. */
         doc = g_hash_table_lookup (data->control_point->priv->doc_cache,

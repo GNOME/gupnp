@@ -1,3 +1,12 @@
+2007-09-08  Jorn Baayen  <jorn@openedhand.com>
+
+	* libgupnp/gupnp-control-point.c: (got_description_url):
+	* libgupnp/gupnp-service-info.c: (got_scpd_url):
+	* libgupnp/gupnp-service-proxy.c: (action_got_response),
+	(finish_action_msg):
+
+	Do not double-free message structures on cancel.
+
 2007-09-05  Zeeshan Ali  <zeenix@gstreamer.net>
 
 	* libgupnp/gupnp-device-info.c:

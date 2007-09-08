@@ -565,12 +565,16 @@ static void
 action_got_response (SoupMessage             *msg,
                      GUPnPServiceProxyAction *action)
 {
-        if (msg->status == SOUP_STATUS_METHOD_NOT_ALLOWED) {
-                /* Not allowed .. */
-                const char *full_action;
-                GUPnPContext *context;
-                SoupSession *session;
+        const char *full_action;
+        GUPnPContext *context;
+        SoupSession *session;
 
+        switch (msg->status_code) {
+        case SOUP_STATUS_CANCELLED:
+                /* Silently return */
+                break;
+
+        case SOUP_STATUS_METHOD_NOT_ALLOWED:
                 /* Retry with M-POST */
                 msg->method = "M-POST";
 
@@ -594,9 +598,14 @@ action_got_response (SoupMessage             *msg,
                 session = _gupnp_context_get_session (context);
 
                 soup_session_requeue_message (session, msg);
-        } else {
+
+                break;
+
+        default:
                 /* Success: Call callback */
                 action->callback (action->proxy, action, action->user_data);
+
+                break;
         }
 }
 
@@ -631,7 +640,8 @@ finish_action_msg (GUPnPServiceProxy              *proxy,
         proxy->priv->pending_actions =
                 g_list_prepend (proxy->priv->pending_actions, ret);
 
-        /* We keep our own reference to the message as well */
+        /* We need to keep our own reference to the message as well,
+         * in order for send_message() to work. */
         g_object_ref (msg);
 
         /* Send the message */
@@ -640,8 +650,7 @@ finish_action_msg (GUPnPServiceProxy              *proxy,
 
         soup_session_queue_message (session,
                                     SOUP_MESSAGE (msg),
-                                    (SoupMessageCallbackFn)
-                                        action_got_response,
+                                    (SoupMessageCallbackFn) action_got_response,
                                     ret);
 
         return ret;

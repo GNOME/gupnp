@@ -574,6 +574,9 @@ got_scpd_url (SoupMessage    *msg,
         introspection = NULL;
         error = NULL;
 
+        if (msg->status_code == SOUP_STATUS_CANCELLED)
+                return;
+
         if (SOUP_STATUS_IS_SUCCESSFUL (msg->status_code)) {
                 xmlDoc *scpd;
 
