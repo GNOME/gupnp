@@ -1,3 +1,10 @@
+2007-09-09  Jorn Baayen  <jorn@openedhand.com>
+
+	* libgupnp/gupnp-service-info.h:
+	* tests/test-introspection.c: (print_state_variables):
+
+	Mark GUPnPServiceIntrospectionCallback() 'error' argument as 'const'.
+
 2007-09-09  Zeeshan Ali  <zeenix@gstreamer.net>
 	    Jorn Baayen  <jorn@openedhand.com>
 

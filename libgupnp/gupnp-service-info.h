@@ -83,7 +83,7 @@ typedef struct {
 typedef void (* GUPnPServiceIntrospectionCallback) (
                                  GUPnPServiceInfo           *info,
                                  GUPnPServiceIntrospection  *introspection,
-                                 GError                     *error,
+                                 const GError               *error,
                                  gpointer                    user_data);
 
 GUPnPContext *

@@ -168,10 +168,10 @@ print_state_variables (GUPnPServiceIntrospection *introspection)
 }
 
 static void
-got_introspection (GUPnPServiceInfo *info,
+got_introspection (GUPnPServiceInfo          *info,
                    GUPnPServiceIntrospection *introspection,
-                   GError *error,
-                   gpointer user_data)
+                   const GError              *error,
+                   gpointer                   user_data)
 {
         if (error) {
                 g_warning ("Failed to create introspection for '%s': %s",
