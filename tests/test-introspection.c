@@ -177,7 +177,7 @@ got_introspection (GUPnPServiceInfo *info,
                 g_warning ("Failed to create introspection for '%s': %s",
                            gupnp_service_info_get_udn (info),
                            error->message);
-                g_error_free (error);
+
                 return;
         }
 
@@ -206,7 +206,10 @@ service_proxy_available_cb (GUPnPControlPoint *cp,
         } else {
                 introspection =
                         gupnp_service_info_get_introspection (info, &error);
-                got_introspection (info, introspection, NULL, error);
+                got_introspection (info, introspection, error, NULL);
+
+                if (error)
+                        g_error_free (error);
         }
 }
 

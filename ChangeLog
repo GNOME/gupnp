@@ -1,3 +1,11 @@
+2007-09-09  Zeeshan Ali  <zeenix@gstreamer.net>
+	    Jorn Baayen  <jorn@openedhand.com>
+
+	* tests/test-introspection.c:
+
+	Correct the order of arguments in a function call, and free 
+	GError in sync code only.
+
 2007-09-08  Zeeshan Ali  <zeenix@gstreamer.net>
 
 	* libgupnp/gupnp-device-info.c:
