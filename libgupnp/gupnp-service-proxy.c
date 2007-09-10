@@ -104,7 +104,7 @@ subscribe_got_response (SoupMessage       *msg,
 static void
 subscribe (GUPnPServiceProxy *proxy);
 static void
-unsubscribe (GUPnPServiceProxy *proxy, gboolean sync);
+unsubscribe (GUPnPServiceProxy *proxy);
 
 static void
 gupnp_service_proxy_action_free (GUPnPServiceProxyAction *action)
@@ -195,6 +195,13 @@ gupnp_service_proxy_dispose (GObject *object)
         GObjectClass *object_class;
 
         proxy = GUPNP_SERVICE_PROXY (object);
+
+        /* Unsubscribe */
+        if (proxy->priv->subscribed) {
+                unsubscribe (proxy);
+
+                proxy->priv->subscribed = FALSE;
+        }
 
         /* Cancel any pending actions */
         while (proxy->priv->pending_actions) {
@@ -641,7 +648,7 @@ finish_action_msg (GUPnPServiceProxy              *proxy,
                 g_list_prepend (proxy->priv->pending_actions, ret);
 
         /* We need to keep our own reference to the message as well,
-         * in order for send_message() to work. */
+         * in order for send_action() to work. */
         g_object_ref (msg);
 
         /* Send the message */
@@ -1322,7 +1329,7 @@ server_handler (SoupServerContext *server_context,
         seq = atoi (hdr);
         if (seq > proxy->priv->seq) {
                 /* Oops, we missed a notify. Resubscribe .. */
-                unsubscribe (proxy, FALSE);
+                unsubscribe (proxy);
                 subscribe (proxy);
 
                 /* Message was OK otherwise */
@@ -1670,7 +1677,7 @@ subscribe (GUPnPServiceProxy *proxy)
  * Unsubscribe from this service.
  **/
 static void
-unsubscribe (GUPnPServiceProxy *proxy, gboolean sync)
+unsubscribe (GUPnPServiceProxy *proxy)
 {
         GUPnPContext *context;
         SoupMessage *msg;
@@ -1698,13 +1705,10 @@ unsubscribe (GUPnPServiceProxy *proxy, gboolean sync)
                                  "SID",
                                  proxy->priv->sid);
 
-        /* And send it off */
+        /* And queue it */
         session = _gupnp_context_get_session (context);
 
-        if (sync)
-                soup_session_send_message (session, msg);
-        else
-                soup_session_queue_message (session, msg, NULL, NULL);
+        soup_session_queue_message (session, msg, NULL, NULL);
 
         /* Reset SID */
         g_free (proxy->priv->sid);
@@ -1720,16 +1724,6 @@ unsubscribe (GUPnPServiceProxy *proxy, gboolean sync)
         /* Remove server handler */
         server = _gupnp_context_get_server (context);
         soup_server_remove_handler (server, proxy->priv->path);
-}
-
-void
-_gupnp_service_proxy_unsubscribe_sync (GUPnPServiceProxy *proxy)
-{
-        if (proxy->priv->subscribed) {
-                unsubscribe (proxy, TRUE);
-
-                proxy->priv->subscribed = FALSE;
-        }
 }
 
 /**
@@ -1758,7 +1752,7 @@ gupnp_service_proxy_set_subscribed (GUPnPServiceProxy *proxy,
         if (subscribed)
                 subscribe (proxy);
         else
-                unsubscribe (proxy, FALSE);
+                unsubscribe (proxy);
 
         g_object_notify (G_OBJECT (proxy), "subscribed");
 }

@@ -1,3 +1,17 @@
+2007-09-10  Jorn Baayen  <jorn@openedhand.com>
+
+	* libgupnp/gupnp-control-point.c: (gupnp_control_point_dispose):
+	* libgupnp/gupnp-service-proxy-private.h:
+	* libgupnp/gupnp-service-proxy.c: (gupnp_service_proxy_dispose),
+	(finish_action_msg), (server_handler), (subscribe), (unsubscribe),
+	(gupnp_service_proxy_set_subscribed):
+
+	Always unsubscribe proxy on dispose, but do it asynchronously.
+	This means that the unsubscribe request may not always be sent on
+	exit. The UPnP spec, however, does not require this to happen.
+
+	This should fix bug #500 as well.
+
 2007-09-09  Jorn Baayen  <jorn@openedhand.com>
 
 	* libgupnp/gupnp-service-info.h:
