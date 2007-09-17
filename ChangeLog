@@ -1,3 +1,17 @@
+2007-09-17  Jorn Baayen  <jorn@openedhand.com>
+
+	* libgupnp/gupnp-service-proxy.c:
+
+	Specify the reason why notify subscription failed in subscription-lost
+	signal.
+
+2007-09-17  Zeeshan Ali  <zeenix@gstreamer.net>
+
+	* libgupnp/gupnp-service.c:
+
+	Specify the reason why notify failed in the error to the notify-failed
+	signal.
+
 2007-09-10  Jorn Baayen  <jorn@openedhand.com>
 
 	* libgupnp/gupnp-control-point.c: (gupnp_control_point_dispose):

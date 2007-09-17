@@ -1446,7 +1446,7 @@ notify_got_response (SoupMessage *msg,
 
                         error = g_error_new (GUPNP_EVENTING_ERROR,
                                              GUPNP_EVENTING_ERROR_NOTIFY_FAILED,
-                                             "Notify failed");
+                                             msg->reason_phrase);
 
                         g_signal_emit (data->service,
                                        signals[NOTIFY_FAILED],
