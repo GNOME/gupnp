@@ -1,3 +1,9 @@
+2007-09-18  Zeeshan Ali  <zeenix@gstreamer.net>
+
+	* libgupnp/gvalue-util.c:
+
+	Accept 'yes' and 'no' as boolean values as well.
+
 2007-09-17  Jorn Baayen  <jorn@openedhand.com>
 
 	* libgupnp/gupnp-service-proxy.c:

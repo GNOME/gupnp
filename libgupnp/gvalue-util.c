@@ -100,9 +100,11 @@ gvalue_util_set_value_from_string (GValue     *value,
                 break;
 
         case G_TYPE_BOOLEAN:
-                if (g_ascii_strcasecmp (str, "true") == 0)
+                if (g_ascii_strcasecmp (str, "true") == 0 ||
+                    g_ascii_strcasecmp (str, "yes") == 0)
                         g_value_set_boolean (value, TRUE);
-                else if (g_ascii_strcasecmp (str, "false") == 0)
+                else if (g_ascii_strcasecmp (str, "false") == 0 ||
+                         g_ascii_strcasecmp (str, "no") == 0)
                         g_value_set_boolean (value, FALSE);
                 else {
                         int i;
