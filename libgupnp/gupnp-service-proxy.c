@@ -1717,8 +1717,10 @@ unsubscribe (GUPnPServiceProxy *proxy)
         proxy->priv->seq = 0;
 
         /* Remove subscription timeout */
-        g_source_remove (proxy->priv->subscription_timeout_id);
-        proxy->priv->subscription_timeout_id = 0;
+        if (proxy->priv->subscription_timeout_id) {
+                g_source_remove (proxy->priv->subscription_timeout_id);
+                proxy->priv->subscription_timeout_id = 0;
+        }
 
         /* Remove server handler */
         server = _gupnp_context_get_server (context);

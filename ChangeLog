@@ -1,5 +1,11 @@
 2007-09-20  Jorn Baayen  <jorn@openedhand.com>
 
+	* libgupnp/gupnp-service-proxy.c: (unsubscribe):
+
+	subscription_timeout_id can be 0 (when we are resubscribing).
+
+2007-09-20  Jorn Baayen  <jorn@openedhand.com>
+
 	* libgupnp/Makefile.am:
 	* libgupnp/gupnp-control-point.c: (gupnp_control_point_dispose),
 	(gupnp_control_point_finalize), (process_service_list),
