@@ -30,6 +30,7 @@
 #include <string.h>
 
 #include "gupnp-device-info.h"
+#include "gupnp-device-info-private.h"
 #include "xml-util.h"
 
 G_DEFINE_ABSTRACT_TYPE (GUPnPDeviceInfo,
@@ -45,6 +46,8 @@ struct _GUPnPDeviceInfoPrivate {
 
         SoupUri *url_base;
 
+        XmlDocWrapper *doc;
+
         xmlNode *element;
 };
 
@@ -55,6 +58,7 @@ enum {
         PROP_UDN,
         PROP_DEVICE_TYPE,
         PROP_URL_BASE,
+        PROP_DOCUMENT,
         PROP_ELEMENT
 };
 
@@ -78,33 +82,32 @@ gupnp_device_info_set_property (GObject      *object,
 
         switch (property_id) {
         case PROP_CONTEXT:
-                info->priv->context =
-                        g_object_ref (g_value_get_object (value));
+                info->priv->context = g_object_ref (g_value_get_object (value));
                 break;
         case PROP_LOCATION:
-                info->priv->location =
-                        g_value_dup_string (value);
+                info->priv->location = g_value_dup_string (value);
                 break;
         case PROP_UDN:
-                info->priv->udn =
-                        g_value_dup_string (value);
+                info->priv->udn = g_value_dup_string (value);
                 break;
         case PROP_DEVICE_TYPE:
-                info->priv->device_type =
-                        g_value_dup_string (value);
+                info->priv->device_type = g_value_dup_string (value);
                 break;
         case PROP_URL_BASE:
-                info->priv->url_base =
-                        g_value_get_pointer (value);
-
+                info->priv->url_base = g_value_get_pointer (value);
                 if (info->priv->url_base)
                         info->priv->url_base =
                                 soup_uri_copy (info->priv->url_base);
 
                 break;
+        case PROP_DOCUMENT:
+                info->priv->doc = g_value_get_object (value);
+                if (info->priv->doc)
+                        g_object_ref_sink (info->priv->doc);
+
+                break;
         case PROP_ELEMENT:
-                info->priv->element =
-                        g_value_get_pointer (value);
+                info->priv->element = g_value_get_pointer (value);
                 break;
         default:
                 G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -159,6 +162,11 @@ gupnp_device_info_dispose (GObject *object)
         if (info->priv->context) {
                 g_object_unref (info->priv->context);
                 info->priv->context = NULL;
+        }
+
+        if (info->priv->doc) {
+                g_object_unref (info->priv->doc);
+                info->priv->doc = NULL;
         }
 }
 
@@ -279,6 +287,27 @@ gupnp_device_info_class_init (GUPnPDeviceInfoClass *klass)
                                        G_PARAM_STATIC_NAME |
                                        G_PARAM_STATIC_NICK |
                                        G_PARAM_STATIC_BLURB));
+
+        /**
+         * GUPnPDeviceInfo:document
+         *
+         * Private property.
+         *
+         * Stability: Private
+         **/
+        g_object_class_install_property
+                (object_class,
+                 PROP_DOCUMENT,
+                 g_param_spec_object ("document",
+                                      "Document",
+                                      "The XML document related to this "
+                                      "device",
+                                      TYPE_XML_DOC_WRAPPER,
+                                      G_PARAM_WRITABLE |
+                                      G_PARAM_CONSTRUCT_ONLY |
+                                      G_PARAM_STATIC_NAME |
+                                      G_PARAM_STATIC_NICK |
+                                      G_PARAM_STATIC_BLURB));
 
         /**
          * GUPnPDeviceInfo:element
@@ -1033,4 +1062,11 @@ gupnp_device_info_get_service (GUPnPDeviceInfo *info,
         }
 
         return service;
+}
+
+/* Return associated xmlDoc wrapper */
+XmlDocWrapper *
+_gupnp_device_info_get_document (GUPnPDeviceInfo *info)
+{
+        return info->priv->doc;
 }

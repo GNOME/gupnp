@@ -1,3 +1,27 @@
+2007-09-20  Jorn Baayen  <jorn@openedhand.com>
+
+	* libgupnp/Makefile.am:
+	* libgupnp/gupnp-control-point.c: (gupnp_control_point_dispose),
+	(gupnp_control_point_finalize), (process_service_list),
+	(process_device_list), (description_loaded), (got_description_url),
+	(load_description), (gupnp_control_point_resource_unavailable):
+	* libgupnp/gupnp-device-info-private.h:
+	* libgupnp/gupnp-device-info.c: (gupnp_device_info_set_property),
+	(gupnp_device_info_dispose), (gupnp_device_info_class_init),
+	(gupnp_device_info_get_service):
+	* libgupnp/gupnp-device-proxy-private.h:
+	* libgupnp/gupnp-device-proxy.c: (gupnp_device_proxy_get_device),
+	(gupnp_device_proxy_get_service), (_gupnp_device_proxy_new):
+	* libgupnp/gupnp-service-info.c: (gupnp_service_info_set_property),
+	(gupnp_service_info_dispose), (gupnp_service_info_class_init):
+	* libgupnp/gupnp-service-proxy-private.h:
+	* libgupnp/gupnp-service-proxy.c: (_gupnp_service_proxy_new):
+	* libgupnp/xml-util.c:
+	* libgupnp/xml-util.h:
+
+	Introduce a wrapper object for xmlDocs. Each proxy takes a reference
+	on the xmlDoc wrapper it uses. 
+
 2007-09-18  Zeeshan Ali  <zeenix@gstreamer.net>
 
 	* libgupnp/gvalue-util.c:

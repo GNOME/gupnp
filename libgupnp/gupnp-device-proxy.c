@@ -31,6 +31,7 @@
 
 #include "gupnp-device-proxy.h"
 #include "gupnp-device-proxy-private.h"
+#include "gupnp-device-info-private.h"
 #include "gupnp-service-proxy-private.h"
 #include "xml-util.h"
 
@@ -44,16 +45,19 @@ gupnp_device_proxy_get_device (GUPnPDeviceInfo *info,
 {
         GUPnPDeviceProxy *proxy, *device;
         GUPnPContext *context;
+        XmlDocWrapper *doc;
         const char *location;
         const SoupUri *url_base;
 
         proxy = GUPNP_DEVICE_PROXY (info);
 
         context = gupnp_device_info_get_context (info);
+        doc = _gupnp_device_info_get_document (info);
         location = gupnp_device_info_get_location (info);
         url_base = gupnp_device_info_get_url_base (info);
 
         device = _gupnp_device_proxy_new (context,
+                                          doc,
                                           element,
                                           NULL,
                                           location,
@@ -69,17 +73,20 @@ gupnp_device_proxy_get_service (GUPnPDeviceInfo *info,
         GUPnPDeviceProxy *proxy;
         GUPnPServiceProxy *service;
         GUPnPContext *context;
+        XmlDocWrapper *doc;
         const char *location, *udn;
         const SoupUri *url_base;
 
         proxy = GUPNP_DEVICE_PROXY (info);
 
         context = gupnp_device_info_get_context (info);
+        doc = _gupnp_device_info_get_document (info);
         udn = gupnp_device_info_get_udn (info);
         location = gupnp_device_info_get_location (info);
         url_base = gupnp_device_info_get_url_base (info);
 
         service = _gupnp_service_proxy_new (context,
+                                            doc,
                                             element,
                                             udn,
                                             NULL,
@@ -118,6 +125,7 @@ gupnp_device_proxy_class_init (GUPnPDeviceProxyClass *klass)
  **/
 GUPnPDeviceProxy *
 _gupnp_device_proxy_new (GUPnPContext  *context,
+                         XmlDocWrapper *doc,
                          xmlNode       *element,
                          const char    *udn,
                          const char    *location,
@@ -126,6 +134,7 @@ _gupnp_device_proxy_new (GUPnPContext  *context,
         GUPnPDeviceProxy *proxy;
 
         g_return_val_if_fail (GUPNP_IS_CONTEXT (context), NULL);
+        g_return_val_if_fail (IS_XML_DOC_WRAPPER (doc), NULL);
         g_return_val_if_fail (element != NULL, NULL);
         g_return_val_if_fail (location != NULL, NULL);
         g_return_val_if_fail (url_base != NULL, NULL);
@@ -135,6 +144,7 @@ _gupnp_device_proxy_new (GUPnPContext  *context,
                               "location", location,
                               "udn", udn,
                               "url-base", url_base,
+                              "document", doc,
                               "element", element,
                               NULL);
 

@@ -1784,6 +1784,7 @@ gupnp_service_proxy_get_subscribed (GUPnPServiceProxy *proxy)
  **/
 GUPnPServiceProxy *
 _gupnp_service_proxy_new (GUPnPContext  *context,
+                          XmlDocWrapper *doc,
                           xmlNode       *element,
                           const char    *udn,
                           const char    *service_type,
@@ -1793,6 +1794,7 @@ _gupnp_service_proxy_new (GUPnPContext  *context,
         GUPnPServiceProxy *proxy;
 
         g_return_val_if_fail (GUPNP_IS_CONTEXT (context), NULL);
+        g_return_val_if_fail (IS_XML_DOC_WRAPPER (doc), NULL);
         g_return_val_if_fail (element != NULL, NULL);
         g_return_val_if_fail (location != NULL, NULL);
         g_return_val_if_fail (url_base != NULL, NULL);
@@ -1803,6 +1805,7 @@ _gupnp_service_proxy_new (GUPnPContext  *context,
                               "udn", udn,
                               "service-type", service_type,
                               "url-base", url_base,
+                              "document", doc,
                               "element", element,
                               NULL);
 

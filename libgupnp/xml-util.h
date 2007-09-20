@@ -27,6 +27,35 @@
 #include <stdarg.h>
 #include <glib-object.h>
 
+/* GObject wrapper for xmlDoc, so that we can use refcounting and
+ * weak references. */
+GType
+xml_doc_wrapper_get_type (void) G_GNUC_CONST;
+
+#define TYPE_XML_DOC_WRAPPER \
+                (xml_doc_wrapper_get_type ())
+#define XML_DOC_WRAPPER(obj) \
+                (G_TYPE_CHECK_INSTANCE_CAST ((obj), \
+                 TYPE_XML_DOC_WRAPPER, \
+                 XmlDocWrapper))
+#define IS_XML_DOC_WRAPPER(obj) \
+                (G_TYPE_CHECK_INSTANCE_TYPE ((obj), \
+                 TYPE_XML_DOC_WRAPPER))
+
+typedef struct {
+        GInitiallyUnowned parent;
+
+        xmlDoc *doc;
+} XmlDocWrapper;
+
+typedef struct {
+        GInitiallyUnownedClass parent_class;
+} XmlDocWrapperClass;
+
+XmlDocWrapper *
+xml_doc_wrapper_new (xmlDoc *doc);
+
+/* Misc utilities for inspecting xmlNodes */
 xmlNode *
 xml_util_get_element                    (xmlNode    *node,
                                          ...) G_GNUC_NULL_TERMINATED;

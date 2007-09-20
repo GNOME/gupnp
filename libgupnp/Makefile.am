@@ -35,6 +35,7 @@ libgupnp_1_0_la_SOURCES = accept-language.c			\
 			  gupnp-control-point.c			\
 			  gupnp-device.c			\
 			  gupnp-device-info.c			\
+			  gupnp-device-info-private.h		\
 			  gupnp-device-proxy.c			\
 			  gupnp-device-proxy-private.h		\
 			  gupnp-error.c				\

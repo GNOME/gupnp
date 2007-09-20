@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006, 2007 OpenedHand Ltd.
+ * Copyright (C) 2007 OpenedHand Ltd.
  *
  * Author: Jorn Baayen <jorn@openedhand.com>
  *
@@ -19,22 +19,13 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef __GUPNP_SERVICE_PROXY_PRIVATE_H__
-#define __GUPNP_SERVICE_PROXY_PRIVATE_H__
+#ifndef __GUPNP_DEVICE_INFO_PRIVATE_H__
+#define __GUPNP_DEVICE_INFO_PRIVATE_H__
 
-#include <libxml/tree.h>
-
-#include "gupnp-context.h"
-#include "gupnp-service-proxy.h"
+#include "gupnp-device-info.h"
 #include "xml-util.h"
 
-GUPnPServiceProxy *
-_gupnp_service_proxy_new (GUPnPContext      *context,
-                          XmlDocWrapper     *wrapper,
-                          xmlNode           *element,
-                          const char        *udn,
-                          const char        *service_type,
-                          const char        *location,
-                          const SoupUri     *url_base);
+XmlDocWrapper *
+_gupnp_device_info_get_document (GUPnPDeviceInfo *info);
 
-#endif /* __GUPNP_SERVICE_PROXY_PRIVATE_H__ */
+#endif /* __GUPNP_DEVICE_INFO_PRIVATE_H__ */

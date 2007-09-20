@@ -26,9 +26,11 @@
 
 #include "gupnp-context.h"
 #include "gupnp-device-proxy.h"
+#include "xml-util.h"
 
 GUPnPDeviceProxy *
 _gupnp_device_proxy_new (GUPnPContext  *context,
+                         XmlDocWrapper *doc,
                          xmlNode       *element,
                          const char    *udn,
                          const char    *location,

@@ -63,20 +63,6 @@ enum {
 static guint signals[SIGNAL_LAST];
 
 typedef struct {
-        xmlDoc *doc;
-
-        int ref_count;
-} DescriptionDoc;
-
-static void
-description_doc_free (DescriptionDoc *doc)
-{
-        xmlFreeDoc (doc->doc);
-
-        g_slice_free (DescriptionDoc, doc);
-}
-
-typedef struct {
         GUPnPControlPoint *control_point;
 
         char *udn;
@@ -111,7 +97,39 @@ gupnp_control_point_init (GUPnPControlPoint *control_point)
                 g_hash_table_new_full (g_str_hash,
                                        g_str_equal,
                                        g_free,
-                                       (GDestroyNotify) description_doc_free);
+                                       NULL);
+}
+
+/* Return TRUE if value == user_data */
+static gboolean
+find_doc (gpointer key,
+          gpointer value,
+          gpointer user_data)
+{
+        return (value == user_data);
+}
+
+/* xmlDoc wrapper finalized */
+static void
+doc_finalized (gpointer user_data,
+               GObject *where_the_object_was)
+{
+        GUPnPControlPoint *control_point;
+
+        control_point = GUPNP_CONTROL_POINT (user_data);
+
+        g_hash_table_foreach_remove (control_point->priv->doc_cache,
+                                     find_doc,
+                                     where_the_object_was);
+}
+
+/* Release weak reference on xmlDoc wrapper */
+static void
+weak_unref_doc (gpointer key,
+                gpointer value,
+                gpointer user_data)
+{
+        g_object_weak_unref (G_OBJECT (value), doc_finalized, user_data);
 }
 
 static void
@@ -153,6 +171,11 @@ gupnp_control_point_dispose (GObject *object)
                 get_description_url_data_free (data);
         }
 
+        /* Release weak references on remaining cached documents */
+        g_hash_table_foreach (control_point->priv->doc_cache,
+                              weak_unref_doc,
+                              control_point);
+
         /* Call super */
         object_class = G_OBJECT_CLASS (gupnp_control_point_parent_class);
         object_class->dispose (object);
@@ -174,18 +197,15 @@ gupnp_control_point_finalize (GObject *object)
 }
 
 /* Search @element for matching services */
-static int
+static void
 process_service_list (xmlNode           *element,
                       GUPnPControlPoint *control_point,
+                      XmlDocWrapper     *doc,
                       const char        *udn,
                       const char        *service_type,
                       const char        *description_url,
                       SoupUri           *url_base)
 {
-        int matches;
-
-        matches = 0;
-
         for (element = element->children; element; element = element->next) {
                 xmlChar *prop;
                 gboolean match;
@@ -215,6 +235,7 @@ process_service_list (xmlNode           *element,
 
                 /* Create proxy */
                 proxy = _gupnp_service_proxy_new (context,
+                                                  doc,
                                                   element,
                                                   udn,
                                                   service_type,
@@ -229,26 +250,19 @@ process_service_list (xmlNode           *element,
                                signals[SERVICE_PROXY_AVAILABLE],
                                0,
                                proxy);
-
-                matches++;
         }
-
-        return matches;
 }
 
 /* Recursively search @element for matching devices */
-static int
+static void
 process_device_list (xmlNode           *element,
                      GUPnPControlPoint *control_point,
+                     XmlDocWrapper     *doc,
                      const char        *udn,
                      const char        *service_type,
                      const char        *description_url,
                      SoupUri           *url_base)
 {
-        int matches;
-
-        matches = 0;
-
         for (element = element->children; element; element = element->next) {
                 xmlNode *children;
                 xmlChar *prop;
@@ -264,12 +278,13 @@ process_device_list (xmlNode           *element,
                                                  NULL);
 
                 if (children) {
-                        matches += process_device_list (children,
-                                                        control_point,
-                                                        udn,
-                                                        service_type,
-                                                        description_url,
-                                                        url_base);
+                        process_device_list (children,
+                                             control_point,
+                                             doc,
+                                             udn,
+                                             service_type,
+                                             description_url,
+                                             url_base);
                 }
 
                 /* See if this is a matching device */
@@ -296,19 +311,20 @@ process_device_list (xmlNode           *element,
                                                          NULL);
 
                         if (children) {
-                                matches += process_service_list
-                                                       (children,
-                                                        control_point,
-                                                        udn,
-                                                        service_type,
-                                                        description_url,
-                                                        url_base);
+                                process_service_list (children,
+                                                      control_point,
+                                                      doc,
+                                                      udn,
+                                                      service_type,
+                                                      description_url,
+                                                      url_base);
                         }
                 } else {
                         /* Create device proxy */
                         GUPnPDeviceProxy *proxy;
 
                         proxy = _gupnp_device_proxy_new (context,
+                                                         doc,
                                                          element,
                                                          udn,
                                                          description_url,
@@ -323,32 +339,25 @@ process_device_list (xmlNode           *element,
                                        signals[DEVICE_PROXY_AVAILABLE],
                                        0,
                                        proxy);
-
-                        matches++;
                 }
         }
-
-        return matches;
 }
 
 /**
  * Called when the description document is loaded.
- *
- * Return value: Number of proxies created.
  **/
-static int
+static void
 description_loaded (GUPnPControlPoint *control_point,
-                    xmlDoc            *doc,
+                    XmlDocWrapper     *doc,
                     const char        *udn,
                     const char        *service_type,
                     const char        *description_url)
 {
         xmlNode *element;
         SoupUri *url_base;
-        int matches;
 
         /* Save the URL base, if any */
-        element = xml_util_get_element ((xmlNode *) doc,
+        element = xml_util_get_element ((xmlNode *) doc->doc,
                                         "root",
                                         NULL);
 
@@ -359,17 +368,16 @@ description_loaded (GUPnPControlPoint *control_point,
                 url_base = soup_uri_new (description_url);
 
         /* Iterate matching devices */
-        matches = process_device_list (element,
-                                       control_point,
-                                       udn,
-                                       service_type,
-                                       description_url,
-                                       url_base);
+        process_device_list (element,
+                             control_point,
+                             doc,
+                             udn,
+                             service_type,
+                             description_url,
+                             url_base);
 
         /* Cleanup */
         soup_uri_free (url_base);
-
-        return matches;
 }
 
 /**
@@ -379,8 +387,7 @@ static void
 got_description_url (SoupMessage           *msg,
                      GetDescriptionURLData *data)
 {
-        DescriptionDoc *doc;
-        int ref_count;
+        XmlDocWrapper *doc;
 
         if (msg->status_code == SOUP_STATUS_CANCELLED)
                 return;
@@ -391,13 +398,11 @@ got_description_url (SoupMessage           *msg,
                                    data->description_url);
         if (doc) {
                 /* Doc was cached */
-                ref_count = description_loaded (data->control_point,
-                                                doc->doc,
-                                                data->udn,
-                                                data->service_type,
-                                                data->description_url);
-
-                doc->ref_count += ref_count;
+                description_loaded (data->control_point,
+                                    doc,
+                                    data->udn,
+                                    data->service_type,
+                                    data->description_url);
 
                 get_description_url_data_free (data);
 
@@ -412,24 +417,29 @@ got_description_url (SoupMessage           *msg,
                 xml_doc = xmlParseMemory (msg->response.body,
                                           msg->response.length);
                 if (xml_doc) {
-                        ref_count = description_loaded (data->control_point,
-                                                        xml_doc,
-                                                        data->udn,
-                                                        data->service_type,
-                                                        data->description_url);
+                        doc = xml_doc_wrapper_new (xml_doc);
 
-                        if (ref_count > 0) {
-                                doc = g_slice_new (DescriptionDoc);
+                        description_loaded (data->control_point,
+                                            doc,
+                                            data->udn,
+                                            data->service_type,
+                                            data->description_url);
 
-                                doc->doc       = xml_doc;
-                                doc->ref_count = ref_count;
+                        /* Insert into document cache */
+                        g_hash_table_insert
+                                          (data->control_point->priv->doc_cache,
+                                           g_strdup (data->description_url),
+                                           doc);
 
-                                g_hash_table_insert
-                                        (data->control_point->priv->doc_cache,
-                                         g_strdup (data->description_url),
-                                         doc);
-                        } else
-                                xmlFreeDoc (xml_doc);
+                        /* Make sure the document is removed from the cache
+                         * once finalized. */
+                        g_object_weak_ref (G_OBJECT (doc),
+                                           doc_finalized,
+                                           data->control_point);
+
+                        /* If no proxy was created, make sure doc is freed. */
+                        g_object_ref_sink (doc);
+                        g_object_unref (doc);
                 } else
                         g_warning ("Failed to parse %s", data->description_url);
         } else
@@ -452,21 +462,17 @@ load_description (GUPnPControlPoint *control_point,
                   const char        *udn,
                   const char        *service_type)
 {
-        DescriptionDoc *doc;
+        XmlDocWrapper *doc;
 
         doc = g_hash_table_lookup (control_point->priv->doc_cache,
                                    description_url);
         if (doc) {
                 /* Doc was cached */
-                int ref_count;
-
-                ref_count = description_loaded (control_point,
-                                                doc->doc,
-                                                udn,
-                                                service_type,
-                                                description_url);
-
-                doc->ref_count += ref_count;
+                description_loaded (control_point,
+                                    doc,
+                                    udn,
+                                    service_type,
+                                    description_url);
         } else {
                 /* Asynchronously download doc */
                 GUPnPContext *context;
@@ -623,7 +629,6 @@ gupnp_control_point_resource_unavailable
         GUPnPControlPoint *control_point;
         char *udn, *service_type;
         GList *l, *cur_l;
-        DescriptionDoc *doc;
 
         control_point = GUPNP_CONTROL_POINT (resource_browser);
 
@@ -638,7 +643,6 @@ gupnp_control_point_resource_unavailable
                 while (l) {
                         GUPnPServiceInfo *info;
                         GUPnPServiceProxy *proxy;
-                        char *location;
 
                         info = GUPNP_SERVICE_INFO (l->data);
 
@@ -667,28 +671,7 @@ gupnp_control_point_resource_unavailable
                                        0,
                                        proxy);
 
-                        location = (char *) gupnp_service_info_get_location
-                                        (GUPNP_SERVICE_INFO (proxy));
-
-                        doc = NULL;
-                        g_hash_table_lookup_extended
-                                (control_point->priv->doc_cache,
-                                 location,
-                                 (gpointer) &location,
-                                 (gpointer) &doc);
-
                         g_object_unref (proxy);
-
-                        /* Unref description doc */
-                        if (doc) {
-                                doc->ref_count--;
-
-                                if (!doc->ref_count) {
-                                        g_hash_table_remove
-                                                (control_point->priv->doc_cache,
-                                                 location);
-                                }
-                        }
                 }
         } else {
                 l = control_point->priv->devices;
@@ -696,7 +679,6 @@ gupnp_control_point_resource_unavailable
                 while (l) {
                         GUPnPDeviceInfo *info;
                         GUPnPDeviceProxy *proxy;
-                        char *location;
 
                         info = GUPNP_DEVICE_INFO (l->data);
 
@@ -722,28 +704,7 @@ gupnp_control_point_resource_unavailable
                                        0,
                                        proxy);
 
-                        location = (char *) gupnp_device_info_get_location
-                                                (GUPNP_DEVICE_INFO (proxy));
-
-                        doc = NULL;
-                        g_hash_table_lookup_extended
-                                (control_point->priv->doc_cache,
-                                 location,
-                                 (gpointer) &location,
-                                 (gpointer) &doc);
-
                         g_object_unref (proxy);
-
-                        /* Unref description doc */
-                        if (doc) {
-                                doc->ref_count--;
-
-                                if (!doc->ref_count) {
-                                        g_hash_table_remove
-                                                (control_point->priv->doc_cache,
-                                                 location);
-                                }
-                        }
                 }
         }
 

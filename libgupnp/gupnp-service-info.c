@@ -50,6 +50,8 @@ struct _GUPnPServiceInfoPrivate {
 
         SoupUri *url_base;
 
+        XmlDocWrapper *doc;
+
         xmlNode *element;
 
         /* For async downloads */
@@ -63,6 +65,7 @@ enum {
         PROP_UDN,
         PROP_SERVICE_TYPE,
         PROP_URL_BASE,
+        PROP_DOCUMENT,
         PROP_ELEMENT
 };
 
@@ -104,33 +107,32 @@ gupnp_service_info_set_property (GObject      *object,
 
         switch (property_id) {
         case PROP_CONTEXT:
-                info->priv->context =
-                        g_object_ref (g_value_get_object (value));
+                info->priv->context = g_object_ref (g_value_get_object (value));
                 break;
         case PROP_LOCATION:
-                info->priv->location =
-                        g_value_dup_string (value);
+                info->priv->location = g_value_dup_string (value);
                 break;
         case PROP_UDN:
-                info->priv->udn =
-                        g_value_dup_string (value);
+                info->priv->udn = g_value_dup_string (value);
                 break;
         case PROP_SERVICE_TYPE:
-                info->priv->service_type =
-                        g_value_dup_string (value);
+                info->priv->service_type = g_value_dup_string (value);
                 break;
         case PROP_URL_BASE:
-                info->priv->url_base =
-                        g_value_get_pointer (value);
-
+                info->priv->url_base = g_value_get_pointer (value);
                 if (info->priv->url_base)
                         info->priv->url_base =
                                 soup_uri_copy (info->priv->url_base);
 
                 break;
+        case PROP_DOCUMENT:
+                info->priv->doc = g_value_get_object (value);
+                if (info->priv->doc)
+                        g_object_ref_sink (info->priv->doc);
+
+                break;
         case PROP_ELEMENT:
-                info->priv->element =
-                        g_value_get_pointer (value);
+                info->priv->element = g_value_get_pointer (value);
                 break;
         default:
                 G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -203,6 +205,11 @@ gupnp_service_info_dispose (GObject *object)
                 /* Unref context */
                 g_object_unref (info->priv->context);
                 info->priv->context = NULL;
+        }
+
+        if (info->priv->doc) {
+                g_object_unref (info->priv->doc);
+                info->priv->doc = NULL;
         }
 }
 
@@ -323,6 +330,27 @@ gupnp_service_info_class_init (GUPnPServiceInfoClass *klass)
                                        G_PARAM_STATIC_NAME |
                                        G_PARAM_STATIC_NICK |
                                        G_PARAM_STATIC_BLURB));
+
+        /**
+         * GUPnPServiceInfo:document
+         *
+         * Private property.
+         *
+         * Stability: Private
+         **/
+        g_object_class_install_property
+                (object_class,
+                 PROP_DOCUMENT,
+                 g_param_spec_object ("document",
+                                      "Document",
+                                      "The XML document related to this "
+                                      "service",
+                                      TYPE_XML_DOC_WRAPPER,
+                                      G_PARAM_WRITABLE |
+                                      G_PARAM_CONSTRUCT_ONLY |
+                                      G_PARAM_STATIC_NAME |
+                                      G_PARAM_STATIC_NICK |
+                                      G_PARAM_STATIC_BLURB));
 
         /**
          * GUPnPServiceInfo:element
