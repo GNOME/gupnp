@@ -59,6 +59,9 @@ struct _GUPnPServicePrivate {
         GQueue          *notify_queue;
 
         gboolean         notify_frozen;
+
+        GList           *pending_messages; /* Pending SoupMessages from this
+                                              service */
 };
 
 enum {
@@ -1187,6 +1190,8 @@ gupnp_service_dispose (GObject *object)
 {
         GUPnPService *service;
         GObjectClass *object_class;
+        GUPnPContext *context;
+        SoupSession *session;
 
         service = GUPNP_SERVICE (object);
 
@@ -1201,6 +1206,26 @@ gupnp_service_dispose (GObject *object)
 
                 g_object_unref (service->priv->root_device);
                 service->priv->root_device = NULL;
+        }
+
+        /* Cancel pending messages */
+        context = gupnp_service_info_get_context (GUPNP_SERVICE_INFO (service));
+        if (context)
+                session = _gupnp_context_get_session (context);
+        else
+                session = NULL; /* Not the first time dispose is called. */
+
+        while (service->priv->pending_messages) {
+                SoupMessage *msg;
+
+                msg = service->priv->pending_messages->data;
+
+                soup_message_set_status (msg, SOUP_STATUS_CANCELLED);
+                soup_session_cancel_message (session, msg);
+
+                service->priv->pending_messages =
+                        g_list_delete_link (service->priv->pending_messages,
+                                            service->priv->pending_messages);
         }
 
         /* Call super */
@@ -1415,7 +1440,15 @@ notify_got_response (SoupMessage *msg,
 {
         SubscriptionData *data;
 
+        /* Cancelled? */
+        if (msg->status_code == SOUP_STATUS_CANCELLED)
+                return;
+
         data = user_data;
+
+        /* Remove from pending messages list */
+        data->service->priv->pending_messages = 
+                g_list_remove (data->service->priv->pending_messages, msg);
 
         if (SOUP_STATUS_IS_SUCCESSFUL (msg->status_code)) {
                 /* Success: reset callbacks pointer */
@@ -1435,6 +1468,11 @@ notify_got_response (SoupMessage *msg,
                         soup_uri_free (uri);
 
                         /* And re-queue */
+                        data->service->priv->pending_messages = 
+                                g_list_prepend
+                                        (data->service->priv->pending_messages,
+                                         msg);
+
                         context = gupnp_service_info_get_context
                                         (GUPNP_SERVICE_INFO (data->service));
                         session = _gupnp_context_get_session (context);
@@ -1522,9 +1560,13 @@ notify_subscriber (gpointer key,
         msg->request.length = strlen (property_set);
 
         /* Queue */
+        data->service->priv->pending_messages = 
+                g_list_prepend (data->service->priv->pending_messages, msg);
+
         context = gupnp_service_info_get_context
                         (GUPNP_SERVICE_INFO (data->service));
         session = _gupnp_context_get_session (context);
+
         soup_session_queue_message (session,
                                     msg,
                                     notify_got_response,

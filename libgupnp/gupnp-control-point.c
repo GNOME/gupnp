@@ -502,15 +502,15 @@ load_description (GUPnPControlPoint *control_point,
                 data->service_type    = g_strdup (service_type);
                 data->description_url = g_strdup (description_url);
 
+                control_point->priv->pending_gets =
+                        g_list_prepend (control_point->priv->pending_gets,
+                                        data);
+
 	        soup_session_queue_message (session,
                                             data->message,
                                             (SoupMessageCallbackFn)
                                                    got_description_url,
                                             data);
-
-                control_point->priv->pending_gets =
-                        g_list_prepend (control_point->priv->pending_gets,
-                                        data);
         }
 }
 

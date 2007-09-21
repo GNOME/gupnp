@@ -61,6 +61,8 @@ struct _GUPnPServiceProxyPrivate {
         int seq; /* Event sequence number */
 
         GHashTable *notify_hash;
+
+        GList *pending_messages; /* Pending SoupMessages from this proxy */
 };
 
 enum {
@@ -193,6 +195,8 @@ gupnp_service_proxy_dispose (GObject *object)
 {
         GUPnPServiceProxy *proxy;
         GObjectClass *object_class;
+        GUPnPContext *context;
+        SoupSession *session;
 
         proxy = GUPNP_SERVICE_PROXY (object);
 
@@ -203,13 +207,33 @@ gupnp_service_proxy_dispose (GObject *object)
                 proxy->priv->subscribed = FALSE;
         }
 
-        /* Cancel any pending actions */
+        /* Cancel pending actions */
         while (proxy->priv->pending_actions) {
                 GUPnPServiceProxyAction *action;
 
                 action = proxy->priv->pending_actions->data;
 
                 gupnp_service_proxy_cancel_action (proxy, action);
+        }
+
+        /* Cancel pending messages */
+        context = gupnp_service_info_get_context (GUPNP_SERVICE_INFO (proxy));
+        if (context)
+                session = _gupnp_context_get_session (context);
+        else
+                session = NULL; /* Not the first time dispose is called. */
+
+        while (proxy->priv->pending_messages) {
+                SoupMessage *msg;
+
+                msg = proxy->priv->pending_messages->data;
+
+                soup_message_set_status (msg, SOUP_STATUS_CANCELLED);
+                soup_session_cancel_message (session, msg);
+
+                proxy->priv->pending_messages =
+                        g_list_delete_link (proxy->priv->pending_messages,
+                                            proxy->priv->pending_messages);
         }
 
         /* Call super */
@@ -1479,6 +1503,9 @@ subscription_expire (gpointer user_data)
         g_free (timeout);
 
         /* And send it off */
+        proxy->priv->pending_messages = 
+                g_list_prepend (proxy->priv->pending_messages, msg);
+
         session = _gupnp_context_get_session (context);
 
         soup_session_queue_message (session,
@@ -1498,6 +1525,14 @@ subscribe_got_response (SoupMessage       *msg,
                         GUPnPServiceProxy *proxy)
 {
         GError *error;
+
+        /* Cancelled? */
+        if (msg->status_code == SOUP_STATUS_CANCELLED)
+                return;
+
+        /* Remove from pending messages list */
+        proxy->priv->pending_messages = 
+                g_list_remove (proxy->priv->pending_messages, msg);
 
         /* Check whether the subscription is still wanted */
         if (!proxy->priv->subscribed)
@@ -1663,6 +1698,9 @@ subscribe (GUPnPServiceProxy *proxy)
                                  proxy);
 
         /* And send our subscription message off */
+        proxy->priv->pending_messages = 
+                g_list_prepend (proxy->priv->pending_messages, msg);
+
         session = _gupnp_context_get_session (context);
 
         soup_session_queue_message (session,

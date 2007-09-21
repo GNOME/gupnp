@@ -81,9 +81,6 @@ typedef struct {
 static void
 get_scpd_url_data_free (GetSCPDURLData *data)
 {
-        data->info->priv->pending_gets =
-                g_list_remove (data->info->priv->pending_gets, data);
-
         g_slice_free (GetSCPDURLData, data);
 }
 
@@ -200,6 +197,10 @@ gupnp_service_info_dispose (GObject *object)
                         soup_session_cancel_message (session, data->message);
 
                         get_scpd_url_data_free (data);
+
+                        info->priv->pending_gets =
+                                g_list_delete_link (info->priv->pending_gets,
+                                                    info->priv->pending_gets);
                 }
 
                 /* Unref context */
@@ -625,6 +626,9 @@ got_scpd_url (SoupMessage    *msg,
         } else
                 error = new_server_error (msg);
 
+        data->info->priv->pending_gets =
+                g_list_remove (data->info->priv->pending_gets, data);
+
         data->callback (data->info,
                         introspection,
                         error,
@@ -692,14 +696,14 @@ gupnp_service_info_get_introspection_async
         data->user_data = user_data;
 
         /* Send off the message */
+        info->priv->pending_gets =
+                g_list_prepend (info->priv->pending_gets,
+                                data);
+
         session = _gupnp_context_get_session (info->priv->context);
 
         soup_session_queue_message (session,
                                     data->message,
                                     (SoupMessageCallbackFn) got_scpd_url,
                                     data);
-
-        info->priv->pending_gets =
-                g_list_prepend (info->priv->pending_gets,
-                                data);
 }
