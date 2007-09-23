@@ -1,3 +1,10 @@
+2007-09-23  Jorn Baayen  <jorn@openedhand.com>
+
+	* NEWS:
+	* configure.ac:
+
+	Release 0.6.
+
 2007-09-21  Jorn Baayen  <jorn@openedhand.com>
 
 	* libgupnp/gupnp-control-point.c: (load_description):

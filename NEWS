@@ -1,3 +1,23 @@
+0.6
+===
+
+- Added service signal autoconnection feature in the spirit of
+  glade_xml_signal_autoconnect(). [Zeeshan Ali]
+- Fixed various bugs related to object destruction. Fixes #500, 503.
+  [Jorn Baayen]
+- Accept 'yes' and 'no' boolean values. [Zeeshan Ali]
+- More information in error messages. [Zeeshan Ali, Jorn Baayen]
+- Mark GUPnPServiceIntrospectionCallback() 'error' argument as 'const'.
+  [Jorn Baayen]
+- Fixed gupnp_device_info_get_model_number() to return the right value.
+  [Zeeshan Ali]
+- Moved the uuid dependency to Requires.Private, and removed the
+  shared-mime-data build dependency. [Jorn Baayen]
+- Various other minor fixes. [Zeeshan Ali, Jorn Baayen]
+
+Special thanks to Stéphane Loeuillet for stress-testing the library and
+discovering many bugs. (Which are all fixed in this release. :) )
+
 0.4
 ===
 
