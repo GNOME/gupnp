@@ -34,7 +34,7 @@
 #include <string.h>
 
 #include "gupnp-service.h"
-#include "gupnp-service-private.h"
+#include "gupnp-root-device.h"
 #include "gupnp-context-private.h"
 #include "gupnp-marshal.h"
 #include "gupnp-error.h"
@@ -1898,41 +1898,3 @@ gupnp_service_signals_autoconnect (GUPnPService *service,
         g_object_unref (introspection);
 }
 
-/**
- * _gupnp_service_new
- * @context: A #GUPnPContext
- * @root_device: The #GUPnPRootDevice
- * @element: The #xmlNode ponting to the right service element
- * @udn: The UDN of the device the service is contained in
- * @location: The location of the service description file
- * @url_base: The URL base for this service
- *
- * Return value: A #GUPnPService for the service with element @element, as
- * read from the service description file specified by @location.
- **/
-GUPnPService *
-_gupnp_service_new (GUPnPContext    *context,
-                    GUPnPRootDevice *root_device,
-                    xmlNode         *element,
-                    const char      *udn,
-                    const char      *location,
-                    const SoupUri   *url_base)
-{
-        GUPnPService *service;
-
-        g_return_val_if_fail (GUPNP_IS_CONTEXT (context), NULL);
-        g_return_val_if_fail (element != NULL, NULL);
-        g_return_val_if_fail (location != NULL, NULL);
-        g_return_val_if_fail (url_base != NULL, NULL);
-
-        service = g_object_new (GUPNP_TYPE_SERVICE,
-                                "context", context,
-                                "root-device", root_device,
-                                "location", location,
-                                "udn", udn,
-                                "url-base", url_base,
-                                "element", element,
-                                NULL);
-
-        return service;
-}

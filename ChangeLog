@@ -1,3 +1,72 @@
+2007-10-03  Jorn Baayen  <jorn@openedhand.com>
+
+	* configure.ac:
+
+	Version number to 0.6.99.
+
+2007-10-03  Zeeshan Ali  <zeenix@gstreamer.net>
+
+	* libgupnp/gupnp-control-point.c:
+	* libgupnp/gupnp-root-device.c:
+
+	Fix the type check for factory argument of _new_full() functions.
+
+2007-10-01  Zeeshan Ali  <zeenix@gstreamer.net>
+
+	* libgupnp/gupnp-resource-factory.c:
+
+	Add doc comments.
+
+	* doc/gupnp-docs.sgml:
+	* doc/gupnp-sections.txt:
+
+	Add ResourceFactory API to the docs.
+
+2007-10-01  Zeeshan Ali  <zeenix@gstreamer.net>
+
+	* doc/gupnp-sections.txt:
+
+	Add _control_point_new_full() and _root_device_new_full() to docs.
+
+2007-10-01  Zeeshan Ali  <zeenix@gstreamer.net>
+
+	* libgupnp/gupnp-resource-factory.c:
+	* libgupnp/gupnp-resource-factory.h:
+	* libgupnp/gupnp-control-point.c:
+	* libgupnp/gupnp-root-device.c:
+
+	Replace _resource_factory_new() with _resource_factory_get_default()
+	that only returns a pointer to a singleton object rather than creating
+	a new one.
+
+2007-10-01  Zeeshan Ali  <zeenix@gstreamer.net>
+
+	* libgupnp/gupnp-resource-factory.c:
+	* libgupnp/gupnp-resource-factory.h:
+	* libgupnp/gupnp-control-point.c:
+	* libgupnp/gupnp-control-point.h:
+	* libgupnp/gupnp-device-proxy.c:
+	* libgupnp/gupnp-device-proxy.h:
+	* libgupnp/gupnp-device.c:
+	* libgupnp/gupnp-root-device.c:
+	* libgupnp/gupnp-root-device.h:
+	* libgupnp/gupnp-service-proxy.c:
+	* libgupnp/gupnp-service.c:
+
+	New resource factory that handles the creation of device,
+	service and device and service proxy objects.
+
+	* libgupnp/gupnp-service-private.h:
+	* libgupnp/gupnp-service-proxy-private.h:
+	* libgupnp/gupnp-device-proxy-private.h:
+
+	Remove unneeded headers.
+
+	* libgupnp/Makefile.am:
+
+	- Add the new resource factory to build.
+	- Remove unneeded headers from build.
+
 2007-09-23  Jorn Baayen  <jorn@openedhand.com>
 
 	* NEWS:

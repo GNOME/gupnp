@@ -437,8 +437,43 @@ gupnp_root_device_new (GUPnPContext *context,
                        xmlDoc       *description_doc,
                        const char   *relative_location)
 {
+        GUPnPResourceFactory *factory;
+
+        g_return_val_if_fail (GUPNP_IS_CONTEXT (context), NULL);
+
+        factory = gupnp_resource_factory_get_default ();
+
         return g_object_new (GUPNP_TYPE_ROOT_DEVICE,
                              "context", context,
+                             "resource-factory", factory,
+                             "root-device", NULL,
+                             "description-doc", description_doc,
+                             "relative-location", relative_location,
+                             NULL);
+}
+
+/**
+ * gupnp_root_device_new_full
+ * @context: A #GUPnPContext
+ * @factory: A #GUPnPResourceFactory
+ * @description_doc: Pointer to the device description document
+ * @relative_location: Location to use for this device, relative to the
+ * HTTP root
+ *
+ * Return value: A new #GUPnPRootDevice object.
+ **/
+GUPnPRootDevice *
+gupnp_root_device_new_full (GUPnPContext         *context,
+                            GUPnPResourceFactory *factory,
+                            xmlDoc               *description_doc,
+                            const char           *relative_location)
+{
+        g_return_val_if_fail (GUPNP_IS_CONTEXT (context), NULL);
+        g_return_val_if_fail (GUPNP_IS_RESOURCE_FACTORY (factory), NULL);
+
+        return g_object_new (GUPNP_TYPE_ROOT_DEVICE,
+                             "client", context,
+                             "resource-factory", factory,
                              "root-device", NULL,
                              "description-doc", description_doc,
                              "relative-location", relative_location,

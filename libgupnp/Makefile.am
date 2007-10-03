@@ -12,6 +12,7 @@ libgupnpinc_HEADERS = gupnp-context.h			\
 		      gupnp-device-info.h		\
 	              gupnp-device-proxy.h		\
 		      gupnp-error.h			\
+		      gupnp-resource-factory.h		\
 		      gupnp-root-device.h		\
 		      gupnp-service.h			\
 		      gupnp-service-info.h		\
@@ -37,17 +38,15 @@ libgupnp_1_0_la_SOURCES = accept-language.c			\
 			  gupnp-device-info.c			\
 			  gupnp-device-info-private.h		\
 			  gupnp-device-proxy.c			\
-			  gupnp-device-proxy-private.h		\
 			  gupnp-error.c				\
 			  gupnp-error-private.h			\
+			  gupnp-resource-factory.c		\
 			  gupnp-root-device.c			\
 		          gupnp-service.c			\
 			  gupnp-service-info.c			\
-			  gupnp-service-private.h		\
 			  gupnp-service-proxy.c			\
 	                  gupnp-service-introspection.c		\
 	                  gupnp-service-introspection-private.h	\
-			  gupnp-service-proxy-private.h 	\
 	                  gupnp-types.c				\
 	                  gupnp-types-private.h			\
 			  gvalue-util.c				\

@@ -34,8 +34,6 @@
 #include <locale.h>
 
 #include "gupnp-service-proxy.h"
-#include "gupnp-service-proxy-private.h"
-#include "gupnp-device-proxy-private.h"
 #include "gupnp-context-private.h"
 #include "gupnp-error.h"
 #include "gupnp-error-private.h"
@@ -1503,7 +1501,7 @@ subscription_expire (gpointer user_data)
         g_free (timeout);
 
         /* And send it off */
-        proxy->priv->pending_messages = 
+        proxy->priv->pending_messages =
                 g_list_prepend (proxy->priv->pending_messages, msg);
 
         session = _gupnp_context_get_session (context);
@@ -1531,7 +1529,7 @@ subscribe_got_response (SoupMessage       *msg,
                 return;
 
         /* Remove from pending messages list */
-        proxy->priv->pending_messages = 
+        proxy->priv->pending_messages =
                 g_list_remove (proxy->priv->pending_messages, msg);
 
         /* Check whether the subscription is still wanted */
@@ -1698,7 +1696,7 @@ subscribe (GUPnPServiceProxy *proxy)
                                  proxy);
 
         /* And send our subscription message off */
-        proxy->priv->pending_messages = 
+        proxy->priv->pending_messages =
                 g_list_prepend (proxy->priv->pending_messages, msg);
 
         session = _gupnp_context_get_session (context);
@@ -1810,44 +1808,3 @@ gupnp_service_proxy_get_subscribed (GUPnPServiceProxy *proxy)
         return proxy->priv->subscribed;
 }
 
-/**
- * _gupnp_service_proxy_new
- * @context: A #GUPnPContext
- * @element: The #xmlNode ponting to the right service element
- * @location: The location of the service description file
- * @udn: The UDN of the device the service is contained in
- * @service_type: The service type
- * @url_base: The URL base for this service, or NULL if none
- *
- * Return value: A #GUPnPServiceProxy for the service with element @element, as
- * read from the service description file specified by @location.
- **/
-GUPnPServiceProxy *
-_gupnp_service_proxy_new (GUPnPContext  *context,
-                          XmlDocWrapper *doc,
-                          xmlNode       *element,
-                          const char    *udn,
-                          const char    *service_type,
-                          const char    *location,
-                          const SoupUri *url_base)
-{
-        GUPnPServiceProxy *proxy;
-
-        g_return_val_if_fail (GUPNP_IS_CONTEXT (context), NULL);
-        g_return_val_if_fail (IS_XML_DOC_WRAPPER (doc), NULL);
-        g_return_val_if_fail (element != NULL, NULL);
-        g_return_val_if_fail (location != NULL, NULL);
-        g_return_val_if_fail (url_base != NULL, NULL);
-
-        proxy = g_object_new (GUPNP_TYPE_SERVICE_PROXY,
-                              "context", context,
-                              "location", location,
-                              "udn", udn,
-                              "service-type", service_type,
-                              "url-base", url_base,
-                              "document", doc,
-                              "element", element,
-                              NULL);
-
-        return proxy;
-}

@@ -66,6 +66,7 @@
 
     <xi:include href="xml/gupnp-context.xml"/>
     <xi:include href="xml/gupnp-error.xml"/>
+    <xi:include href="xml/gupnp-resource-factory.xml"/>
     <xi:include href="xml/gupnp-types.xml"/>
   </chapter>
 

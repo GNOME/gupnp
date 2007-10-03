@@ -35,8 +35,7 @@
 
 #include "gupnp-control-point.h"
 #include "gupnp-context-private.h"
-#include "gupnp-device-proxy-private.h"
-#include "gupnp-service-proxy-private.h"
+#include "gupnp-resource-factory.h"
 #include "xml-util.h"
 
 G_DEFINE_TYPE (GUPnPControlPoint,
@@ -44,12 +43,19 @@ G_DEFINE_TYPE (GUPnPControlPoint,
                GSSDP_TYPE_RESOURCE_BROWSER);
 
 struct _GUPnPControlPointPrivate {
+        GUPnPResourceFactory *factory;
+
         GList *devices;
         GList *services;
 
         GHashTable *doc_cache;
 
         GList *pending_gets;
+};
+
+enum {
+        PROP_0,
+        PROP_RESOURCE_FACTORY,
 };
 
 enum {
@@ -139,6 +145,11 @@ gupnp_control_point_dispose (GObject *object)
         GObjectClass *object_class;
 
         control_point = GUPNP_CONTROL_POINT (object);
+
+        if (control_point->priv->factory) {
+                g_object_unref (control_point->priv->factory);
+                control_point->priv->factory = NULL;
+        }
 
         while (control_point->priv->devices) {
                 g_object_unref (control_point->priv->devices->data);
@@ -234,7 +245,9 @@ process_service_list (xmlNode           *element,
                 context = gupnp_control_point_get_context (control_point);
 
                 /* Create proxy */
-                proxy = _gupnp_service_proxy_new (context,
+                proxy = gupnp_resource_factory_create_service_proxy
+                                                 (control_point->priv->factory,
+                                                  context,
                                                   doc,
                                                   element,
                                                   udn,
@@ -323,12 +336,14 @@ process_device_list (xmlNode           *element,
                         /* Create device proxy */
                         GUPnPDeviceProxy *proxy;
 
-                        proxy = _gupnp_device_proxy_new (context,
-                                                         doc,
-                                                         element,
-                                                         udn,
-                                                         description_url,
-                                                         url_base);
+                        proxy = gupnp_resource_factory_create_device_proxy
+                                        (control_point->priv->factory,
+                                         context,
+                                         doc,
+                                         element,
+                                         udn,
+                                         description_url,
+                                         url_base);
 
                         control_point->priv->devices =
                                 g_list_prepend
@@ -713,6 +728,48 @@ gupnp_control_point_resource_unavailable
 }
 
 static void
+gupnp_control_point_set_property (GObject      *object,
+                                  guint         property_id,
+                                  const GValue *value,
+                                  GParamSpec   *pspec)
+{
+        GUPnPControlPoint *control_point;
+
+        control_point = GUPNP_CONTROL_POINT (object);
+
+        switch (property_id) {
+        case PROP_RESOURCE_FACTORY:
+                if (control_point->priv->factory != NULL)
+                       g_object_unref (control_point->priv->factory);
+                control_point->priv->factory = g_value_dup_object (value);
+                break;
+        default:
+                G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
+                break;
+        }
+}
+
+static void
+gupnp_control_point_get_property (GObject    *object,
+                                  guint       property_id,
+                                  GValue     *value,
+                                  GParamSpec *pspec)
+{
+        GUPnPControlPoint *control_point;
+
+        control_point = GUPNP_CONTROL_POINT (object);
+
+        switch (property_id) {
+        case PROP_RESOURCE_FACTORY:
+                g_value_set_object (value, control_point->priv->factory);
+                break;
+        default:
+                G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
+                break;
+        }
+}
+
+static void
 gupnp_control_point_class_init (GUPnPControlPointClass *klass)
 {
         GObjectClass *object_class;
@@ -720,8 +777,10 @@ gupnp_control_point_class_init (GUPnPControlPointClass *klass)
 
         object_class = G_OBJECT_CLASS (klass);
 
-        object_class->dispose  = gupnp_control_point_dispose;
-        object_class->finalize = gupnp_control_point_finalize;
+        object_class->set_property = gupnp_control_point_set_property;
+        object_class->get_property = gupnp_control_point_get_property;
+        object_class->dispose      = gupnp_control_point_dispose;
+        object_class->finalize     = gupnp_control_point_finalize;
 
         browser_class = GSSDP_RESOURCE_BROWSER_CLASS (klass);
 
@@ -731,6 +790,24 @@ gupnp_control_point_class_init (GUPnPControlPointClass *klass)
                 gupnp_control_point_resource_unavailable;
 
         g_type_class_add_private (klass, sizeof (GUPnPControlPointPrivate));
+
+        /**
+         * GUPnPControlPoint:resource-factory
+         *
+         * The resource factory to use. Set to NULL for default factory.
+         **/
+        g_object_class_install_property
+                (object_class,
+                 PROP_RESOURCE_FACTORY,
+                 g_param_spec_object ("resource-factory",
+                                      "Resource Factory",
+                                      "The resource factory to use",
+                                      GUPNP_TYPE_RESOURCE_FACTORY,
+                                      G_PARAM_CONSTRUCT |
+                                      G_PARAM_READWRITE |
+                                      G_PARAM_STATIC_NAME |
+                                      G_PARAM_STATIC_NICK |
+                                      G_PARAM_STATIC_BLURB));
 
         /**
          * GUPnPControlPoint::device-proxy-available
@@ -828,11 +905,39 @@ GUPnPControlPoint *
 gupnp_control_point_new (GUPnPContext *context,
                          const char   *target)
 {
+        GUPnPResourceFactory *factory;
+
         g_return_val_if_fail (GUPNP_IS_CONTEXT (context), NULL);
+
+        factory = gupnp_resource_factory_get_default ();
 
         return g_object_new (GUPNP_TYPE_CONTROL_POINT,
                              "client", context,
                              "target", target,
+                             "resource-factory", factory,
+                             NULL);
+}
+
+/**
+ * gupnp_control_point_new_full
+ * @context: A #GUPnPContext
+ * @factory: A #GUPnPResourceFactory
+ * @target: The search target
+ *
+ * Return value: A new #GUPnPControlPoint object.
+ **/
+GUPnPControlPoint *
+gupnp_control_point_new_full (GUPnPContext         *context,
+                              GUPnPResourceFactory *factory,
+                              const char           *target)
+{
+        g_return_val_if_fail (GUPNP_IS_CONTEXT (context), NULL);
+        g_return_val_if_fail (GUPNP_IS_RESOURCE_FACTORY (factory), NULL);
+
+        return g_object_new (GUPNP_TYPE_CONTROL_POINT,
+                             "client", context,
+                             "target", target,
+                             "resource-factory", factory,
                              NULL);
 }
 

@@ -32,56 +32,51 @@
 
 #include "gupnp-device.h"
 #include "gupnp-service.h"
-#include "gupnp-service-private.h"
 #include "gupnp-root-device.h"
+#include "gupnp-resource-factory.h"
 #include "xml-util.h"
-
-static GUPnPDevice *
-_gupnp_device_new (GUPnPContext    *context,
-                   GUPnPRootDevice *root_device,
-                   xmlNode         *element,
-                   const char      *udn,
-                   const char      *location,
-                   const SoupUri   *url_base);
 
 G_DEFINE_TYPE (GUPnPDevice,
                gupnp_device,
                GUPNP_TYPE_DEVICE_INFO);
 
 struct _GUPnPDevicePrivate {
-        GUPnPRootDevice *root_device;
+        GUPnPRootDevice      *root_device;
+        GUPnPResourceFactory *factory;
 };
 
 enum {
         PROP_0,
-        PROP_ROOT_DEVICE
+        PROP_ROOT_DEVICE,
+        PROP_RESOURCE_FACTORY
 };
 
 static GUPnPDeviceInfo *
 gupnp_device_get_device (GUPnPDeviceInfo *info,
                          xmlNode         *element)
 {
-        GUPnPDevice *device;
-        GUPnPContext *context;
-        GUPnPRootDevice *root_device;
-        const char *location;
+        GUPnPDevice   *device;
+        GUPnPContext  *context;
+        GUPnPDevice   *root_device;
+        const char    *location;
         const SoupUri *url_base;
 
         device = GUPNP_DEVICE (info);
 
         root_device = device->priv->root_device ?
-                      device->priv->root_device : GUPNP_ROOT_DEVICE (device);
+                      GUPNP_DEVICE (device->priv->root_device) : device;
 
         context = gupnp_device_info_get_context (info);
         location = gupnp_device_info_get_location (info);
         url_base = gupnp_device_info_get_url_base (info);
 
-        device = _gupnp_device_new (context,
-                                    root_device,
-                                    element,
-                                    NULL,
-                                    location,
-                                    url_base);
+        device = gupnp_resource_factory_create_device (device->priv->factory,
+                                                       context,
+                                                       root_device,
+                                                       element,
+                                                       NULL,
+                                                       location,
+                                                       url_base);
 
         return GUPNP_DEVICE_INFO (device);
 }
@@ -90,29 +85,30 @@ static GUPnPServiceInfo *
 gupnp_device_get_service (GUPnPDeviceInfo *info,
                           xmlNode         *element)
 {
-        GUPnPDevice *device;
-        GUPnPService *service;
-        GUPnPContext *context;
-        GUPnPRootDevice *root_device;
-        const char *location, *udn;
+        GUPnPDevice   *device;
+        GUPnPService  *service;
+        GUPnPContext  *context;
+        GUPnPDevice   *root_device;
+        const char    *location, *udn;
         const SoupUri *url_base;
 
         device = GUPNP_DEVICE (info);
 
         root_device = device->priv->root_device ?
-                      device->priv->root_device : GUPNP_ROOT_DEVICE (device);
+                      GUPNP_DEVICE (device->priv->root_device) : device;
 
         context = gupnp_device_info_get_context (info);
         udn = gupnp_device_info_get_udn (info);
         location = gupnp_device_info_get_location (info);
         url_base = gupnp_device_info_get_url_base (info);
 
-        service = _gupnp_service_new (context,
-                                      root_device,
-                                      element,
-                                      udn,
-                                      location,
-                                      url_base);
+        service = gupnp_resource_factory_create_service (device->priv->factory,
+                                                         context,
+                                                         root_device,
+                                                         element,
+                                                         udn,
+                                                         location,
+                                                         url_base);
 
         return GUPNP_SERVICE_INFO (service);
 }
@@ -136,6 +132,11 @@ gupnp_device_set_property (GObject      *object,
                         g_object_ref (device->priv->root_device);
 
                 break;
+        case PROP_RESOURCE_FACTORY:
+                if (device->priv->factory != NULL)
+                       g_object_unref (device->priv->factory);
+                device->priv->factory = g_value_dup_object (value);
+                break;
         default:
                 G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
                 break;
@@ -156,6 +157,9 @@ gupnp_device_get_property (GObject    *object,
         case PROP_ROOT_DEVICE:
                 g_value_set_object (value, device->priv->root_device);
                 break;
+        case PROP_RESOURCE_FACTORY:
+                g_value_set_object (value, device->priv->factory);
+                break;
         default:
                 G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
                 break;
@@ -173,6 +177,11 @@ gupnp_device_dispose (GObject *object)
         if (device->priv->root_device) {
                 g_object_unref (device->priv->root_device);
                 device->priv->root_device = NULL;
+        }
+
+        if (device->priv->factory) {
+                g_object_unref (device->priv->factory);
+                device->priv->factory = NULL;
         }
 
         /* Call super */
@@ -225,42 +234,23 @@ gupnp_device_class_init (GUPnPDeviceClass *klass)
                                       G_PARAM_STATIC_NAME |
                                       G_PARAM_STATIC_NICK |
                                       G_PARAM_STATIC_BLURB));
+
+        /**
+         * GUPnPDevice:resource-factory
+         *
+         * The resource factory to use. Set to NULL for default factory.
+         **/
+        g_object_class_install_property
+                (object_class,
+                 PROP_RESOURCE_FACTORY,
+                 g_param_spec_object ("resource-factory",
+                                      "Resource Factory",
+                                      "The resource factory to use",
+                                      GUPNP_TYPE_RESOURCE_FACTORY,
+                                      G_PARAM_CONSTRUCT |
+                                      G_PARAM_READWRITE |
+                                      G_PARAM_STATIC_NAME |
+                                      G_PARAM_STATIC_NICK |
+                                      G_PARAM_STATIC_BLURB));
 }
 
-/**
- * _gupnp_device_new
- * @context: A #GUPnPContext
- * @root_device: The #GUPnPRootDevice
- * @element: The #xmlNode ponting to the right device element
- * @udn: The UDN of the device to create a device for
- * @location: The location of the device description file
- * @url_base: The URL base for this device
- *
- * Return value: A #GUPnPDevice for the device with element @element, as
- * read from the device description file specified by @location.
- **/
-static GUPnPDevice *
-_gupnp_device_new (GUPnPContext    *context,
-                   GUPnPRootDevice *root_device,
-                   xmlNode         *element,
-                   const char      *udn,
-                   const char      *location,
-                   const SoupUri   *url_base)
-{
-        GUPnPDevice *device;
-
-        g_return_val_if_fail (GUPNP_IS_CONTEXT (context), NULL);
-        g_return_val_if_fail (element != NULL, NULL);
-        g_return_val_if_fail (url_base != NULL, NULL);
-
-        device = g_object_new (GUPNP_TYPE_DEVICE,
-                               "context", context,
-                               "root-device", root_device,
-                               "location", location,
-                               "udn", udn,
-                               "url-base", url_base,
-                               "element", element,
-                               NULL);
-
-        return device;
-}

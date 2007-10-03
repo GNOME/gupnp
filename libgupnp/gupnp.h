@@ -25,6 +25,7 @@
 #include "gupnp-device.h"
 #include "gupnp-device-info.h"
 #include "gupnp-device-proxy.h"
+#include "gupnp-resource-factory.h"
 #include "gupnp-root-device.h"
 #include "gupnp-service.h"
 #include "gupnp-service-info.h"

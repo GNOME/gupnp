@@ -3,6 +3,7 @@
 <TITLE>GUPnPControlPoint</TITLE>
 GUPnPControlPoint
 gupnp_control_point_new
+gupnp_control_point_new_full
 gupnp_control_point_get_context
 gupnp_control_point_list_device_proxies
 gupnp_control_point_list_service_proxies
@@ -126,6 +127,7 @@ GUPnPServicePrivate
 <TITLE>GUPnPRootDevice</TITLE>
 GUPnPRootDevice
 gupnp_root_device_new
+gupnp_root_device_new_full
 gupnp_root_device_set_available
 gupnp_root_device_get_available
 gupnp_root_device_get_relative_location
@@ -244,6 +246,26 @@ gupnp_device_proxy_get_type
 GUPNP_DEVICE_PROXY_CLASS
 GUPNP_IS_DEVICE_PROXY_CLASS
 GUPNP_DEVICE_PROXY_GET_CLASS
+</SECTION>
+
+<SECTION>
+<FILE>gupnp-resource-factory</FILE>
+<TITLE>GUPnPResourceFactory</TITLE>
+GUPnPResourceFactory
+GUPnPResourceFactoryClass
+gupnp_resource_factory_get_default
+gupnp_resource_factory_create_device_proxy
+gupnp_resource_factory_create_service_proxy
+gupnp_resource_factory_create_device
+gupnp_resource_factory_create_service
+<SUBSECTION Standard>
+GUPNP_RESOURCE_FACTORY
+GUPNP_IS_RESOURCE_FACTORY
+GUPNP_TYPE_RESOURCE_FACTORY
+gupnp_device_proxy_get_type
+GUPNP_RESOURCE_FACTORY_CLASS
+GUPNP_IS_RESOURCE_FACTORY_CLASS
+GUPNP_RESOURCE_FACTORY_GET_CLASS
 </SECTION>
 
 <SECTION>

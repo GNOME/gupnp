@@ -26,6 +26,7 @@
 
 #include "gupnp-context.h"
 #include "gupnp-device.h"
+#include "gupnp-resource-factory.h"
 
 G_BEGIN_DECLS
 
@@ -72,16 +73,21 @@ typedef struct {
 } GUPnPRootDeviceClass;
 
 GUPnPRootDevice *
-gupnp_root_device_new                   (GUPnPContext    *context,
-                                         xmlDoc          *description_doc,
-                                         const char      *relative_location);
+gupnp_root_device_new             (GUPnPContext    *context,
+                                   xmlDoc          *description_doc,
+                                   const char      *relative_location);
 
+GUPnPRootDevice *
+gupnp_root_device_new_full        (GUPnPContext         *context,
+                                   GUPnPResourceFactory *factory,
+                                   xmlDoc               *description_doc,
+                                   const char           *relative_location);
 void
-gupnp_root_device_set_available         (GUPnPRootDevice *root_device,
-                                         gboolean         available);
+gupnp_root_device_set_available   (GUPnPRootDevice *root_device,
+                                   gboolean         available);
 
 gboolean
-gupnp_root_device_get_available         (GUPnPRootDevice *root_device);
+gupnp_root_device_get_available   (GUPnPRootDevice *root_device);
 
 const char *
 gupnp_root_device_get_relative_location (GUPnPRootDevice *root_device);

@@ -25,6 +25,7 @@
 #include <libgssdp/gssdp-resource-browser.h>
 
 #include "gupnp-context.h"
+#include "gupnp-resource-factory.h"
 #include "gupnp-device-proxy.h"
 #include "gupnp-service-proxy.h"
 
@@ -82,21 +83,25 @@ typedef struct {
         void (* _gupnp_reserved1) (void);
         void (* _gupnp_reserved2) (void);
         void (* _gupnp_reserved3) (void);
-        void (* _gupnp_reserved4) (void);
 } GUPnPControlPointClass;
 
 GUPnPControlPoint *
-gupnp_control_point_new                  (GUPnPContext      *context,
-                                          const char        *target);
+gupnp_control_point_new                  (GUPnPContext         *context,
+                                          const char           *target);
+
+GUPnPControlPoint *
+gupnp_control_point_new_full             (GUPnPContext         *context,
+                                          GUPnPResourceFactory *factory,
+                                          const char           *target);
 
 GUPnPContext *
-gupnp_control_point_get_context          (GUPnPControlPoint *control_point);
+gupnp_control_point_get_context          (GUPnPControlPoint    *control_point);
 
 const GList *
-gupnp_control_point_list_device_proxies  (GUPnPControlPoint *control_point);
+gupnp_control_point_list_device_proxies  (GUPnPControlPoint    *control_point);
 
 const GList *
-gupnp_control_point_list_service_proxies (GUPnPControlPoint *control_point);
+gupnp_control_point_list_service_proxies (GUPnPControlPoint    *control_point);
 
 G_END_DECLS
 
