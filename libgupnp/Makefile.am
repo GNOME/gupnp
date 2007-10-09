@@ -41,6 +41,7 @@ libgupnp_1_0_la_SOURCES = accept-language.c			\
 			  gupnp-error.c				\
 			  gupnp-error-private.h			\
 			  gupnp-resource-factory.c		\
+		      	  gupnp-resource-factory-private.h	\
 			  gupnp-root-device.c			\
 		          gupnp-service.c			\
 			  gupnp-service-info.c			\

@@ -1,3 +1,48 @@
+2007-10-09  Zeeshan Ali  <zeenix@gstreamer.net>
+	    Jorn Baayen  <jorn@openedhand.com>
+
+	* libgupnp/gupnp-resource-factory.c:
+	* libgupnp/gupnp-resource-factory.h:
+
+	- Instead of asking the users to subclass resource factory, provide an
+	  API to register GTypes for UPnP types.
+	- Make the resource and resource proxy creation functions private.
+
+	* libgupnp/gupnp-resource-factory-private.h:
+
+	Make the resource and resource proxy creation functions private.
+
+	* libgupnp/gupnp-control-point.c:
+	* libgupnp/gupnp-root-device.c:
+
+	- "resource-factory" prop can only be set at contruction time.
+	- Make _new() a wrapper around_new_full().
+	- Provide getter for resource factory.
+	- Fix a copy&paste mistake.
+
+	* libgupnp/gupnp-control-point.h:
+	* libgupnp/gupnp-root-device.h:
+
+	Provide getter for resource factory.
+
+	* libgupnp/gupnp-device.c:
+	* libgupnp/gupnp-device.h:
+	* libgupnp/gupnp-device-info.c:
+	* libgupnp/gupnp-device-info.h:
+	* libgupnp/gupnp-device-proxy.c:
+
+	Move "resource-factory" prop to DeviceInfo class.
+
+	* libgupnp/Makefile.am:
+
+	Add gupnp-resource-factory-private.h to build.
+
+	* doc/gupnp-sections.txt:
+
+	- Add resource factory getter functions.
+	- Add type assignment (un)registeration functions.
+	- Remove the now private resource and resource proxy creation functions.
+
 2007-10-09  Jorn Baayen  <jorn@openedhand.com>
 
 	* libgupnp/gena-protocol.h:

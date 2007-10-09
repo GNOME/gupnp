@@ -28,6 +28,7 @@
 
 #include "gupnp-context.h"
 #include "gupnp-service-info.h"
+#include "gupnp-resource-factory.h"
 
 G_BEGIN_DECLS
 
@@ -153,6 +154,9 @@ gupnp_device_info_list_service_types    (GUPnPDeviceInfo *info);
 GUPnPServiceInfo *
 gupnp_device_info_get_service           (GUPnPDeviceInfo *info,
                                          const char      *type);
+
+GUPnPResourceFactory *
+gupnp_device_info_get_resource_factory  (GUPnPDeviceInfo *device_info);
 
 G_END_DECLS
 

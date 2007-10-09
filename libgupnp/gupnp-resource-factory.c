@@ -23,183 +23,72 @@
 
 /**
  * SECTION:gupnp-resource-factory
- * @short_description: Class for resource objects creation.
+ * @short_description: Class for resource and resource proxy object creation.
  *
- * #GUPnPResourceFactory handles creation of client and server resource
- * object: device, service, device and service proxy. You can always subclass
- * the resource objects but the #GUPnPControlPoint and #GUPnPRootDevice objects
- * do not and can not create objects of your subclass. The solution to this
- * problem is to:
- *
- * <orderedlist>
- * <listitem>
- * <para>Create your own subclass of the #GUPnPResourceFactory.
- * </para>
- * </listitem>
- * <listitem>
- * <para>In your #GUPnPResourceFactory subclass, override the appropriate
- * *_create_* virtual functions with your own functions, in which you create
- * the objects of your desired type.
- * </para>
- * </listitem>
- * <listitem>
- * <para>Ask the #GUPnPControlPoint and #GUPnPRootDevice to use your custom
- * #GUPnPResourceFactory to create resource objects, either at creation time
- * using the appropriate *_new_full functions or using the "resource-factory"
- * property.
- * </para>
- * </listitem>
- * </orderedlist>
- *
+ * #GUPnPResourceFactory objects are used by #GUPnPControlPoint,
+ * #GUPnPDeviceProxy and #GUPnPDevice to create resource proxy and resource
+ * objects. Register UPnP type - #GType pairs to have resource or resource proxy
+ * objects created with the specified #GType whenever an object for a resource
+ * of the specified UPnP type is requested. The #GType<!-- -->s need
+ * to be derived from the relevant resource or resource proxy type (e.g.
+ * a device proxy type needs to be derived from #GUPnPDeviceProxy).
  */
 
 #include <string.h>
 
-#include "gupnp-resource-factory.h"
+#include "gupnp-resource-factory-private.h"
 #include "gupnp-root-device.h"
 
 G_DEFINE_TYPE (GUPnPResourceFactory,
                gupnp_resource_factory,
                G_TYPE_OBJECT);
 
+struct _GUPnPResourceFactoryPrivate {
+        GHashTable *resource_type_hash;
+        GHashTable *proxy_type_hash;
+};
+
 static void
 gupnp_resource_factory_init (GUPnPResourceFactory *factory)
 {
-}
+        factory->priv =
+                G_TYPE_INSTANCE_GET_PRIVATE (factory,
+                                             GUPNP_TYPE_RESOURCE_FACTORY,
+                                             GUPnPResourceFactoryPrivate);
 
-static GUPnPDeviceProxy *
-create_device_proxy (GUPnPResourceFactory *factory,
-                     GUPnPContext         *context,
-                     XmlDocWrapper        *doc,
-                     xmlNode              *element,
-                     const char           *udn,
-                     const char           *location,
-                     const SoupUri        *url_base)
-{
-        GUPnPDeviceProxy *proxy;
-
-        g_return_val_if_fail (GUPNP_IS_CONTEXT (context), NULL);
-        g_return_val_if_fail (IS_XML_DOC_WRAPPER (doc), NULL);
-        g_return_val_if_fail (element != NULL, NULL);
-        g_return_val_if_fail (location != NULL, NULL);
-        g_return_val_if_fail (url_base != NULL, NULL);
-
-        proxy = g_object_new (GUPNP_TYPE_DEVICE_PROXY,
-                              "resource-factory", factory,
-                              "context", context,
-                              "location", location,
-                              "udn", udn,
-                              "url-base", url_base,
-                              "document", doc,
-                              "element", element,
-                              NULL);
-
-        return proxy;
-}
-
-static GUPnPServiceProxy *
-create_service_proxy (GUPnPResourceFactory *factory,
-                      GUPnPContext         *context,
-                      XmlDocWrapper        *doc,
-                      xmlNode              *element,
-                      const char           *udn,
-                      const char           *service_type,
-                      const char           *location,
-                      const SoupUri        *url_base)
-{
-        GUPnPServiceProxy *proxy;
-
-        g_return_val_if_fail (GUPNP_IS_CONTEXT (context), NULL);
-        g_return_val_if_fail (IS_XML_DOC_WRAPPER (doc), NULL);
-        g_return_val_if_fail (element != NULL, NULL);
-        g_return_val_if_fail (location != NULL, NULL);
-        g_return_val_if_fail (url_base != NULL, NULL);
-
-        proxy = g_object_new (GUPNP_TYPE_SERVICE_PROXY,
-                              "context", context,
-                              "location", location,
-                              "udn", udn,
-                              "service-type", service_type,
-                              "url-base", url_base,
-                              "document", doc,
-                              "element", element,
-                              NULL);
-
-        return proxy;
-}
-
-static GUPnPDevice *
-create_device (GUPnPResourceFactory *factory,
-               GUPnPContext         *context,
-               GUPnPDevice          *root_device,
-               xmlNode              *element,
-               const char           *udn,
-               const char           *location,
-               const SoupUri        *url_base)
-{
-        GUPnPDevice *device;
-
-        g_return_val_if_fail (GUPNP_IS_CONTEXT (context), NULL);
-        g_return_val_if_fail (GUPNP_IS_ROOT_DEVICE (root_device), NULL);
-        g_return_val_if_fail (element != NULL, NULL);
-        g_return_val_if_fail (url_base != NULL, NULL);
-
-        device = g_object_new (GUPNP_TYPE_DEVICE,
-                               "resource-factory", factory,
-                               "context", context,
-                               "root-device", root_device,
-                               "location", location,
-                               "udn", udn,
-                               "url-base", url_base,
-                               "element", element,
-                               NULL);
-
-        return device;
-}
-
-static GUPnPService *
-create_service (GUPnPResourceFactory *factory,
-                GUPnPContext         *context,
-                GUPnPDevice          *root_device,
-                xmlNode              *element,
-                const char           *udn,
-                const char           *location,
-                const SoupUri        *url_base)
-{
-        GUPnPService *service;
-
-        g_return_val_if_fail (GUPNP_IS_CONTEXT (context), NULL);
-        g_return_val_if_fail (GUPNP_IS_ROOT_DEVICE (root_device), NULL);
-        g_return_val_if_fail (element != NULL, NULL);
-        g_return_val_if_fail (location != NULL, NULL);
-        g_return_val_if_fail (url_base != NULL, NULL);
-
-        service = g_object_new (GUPNP_TYPE_SERVICE,
-                                "context", context,
-                                "root-device", root_device,
-                                "location", location,
-                                "udn", udn,
-                                "url-base", url_base,
-                                "element", element,
-                                NULL);
-
-        return service;
+        factory->priv->resource_type_hash =
+                        g_hash_table_new_full (g_str_hash,
+                                               g_int_equal,
+                                               g_free,
+                                               NULL);
+        factory->priv->proxy_type_hash =
+                        g_hash_table_new_full (g_str_hash,
+                                               g_int_equal,
+                                               g_free,
+                                               NULL);
 }
 
 static void
 gupnp_resource_factory_class_init (GUPnPResourceFactoryClass *klass)
 {
-        klass->create_device_proxy  = create_device_proxy;
-        klass->create_service_proxy = create_service_proxy;
-        klass->create_device        = create_device;
-        klass->create_service       = create_service;
+        g_type_class_add_private (klass, sizeof (GUPnPResourceFactoryPrivate));
+}
+
+/**
+ * gupnp_resource_factory_new
+ *
+ * Return value: A new #GUPnPResourceFactory object.
+ **/
+GUPnPResourceFactory *
+gupnp_resource_factory_new (void)
+{
+        return g_object_new (GUPNP_TYPE_RESOURCE_FACTORY, NULL);
 }
 
 /**
  * gupnp_resource_factory_get_default
  *
  * Return value: The default singleton #GUPnPResourceFactory object.
- *
  **/
 GUPnPResourceFactory *
 gupnp_resource_factory_get_default (void)
@@ -237,21 +126,39 @@ gupnp_resource_factory_create_device_proxy
                                  const char           *location,
                                  const SoupUri        *url_base)
 {
-        GUPnPResourceFactoryClass *klass;
+        GUPnPDeviceProxy *proxy;
+        const char       *upnp_type;
+        GType             proxy_type = GUPNP_TYPE_DEVICE_PROXY;
 
         g_return_val_if_fail (GUPNP_IS_RESOURCE_FACTORY (factory), NULL);
+        g_return_val_if_fail (GUPNP_IS_CONTEXT (context), NULL);
+        g_return_val_if_fail (IS_XML_DOC_WRAPPER (doc), NULL);
+        g_return_val_if_fail (element != NULL, NULL);
+        g_return_val_if_fail (location != NULL, NULL);
+        g_return_val_if_fail (url_base != NULL, NULL);
 
-        klass = GUPNP_RESOURCE_FACTORY_GET_CLASS (factory);
-        if (klass->create_device != NULL) {
-                return klass->create_device_proxy (factory,
-                                                   context,
-                                                   doc,
-                                                   element,
-                                                   udn,
-                                                   location,
-                                                   url_base);
-        } else
-                return NULL;
+        upnp_type = xml_util_get_child_element_content_glib (element,
+                                                             "deviceType");
+        if (upnp_type) {
+                gpointer value;
+
+                value = g_hash_table_lookup (factory->priv->proxy_type_hash,
+                                             upnp_type);
+                if (value)
+                        proxy_type = GPOINTER_TO_INT (value);
+        }
+
+        proxy = g_object_new (proxy_type,
+                              "resource-factory", factory,
+                              "context", context,
+                              "location", location,
+                              "udn", udn,
+                              "url-base", url_base,
+                              "document", doc,
+                              "element", element,
+                              NULL);
+
+        return proxy;
 }
 
 /**
@@ -279,22 +186,36 @@ gupnp_resource_factory_create_service_proxy
                                  const char             *location,
                                  const SoupUri          *url_base)
 {
-        GUPnPResourceFactoryClass *klass;
+        GUPnPServiceProxy *proxy;
+        GType              proxy_type = GUPNP_TYPE_SERVICE_PROXY;
 
         g_return_val_if_fail (GUPNP_IS_RESOURCE_FACTORY (factory), NULL);
+        g_return_val_if_fail (GUPNP_IS_CONTEXT (context), NULL);
+        g_return_val_if_fail (IS_XML_DOC_WRAPPER (wrapper), NULL);
+        g_return_val_if_fail (element != NULL, NULL);
+        g_return_val_if_fail (location != NULL, NULL);
+        g_return_val_if_fail (url_base != NULL, NULL);
 
-        klass = GUPNP_RESOURCE_FACTORY_GET_CLASS (factory);
-        if (klass->create_service_proxy != NULL) {
-                return klass->create_service_proxy (factory,
-                                                    context,
-                                                    wrapper,
-                                                    element,
-                                                    udn,
-                                                    service_type,
-                                                    location,
-                                                    url_base);
-        } else
-                return NULL;
+        if (service_type) {
+                gpointer value;
+
+                value = g_hash_table_lookup (factory->priv->proxy_type_hash,
+                                             service_type);
+                if (value)
+                        proxy_type = GPOINTER_TO_INT (value);
+        }
+
+        proxy = g_object_new (proxy_type,
+                              "context", context,
+                              "location", location,
+                              "udn", udn,
+                              "service-type", service_type,
+                              "url-base", url_base,
+                              "document", wrapper,
+                              "element", element,
+                              NULL);
+
+        return proxy;
 }
 
 /**
@@ -320,21 +241,38 @@ gupnp_resource_factory_create_device
                                  const char           *location,
                                  const SoupUri        *url_base)
 {
-        GUPnPResourceFactoryClass *klass;
+        GUPnPDevice *device;
+        const char  *upnp_type;
+        GType        device_type = GUPNP_TYPE_DEVICE;
 
         g_return_val_if_fail (GUPNP_IS_RESOURCE_FACTORY (factory), NULL);
+        g_return_val_if_fail (GUPNP_IS_CONTEXT (context), NULL);
+        g_return_val_if_fail (GUPNP_IS_ROOT_DEVICE (root_device), NULL);
+        g_return_val_if_fail (element != NULL, NULL);
+        g_return_val_if_fail (url_base != NULL, NULL);
 
-        klass = GUPNP_RESOURCE_FACTORY_GET_CLASS (factory);
-        if (klass->create_device != NULL) {
-                return klass->create_device (factory,
-                                             context,
-                                             root_device,
-                                             element,
-                                             udn,
-                                             location,
-                                             url_base);
-        } else
-                return NULL;
+        upnp_type = xml_util_get_child_element_content_glib (element,
+                                                             "deviceType");
+        if (upnp_type) {
+                gpointer value;
+
+                value = g_hash_table_lookup (factory->priv->resource_type_hash,
+                                             upnp_type);
+                if (value)
+                        device_type = GPOINTER_TO_INT (value);
+        }
+
+        device = g_object_new (device_type,
+                               "resource-factory", factory,
+                               "context", context,
+                               "root-device", root_device,
+                               "location", location,
+                               "udn", udn,
+                               "url-base", url_base,
+                               "element", element,
+                               NULL);
+
+        return device;
 }
 
 /**
@@ -360,20 +298,122 @@ gupnp_resource_factory_create_service
                                  const char           *location,
                                  const SoupUri        *url_base)
 {
-        GUPnPResourceFactoryClass *klass;
+        GUPnPService *service;
+        const char   *upnp_type;
+        GType         service_type = GUPNP_TYPE_SERVICE;
 
         g_return_val_if_fail (GUPNP_IS_RESOURCE_FACTORY (factory), NULL);
+        g_return_val_if_fail (GUPNP_IS_CONTEXT (context), NULL);
+        g_return_val_if_fail (GUPNP_IS_ROOT_DEVICE (root_device), NULL);
+        g_return_val_if_fail (element != NULL, NULL);
+        g_return_val_if_fail (location != NULL, NULL);
+        g_return_val_if_fail (url_base != NULL, NULL);
 
-        klass = GUPNP_RESOURCE_FACTORY_GET_CLASS (factory);
-        if (klass->create_service != NULL) {
-                return klass->create_service (factory,
-                                              context,
-                                              root_device,
-                                              element,
-                                              udn,
-                                              location,
-                                              url_base);
-        } else
-                return NULL;
+        upnp_type = xml_util_get_child_element_content_glib (element,
+                                                             "serviceType");
+        if (upnp_type) {
+                gpointer value;
+
+                value = g_hash_table_lookup (factory->priv->resource_type_hash,
+                                             upnp_type);
+                if (value)
+                        service_type = GPOINTER_TO_INT (value);
+        }
+
+        service = g_object_new (service_type,
+                                "context", context,
+                                "root-device", root_device,
+                                "location", location,
+                                "udn", udn,
+                                "url-base", url_base,
+                                "element", element,
+                                NULL);
+
+        return service;
+}
+
+/**
+ * gupnp_resource_factory_register_resource_type
+ * @factory: A #GUPnPResourceFactory.
+ * @upnp_type: The UPnP type name of the resource.
+ * @type: The requested GType assignment for the resource.
+ *
+ * Registers the GType @type for the resource of UPnP type @upnp_type. After
+ * this call, the factory @factory will create object of GType @type each time
+ * it is asked to create a resource object for UPnP type @upnp_type.
+ *
+ * Note: GType @type must be a derived type of #GUPNP_TYPE_DEVICE if resource is
+ * a device or #GUPNP_TYPE_SERVICE if its a service.
+ **/
+void
+gupnp_resource_factory_register_resource_type (GUPnPResourceFactory *factory,
+                                               const char           *upnp_type,
+                                               GType                 type)
+{
+        g_hash_table_insert (factory->priv->resource_type_hash,
+                             g_strdup (upnp_type),
+                             GINT_TO_POINTER (type));
+}
+
+/**
+ * gupnp_resource_factory_unregister_resource_type
+ * @factory: A #GUPnPResourceFactory.
+ * @upnp_type: The UPnP type name of the resource.
+ *
+ * Unregisters the GType assignment for the resource of UPnP type @upnp_type.
+ *
+ * Return value: TRUE if GType assignment was removed successfully, FALSE
+ * otherwise.
+ **/
+gboolean
+gupnp_resource_factory_unregister_resource_type
+                                (GUPnPResourceFactory *factory,
+                                 const char           *upnp_type)
+{
+        return g_hash_table_remove (factory->priv->resource_type_hash,
+                                    upnp_type);
+}
+
+/**
+ * gupnp_resource_factory_register_resource_proxy_type
+ * @factory: A #GUPnPResourceFactory.
+ * @upnp_type: The UPnP type name of the resource.
+ * @type: The requested GType assignment for the resource proxy.
+ *
+ * Registers the GType @type for the proxy of resource of UPnP type @upnp_type.
+ * After this call, the factory @factory will create object of GType @type each
+ * time it is asked to create a resource proxy object for UPnP type @upnp_type.
+ *
+ * Note: GType @type must be a derived type of #GUPNP_TYPE_DEVICE_PROXY if
+ * resource is a device or #GUPNP_TYPE_SERVICE_PROXY if its a service.
+ **/
+void
+gupnp_resource_factory_register_resource_proxy_type
+                                (GUPnPResourceFactory *factory,
+                                 const char           *upnp_type,
+                                 GType                 type)
+{
+        g_hash_table_insert (factory->priv->proxy_type_hash,
+                             g_strdup (upnp_type),
+                             GINT_TO_POINTER (type));
+}
+
+/**
+ * gupnp_resource_factory_unregister_resource_proxy_type
+ * @factory: A #GUPnPResourceFactory.
+ * @upnp_type: The UPnP type name of the resource.
+ *
+ * Unregisters the GType assignment for the proxy of resource of UPnP type
+ * @upnp_type.
+ *
+ * Return value: TRUE if GType assignment was removed successfully, FALSE
+ * otherwise.
+ **/
+gboolean
+gupnp_resource_factory_unregister_resource_proxy_type
+                                (GUPnPResourceFactory *factory,
+                                 const char           *upnp_type)
+{
+        return g_hash_table_remove (factory->priv->proxy_type_hash, upnp_type);
 }
 

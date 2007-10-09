@@ -33,7 +33,7 @@
 #include "gupnp-device.h"
 #include "gupnp-service.h"
 #include "gupnp-root-device.h"
-#include "gupnp-resource-factory.h"
+#include "gupnp-resource-factory-private.h"
 #include "xml-util.h"
 
 G_DEFINE_TYPE (GUPnPDevice,
@@ -41,36 +41,36 @@ G_DEFINE_TYPE (GUPnPDevice,
                GUPNP_TYPE_DEVICE_INFO);
 
 struct _GUPnPDevicePrivate {
-        GUPnPRootDevice      *root_device;
-        GUPnPResourceFactory *factory;
+        GUPnPRootDevice *root_device;
 };
 
 enum {
         PROP_0,
-        PROP_ROOT_DEVICE,
-        PROP_RESOURCE_FACTORY
+        PROP_ROOT_DEVICE
 };
 
 static GUPnPDeviceInfo *
 gupnp_device_get_device (GUPnPDeviceInfo *info,
                          xmlNode         *element)
 {
-        GUPnPDevice   *device;
-        GUPnPContext  *context;
-        GUPnPDevice   *root_device;
-        const char    *location;
-        const SoupUri *url_base;
+        GUPnPDevice          *device;
+        GUPnPResourceFactory *factory;
+        GUPnPContext         *context;
+        GUPnPDevice          *root_device;
+        const char           *location;
+        const SoupUri        *url_base;
 
         device = GUPNP_DEVICE (info);
 
         root_device = device->priv->root_device ?
                       GUPNP_DEVICE (device->priv->root_device) : device;
 
+        factory = gupnp_device_info_get_resource_factory (info);
         context = gupnp_device_info_get_context (info);
         location = gupnp_device_info_get_location (info);
         url_base = gupnp_device_info_get_url_base (info);
 
-        device = gupnp_resource_factory_create_device (device->priv->factory,
+        device = gupnp_resource_factory_create_device (factory,
                                                        context,
                                                        root_device,
                                                        element,
@@ -85,24 +85,26 @@ static GUPnPServiceInfo *
 gupnp_device_get_service (GUPnPDeviceInfo *info,
                           xmlNode         *element)
 {
-        GUPnPDevice   *device;
-        GUPnPService  *service;
-        GUPnPContext  *context;
-        GUPnPDevice   *root_device;
-        const char    *location, *udn;
-        const SoupUri *url_base;
+        GUPnPDevice          *device;
+        GUPnPService         *service;
+        GUPnPResourceFactory *factory;
+        GUPnPContext         *context;
+        GUPnPDevice          *root_device;
+        const char           *location, *udn;
+        const SoupUri        *url_base;
 
         device = GUPNP_DEVICE (info);
 
         root_device = device->priv->root_device ?
                       GUPNP_DEVICE (device->priv->root_device) : device;
 
+        factory = gupnp_device_info_get_resource_factory (info);
         context = gupnp_device_info_get_context (info);
         udn = gupnp_device_info_get_udn (info);
         location = gupnp_device_info_get_location (info);
         url_base = gupnp_device_info_get_url_base (info);
 
-        service = gupnp_resource_factory_create_service (device->priv->factory,
+        service = gupnp_resource_factory_create_service (factory,
                                                          context,
                                                          root_device,
                                                          element,
@@ -132,11 +134,6 @@ gupnp_device_set_property (GObject      *object,
                         g_object_ref (device->priv->root_device);
 
                 break;
-        case PROP_RESOURCE_FACTORY:
-                if (device->priv->factory != NULL)
-                       g_object_unref (device->priv->factory);
-                device->priv->factory = g_value_dup_object (value);
-                break;
         default:
                 G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
                 break;
@@ -157,9 +154,6 @@ gupnp_device_get_property (GObject    *object,
         case PROP_ROOT_DEVICE:
                 g_value_set_object (value, device->priv->root_device);
                 break;
-        case PROP_RESOURCE_FACTORY:
-                g_value_set_object (value, device->priv->factory);
-                break;
         default:
                 G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
                 break;
@@ -177,11 +171,6 @@ gupnp_device_dispose (GObject *object)
         if (device->priv->root_device) {
                 g_object_unref (device->priv->root_device);
                 device->priv->root_device = NULL;
-        }
-
-        if (device->priv->factory) {
-                g_object_unref (device->priv->factory);
-                device->priv->factory = NULL;
         }
 
         /* Call super */
@@ -235,22 +224,4 @@ gupnp_device_class_init (GUPnPDeviceClass *klass)
                                       G_PARAM_STATIC_NICK |
                                       G_PARAM_STATIC_BLURB));
 
-        /**
-         * GUPnPDevice:resource-factory
-         *
-         * The resource factory to use. Set to NULL for default factory.
-         **/
-        g_object_class_install_property
-                (object_class,
-                 PROP_RESOURCE_FACTORY,
-                 g_param_spec_object ("resource-factory",
-                                      "Resource Factory",
-                                      "The resource factory to use",
-                                      GUPNP_TYPE_RESOURCE_FACTORY,
-                                      G_PARAM_CONSTRUCT |
-                                      G_PARAM_READWRITE |
-                                      G_PARAM_STATIC_NAME |
-                                      G_PARAM_STATIC_NICK |
-                                      G_PARAM_STATIC_BLURB));
 }
-

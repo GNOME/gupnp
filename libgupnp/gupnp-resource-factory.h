@@ -24,11 +24,7 @@
 #ifndef __GUPNP_RESOURCE_FACTORY_H__
 #define __GUPNP_RESOURCE_FACTORY_H__
 
-#include "xml-util.h"
-#include "gupnp-device.h"
-#include "gupnp-service.h"
-#include "gupnp-device-proxy.h"
-#include "gupnp-service-proxy.h"
+#include <glib-object.h>
 
 G_BEGIN_DECLS
 
@@ -56,53 +52,16 @@ gupnp_resource_factory_get_type (void) G_GNUC_CONST;
                  GUPNP_TYPE_RESOURCE_FACTORY, \
                  GUPnPResourceFactoryClass))
 
+typedef struct _GUPnPResourceFactoryPrivate GUPnPResourceFactoryPrivate;
+
 typedef struct {
         GObject parent;
 
-        gpointer _gupnp_reserved;
+        GUPnPResourceFactoryPrivate *priv;
 } GUPnPResourceFactory;
 
 typedef struct {
         GObjectClass parent_class;
-
-        /* resource proxy creation implementations */
-        GUPnPDeviceProxy  * (* create_device_proxy)
-                                         (GUPnPResourceFactory *factory,
-                                          GUPnPContext         *context,
-                                          XmlDocWrapper        *doc,
-                                          xmlNode              *element,
-                                          const char           *udn,
-                                          const char           *location,
-                                          const SoupUri        *url_base);
-
-        GUPnPServiceProxy * (* create_service_proxy)
-                                         (GUPnPResourceFactory *factory,
-                                          GUPnPContext         *context,
-                                          XmlDocWrapper        *wrapper,
-                                          xmlNode              *element,
-                                          const char           *udn,
-                                          const char           *service_type,
-                                          const char           *location,
-                                          const SoupUri        *url_base);
-
-        /* resource creation implementations */
-        GUPnPDevice       * (* create_device)
-                                         (GUPnPResourceFactory *factory,
-                                          GUPnPContext         *context,
-                                          GUPnPDevice          *root_device,
-                                          xmlNode              *element,
-                                          const char           *udn,
-                                          const char           *location,
-                                          const SoupUri        *url_base);
-
-        GUPnPService      * (* create_service)
-                                         (GUPnPResourceFactory *factory,
-                                          GUPnPContext         *context,
-                                          GUPnPDevice          *root_device,
-                                          xmlNode              *element,
-                                          const char           *udn,
-                                          const char           *location,
-                                          const SoupUri        *url_base);
 
         /* future padding */
         void (* _gupnp_reserved1) (void);
@@ -112,46 +71,32 @@ typedef struct {
 } GUPnPResourceFactoryClass;
 
 GUPnPResourceFactory *
-gupnp_resource_factory_get_default    (void);
+gupnp_resource_factory_new         (void);
 
-GUPnPDeviceProxy *
-gupnp_resource_factory_create_device_proxy
-                                      (GUPnPResourceFactory *factory,
-                                       GUPnPContext         *context,
-                                       XmlDocWrapper        *doc,
-                                       xmlNode              *element,
-                                       const char           *udn,
-                                       const char           *location,
-                                       const SoupUri        *url_base);
+GUPnPResourceFactory *
+gupnp_resource_factory_get_default (void);
 
-GUPnPServiceProxy *
-gupnp_resource_factory_create_service_proxy
-                                      (GUPnPResourceFactory *factory,
-                                       GUPnPContext         *context,
-                                       XmlDocWrapper        *wrapper,
-                                       xmlNode              *element,
-                                       const char           *udn,
-                                       const char           *service_type,
-                                       const char           *location,
-                                       const SoupUri        *url_base);
+void
+gupnp_resource_factory_register_resource_type
+                                   (GUPnPResourceFactory *factory,
+                                    const char           *upnp_type,
+                                    GType                 type);
 
-GUPnPDevice *
-gupnp_resource_factory_create_device  (GUPnPResourceFactory *factory,
-                                       GUPnPContext         *context,
-                                       GUPnPDevice          *root_device,
-                                       xmlNode              *element,
-                                       const char           *udn,
-                                       const char           *location,
-                                       const SoupUri        *url_base);
+gboolean
+gupnp_resource_factory_unregister_resource_type
+                                   (GUPnPResourceFactory *factory,
+                                    const char           *upnp_type);
 
-GUPnPService *
-gupnp_resource_factory_create_service (GUPnPResourceFactory *factory,
-                                       GUPnPContext         *context,
-                                       GUPnPDevice          *root_device,
-                                       xmlNode              *element,
-                                       const char           *udn,
-                                       const char           *location,
-                                       const SoupUri        *url_base);
+void
+gupnp_resource_factory_register_resource_proxy_type
+                                   (GUPnPResourceFactory *factory,
+                                    const char           *upnp_type,
+                                    GType                 type);
+
+gboolean
+gupnp_resource_factory_unregister_resource_proxy_type
+                                   (GUPnPResourceFactory *factory,
+                                    const char           *upnp_type);
 
 G_END_DECLS
 

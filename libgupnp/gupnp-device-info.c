@@ -31,6 +31,7 @@
 
 #include "gupnp-device-info.h"
 #include "gupnp-device-info-private.h"
+#include "gupnp-resource-factory-private.h"
 #include "xml-util.h"
 
 G_DEFINE_ABSTRACT_TYPE (GUPnPDeviceInfo,
@@ -38,7 +39,8 @@ G_DEFINE_ABSTRACT_TYPE (GUPnPDeviceInfo,
                         G_TYPE_OBJECT);
 
 struct _GUPnPDeviceInfoPrivate {
-        GUPnPContext *context;
+        GUPnPResourceFactory *factory;
+        GUPnPContext         *context;
 
         char *location;
         char *udn;
@@ -53,6 +55,7 @@ struct _GUPnPDeviceInfoPrivate {
 
 enum {
         PROP_0,
+        PROP_RESOURCE_FACTORY,
         PROP_CONTEXT,
         PROP_LOCATION,
         PROP_UDN,
@@ -81,6 +84,9 @@ gupnp_device_info_set_property (GObject      *object,
         info = GUPNP_DEVICE_INFO (object);
 
         switch (property_id) {
+        case PROP_RESOURCE_FACTORY:
+                info->priv->factory = g_value_dup_object (value);
+                break;
         case PROP_CONTEXT:
                 info->priv->context = g_object_ref (g_value_get_object (value));
                 break;
@@ -126,6 +132,10 @@ gupnp_device_info_get_property (GObject    *object,
         info = GUPNP_DEVICE_INFO (object);
 
         switch (property_id) {
+        case PROP_RESOURCE_FACTORY:
+                g_value_set_object (value,
+                                    info->priv->factory);
+                break;
         case PROP_CONTEXT:
                 g_value_set_object (value,
                                     info->priv->context);
@@ -158,6 +168,11 @@ gupnp_device_info_dispose (GObject *object)
         GUPnPDeviceInfo *info;
 
         info = GUPNP_DEVICE_INFO (object);
+
+        if (info->priv->factory) {
+                g_object_unref (info->priv->factory);
+                info->priv->factory = NULL;
+        }
 
         if (info->priv->context) {
                 g_object_unref (info->priv->context);
@@ -197,6 +212,24 @@ gupnp_device_info_class_init (GUPnPDeviceInfoClass *klass)
         object_class->finalize     = gupnp_device_info_finalize;
 
         g_type_class_add_private (klass, sizeof (GUPnPDeviceInfoPrivate));
+
+        /**
+         * GUPnPDeviceInfo:resource-factory
+         *
+         * The resource factory to use. Set to NULL for default factory.
+         **/
+        g_object_class_install_property
+                (object_class,
+                 PROP_RESOURCE_FACTORY,
+                 g_param_spec_object ("resource-factory",
+                                      "Resource Factory",
+                                      "The resource factory to use",
+                                      GUPNP_TYPE_RESOURCE_FACTORY,
+                                      G_PARAM_READWRITE |
+                                      G_PARAM_CONSTRUCT_ONLY |
+                                      G_PARAM_STATIC_NAME |
+                                      G_PARAM_STATIC_NICK |
+                                      G_PARAM_STATIC_BLURB));
 
         /**
          * GUPnPDeviceInfo:context
@@ -328,6 +361,20 @@ gupnp_device_info_class_init (GUPnPDeviceInfoClass *klass)
                                        G_PARAM_STATIC_NAME |
                                        G_PARAM_STATIC_NICK |
                                        G_PARAM_STATIC_BLURB));
+}
+
+/**
+ * gupnp_device_info_get_resource_factory
+ * @device_info: A #GUPnPDeviceInfo
+ *
+ * Return value: The #GUPnPResourceFactory used by the @device_info.
+ **/
+GUPnPResourceFactory *
+gupnp_device_info_get_resource_factory (GUPnPDeviceInfo *info)
+{
+        g_return_val_if_fail (GUPNP_IS_DEVICE_INFO (info), NULL);
+
+        return info->priv->factory;
 }
 
 /**

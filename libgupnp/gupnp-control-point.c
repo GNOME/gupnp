@@ -35,7 +35,7 @@
 
 #include "gupnp-control-point.h"
 #include "gupnp-context-private.h"
-#include "gupnp-resource-factory.h"
+#include "gupnp-resource-factory-private.h"
 #include "xml-util.h"
 
 G_DEFINE_TYPE (GUPnPControlPoint,
@@ -739,8 +739,6 @@ gupnp_control_point_set_property (GObject      *object,
 
         switch (property_id) {
         case PROP_RESOURCE_FACTORY:
-                if (control_point->priv->factory != NULL)
-                       g_object_unref (control_point->priv->factory);
                 control_point->priv->factory = g_value_dup_object (value);
                 break;
         default:
@@ -803,7 +801,7 @@ gupnp_control_point_class_init (GUPnPControlPointClass *klass)
                                       "Resource Factory",
                                       "The resource factory to use",
                                       GUPNP_TYPE_RESOURCE_FACTORY,
-                                      G_PARAM_CONSTRUCT |
+                                      G_PARAM_CONSTRUCT_ONLY |
                                       G_PARAM_READWRITE |
                                       G_PARAM_STATIC_NAME |
                                       G_PARAM_STATIC_NICK |
@@ -907,15 +905,11 @@ gupnp_control_point_new (GUPnPContext *context,
 {
         GUPnPResourceFactory *factory;
 
-        g_return_val_if_fail (GUPNP_IS_CONTEXT (context), NULL);
-
         factory = gupnp_resource_factory_get_default ();
 
-        return g_object_new (GUPNP_TYPE_CONTROL_POINT,
-                             "client", context,
-                             "target", target,
-                             "resource-factory", factory,
-                             NULL);
+        return gupnp_control_point_new_full (context,
+                                             factory,
+                                             target);
 }
 
 /**
@@ -988,4 +982,18 @@ gupnp_control_point_list_service_proxies (GUPnPControlPoint *control_point)
         g_return_val_if_fail (GUPNP_IS_CONTROL_POINT (control_point), NULL);
 
         return (const GList *) control_point->priv->services;
+}
+
+/**
+ * gupnp_control_point_get_resource_factory
+ * @control_point: A #GUPnPControlPoint
+ *
+ * Return value: The #GUPnPResourceFactory used by the @control_point.
+ **/
+GUPnPResourceFactory *
+gupnp_control_point_get_resource_factory (GUPnPControlPoint *control_point)
+{
+        g_return_val_if_fail (GUPNP_IS_CONTROL_POINT (control_point), NULL);
+
+        return control_point->priv->factory;
 }

@@ -439,17 +439,12 @@ gupnp_root_device_new (GUPnPContext *context,
 {
         GUPnPResourceFactory *factory;
 
-        g_return_val_if_fail (GUPNP_IS_CONTEXT (context), NULL);
-
         factory = gupnp_resource_factory_get_default ();
 
-        return g_object_new (GUPNP_TYPE_ROOT_DEVICE,
-                             "context", context,
-                             "resource-factory", factory,
-                             "root-device", NULL,
-                             "description-doc", description_doc,
-                             "relative-location", relative_location,
-                             NULL);
+        return gupnp_root_device_new_full (context,
+                                           factory,
+                                           description_doc,
+                                           relative_location);
 }
 
 /**
@@ -472,7 +467,7 @@ gupnp_root_device_new_full (GUPnPContext         *context,
         g_return_val_if_fail (GUPNP_IS_RESOURCE_FACTORY (factory), NULL);
 
         return g_object_new (GUPNP_TYPE_ROOT_DEVICE,
-                             "client", context,
+                             "context", context,
                              "resource-factory", factory,
                              "root-device", NULL,
                              "description-doc", description_doc,
