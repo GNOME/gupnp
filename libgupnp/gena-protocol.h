@@ -31,6 +31,9 @@ G_BEGIN_DECLS
 #define GENA_MIN_TIMEOUT     1800
 #define GENA_DEFAULT_TIMEOUT 1800
 
+/* Resubscribe 30 seconds before the specified timeout runs out */
+#define GENA_TIMEOUT_DELTA   30
+
 G_END_DECLS
 
 #endif /* __GENA_PROTOCOL_H__ */

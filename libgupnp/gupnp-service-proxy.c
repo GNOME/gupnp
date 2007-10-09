@@ -1571,6 +1571,11 @@ subscribe_got_response (SoupMessage       *msg,
                 if (strncmp (hdr, "Second-", strlen ("Second-")) == 0) {
                         /* We have a finite timeout */
                         timeout = atoi (hdr + strlen ("Second-"));
+
+                        /* We want to resubscribe before the subscription
+                         * expires. */
+                        timeout -= GENA_TIMEOUT_DELTA;
+
                         if (timeout < 0) {
                                 g_warning ("Invalid time-out specified. "
                                            "Assuming default value of %d.",

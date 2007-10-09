@@ -1,3 +1,10 @@
+2007-10-09  Jorn Baayen  <jorn@openedhand.com>
+
+	* libgupnp/gena-protocol.h:
+	* libgupnp/gupnp-service-proxy.c: (subscribe_got_response):
+
+	Resubscribe 30 seconds before subscription times out.
+
 2007-10-03  Jorn Baayen  <jorn@openedhand.com>
 
 	* configure.ac:
