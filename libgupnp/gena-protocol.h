@@ -29,6 +29,7 @@ G_BEGIN_DECLS
 #define GENA_METHOD_NOTIFY      "NOTIFY"
 
 #define GENA_MIN_TIMEOUT     1800
+#define GENA_MAX_TIMEOUT     604800 /* 7 days */
 #define GENA_DEFAULT_TIMEOUT 1800
 
 /* Resubscribe 30 seconds before the specified timeout runs out */

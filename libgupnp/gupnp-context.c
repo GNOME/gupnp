@@ -345,7 +345,8 @@ gupnp_context_class_init (GUPnPContextClass *klass)
          * GUPnPContext:subscription-timeout
          *
          * The preferred subscription timeout: the number of seconds after
-         * which subscriptions are renewed.
+         * which subscriptions are renewed. Set to '0' if subscriptions 
+         * are never to time out.
          **/
         g_object_class_install_property
                 (object_class,
@@ -353,8 +354,8 @@ gupnp_context_class_init (GUPnPContextClass *klass)
                  g_param_spec_uint ("subscription-timeout",
                                     "Subscription timeout",
                                     "Subscription timeout",
-                                    GENA_MIN_TIMEOUT,
-                                    G_MAXUINT,
+                                    0,
+                                    GENA_MAX_TIMEOUT,
                                     GENA_DEFAULT_TIMEOUT,
                                     G_PARAM_READWRITE |
                                     G_PARAM_CONSTRUCT_ONLY |

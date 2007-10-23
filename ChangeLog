@@ -1,3 +1,12 @@
+2007-10-23  Jorn Baayen  <jorn@openedhand.com>
+
+	* libgupnp/gena-protocol.h:
+	* libgupnp/gupnp-context.c: (gupnp_context_class_init):
+	* libgupnp/gupnp-service.c: (subscription_timeout),
+	(parse_and_limit_timeout), (subscribe), (resubscribe):
+
+	Add an upper bound of 7 days to subscription timeouts.
+
 2007-10-09  Zeeshan Ali  <zeenix@gstreamer.net>
 	    Jorn Baayen  <jorn@openedhand.com>
 

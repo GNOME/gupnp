@@ -783,10 +783,10 @@ subscription_timeout (gpointer user_data)
         return FALSE;
 }
 
-/* Parse timeout header and return its value in seconds, or -1
+/* Parse timeout header and return its value in seconds, or 0
  * if infinite */
 static int
-parse_timeout (const char *timeout)
+parse_and_limit_timeout (const char *timeout)
 {
         int timeout_seconds;
 
@@ -794,14 +794,11 @@ parse_timeout (const char *timeout)
 
         if (strncmp (timeout, "Second-", strlen ("Second-")) == 0) {
                 /* We have a finite timeout */
-                timeout_seconds = atoi (timeout + strlen ("Second-"));
-                if (timeout_seconds < GENA_MIN_TIMEOUT) {
-                        g_warning ("Specified timeout is too short. Assuming "
-                                   "default of %d.", GENA_DEFAULT_TIMEOUT);
-
-                        timeout_seconds = GENA_DEFAULT_TIMEOUT;
-                }
-        }
+                timeout_seconds = CLAMP (atoi (timeout + strlen ("Second-")),
+                                         GENA_MIN_TIMEOUT,
+                                         GENA_MAX_TIMEOUT);
+        } else
+                timeout_seconds = GENA_MAX_TIMEOUT;
 
         return timeout_seconds;
 }
@@ -854,7 +851,7 @@ subscribe (GUPnPService *service,
         data->sid     = generate_sid ();
 
         /* Add timeout */
-        timeout_seconds = parse_timeout (timeout);
+        timeout_seconds = parse_and_limit_timeout (timeout);
         if (timeout_seconds > 0) {
                 data->timeout_id = g_timeout_add (timeout_seconds * 1000,
                                                   subscription_timeout,
@@ -926,7 +923,7 @@ resubscribe (GUPnPService *service,
                 data->timeout_id = 0;
         }
 
-        timeout_seconds = parse_timeout (timeout);
+        timeout_seconds = parse_and_limit_timeout (timeout);
         if (timeout_seconds > 0) {
                 data->timeout_id = g_timeout_add (timeout_seconds * 1000,
                                                   subscription_timeout,
