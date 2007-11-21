@@ -113,26 +113,6 @@ xml_util_node_get_content_value (xmlNode *node,
         return success;
 }
 
-void
-xml_util_set_child_element_content (xmlNode    *node,
-                                    const char *child_name,
-                                    const char *content)
-{
-        xmlNode *child_node;
-
-        child_node = xml_util_get_element (node,
-                                           child_name,
-                                           NULL);
-
-        if (!child_node) {
-                child_node = xmlNewNode (NULL, (xmlChar *) child_name);
-
-                xmlAddChild (node, child_node);
-        }
-
-        xmlNodeSetContent (child_node, (xmlChar *) content);
-}
-
 xmlChar *
 xml_util_get_child_element_content (xmlNode    *node,
                                     const char *child_name)

@@ -64,11 +64,6 @@ gboolean
 xml_util_node_get_content_value         (xmlNode    *node,
                                          GValue     *value);
 
-void
-xml_util_set_child_element_content      (xmlNode    *node,
-                                         const char *child_name,
-                                         const char *content);
-
 xmlChar *
 xml_util_get_child_element_content      (xmlNode    *node,
                                          const char *child_name);
