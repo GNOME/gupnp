@@ -1,5 +1,12 @@
 2007-11-22  Jorn Baayen  <jorn@openedhand.com>
 
+	* libgupnp/gupnp-service.c: (control_server_handler),
+	(create_property_set):
+
+	Set embedded xml docs to not be standalone.
+
+2007-11-22  Jorn Baayen  <jorn@openedhand.com>
+
 	* configure.ac:
 
 	Set XDG_PREFIX. Avoids symbol collisions with other xdgmimes.

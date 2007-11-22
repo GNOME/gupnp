@@ -663,6 +663,9 @@ control_server_handler (SoupServerContext *server_context,
 
         /* Embed action->response_node in a SOUP document */
         response_doc = xmlNewDoc ((const xmlChar *) "1.0");
+
+        response_doc->standalone = FALSE;
+
         response_node = xmlNewDocNode (response_doc,
                                        NULL,
                                        (const xmlChar *) "Envelope",
@@ -1584,6 +1587,8 @@ create_property_set (GQueue *queue)
 
         /* Compose property set */
         doc = xmlNewDoc ((const xmlChar *) "1.0");
+
+        doc->standalone = FALSE;
 
         node = xmlNewDocNode (doc,
                               NULL,
