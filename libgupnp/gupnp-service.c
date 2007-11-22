@@ -1733,8 +1733,7 @@ strip_camel_case (char *camel_str)
                         if (i != 0 &&
                             camel_str[i + 1] != '\0' &&
                             camel_str[i - 1] != '_' &&
-                            !(g_ascii_isupper (camel_str[i - 1]) &&
-                              g_ascii_isupper (camel_str[i + 1]))) {
+                            !g_ascii_isupper (camel_str[i - 1])) {
                                 stripped[j++] = '_';
                         }
                         stripped[j++] = g_ascii_tolower (camel_str[i]);
