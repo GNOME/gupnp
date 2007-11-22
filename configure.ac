@@ -41,7 +41,11 @@ ALL_LINGUAS=""
 AM_GLIB_GNU_GETTEXT
 AM_GLIB_DEFINE_LOCALEDIR([LOCALEDIR])
 
+# Gtk-doc
 GTK_DOC_CHECK([1.0])
+
+# Don't collide with other xdgmimes
+AC_DEFINE_UNQUOTED(XDG_PREFIX, [_gupnp_xdg], [xdgmime prefix])
 
 AC_OUTPUT([
 Makefile

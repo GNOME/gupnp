@@ -1,5 +1,12 @@
 2007-11-22  Jorn Baayen  <jorn@openedhand.com>
 
+	* configure.ac:
+
+	Set XDG_PREFIX. Avoids symbol collisions with other xdgmimes.
+	Patch by Ross Burton <ross@openedhand.com>.
+
+2007-11-22  Jorn Baayen  <jorn@openedhand.com>
+
 	* libgupnp/gupnp-service.c: (strip_camel_case):
 
 	Don't split up 2 letter abbreviations when coverting from camel case.
