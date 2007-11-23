@@ -578,6 +578,8 @@ begin_action_msg (GUPnPServiceProxy *proxy,
 
         /* Fill envelope */
 	soup_soap_message_start_envelope (msg);
+        soup_soap_message_set_encoding_style
+                (msg, "http://schemas.xmlsoap.org/soap/encoding/");
 	soup_soap_message_start_body (msg);
 
         /* Action element */

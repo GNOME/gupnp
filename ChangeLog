@@ -1,3 +1,12 @@
+2007-11-23  Jorn Baayen  <jorn@openedhand.com>
+
+	* libgupnp/gupnp-service-proxy.c: (begin_action_msg):
+	* libgupnp/gupnp-service.c: (gupnp_service_action_set_value),
+	(gupnp_service_action_return_error), (control_server_handler),
+	(notify_subscriber), (create_property_set):
+
+	Tweak XML generation to match spec to the letter.
+
 2007-11-22  Jorn Baayen  <jorn@openedhand.com>
 
 	* libgupnp/gupnp-service.c: (control_server_handler),

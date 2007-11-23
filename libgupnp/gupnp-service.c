@@ -357,11 +357,16 @@ gupnp_service_action_set_value (GUPnPServiceAction *action,
         /* Transform to string */
         str = gvalue_util_value_get_string (value);
         if (str != NULL) {
+                xmlNode *node;
+
                 /* Append to response */
-                xmlNewTextChild (action->response_node,
-                                 NULL,
-                                 (const xmlChar *) argument,
-                                 (xmlChar *) str);
+                node = xmlNewTextChild (action->response_node,
+                                        NULL,
+                                        (const xmlChar *) argument,
+                                        (xmlChar *) str);
+
+                /* No namespace prefix please */
+                xmlSetNs (node, NULL);
 
                 g_free (str);
         }
@@ -435,20 +440,23 @@ gupnp_service_action_return_error (GUPnPServiceAction *action,
         action->response_node = xmlNewNode (NULL,
                                             (const xmlChar *) "Fault");
 
-        xmlNewTextChild (action->response_node,
-                         NULL,
-                         (const xmlChar *) "faultcode",
-                         (const xmlChar *) "s:Client");
+        node = xmlNewTextChild (action->response_node,
+                                NULL,
+                                (const xmlChar *) "faultcode",
+                                (const xmlChar *) "s:Client");
+        xmlSetNs (node, NULL);
 
-        xmlNewTextChild (action->response_node,
-                         NULL,
-                         (const xmlChar *) "faultstring",
-                         (const xmlChar *) "UPnPError");
+        node = xmlNewTextChild (action->response_node,
+                                NULL,
+                                (const xmlChar *) "faultstring",
+                                (const xmlChar *) "UPnPError");
+        xmlSetNs (node, NULL);
 
         node = xmlNewTextChild (action->response_node,
                                 NULL,
                                 (const xmlChar *) "detail",
                                 NULL);
+        xmlSetNs (node, NULL);
 
         node = xmlNewTextChild (node,
                                 NULL,
@@ -457,7 +465,7 @@ gupnp_service_action_return_error (GUPnPServiceAction *action,
 
         ns = xmlNewNs (node,
                        (const xmlChar *) "urn:schemas-upnp-org:control-1-0",
-                       (const xmlChar *) "u");
+                       NULL);
         xmlSetNs (node, ns);
 
         tmp = g_strdup_printf ("%u", error_code);
@@ -676,6 +684,13 @@ control_server_handler (SoupServerContext *server_context,
                        (const xmlChar *)
                                "http://schemas.xmlsoap.org/soap/envelope/",
                        (const xmlChar *) "s");
+
+        xmlNewNsProp (response_node,
+                      ns,
+                      (const xmlChar *) "encodingStyle",
+                      (const xmlChar *)
+                               "http://schemas.xmlsoap.org/soap/encoding/");
+
         xmlSetNs (response_node, ns);
 
         response_node = xmlNewChild (response_node,
@@ -1579,7 +1594,7 @@ create_property_set (GQueue *queue)
 {
         NotifyData *data;
         xmlDoc *doc;
-        xmlNode *node;
+        xmlNode *node, *child;
         xmlNs *ns;
         xmlChar *mem;
         int size;
@@ -1611,10 +1626,14 @@ create_property_set (GQueue *queue)
                 str = gvalue_util_value_get_string (&data->value);
                 if (str != NULL) {
                         /* Add to property set */
-                        xmlNewTextChild (node,
+                        child = xmlNewTextChild
+                                        (node,
                                          NULL,
                                          (const xmlChar *) data->variable,
                                          (xmlChar *) str);
+
+                        /* No namespace prefix please */
+                        xmlSetNs (child, NULL);
 
                         g_free (str);
                 }
