@@ -39,9 +39,9 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <net/if.h>
-#include <netinet/in.h>
 #include <arpa/inet.h>
+#include <net/if.h>
+#include <ifaddrs.h>
 #include <libsoup/soup-address.h>
 
 #include "xdgmime/xdgmime.h"
@@ -77,11 +77,6 @@ enum {
 
 #define LOOPBACK_IP "127.0.0.1"
 
-typedef char ip_address[15+1];
-
-#define inaddrr(x) (*(struct in_addr *) &ifr->x[sizeof sa.sin_port])
-#define IFRSIZE   ((int)(size * sizeof (struct ifreq)))
-
 /**
  * Generates the default server ID.
  **/
@@ -99,76 +94,60 @@ make_server_id (void)
 }
 
 /**
- * Looks up the IP address for interface @iface.
- *
- * http://www.linuxquestions.org/questions/showthread.php?t=425637
- **/
-gboolean
-get_ip (const char *iface, ip_address ip)
-{
-        struct ifreq *ifr;
-        struct ifreq ifrr;
-        struct sockaddr_in sa;
-        struct sockaddr ifaddr;
-        int sockfd;
-
-        if ((sockfd = socket (AF_INET, SOCK_DGRAM, IPPROTO_UDP)) == -1)
-                return FALSE;
-
-        ifr = &ifrr;
-
-        ifrr.ifr_addr.sa_family = AF_INET;
-
-        strncpy (ifrr.ifr_name, iface, sizeof (ifrr.ifr_name));
-
-        if (ioctl (sockfd, SIOCGIFADDR, ifr) < 0)
-                return FALSE;
-
-        ifaddr = ifrr.ifr_addr;
-        strncpy (ip, inet_ntoa (inaddrr (ifr_addr.sa_data)),
-                 sizeof (ip_address));
-
-        return TRUE;
-}
-
-/**
  * Looks up the IP address of the first non-loopback network interface.
  **/
 static char *
 get_default_host_ip (void)
 {
-        struct if_nameindex *ifs;
+        struct ifaddrs *ifa_list, *ifa;
         char *ret;
-        int i;
 
-        /* List network interfaces */
-        ifs = if_nameindex ();
-        if (ifs == NULL) {
+        ret = NULL;
+
+        if (getifaddrs (&ifa_list) != 0) {
                 g_error ("Failed to retrieve list of network interfaces:\n%s\n",
                          strerror (errno));
 
                 return NULL;
         }
 
-        ret = NULL;
+        for (ifa = ifa_list; ifa != NULL; ifa = ifa->ifa_next) {
+                char ip[INET6_ADDRSTRLEN];
+                const char *p;
+                struct sockaddr_in *s4;
+                struct sockaddr_in6 *s6;
 
-        for (i = 0; ifs[i].if_index != 0 && ifs[i].if_name != NULL; i++) {
-                ip_address ip;
-
-                /* Retrieve IP address */
-                if (!get_ip (ifs[i].if_name, ip))
+                if (ifa->ifa_addr == NULL)
                         continue;
 
-                if (strcmp (ip, LOOPBACK_IP) != 0) {
-                        /* This is not a loopback interface - just what we
-                         * are looking for. */
-                        ret = g_strdup (ip);
+                if ((ifa->ifa_flags & IFF_LOOPBACK) ||
+                    !(ifa->ifa_flags & IFF_UP))
+                        continue;
 
+                p = NULL;
+
+                switch (ifa->ifa_addr->sa_family) {
+                case AF_INET:
+                        s4 = (struct sockaddr_in *) ifa->ifa_addr;
+                        p = inet_ntop (AF_INET,
+                                       &s4->sin_addr, ip, sizeof (ip));
+                        break;
+                case AF_INET6:
+                        s6 = (struct sockaddr_in6 *) ifa->ifa_addr;
+                        p = inet_ntop (AF_INET6,
+                                       &s6->sin6_addr, ip, sizeof (ip));
+                        break;
+                default:
+                        continue; /* Unknown: ignore */
+                }
+
+                if (p != NULL) {
+                        ret = g_strdup (p);
                         break;
                 }
         }
 
-        if_freenameindex (ifs);
+        freeifaddrs (ifa_list);
 
         if (!ret) {
                 /* Didn't find anything. Let's take the loopback IP. */

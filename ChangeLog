@@ -1,3 +1,9 @@
+2007-11-26  Jorn Baayen  <jorn@openedhand.com>
+
+	* libgupnp/gupnp-context.c:
+
+	Rewrite local IP detection to be IPv6-friendly.
+
 2007-11-23  Jorn Baayen  <jorn@openedhand.com>
 
 	* libgupnp/gupnp-service-proxy.c: (begin_action_msg):
