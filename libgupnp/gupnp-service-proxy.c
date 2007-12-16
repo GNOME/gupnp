@@ -78,7 +78,7 @@ static guint signals[LAST_SIGNAL];
 struct _GUPnPServiceProxyAction {
         GUPnPServiceProxy *proxy;
 
-        SoupSoapMessage *msg;
+        SoupMessage *msg;
 
         GUPnPServiceProxyActionCallback callback;
         gpointer user_data;
@@ -515,14 +515,15 @@ gupnp_service_proxy_begin_action (GUPnPServiceProxy              *proxy,
 }
 
 /* Begins a basic action message */
-static SoupSoapMessage *
+static SoupMessage *
 begin_action_msg (GUPnPServiceProxy *proxy,
                   const char        *action,
                   GError           **error)
 {
-        SoupSoapMessage *msg;
+        SoupMessage *msg;
         char *control_url, *lang, *full_action;
         const char *service_type;
+        GString *str;
 
         /* Create message */
         control_url = gupnp_service_info_get_control_url
@@ -530,9 +531,7 @@ begin_action_msg (GUPnPServiceProxy *proxy,
 
         msg = NULL;
         if (control_url != NULL) {
-                msg = soup_soap_message_new (SOUP_METHOD_POST,
-		        		     control_url,
-			        	     FALSE, NULL, NULL, NULL);
+                msg = soup_message_new (SOUP_METHOD_POST, control_url);
 
                 g_free (control_url);
         }
@@ -552,7 +551,6 @@ begin_action_msg (GUPnPServiceProxy *proxy,
                 soup_message_add_header (SOUP_MESSAGE (msg)->request_headers,
                                          "Accept-Language",
                                          lang);
-
                 g_free (lang);
         }
 
@@ -576,17 +574,27 @@ begin_action_msg (GUPnPServiceProxy *proxy,
                                  full_action);
         g_free (full_action);
 
-        /* Fill envelope */
-	soup_soap_message_start_envelope (msg);
-        soup_soap_message_set_encoding_style
-                (msg, "http://schemas.xmlsoap.org/soap/encoding/");
-	soup_soap_message_start_body (msg);
+        /* Set up envelope */
+        str = xml_util_new_string ();
 
-        /* Action element */
-        soup_soap_message_start_element (msg,
-                                         action,
-                                         "u",
-                                         service_type);
+        g_string_append (str,
+                         "<?xml version=\"1.0\"?>"
+                         "<s:Envelope xmlns:s="
+                                "\"http://schemas.xmlsoap.org/soap/envelope/\" "
+                          "s:encodingStyle="
+                                "\"http://schemas.xmlsoap.org/soap/encoding/\">"
+                         "<s:Body>");
+
+        g_string_append (str, "<u:");
+        g_string_append (str, action);
+        g_string_append (str, " xmlns:u=\"");
+        g_string_append (str, service_type);
+        g_string_append (str, "\">");
+
+        /* Store our GString temporarily and evillishly into
+         * msg->request.body. We do this to save us the trouble of setting it
+         * as user-data onto the object. */
+        msg->request.body = (char *) str;
 
         return msg;
 }
@@ -643,20 +651,32 @@ action_got_response (SoupMessage             *msg,
 /* Finishes an action message and sends it off */
 static GUPnPServiceProxyAction *
 finish_action_msg (GUPnPServiceProxy              *proxy,
-                   SoupSoapMessage                *msg,
+                   const char                     *action,
+                   SoupMessage                    *msg,
                    GUPnPServiceProxyActionCallback callback,
                    gpointer                        user_data)
 {
         GUPnPServiceProxyAction *ret;
         GUPnPContext *context;
         SoupSession *session;
+        GString *str;
+
+        /* Retrieve our GString, which we temporarily and evillishly
+         * stored into msg->request.body .. */
+        str = (GString *) msg->request.body;
 
         /* Finish message */
-        soup_soap_message_end_element (msg);
+        g_string_append (str, "</u:");
+        g_string_append (str, action);
+        g_string_append_c (str, '>');
 
-	soup_soap_message_end_body (msg);
-	soup_soap_message_end_envelope (msg);
-        soup_soap_message_persist (msg);
+        g_string_append (str,
+                         "</s:Body>"
+                         "</s:Envelope>");
+
+        msg->request.owner  = SOUP_BUFFER_SYSTEM_OWNED;
+        msg->request.body   = g_string_free (str, FALSE);
+        msg->request.length = strlen (msg->request.body);
 
         /* Create action structure */
         ret = g_slice_new (GUPnPServiceProxyAction);
@@ -689,22 +709,20 @@ finish_action_msg (GUPnPServiceProxy              *proxy,
 
 /* Writes a parameter name and GValue pair to @msg */
 static void
-write_in_parameter (const char      *arg_name,
-                    GValue          *value,
-                    SoupSoapMessage *msg)
+write_in_parameter (const char  *arg_name,
+                    GValue      *value,
+                    SoupMessage *msg)
 {
-        char *str;
+        GString *str;
 
-        soup_soap_message_start_element (msg,
-                                         arg_name,
-                                         NULL,
-                                         NULL);
+        /* Retrieve our GString, which we temporarily and evillishly
+         * stored into msg->request.body .. */
+        str = (GString *) msg->request.body;
 
-        str = gvalue_util_value_get_string (value);
-        soup_soap_message_write_string (msg, str);
-        g_free (str);
-
-        soup_soap_message_end_element (msg);
+        /* Write parameter pair */
+        xml_util_start_element (str, arg_name);
+        gvalue_util_value_append_to_xml_string (value, str);
+        xml_util_end_element (str, arg_name);
 }
 
 /**
@@ -734,7 +752,7 @@ gupnp_service_proxy_begin_action_valist
                                     va_list                         var_args)
 {
         const char *arg_name;
-        SoupSoapMessage *msg;
+        SoupMessage *msg;
         GUPnPServiceProxyAction *ret;
 
         g_return_val_if_fail (GUPNP_IS_SERVICE_PROXY (proxy), NULL);
@@ -777,7 +795,7 @@ gupnp_service_proxy_begin_action_valist
         }
 
         /* Finish and send off */
-        ret = finish_action_msg (proxy, msg, callback, user_data);
+        ret = finish_action_msg (proxy, action, msg, callback, user_data);
 
         /* Save the current position in the va_list for send_action_valist() */
         G_VA_COPY (ret->var_args, var_args);
@@ -810,7 +828,7 @@ gupnp_service_proxy_begin_action_hash
                                     GError                        **error,
                                     GHashTable                     *hash)
 {
-        SoupSoapMessage *msg;
+        SoupMessage *msg;
 
         g_return_val_if_fail (GUPNP_IS_SERVICE_PROXY (proxy), NULL);
         g_return_val_if_fail (action, NULL);
@@ -825,7 +843,7 @@ gupnp_service_proxy_begin_action_hash
         g_hash_table_foreach (hash, (GHFunc) write_in_parameter, msg);
 
         /* Finish and send off */
-        return finish_action_msg (proxy, msg, callback, user_data);
+        return finish_action_msg (proxy, action, msg, callback, user_data);
 }
 
 /**
@@ -872,6 +890,7 @@ check_action_response (GUPnPServiceProxy       *proxy,
         SoupMessage *soup_msg;
         SoupSoapResponse *response;
         SoupSoapParameter *param;
+        char *tmp;
         int code;
 
         soup_msg = SOUP_MESSAGE (action->msg);
@@ -890,7 +909,11 @@ check_action_response (GUPnPServiceProxy       *proxy,
         }
 
         /* Parse response */
-	response = soup_soap_message_parse_response (action->msg);
+        tmp = g_malloc0 (action->msg->response.length + 1);
+        strncpy (tmp, action->msg->response.body, action->msg->response.length);
+        response = soup_soap_response_new_from_string (tmp);
+        g_free (tmp);
+
 	if (!response) {
                 if (soup_msg->status_code == SOUP_STATUS_OK) {
                         g_set_error (error,

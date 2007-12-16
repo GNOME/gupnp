@@ -69,6 +69,7 @@ xml_doc_wrapper_new (xmlDoc *doc)
         return wrapper;
 }
 
+/* libxml DOM interface helpers */
 xmlNode *
 xml_util_get_element (xmlNode *node,
                       ...)
@@ -221,3 +222,69 @@ xml_util_get_attribute_contents (xmlNode    *node,
                 return NULL;
 }
 
+/* XML string creation helpers */
+
+#define INITIAL_XML_STR_SIZE 100 /* Initial xml string size in bytes */
+
+GString *
+xml_util_new_string (void)
+{
+        return g_string_sized_new (INITIAL_XML_STR_SIZE);
+}
+
+void
+xml_util_start_element (GString    *xml_str,
+                        const char *element_name)
+{
+        g_string_append_c (xml_str, '<');
+        g_string_append (xml_str, element_name);
+        g_string_append_c (xml_str, '>');
+}
+
+void
+xml_util_end_element (GString    *xml_str,
+                      const char *element_name)
+{
+        g_string_append (xml_str, "</");
+        g_string_append (xml_str, element_name);
+        g_string_append_c (xml_str, '>');
+}
+
+void
+xml_util_add_content (GString    *xml_str,
+                      const char *content)
+{
+        /* Modified from GLib gmarkup.c */
+        const gchar *p;
+
+        p = content;
+
+        while (*p) {
+                const gchar *next;
+                next = g_utf8_next_char (p);
+
+                switch (*p) {
+                case '&':
+                        g_string_append (xml_str, "&amp;");
+                        break;
+
+                case '<':
+                        g_string_append (xml_str, "&lt;");
+                        break;
+
+                case '>':
+                        g_string_append (xml_str, "&gt;");
+                        break;
+
+                case '"':
+                        g_string_append (xml_str, "&quot;");
+                        break;
+
+                default:
+                        g_string_append_len (xml_str, p, next - p);
+                        break;
+                }
+
+                p = next;
+        }
+}

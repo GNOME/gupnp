@@ -89,4 +89,20 @@ xmlChar *
 xml_util_get_attribute_contents         (xmlNode    *node,
                                          const char *attribute_name);
 
+/* XML string creation helpers */
+GString *
+xml_util_new_string                     (void);
+
+void
+xml_util_start_element                  (GString    *xml_str,
+                                         const char *element_name);
+
+void
+xml_util_end_element                    (GString    *xml_str,
+                                         const char *element_name);
+
+void
+xml_util_add_content                    (GString    *xml_str,
+                                         const char *content);
+
 #endif /* __XML_UTIL_H__ */

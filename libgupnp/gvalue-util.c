@@ -23,6 +23,8 @@
 #include <stdlib.h>
 
 #include "gvalue-util.h"
+#include "xml-util.h"
+#include "gupnp-types.h"
 
 gboolean
 gvalue_util_set_value_from_string (GValue     *value,
@@ -151,22 +153,90 @@ gvalue_util_set_value_from_string (GValue     *value,
         return TRUE;
 }
 
-char *
-gvalue_util_value_get_string (const GValue *value)
+void
+gvalue_util_value_append_to_xml_string (const GValue *value, GString *str)
 {
         GValue transformed_value = {0, };
-        char *ret;
+        const char *tmp;
+
+        if (G_VALUE_TYPE (value) == GUPNP_TYPE_XML_CHUNK) {
+                /* Append without escaping */
+                tmp = gupnp_value_get_string (value);
+                if (tmp != NULL)
+                        g_string_append (str, tmp);
+
+                return;
+        }
 
         switch (G_VALUE_TYPE (value)) {
         case G_TYPE_STRING:
-                return g_value_dup_string (value);
+                /* Escape and append */
+                tmp = g_value_get_string (value);
+                if (tmp != NULL)
+                        xml_util_add_content (str, tmp);
+
+                break;
+
+        case G_TYPE_CHAR:
+                g_string_append_c (str, g_value_get_char (value));
+
+                break;
+
+        case G_TYPE_UCHAR:
+                g_string_append_c (str, g_value_get_uchar (value));
+
+                break;
+
+        case G_TYPE_INT:
+                g_string_append_printf (str, "%d", g_value_get_int (value));
+
+                break;
+
+        case G_TYPE_UINT:
+                g_string_append_printf (str, "%u", g_value_get_uint (value));
+
+                break;
+
+        case G_TYPE_INT64:
+                g_string_append_printf (str, "%lld",
+                                        g_value_get_int64 (value));
+
+                break;
+
+        case G_TYPE_UINT64:
+                g_string_append_printf (str, "%llu",
+                                        g_value_get_uint64 (value));
+
+                break;
+
+        case G_TYPE_LONG:
+                g_string_append_printf (str, "%ld", g_value_get_long (value));
+
+                break;
+
+        case G_TYPE_ULONG:
+                g_string_append_printf (str, "%lu", g_value_get_ulong (value));
+
+                break;
+
+        case G_TYPE_FLOAT:
+                g_string_append_printf (str, "%f", g_value_get_float (value));
+
+                break;
+
+        case G_TYPE_DOUBLE:
+                g_string_append_printf (str, "%g", g_value_get_double (value));
+
+                break;
 
         case G_TYPE_BOOLEAN:
                 /* We don't want to convert to "TRUE"/"FALSE" */
                 if (g_value_get_boolean (value))
-                        return g_strdup ("1");
+                        g_string_append_c (str, '1');
                 else
-                        return g_strdup ("0");
+                        g_string_append_c (str, '0');
+
+                break;
 
         default:
                 /* Try to convert */
@@ -176,17 +246,17 @@ gvalue_util_value_get_string (const GValue *value)
 
                         g_value_transform (value, &transformed_value);
 
-                        ret = g_value_dup_string (&transformed_value);
+                        tmp = g_value_get_string (&transformed_value);
+                        if (tmp != NULL)
+                                xml_util_add_content (str, tmp);
 
                         g_value_unset (&transformed_value);
 
                 } else {
                         g_warning ("Failed to transform value of type %s "
                                    "to a string", G_VALUE_TYPE_NAME (value));
-
-                        ret = NULL;
                 }
 
-                return ret;
+                break;
         }
 }

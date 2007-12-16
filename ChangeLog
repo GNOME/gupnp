@@ -1,3 +1,26 @@
+2007-12-16  Jorn Baayen  <jorn@openedhand.com>
+
+	* libgupnp/gupnp-service-proxy.c:
+	(gupnp_service_proxy_begin_action), (begin_action_msg),
+	(action_got_response), (finish_action_msg),
+	(gupnp_service_proxy_begin_action_valist),
+	(gupnp_service_proxy_begin_action_hash),
+	(gupnp_service_proxy_end_action), (check_action_response):
+	* libgupnp/gupnp-service.c: (gupnp_service_action_set_value),
+	(gupnp_service_action_return_error), (control_server_handler),
+	(subscribe):
+	* libgupnp/gupnp-types.c: (gupnp_string_to_type):
+	* libgupnp/gupnp-types.h:
+	* libgupnp/gvalue-util.c: (gvalue_util_set_value_from_string),
+	(gvalue_util_value_append_to_xml_string):
+	* libgupnp/gvalue-util.h:
+	* libgupnp/xml-util.c: (xml_doc_wrapper_new),
+	(xml_util_get_attribute_contents):
+	* libgupnp/xml-util.h:
+
+	Don't use libxml for message construction. This allows us to
+	embed chunks of xml into messages without them being escaped.
+
 2007-11-26  Jorn Baayen  <jorn@openedhand.com>
 
 	* libgupnp/gupnp-context.c:

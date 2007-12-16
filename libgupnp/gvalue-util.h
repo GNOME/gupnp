@@ -25,10 +25,11 @@
 #include <glib-object.h>
 
 gboolean
-gvalue_util_set_value_from_string (GValue       *value,
-                                   const char   *str);
+gvalue_util_set_value_from_string      (GValue       *value,
+                                        const char   *str);
 
-char *
-gvalue_util_value_get_string      (const GValue *value);
+void
+gvalue_util_value_append_to_xml_string (const GValue *value,
+                                        GString      *str);
 
 #endif /* __GVALUE_UTIL_H__ */

@@ -47,6 +47,29 @@ gupnp_string_to_type (const GValue *src_value,
 }
 
 GType
+gupnp_xml_chunk_get_type (void)
+{
+        static GType type = 0;
+
+        if (!type) {
+                type = g_boxed_type_register_static (
+                                g_intern_static_string ("GUPnPXMLChunk"),
+                                (GBoxedCopyFunc) g_strdup,
+                                (GBoxedFreeFunc) g_free);
+                g_value_register_transform_func (
+                                type,
+                                G_TYPE_STRING,
+                                gupnp_type_to_string);
+                g_value_register_transform_func (
+                                G_TYPE_STRING,
+                                type,
+                                gupnp_string_to_type);
+        }
+
+        return type;
+}
+
+GType
 gupnp_bin_base64_get_type (void)
 {
         static GType type = 0;
