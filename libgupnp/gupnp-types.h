@@ -27,6 +27,8 @@
 
 G_BEGIN_DECLS
 
+#define GUPNP_TYPE_XML_NODE \
+                (gupnp_xml_node_get_type ())
 #define GUPNP_TYPE_XML_CHUNK \
                 (gupnp_xml_chunk_get_type ())
 #define GUPNP_TYPE_BIN_BASE64 \
@@ -49,34 +51,40 @@ G_BEGIN_DECLS
                 (gupnp_uuid_get_type ())
 
 GType
-gupnp_xml_chunk_get_type (void) G_GNUC_CONST;
+gupnp_xml_node_get_type (void) G_GNUC_CONST; /* xmlNode pointer */
 
 GType
-gupnp_bin_base64_get_type (void) G_GNUC_CONST;
+gupnp_xml_chunk_get_type (void) G_GNUC_CONST; /* string */
 
 GType
-gupnp_bin_hex_get_type (void) G_GNUC_CONST;
+gupnp_bin_base64_get_type (void) G_GNUC_CONST; /* string */
 
 GType
-gupnp_date_get_type (void) G_GNUC_CONST;
+gupnp_bin_hex_get_type (void) G_GNUC_CONST; /* string */
 
 GType
-gupnp_date_time_get_type (void) G_GNUC_CONST;
+gupnp_date_get_type (void) G_GNUC_CONST; /* string */
 
 GType
-gupnp_date_time_tz_get_type (void) G_GNUC_CONST;
+gupnp_date_time_get_type (void) G_GNUC_CONST; /* string */
 
 GType
-gupnp_time_get_type (void) G_GNUC_CONST;
+gupnp_date_time_tz_get_type (void) G_GNUC_CONST; /* string */
 
 GType
-gupnp_time_tz_get_type (void) G_GNUC_CONST;
+gupnp_time_get_type (void) G_GNUC_CONST; /* string */
 
 GType
-gupnp_uri_get_type (void) G_GNUC_CONST;
+gupnp_time_tz_get_type (void) G_GNUC_CONST; /* string */
 
 GType
-gupnp_uuid_get_type (void) G_GNUC_CONST;
+gupnp_uri_get_type (void) G_GNUC_CONST; /* string */
+
+GType
+gupnp_uuid_get_type (void) G_GNUC_CONST; /* string */
+
+#define gupnp_value_get_xml_node( value ) \
+        (xmlNode *) g_value_get_boxed ((value))
 
 #define gupnp_value_get_string( value ) \
         (const char *) g_value_get_boxed ((value))

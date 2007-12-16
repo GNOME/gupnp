@@ -37,6 +37,7 @@
 #include "gupnp-context-private.h"
 #include "gupnp-error.h"
 #include "gupnp-error-private.h"
+#include "gupnp-types.h"
 #include "xml-util.h"
 #include "gena-protocol.h"
 #include "accept-language.h"
@@ -1010,7 +1011,6 @@ read_out_parameter (const char       *arg_name,
                     SoupSoapResponse *response)
 {
         SoupSoapParameter *param;
-        char *str;
 
         /* Try to find a matching paramater in the response */
         param = soup_soap_response_get_first_parameter_by_name
@@ -1022,12 +1022,29 @@ read_out_parameter (const char       *arg_name,
                 return;
         }
 
-        /* Parse into @value */
-        str = soup_soap_parameter_get_string_value (param);
+        if (G_VALUE_TYPE (value) == GUPNP_TYPE_XML_NODE) {
+                xmlNode *node;
 
-        gvalue_util_set_value_from_string (value, str);
+                node = (xmlNode *) param;
+                if (node->parent) {
+                        /* Steal the whole xmlNode */
+                        xmlUnlinkNode (node);
+                        g_value_take_boxed (value, node);
+                } else {
+                        /* Already stolen. Make a copy. */
+                        g_value_set_boxed (value, node);
+                }
 
-        g_free (str);
+        } else {
+                char *str;
+
+                /* Parse into @value */
+                str = soup_soap_parameter_get_string_value (param);
+
+                gvalue_util_set_value_from_string (value, str);
+
+                g_free (str);
+        }
 
         return;
 }

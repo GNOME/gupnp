@@ -21,12 +21,34 @@
  */
 
 #include <string.h>
+#include <libxml/tree.h>
 
 #include "gupnp-types.h"
 
+static gpointer
+copy_xml_node (gpointer boxed)
+{
+        return xmlCopyNode ((xmlNode *) boxed, 2);
+}
+
+GType
+gupnp_xml_node_get_type (void)
+{
+        static GType type = 0;
+
+        if (!type) {
+                type = g_boxed_type_register_static (
+                                g_intern_static_string ("GUPnPXMLNode"),
+                                (GBoxedCopyFunc) copy_xml_node,
+                                (GBoxedFreeFunc) xmlFreeNode);
+        }
+
+        return type;
+}
+
 static void
-gupnp_type_to_string (const GValue *src_value,
-                      GValue       *dest_value)
+gupnp_string_type_to_string (const GValue *src_value,
+                             GValue       *dest_value)
 {
         const char *str;
 
@@ -36,8 +58,8 @@ gupnp_type_to_string (const GValue *src_value,
 }
 
 static void
-gupnp_string_to_type (const GValue *src_value,
-                      GValue       *dest_value)
+gupnp_string_to_string_type (const GValue *src_value,
+                             GValue       *dest_value)
 {
         const char *str;
 
@@ -46,25 +68,34 @@ gupnp_string_to_type (const GValue *src_value,
         g_value_set_boxed (dest_value, str);
 }
 
+static GType
+register_string_type (const char *name)
+{
+        GType type;
+
+        type = g_boxed_type_register_static (
+                                g_intern_static_string (name),
+                                (GBoxedCopyFunc) g_strdup,
+                                (GBoxedFreeFunc) g_free);
+        g_value_register_transform_func (
+                        type,
+                        G_TYPE_STRING,
+                        gupnp_string_type_to_string);
+        g_value_register_transform_func (
+                        G_TYPE_STRING,
+                        type,
+                        gupnp_string_to_string_type);
+
+        return type;
+}
+
 GType
 gupnp_xml_chunk_get_type (void)
 {
         static GType type = 0;
 
-        if (!type) {
-                type = g_boxed_type_register_static (
-                                g_intern_static_string ("GUPnPXMLChunk"),
-                                (GBoxedCopyFunc) g_strdup,
-                                (GBoxedFreeFunc) g_free);
-                g_value_register_transform_func (
-                                type,
-                                G_TYPE_STRING,
-                                gupnp_type_to_string);
-                g_value_register_transform_func (
-                                G_TYPE_STRING,
-                                type,
-                                gupnp_string_to_type);
-        }
+        if (!type)
+                type = register_string_type ("GUPnPXMLChunk");
 
         return type;
 }
@@ -74,20 +105,8 @@ gupnp_bin_base64_get_type (void)
 {
         static GType type = 0;
 
-        if (!type) {
-                type = g_boxed_type_register_static (
-                                g_intern_static_string ("GUPnPBinBase64"),
-                                (GBoxedCopyFunc) g_strdup,
-                                (GBoxedFreeFunc) g_free);
-                g_value_register_transform_func (
-                                type,
-                                G_TYPE_STRING,
-                                gupnp_type_to_string);
-                g_value_register_transform_func (
-                                G_TYPE_STRING,
-                                type,
-                                gupnp_string_to_type);
-        }
+        if (!type)
+                type = register_string_type ("GUPnPBinBase64");
 
         return type;
 }
@@ -97,20 +116,8 @@ gupnp_bin_hex_get_type (void)
 {
         static GType type = 0;
 
-        if (!type) {
-                type = g_boxed_type_register_static (
-                                g_intern_static_string ("GUPnPBinHex"),
-                                (GBoxedCopyFunc) g_strdup,
-                                (GBoxedFreeFunc) g_free);
-                g_value_register_transform_func (
-                                type,
-                                G_TYPE_STRING,
-                                gupnp_type_to_string);
-                g_value_register_transform_func (
-                                G_TYPE_STRING,
-                                type,
-                                gupnp_string_to_type);
-        }
+        if (!type)
+                type = register_string_type ("GUPnPBinHex");
 
         return type;
 }
@@ -120,20 +127,8 @@ gupnp_date_get_type (void)
 {
         static GType type = 0;
 
-        if (!type) {
-                type = g_boxed_type_register_static (
-                                g_intern_static_string ("GUPnPDate"),
-                                (GBoxedCopyFunc) g_strdup,
-                                (GBoxedFreeFunc) g_free);
-                g_value_register_transform_func (
-                                type,
-                                G_TYPE_STRING,
-                                gupnp_type_to_string);
-                g_value_register_transform_func (
-                                G_TYPE_STRING,
-                                type,
-                                gupnp_string_to_type);
-        }
+        if (!type)
+                type = register_string_type ("GUPnPDate");
 
         return type;
 }
@@ -143,20 +138,8 @@ gupnp_date_time_get_type (void)
 {
         static GType type = 0;
 
-        if (!type) {
-                type = g_boxed_type_register_static (
-                                g_intern_static_string ("GUPnPDateTime"),
-                                (GBoxedCopyFunc) g_strdup,
-                                (GBoxedFreeFunc) g_free);
-                g_value_register_transform_func (
-                                type,
-                                G_TYPE_STRING,
-                                gupnp_type_to_string);
-                g_value_register_transform_func (
-                                G_TYPE_STRING,
-                                type,
-                                gupnp_string_to_type);
-        }
+        if (!type)
+                type = register_string_type ("GUPnPDateTime");
 
         return type;
 }
@@ -166,20 +149,8 @@ gupnp_date_time_tz_get_type (void)
 {
         static GType type = 0;
 
-        if (!type) {
-                type = g_boxed_type_register_static (
-                                g_intern_static_string ("GUPnPDateTimeTZ"),
-                                (GBoxedCopyFunc) g_strdup,
-                                (GBoxedFreeFunc) g_free);
-                g_value_register_transform_func (
-                                type,
-                                G_TYPE_STRING,
-                                gupnp_type_to_string);
-                g_value_register_transform_func (
-                                G_TYPE_STRING,
-                                type,
-                                gupnp_string_to_type);
-        }
+        if (!type)
+                type = register_string_type ("GUPnPDateTimeTZ");
 
         return type;
 }
@@ -189,20 +160,8 @@ gupnp_time_get_type (void)
 {
         static GType type = 0;
 
-        if (!type) {
-                type = g_boxed_type_register_static (
-                                g_intern_static_string ("GUPnPTime"),
-                                (GBoxedCopyFunc) g_strdup,
-                                (GBoxedFreeFunc) g_free);
-                g_value_register_transform_func (
-                                type,
-                                G_TYPE_STRING,
-                                gupnp_type_to_string);
-                g_value_register_transform_func (
-                                G_TYPE_STRING,
-                                type,
-                                gupnp_string_to_type);
-        }
+        if (!type)
+                type = register_string_type ("GUPnPTime");
 
         return type;
 }
@@ -212,20 +171,8 @@ gupnp_time_tz_get_type (void)
 {
         static GType type = 0;
 
-        if (!type) {
-                type = g_boxed_type_register_static (
-                                g_intern_static_string ("GUPnPTimeTZ"),
-                                (GBoxedCopyFunc) g_strdup,
-                                (GBoxedFreeFunc) g_free);
-                g_value_register_transform_func (
-                                type,
-                                G_TYPE_STRING,
-                                gupnp_type_to_string);
-                g_value_register_transform_func (
-                                G_TYPE_STRING,
-                                type,
-                                gupnp_string_to_type);
-        }
+        if (!type)
+                type = register_string_type ("GUPnPTimeTZ");
 
         return type;
 }
@@ -235,20 +182,8 @@ gupnp_uri_get_type (void)
 {
         static GType type = 0;
 
-        if (!type) {
-                type = g_boxed_type_register_static (
-                                g_intern_static_string ("GUPnPURI"),
-                                (GBoxedCopyFunc) g_strdup,
-                                (GBoxedFreeFunc) g_free);
-                g_value_register_transform_func (
-                                type,
-                                G_TYPE_STRING,
-                                gupnp_type_to_string);
-                g_value_register_transform_func (
-                                G_TYPE_STRING,
-                                type,
-                                gupnp_string_to_type);
-        }
+        if (!type)
+                type = register_string_type ("GUPnPURI");
 
         return type;
 }
@@ -258,20 +193,8 @@ gupnp_uuid_get_type (void)
 {
         static GType type = 0;
 
-        if (!type) {
-                type = g_boxed_type_register_static (
-                                g_intern_static_string ("GUPnPUUID"),
-                                (GBoxedCopyFunc) g_strdup,
-                                (GBoxedFreeFunc) g_free);
-                g_value_register_transform_func (
-                                type,
-                                G_TYPE_STRING,
-                                gupnp_type_to_string);
-                g_value_register_transform_func (
-                                G_TYPE_STRING,
-                                type,
-                                gupnp_string_to_type);
-        }
+        if (!type)
+                type = register_string_type ("GUPnPUUID");
 
         return type;
 }
