@@ -60,10 +60,6 @@ xmlNode *
 xml_util_get_element                    (xmlNode    *node,
                                          ...) G_GNUC_NULL_TERMINATED;
 
-gboolean
-xml_util_node_get_content_value         (xmlNode    *node,
-                                         GValue     *value);
-
 xmlChar *
 xml_util_get_child_element_content      (xmlNode    *node,
                                          const char *child_name);

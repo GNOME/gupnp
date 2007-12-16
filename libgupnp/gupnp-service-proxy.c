@@ -1022,31 +1022,7 @@ read_out_parameter (const char       *arg_name,
                 return;
         }
 
-        if (G_VALUE_TYPE (value) == GUPNP_TYPE_XML_NODE) {
-                xmlNode *node;
-
-                node = (xmlNode *) param;
-                if (node->parent) {
-                        /* Steal the whole xmlNode */
-                        xmlUnlinkNode (node);
-                        g_value_take_boxed (value, node);
-                } else {
-                        /* Already stolen. Make a copy. */
-                        g_value_set_boxed (value, node);
-                }
-
-        } else {
-                char *str;
-
-                /* Parse into @value */
-                str = soup_soap_parameter_get_string_value (param);
-
-                gvalue_util_set_value_from_string (value, str);
-
-                g_free (str);
-        }
-
-        return;
+        gvalue_util_set_value_from_xml_node (value, (xmlNode *) param);
 }
 
 /**
@@ -1454,8 +1430,8 @@ server_handler (SoupServerContext *server_context,
                         /* Make a GValue of the desired type */
                         g_value_init (&value, data->type);
 
-                        if (!xml_util_node_get_content_value (var_node,
-                                                              &value)) {
+                        if (!gvalue_util_set_value_from_xml_node (&value,
+                                                                  var_node)) {
                                 g_value_unset (&value);
 
                                 continue;

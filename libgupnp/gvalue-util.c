@@ -153,20 +153,56 @@ gvalue_util_set_value_from_string (GValue     *value,
         return TRUE;
 }
 
-void
-gvalue_util_value_append_to_xml_string (const GValue *value, GString *str)
+gboolean
+gvalue_util_set_value_from_xml_node (GValue  *value,
+                                     xmlNode *node)
+{
+        xmlChar *str;
+        int ret;
+
+        if (G_VALUE_TYPE (value) == GUPNP_TYPE_XML_NODE) {
+                /* This makes a copy of the node */
+                g_value_set_boxed (value, node);
+
+                return TRUE;
+        }
+        
+        if (G_VALUE_TYPE (value) == GUPNP_TYPE_XML_CHUNK) {
+                /* Dump node to text */
+                xmlBuffer *buf;
+
+                buf = xmlBufferCreate ();
+
+                ret = xmlNodeDump (buf,
+                                   node->doc,
+                                   node,
+                                   0,
+                                   0);
+
+                if (ret > 0)
+                        g_value_set_boxed (value, (char *) buf->content);
+                
+                xmlBufferFree (buf);
+
+                return (ret > 0);
+        }
+        
+        /* else .. */
+        str = xmlNodeGetContent (node);
+
+        ret = gvalue_util_set_value_from_string (value, (const char *) str);
+
+        xmlFree (str);
+
+        return ret;
+}
+
+gboolean
+gvalue_util_value_append_to_xml_string (const GValue *value,
+                                        GString      *str)
 {
         GValue transformed_value = {0, };
         const char *tmp;
-
-        if (G_VALUE_TYPE (value) == GUPNP_TYPE_XML_CHUNK) {
-                /* Append without escaping */
-                tmp = gupnp_value_get_string (value);
-                if (tmp != NULL)
-                        g_string_append (str, tmp);
-
-                return;
-        }
 
         switch (G_VALUE_TYPE (value)) {
         case G_TYPE_STRING:
@@ -175,59 +211,59 @@ gvalue_util_value_append_to_xml_string (const GValue *value, GString *str)
                 if (tmp != NULL)
                         xml_util_add_content (str, tmp);
 
-                break;
+                return TRUE;
 
         case G_TYPE_CHAR:
                 g_string_append_c (str, g_value_get_char (value));
 
-                break;
+                return TRUE;
 
         case G_TYPE_UCHAR:
                 g_string_append_c (str, g_value_get_uchar (value));
 
-                break;
+                return TRUE;
 
         case G_TYPE_INT:
                 g_string_append_printf (str, "%d", g_value_get_int (value));
 
-                break;
+                return TRUE;
 
         case G_TYPE_UINT:
                 g_string_append_printf (str, "%u", g_value_get_uint (value));
 
-                break;
+                return TRUE;
 
         case G_TYPE_INT64:
                 g_string_append_printf (str, "%lld",
                                         g_value_get_int64 (value));
 
-                break;
+                return TRUE;
 
         case G_TYPE_UINT64:
                 g_string_append_printf (str, "%llu",
                                         g_value_get_uint64 (value));
 
-                break;
+                return TRUE;
 
         case G_TYPE_LONG:
                 g_string_append_printf (str, "%ld", g_value_get_long (value));
 
-                break;
+                return TRUE;
 
         case G_TYPE_ULONG:
                 g_string_append_printf (str, "%lu", g_value_get_ulong (value));
 
-                break;
+                return TRUE;
 
         case G_TYPE_FLOAT:
                 g_string_append_printf (str, "%f", g_value_get_float (value));
 
-                break;
+                return TRUE;
 
         case G_TYPE_DOUBLE:
                 g_string_append_printf (str, "%g", g_value_get_double (value));
 
-                break;
+                return TRUE;
 
         case G_TYPE_BOOLEAN:
                 /* We don't want to convert to "TRUE"/"FALSE" */
@@ -236,9 +272,51 @@ gvalue_util_value_append_to_xml_string (const GValue *value, GString *str)
                 else
                         g_string_append_c (str, '0');
 
-                break;
+                return TRUE;
 
         default:
+                if (G_VALUE_TYPE (value) == GUPNP_TYPE_XML_NODE) {
+                        /* Dump node to text */
+                        xmlNode *node;
+                        xmlDoc *doc;
+                        xmlBuffer *buf;
+                        int ret;
+
+                        node = gupnp_value_get_xml_node (value);
+                        if (node->doc)
+                                doc = node->doc;
+                        else
+                                doc = xmlNewDoc ((const xmlChar *) "1.0");
+
+                        buf = xmlBufferCreate ();
+
+                        ret = xmlNodeDump (buf,
+                                           doc,
+                                           node,
+                                           0,
+                                           0);
+
+                        if (!node->doc)
+                                xmlFreeDoc (doc);
+
+                        /* Append without escaping */
+                        if (ret > 0)
+                                g_string_append (str, (char *) buf->content);
+                
+                        xmlBufferFree (buf);
+
+                        return (ret > 0);
+                }
+
+                if (G_VALUE_TYPE (value) == GUPNP_TYPE_XML_CHUNK) {
+                        /* Append without escaping */
+                        tmp = gupnp_value_get_string (value);
+                        if (tmp != NULL)
+                                g_string_append (str, tmp);
+
+                        return TRUE;
+                }
+
                 /* Try to convert */
                 if (g_value_type_transformable (G_VALUE_TYPE (value),
                                                 G_TYPE_STRING)) {
@@ -252,11 +330,12 @@ gvalue_util_value_append_to_xml_string (const GValue *value, GString *str)
 
                         g_value_unset (&transformed_value);
 
+                        return TRUE;
                 } else {
                         g_warning ("Failed to transform value of type %s "
                                    "to a string", G_VALUE_TYPE_NAME (value));
-                }
 
-                break;
+                        return FALSE;
+                }
         }
 }

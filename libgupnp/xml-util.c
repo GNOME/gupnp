@@ -98,22 +98,6 @@ xml_util_get_element (xmlNode *node,
         return node;
 }
 
-gboolean
-xml_util_node_get_content_value (xmlNode *node,
-                                 GValue  *value)
-{
-        xmlChar *content;
-        gboolean success;
-
-        content = xmlNodeGetContent (node);
-
-        success = gvalue_util_set_value_from_string (value, (char *) content);
-
-        xmlFree (content);
-
-        return success;
-}
-
 xmlChar *
 xml_util_get_child_element_content (xmlNode    *node,
                                     const char *child_name)

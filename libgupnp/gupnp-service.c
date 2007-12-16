@@ -255,7 +255,7 @@ gupnp_service_action_get_value (GUPnPServiceAction *action,
                 if (strcmp ((char *) node->name, argument) != 0)
                         continue;
 
-                xml_util_node_get_content_value (node, value);
+                gvalue_util_set_value_from_xml_node (value, node);
 
                 break;
         }

@@ -1,5 +1,22 @@
 2007-12-16  Jorn Baayen  <jorn@openedhand.com>
 
+	* libgupnp/gupnp-service-proxy.c: (read_out_parameter),
+	(server_handler):
+	* libgupnp/gupnp-service.c: (gupnp_service_action_get_value):
+	* libgupnp/gvalue-util.c: (gvalue_util_set_value_from_string),
+	(gvalue_util_set_value_from_xml_node),
+	(gvalue_util_value_append_to_xml_string):
+	* libgupnp/gvalue-util.h:
+	* libgupnp/xml-util.c: (xml_util_get_element):
+	* libgupnp/xml-util.h:
+
+	Allow use of GUPNP_TYPE_XML_CHUNK and GUPNP_TYPE_XML_NODE to be
+	mixed through text->xmlDoc->text conversion. (Which is obviously
+	slow, so use of XML_CHUNK on the sending side, and XML_NODE on
+	the receiving side is recommended.)
+
+2007-12-16  Jorn Baayen  <jorn@openedhand.com>
+
 	* libgupnp/gupnp-service-proxy.c: (read_out_parameter):
 	* libgupnp/gupnp-types.c: (gupnp_xml_node_get_type),
 	(gupnp_string_type_to_string), (gupnp_string_to_string_type),

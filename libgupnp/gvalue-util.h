@@ -23,12 +23,17 @@
 #define __GVALUE_UTIL_H__
 
 #include <glib-object.h>
+#include <libxml/tree.h>
 
 gboolean
 gvalue_util_set_value_from_string      (GValue       *value,
                                         const char   *str);
 
-void
+gboolean
+gvalue_util_set_value_from_xml_node    (GValue       *value,
+                                        xmlNode      *node);
+
+gboolean
 gvalue_util_value_append_to_xml_string (const GValue *value,
                                         GString      *str);
 
