@@ -1,3 +1,9 @@
+2008-01-07  Jorn Baayen  <jorn@openedhand.com>
+
+	* libgupnp/gvalue-util.c: (gvalue_util_set_value_from_string):
+
+	Use atol() for 64-bit int parsing.
+
 2007-12-16  Jorn Baayen  <jorn@openedhand.com>
 
 	* libgupnp/gupnp-service-proxy.c: (read_out_parameter),

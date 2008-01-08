@@ -66,13 +66,13 @@ gvalue_util_set_value_from_string (GValue     *value,
                 break;
 
         case G_TYPE_INT64:
-                i = atoi (str);
+                i = atol (str);
                 g_value_set_int64 (value, (gint64) i);
 
                 break;
 
         case G_TYPE_UINT64:
-                i = atoi (str);
+                i = atol (str);
                 g_value_set_uint64 (value, (guint64) i);
 
                 break;
