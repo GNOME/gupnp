@@ -1,3 +1,9 @@
+2008-01-14  Jorn Baayen  <jorn@openedhand.com>
+
+	* doc/Makefile.am:
+
+	Update list of ignored header files.
+
 2008-01-07  Jorn Baayen  <jorn@openedhand.com>
 
 	* libgupnp/gvalue-util.c: (gvalue_util_set_value_from_string):
