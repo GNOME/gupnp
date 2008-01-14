@@ -28,7 +28,7 @@
 static gpointer
 copy_xml_node (gpointer boxed)
 {
-        return xmlCopyNode ((xmlNode *) boxed, 2);
+        return xmlCopyNode ((xmlNode *) boxed, 1);
 }
 
 GType

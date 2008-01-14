@@ -1,5 +1,11 @@
 2008-01-14  Jorn Baayen  <jorn@openedhand.com>
 
+	* libgupnp/gupnp-types.c:
+
+	Recursively copy xmlNodes.
+
+2008-01-14  Jorn Baayen  <jorn@openedhand.com>
+
 	* doc/Makefile.am:
 
 	Update list of ignored header files.
