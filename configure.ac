@@ -31,16 +31,6 @@ if test "x$enable_debug" = "xyes"; then
         CFLAGS="$CFLAGS -g -Wall -Werror"
 fi
 
-# Gettext
-GETTEXT_PACKAGE=libgupnp
-AC_SUBST(GETTEXT_PACKAGE)
-AC_DEFINE_UNQUOTED(GETTEXT_PACKAGE, ["$GETTEXT_PACKAGE"], 
-  [Define the gettext package to be used])
-
-ALL_LINGUAS=""
-AM_GLIB_GNU_GETTEXT
-AM_GLIB_DEFINE_LOCALEDIR([LOCALEDIR])
-
 # Gtk-doc
 GTK_DOC_CHECK([1.0])
 
@@ -52,8 +42,6 @@ Makefile
 libgupnp/Makefile
 libgupnp/xdgmime/Makefile
 tests/Makefile
-po/Makefile.in
-po/Makefile
 doc/Makefile
 doc/version.xml
 gupnp-1.0.pc

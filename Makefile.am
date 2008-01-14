@@ -1,4 +1,4 @@
-SUBDIRS = libgupnp tests po doc
+SUBDIRS = libgupnp tests doc
 
 pkgconfig_DATA= gupnp-1.0.pc
 pkgconfigdir = $(libdir)/pkgconfig
