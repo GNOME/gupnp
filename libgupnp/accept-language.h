@@ -26,16 +26,16 @@
 
 G_BEGIN_DECLS
 
-char *
+G_GNUC_INTERNAL char *
 accept_language_get_header  (void);
 
-GList *
+G_GNUC_INTERNAL GList *
 accept_language_get_locales (SoupMessage *message);
 
-int
+G_GNUC_INTERNAL int
 http_language_from_locale   (char        *lang);
 
-int
+G_GNUC_INTERNAL int
 locale_from_http_language   (char        *lang);
 
 G_END_DECLS

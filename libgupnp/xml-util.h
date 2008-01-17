@@ -29,7 +29,7 @@
 
 /* GObject wrapper for xmlDoc, so that we can use refcounting and
  * weak references. */
-GType
+G_GNUC_INTERNAL GType
 xml_doc_wrapper_get_type (void) G_GNUC_CONST;
 
 #define TYPE_XML_DOC_WRAPPER \
@@ -52,52 +52,52 @@ typedef struct {
         GInitiallyUnownedClass parent_class;
 } XmlDocWrapperClass;
 
-XmlDocWrapper *
+G_GNUC_INTERNAL XmlDocWrapper *
 xml_doc_wrapper_new (xmlDoc *doc);
 
 /* Misc utilities for inspecting xmlNodes */
-xmlNode *
+G_GNUC_INTERNAL xmlNode *
 xml_util_get_element                    (xmlNode    *node,
                                          ...) G_GNUC_NULL_TERMINATED;
 
-xmlChar *
+G_GNUC_INTERNAL xmlChar *
 xml_util_get_child_element_content      (xmlNode    *node,
                                          const char *child_name);
 
-int
+G_GNUC_INTERNAL int
 xml_util_get_child_element_content_int  (xmlNode    *node,
                                          const char *child_name);
 
-char *
+G_GNUC_INTERNAL char *
 xml_util_get_child_element_content_glib (xmlNode    *node,
                                          const char *child_name);
 
-SoupUri *
+G_GNUC_INTERNAL SoupUri *
 xml_util_get_child_element_content_uri  (xmlNode    *node,
                                          const char *child_name,
                                          SoupUri    *base);
 
-char *
+G_GNUC_INTERNAL char *
 xml_util_get_child_element_content_url  (xmlNode    *node,
                                          const char *child_name,
                                          SoupUri    *base);
-xmlChar *
+G_GNUC_INTERNAL xmlChar *
 xml_util_get_attribute_contents         (xmlNode    *node,
                                          const char *attribute_name);
 
 /* XML string creation helpers */
-GString *
+G_GNUC_INTERNAL GString *
 xml_util_new_string                     (void);
 
-void
+G_GNUC_INTERNAL void
 xml_util_start_element                  (GString    *xml_str,
                                          const char *element_name);
 
-void
+G_GNUC_INTERNAL void
 xml_util_end_element                    (GString    *xml_str,
                                          const char *element_name);
 
-void
+G_GNUC_INTERNAL void
 xml_util_add_content                    (GString    *xml_str,
                                          const char *content);
 

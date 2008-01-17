@@ -1,3 +1,12 @@
+2008-01-17  Zeeshan Ali Khattak  <zeenix@gmail.com>
+
+	* libgupnp/accept-language.h:
+	* libgupnp/gvalue-util.h:
+	* libgupnp/xml-util.h:
+
+	Use 'G_GNUC_INTERNAL' macro to declare functions we don't want to
+	export.
+
 2008-01-17  Jorn Baayen  <jorn@openedhand.com>
 
 	* libgupnp/gupnp-types.c:
