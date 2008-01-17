@@ -206,13 +206,13 @@ gvalue_util_value_append_to_xml_string (const GValue *value,
                 return TRUE;
 
         case G_TYPE_INT64:
-                g_string_append_printf (str, "%lld",
+                g_string_append_printf (str, "%"G_GINT64_FORMAT,
                                         g_value_get_int64 (value));
 
                 return TRUE;
 
         case G_TYPE_UINT64:
-                g_string_append_printf (str, "%llu",
+                g_string_append_printf (str, "%"G_GUINT64_FORMAT,
                                         g_value_get_uint64 (value));
 
                 return TRUE;
