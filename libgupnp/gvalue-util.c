@@ -160,34 +160,6 @@ gvalue_util_set_value_from_xml_node (GValue  *value,
         xmlChar *str;
         int ret;
 
-        if (G_VALUE_TYPE (value) == GUPNP_TYPE_XML_NODE) {
-                /* This makes a copy of the node */
-                g_value_set_boxed (value, node);
-
-                return TRUE;
-        }
-        
-        if (G_VALUE_TYPE (value) == GUPNP_TYPE_XML_CHUNK) {
-                /* Dump node to text */
-                xmlBuffer *buf;
-
-                buf = xmlBufferCreate ();
-
-                ret = xmlNodeDump (buf,
-                                   node->doc,
-                                   node,
-                                   0,
-                                   0);
-
-                if (ret > 0)
-                        g_value_set_boxed (value, (char *) buf->content);
-                
-                xmlBufferFree (buf);
-
-                return (ret > 0);
-        }
-        
-        /* else .. */
         str = xmlNodeGetContent (node);
 
         ret = gvalue_util_set_value_from_string (value, (const char *) str);
@@ -275,48 +247,6 @@ gvalue_util_value_append_to_xml_string (const GValue *value,
                 return TRUE;
 
         default:
-                if (G_VALUE_TYPE (value) == GUPNP_TYPE_XML_NODE) {
-                        /* Dump node to text */
-                        xmlNode *node;
-                        xmlDoc *doc;
-                        xmlBuffer *buf;
-                        int ret;
-
-                        node = gupnp_value_get_xml_node (value);
-                        if (node->doc)
-                                doc = node->doc;
-                        else
-                                doc = xmlNewDoc ((const xmlChar *) "1.0");
-
-                        buf = xmlBufferCreate ();
-
-                        ret = xmlNodeDump (buf,
-                                           doc,
-                                           node,
-                                           0,
-                                           0);
-
-                        if (!node->doc)
-                                xmlFreeDoc (doc);
-
-                        /* Append without escaping */
-                        if (ret > 0)
-                                g_string_append (str, (char *) buf->content);
-                
-                        xmlBufferFree (buf);
-
-                        return (ret > 0);
-                }
-
-                if (G_VALUE_TYPE (value) == GUPNP_TYPE_XML_CHUNK) {
-                        /* Append without escaping */
-                        tmp = gupnp_value_get_string (value);
-                        if (tmp != NULL)
-                                g_string_append (str, tmp);
-
-                        return TRUE;
-                }
-
                 /* Try to convert */
                 if (g_value_type_transformable (G_VALUE_TYPE (value),
                                                 G_TYPE_STRING)) {

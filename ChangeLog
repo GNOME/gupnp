@@ -1,3 +1,11 @@
+2008-01-17  Jorn Baayen  <jorn@openedhand.com>
+
+	* libgupnp/gupnp-types.c:
+	* libgupnp/gupnp-types.h:
+	* libgupnp/gvalue-util.c: (gvalue_util_set_value_from_xml_node):
+
+	Remove ugly and luckily unnecessary XML_NODE and XML_CHUNK types.
+
 2008-01-14  Jorn Baayen  <jorn@openedhand.com>
 
 	* Makefile.am:

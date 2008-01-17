@@ -21,30 +21,8 @@
  */
 
 #include <string.h>
-#include <libxml/tree.h>
 
 #include "gupnp-types.h"
-
-static gpointer
-copy_xml_node (gpointer boxed)
-{
-        return xmlCopyNode ((xmlNode *) boxed, 1);
-}
-
-GType
-gupnp_xml_node_get_type (void)
-{
-        static GType type = 0;
-
-        if (!type) {
-                type = g_boxed_type_register_static (
-                                g_intern_static_string ("GUPnPXMLNode"),
-                                (GBoxedCopyFunc) copy_xml_node,
-                                (GBoxedFreeFunc) xmlFreeNode);
-        }
-
-        return type;
-}
 
 static void
 gupnp_string_type_to_string (const GValue *src_value,
@@ -85,17 +63,6 @@ register_string_type (const char *name)
                         G_TYPE_STRING,
                         type,
                         gupnp_string_to_string_type);
-
-        return type;
-}
-
-GType
-gupnp_xml_chunk_get_type (void)
-{
-        static GType type = 0;
-
-        if (!type)
-                type = register_string_type ("GUPnPXMLChunk");
 
         return type;
 }

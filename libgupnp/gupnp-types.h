@@ -27,10 +27,6 @@
 
 G_BEGIN_DECLS
 
-#define GUPNP_TYPE_XML_NODE \
-                (gupnp_xml_node_get_type ())
-#define GUPNP_TYPE_XML_CHUNK \
-                (gupnp_xml_chunk_get_type ())
 #define GUPNP_TYPE_BIN_BASE64 \
                 (gupnp_bin_base64_get_type ())
 #define GUPNP_TYPE_BIN_HEX \
@@ -49,12 +45,6 @@ G_BEGIN_DECLS
                 (gupnp_uri_get_type ())
 #define GUPNP_TYPE_UUID \
                 (gupnp_uuid_get_type ())
-
-GType
-gupnp_xml_node_get_type (void) G_GNUC_CONST; /* xmlNode pointer */
-
-GType
-gupnp_xml_chunk_get_type (void) G_GNUC_CONST; /* string */
 
 GType
 gupnp_bin_base64_get_type (void) G_GNUC_CONST; /* string */
