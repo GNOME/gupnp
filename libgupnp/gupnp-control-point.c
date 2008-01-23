@@ -739,7 +739,8 @@ gupnp_control_point_set_property (GObject      *object,
 
         switch (property_id) {
         case PROP_RESOURCE_FACTORY:
-                control_point->priv->factory = g_value_dup_object (value);
+                control_point->priv->factory = 
+			GUPNP_RESOURCE_FACTORY (g_value_dup_object (value));
                 break;
         default:
                 G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
