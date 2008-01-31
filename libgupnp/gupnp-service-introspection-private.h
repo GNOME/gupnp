@@ -26,7 +26,7 @@
 
 #include "gupnp-service-introspection.h"
 
-GUPnPServiceIntrospection *
+G_GNUC_INTERNAL GUPnPServiceIntrospection *
 gupnp_service_introspection_new (xmlDoc *scpd);
 
 #endif /* __GUPNP_SERVICE_INTROSPECTION_PRIVATE_H__ */

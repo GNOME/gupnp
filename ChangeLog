@@ -1,3 +1,14 @@
+2008-01-31  Jorn Baayen  <jorn@openedhand.com>
+
+	* libgupnp/gupnp-context-private.h:
+	* libgupnp/gupnp-device-info-private.h:
+	* libgupnp/gupnp-resource-factory-private.h:
+	* libgupnp/gupnp-resource-factory.c:
+	(gupnp_resource_factory_unregister_resource_proxy_type):
+	* libgupnp/gupnp-service-introspection-private.h:
+
+	Add missing G_GNUC_INTERNALs.
+
 2008-01-23  Jorn Baayen  <jorn@openedhand.com>
 
 	* libgupnp/gupnp-control-point.c:

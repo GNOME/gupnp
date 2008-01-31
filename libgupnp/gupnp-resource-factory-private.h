@@ -33,7 +33,7 @@
 
 G_BEGIN_DECLS
 
-GUPnPDeviceProxy *
+G_GNUC_INTERNAL GUPnPDeviceProxy *
 gupnp_resource_factory_create_device_proxy
                                       (GUPnPResourceFactory *factory,
                                        GUPnPContext         *context,
@@ -43,7 +43,7 @@ gupnp_resource_factory_create_device_proxy
                                        const char           *location,
                                        const SoupUri        *url_base);
 
-GUPnPServiceProxy *
+G_GNUC_INTERNAL GUPnPServiceProxy *
 gupnp_resource_factory_create_service_proxy
                                       (GUPnPResourceFactory *factory,
                                        GUPnPContext         *context,
@@ -54,7 +54,7 @@ gupnp_resource_factory_create_service_proxy
                                        const char           *location,
                                        const SoupUri        *url_base);
 
-GUPnPDevice *
+G_GNUC_INTERNAL GUPnPDevice *
 gupnp_resource_factory_create_device  (GUPnPResourceFactory *factory,
                                        GUPnPContext         *context,
                                        GUPnPDevice          *root_device,
@@ -63,7 +63,7 @@ gupnp_resource_factory_create_device  (GUPnPResourceFactory *factory,
                                        const char           *location,
                                        const SoupUri        *url_base);
 
-GUPnPService *
+G_GNUC_INTERNAL GUPnPService *
 gupnp_resource_factory_create_service (GUPnPResourceFactory *factory,
                                        GUPnPContext         *context,
                                        GUPnPDevice          *root_device,

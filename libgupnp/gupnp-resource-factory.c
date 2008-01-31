@@ -416,4 +416,3 @@ gupnp_resource_factory_unregister_resource_proxy_type
 {
         return g_hash_table_remove (factory->priv->proxy_type_hash, upnp_type);
 }
-

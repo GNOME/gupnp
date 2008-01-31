@@ -27,13 +27,13 @@
 
 G_BEGIN_DECLS
 
-SoupSession *
+G_GNUC_INTERNAL SoupSession *
 _gupnp_context_get_session    (GUPnPContext *context);
 
-SoupServer *
+G_GNUC_INTERNAL SoupServer *
 _gupnp_context_get_server     (GUPnPContext *context);
 
-const char *
+G_GNUC_INTERNAL const char *
 _gupnp_context_get_server_url (GUPnPContext *context);
 
 G_END_DECLS
