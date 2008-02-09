@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007 OpenedHand Ltd.
+ * Copyright (C) 2007, 2008 OpenedHand Ltd.
  *
  * Author: Jorn Baayen <jorn@openedhand.com>
  *
@@ -19,8 +19,8 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef __ACCEPT_LANGUAGE_H__
-#define __ACCEPT_LANGUAGE_H__
+#ifndef __HTTP_HEADERS_H__
+#define __HTTP_HEADERS_H__
 
 #include <libsoup/soup-message.h>
 
@@ -38,6 +38,9 @@ http_language_from_locale   (char        *lang);
 G_GNUC_INTERNAL int
 locale_from_http_language   (char        *lang);
 
+G_GNUC_INTERNAL void
+message_set_user_agent      (SoupMessage *message);
+
 G_END_DECLS
 
-#endif /* __ACCEPT_LANGUAGE_H__ */
+#endif /* __HTTP_HEADERS_H__ */

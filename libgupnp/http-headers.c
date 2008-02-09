@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007 OpenedHand Ltd.
+ * Copyright (C) 2007, 2008 OpenedHand Ltd.
  *
  * Author: Jorn Baayen <jorn@openedhand.com>
  *
@@ -19,11 +19,13 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#include <config.h>
+
 #include <locale.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include "accept-language.h"
+#include "http-headers.h"
 
 /* Returns the language taken from the current locale, in a format
  * suitable for the HTTP Accept-Language header. */
@@ -215,4 +217,28 @@ locale_from_http_language (char *lang)
         }
 
         return underscore_index;
+}
+
+static char *user_agent = NULL;
+
+static void
+free_user_agent (void)
+{
+        g_free (user_agent);
+}
+
+/* Sets the User-Agent header on @message */
+void
+message_set_user_agent (SoupMessage *message)
+{
+        if (G_UNLIKELY (user_agent == NULL)) {
+                user_agent = g_strdup_printf ("%s GUPnP/" VERSION,
+                                              g_get_application_name ());
+
+                g_atexit (free_user_agent);
+        }
+
+        soup_message_add_header (message->request_headers,
+				 "User-Agent",
+                                 user_agent);
 }

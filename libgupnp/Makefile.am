@@ -29,8 +29,8 @@ gupnp-marshal.h: gupnp-marshal.list
 
 BUILT_SOURCES = gupnp-marshal.c gupnp-marshal.h
 
-libgupnp_1_0_la_SOURCES = accept-language.c			\
-			  accept-language.h			\
+libgupnp_1_0_la_SOURCES = http-headers.c			\
+			  http-headers.h			\
 			  gupnp-context.c			\
 			  gupnp-context-private.h		\
 			  gupnp-control-point.c			\

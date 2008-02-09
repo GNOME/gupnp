@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006, 2007 OpenedHand Ltd.
+ * Copyright (C) 2006, 2007, 2008 OpenedHand Ltd.
  *
  * Author: Jorn Baayen <jorn@openedhand.com>
  *
@@ -40,7 +40,7 @@
 #include "gupnp-types.h"
 #include "xml-util.h"
 #include "gena-protocol.h"
-#include "accept-language.h"
+#include "http-headers.h"
 #include "gvalue-util.h"
 
 G_DEFINE_TYPE (GUPnPServiceProxy,
@@ -574,6 +574,9 @@ begin_action_msg (GUPnPServiceProxy *proxy,
 				 "SOAPAction",
                                  full_action);
         g_free (full_action);
+
+        /* Specify user agent */
+        message_set_user_agent (SOUP_MESSAGE (msg));
 
         /* Set up envelope */
         str = xml_util_new_string ();
@@ -1830,4 +1833,3 @@ gupnp_service_proxy_get_subscribed (GUPnPServiceProxy *proxy)
 
         return proxy->priv->subscribed;
 }
-

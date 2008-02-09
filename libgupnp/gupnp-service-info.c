@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006, 2007 OpenedHand Ltd.
+ * Copyright (C) 2006, 2007, 2008 OpenedHand Ltd.
  *
  * Author: Jorn Baayen <jorn@openedhand.com>
  *
@@ -35,6 +35,7 @@
 #include "gupnp-context-private.h"
 #include "gupnp-error.h"
 #include "gupnp-error-private.h"
+#include "http-headers.h"
 #include "xml-util.h"
 
 G_DEFINE_ABSTRACT_TYPE (GUPnPServiceInfo,
@@ -558,6 +559,8 @@ gupnp_service_info_get_introspection (GUPnPServiceInfo *info,
                 return NULL;
         }
 
+        message_set_user_agent (msg);
+
         /* Send off the message */
         session = _gupnp_context_get_session (info->priv->context);
 
@@ -690,6 +693,8 @@ gupnp_service_info_get_introspection_async
 
                 return;
         }
+
+        message_set_user_agent (data->message);
 
         data->info      = info;
         data->callback  = callback;

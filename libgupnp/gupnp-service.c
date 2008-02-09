@@ -38,7 +38,7 @@
 #include "gupnp-context-private.h"
 #include "gupnp-marshal.h"
 #include "gupnp-error.h"
-#include "accept-language.h"
+#include "http-headers.h"
 #include "gena-protocol.h"
 #include "xml-util.h"
 #include "gvalue-util.h"

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006, 2007 OpenedHand Ltd.
+ * Copyright (C) 2006, 2007, 2008 OpenedHand Ltd.
  *
  * Author: Jorn Baayen <jorn@openedhand.com>
  *
@@ -36,6 +36,7 @@
 #include "gupnp-control-point.h"
 #include "gupnp-context-private.h"
 #include "gupnp-resource-factory-private.h"
+#include "http-headers.h"
 #include "xml-util.h"
 
 G_DEFINE_TYPE (GUPnPControlPoint,
@@ -510,6 +511,8 @@ load_description (GUPnPControlPoint *control_point,
 
                         return;
                 }
+
+                message_set_user_agent (data->message);
 
                 data->control_point   = control_point;
 

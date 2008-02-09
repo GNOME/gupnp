@@ -50,7 +50,7 @@
 #include "gupnp-context-private.h"
 #include "gupnp-marshal.h"
 #include "gena-protocol.h"
-#include "accept-language.h"
+#include "http-headers.h"
 
 G_DEFINE_TYPE (GUPnPContext,
                gupnp_context,
