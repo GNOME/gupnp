@@ -232,8 +232,9 @@ void
 message_set_user_agent (SoupMessage *message)
 {
         if (G_UNLIKELY (user_agent == NULL)) {
-                user_agent = g_strdup_printf ("%s GUPnP/" VERSION,
-                                              g_get_application_name ());
+                user_agent = g_strdup_printf
+                                ("%s GUPnP/" VERSION " DLNADOC/1.50",
+                                 g_get_application_name ());
 
                 g_atexit (free_user_agent);
         }
