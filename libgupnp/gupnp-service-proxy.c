@@ -1187,6 +1187,9 @@ gupnp_service_proxy_cancel_action (GUPnPServiceProxy       *proxy,
                                              SOUP_MESSAGE (action->msg));
         }
 
+        if (action->error != NULL)
+                g_error_free (action->error);
+
         gupnp_service_proxy_action_free (action);
 }
 
