@@ -129,7 +129,6 @@ gupnp_service_proxy_begin_action   (GUPnPServiceProxy              *proxy,
                                     const char                     *action,
                                     GUPnPServiceProxyActionCallback callback,
                                     gpointer                        user_data,
-                                    GError                        **error,
                                     ...) G_GNUC_NULL_TERMINATED;
 
 GUPnPServiceProxyAction *
@@ -138,7 +137,6 @@ gupnp_service_proxy_begin_action_valist
                                     const char                     *action,
                                     GUPnPServiceProxyActionCallback callback,
                                     gpointer                        user_data,
-                                    GError                        **error,
                                     va_list                         var_args);
 
 GUPnPServiceProxyAction *
@@ -147,7 +145,6 @@ gupnp_service_proxy_begin_action_hash
                                     const char                     *action,
                                     GUPnPServiceProxyActionCallback callback,
                                     gpointer                        user_data,
-                                    GError                        **error,
                                     GHashTable                     *args);
 
 gboolean

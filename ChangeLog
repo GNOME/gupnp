@@ -1,5 +1,21 @@
 2008-02-23  Jorn Baayen  <jorn@openedhand.com>
 
+	* libgupnp/gupnp-service-proxy.c:
+	(gupnp_service_proxy_action_free),
+	(gupnp_service_proxy_send_action_valist),
+	(gupnp_service_proxy_send_action_hash), (begin_action_msg),
+	(action_got_response), (gupnp_service_proxy_begin_action_valist),
+	(gupnp_service_proxy_begin_action_hash),
+	(gupnp_service_proxy_end_action_valist),
+	(gupnp_service_proxy_end_action_hash),
+	(gupnp_service_proxy_cancel_action):
+	* libgupnp/gupnp-service-proxy.h:
+
+	Remove error argument from begin_action() method series. The
+	error is now saved and returned by end_action().
+
+2008-02-23  Jorn Baayen  <jorn@openedhand.com>
+
 	* libgupnp/http-headers.c: (message_set_user_agent):
 
 	Add DLNA string.

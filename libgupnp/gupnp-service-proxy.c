@@ -84,6 +84,9 @@ struct _GUPnPServiceProxyAction {
         GUPnPServiceProxyActionCallback callback;
         gpointer user_data;
 
+        GError *error;    /* If non-NULL, description of error that
+                             occurred when preparing message */
+
         va_list var_args; /* The va_list after begin_action_valist has
                              gone through it. Used by send_action_valist(). */
 };
@@ -113,7 +116,8 @@ gupnp_service_proxy_action_free (GUPnPServiceProxyAction *action)
         action->proxy->priv->pending_actions =
                 g_list_remove (action->proxy->priv->pending_actions, action);
 
-        g_object_unref (action->msg);
+        if (action->msg != NULL)
+                g_object_unref (action->msg);
 
         g_slice_free (GUPnPServiceProxyAction, action);
 }
@@ -390,13 +394,7 @@ gupnp_service_proxy_send_action_valist (GUPnPServiceProxy *proxy,
                                                           action,
                                                           stop_main_loop,
                                                           main_loop,
-                                                          error,
                                                           var_args);
-        if (!handle) {
-                g_main_loop_unref (main_loop);
-
-                return FALSE;
-        }
 
         /* Loop till we get a reply (or time out) */
         if (g_main_loop_is_running (main_loop))
@@ -450,7 +448,6 @@ gupnp_service_proxy_send_action_hash (GUPnPServiceProxy *proxy,
                                                         action,
                                                         stop_main_loop,
                                                         main_loop,
-                                                        error,
                                                         in_hash);
         if (!handle) {
                 g_main_loop_unref (main_loop);
@@ -480,7 +477,6 @@ gupnp_service_proxy_send_action_hash (GUPnPServiceProxy *proxy,
  * @callback: The callback to call when sending the action has succeeded
  * or failed
  * @user_data: User data for @callback
- * @error: The location where to store any error, or NULL
  * @Varargs: tuples of in parameter name, in paramater type, and in parameter
  * value, terminated with NULL
  *
@@ -489,26 +485,25 @@ gupnp_service_proxy_send_action_hash (GUPnPServiceProxy *proxy,
  * gupnp_service_proxy_end_action() to check for errors, to retrieve return
  * values, and to free the #GUPnPServiceProxyAction.
  *
- * Return value: A #GUPnPServiceProxyAction handle. This is freed when
- * calling gupnp_service_proxy_end_action().
+ * Return value: A #GUPnPServiceProxyAction handle. This will
+ * be freed when calling gupnp_service_proxy_cancel_action() or
+ * gupnp_service_proxy_end_action_valist().
  **/
 GUPnPServiceProxyAction *
 gupnp_service_proxy_begin_action (GUPnPServiceProxy              *proxy,
                                   const char                     *action,
                                   GUPnPServiceProxyActionCallback callback,
                                   gpointer                        user_data,
-                                  GError                        **error,
                                   ...)
 {
         va_list var_args;
         GUPnPServiceProxyAction *ret;
 
-        va_start (var_args, error);
+        va_start (var_args, user_data);
         ret = gupnp_service_proxy_begin_action_valist (proxy,
                                                        action,
                                                        callback,
                                                        user_data,
-                                                       error,
                                                        var_args);
         va_end (var_args);
 
@@ -516,67 +511,80 @@ gupnp_service_proxy_begin_action (GUPnPServiceProxy              *proxy,
 }
 
 /* Begins a basic action message */
-static SoupMessage *
-begin_action_msg (GUPnPServiceProxy *proxy,
-                  const char        *action,
-                  GError           **error)
+static GUPnPServiceProxyAction *
+begin_action_msg (GUPnPServiceProxy              *proxy,
+                  const char                     *action,
+                  GUPnPServiceProxyActionCallback callback,
+                  gpointer                        user_data)
 {
-        SoupMessage *msg;
+        GUPnPServiceProxyAction *ret;
         char *control_url, *lang, *full_action;
         const char *service_type;
         GString *str;
+
+        /* Create action structure */
+        ret = g_slice_new (GUPnPServiceProxyAction);
+
+        ret->proxy = proxy;
+
+        ret->callback  = callback;
+        ret->user_data = user_data;
+
+        ret->msg = NULL;
+
+        ret->error = NULL;
+
+        proxy->priv->pending_actions =
+                g_list_prepend (proxy->priv->pending_actions, ret);
+
+        /* Make sure we have a service type */
+        service_type = gupnp_service_info_get_service_type
+                                        (GUPNP_SERVICE_INFO (proxy));
+        if (service_type == NULL) {
+                ret->error = g_error_new (GUPNP_SERVER_ERROR,
+                                          GUPNP_SERVER_ERROR_OTHER,
+                                          "No service type defined");
+
+                return ret;
+        }
 
         /* Create message */
         control_url = gupnp_service_info_get_control_url
                                         (GUPNP_SERVICE_INFO (proxy));
 
-        msg = NULL;
         if (control_url != NULL) {
-                msg = soup_message_new (SOUP_METHOD_POST, control_url);
+                ret->msg = soup_message_new (SOUP_METHOD_POST, control_url);
 
                 g_free (control_url);
         }
 
-        if (msg == NULL) {
-                g_set_error (error,
-                             GUPNP_SERVER_ERROR,
-                             GUPNP_SERVER_ERROR_INVALID_URL,
-                             "No valid control URL defined");
+        if (ret->msg == NULL) {
+                ret->error = g_error_new (GUPNP_SERVER_ERROR,
+                                          GUPNP_SERVER_ERROR_INVALID_URL,
+                                          "No valid control URL defined");
 
-                return NULL;
+                return ret;
         }
 
         /* Specify language */
         lang = accept_language_get_header ();
         if (lang) {
-                soup_message_add_header (SOUP_MESSAGE (msg)->request_headers,
-                                         "Accept-Language",
-                                         lang);
+                soup_message_add_header
+                        (SOUP_MESSAGE (ret->msg)->request_headers,
+                         "Accept-Language",
+                         lang);
                 g_free (lang);
         }
 
         /* Specify action */
-        service_type = gupnp_service_info_get_service_type
-                                        (GUPNP_SERVICE_INFO (proxy));
-        if (service_type == NULL) {
-                g_set_error (error,
-                             GUPNP_SERVER_ERROR,
-                             GUPNP_SERVER_ERROR_OTHER,
-                             "No service type defined");
-
-                g_object_unref (msg);
-
-                return NULL;
-        }
-
         full_action = g_strdup_printf ("\"%s#%s\"", service_type, action);
-        soup_message_add_header (SOUP_MESSAGE (msg)->request_headers,
+        soup_message_add_header (SOUP_MESSAGE (ret->msg)->request_headers,
 				 "SOAPAction",
                                  full_action);
         g_free (full_action);
 
         /* Specify user agent */
-        message_set_user_agent (SOUP_MESSAGE (msg));
+        message_set_user_agent (SOUP_MESSAGE (ret->msg));
 
         /* Set up envelope */
         str = xml_util_new_string ();
@@ -598,9 +606,9 @@ begin_action_msg (GUPnPServiceProxy *proxy,
         /* Store our GString temporarily and evillishly into
          * msg->request.body. We do this to save us the trouble of setting it
          * as user-data onto the object. */
-        msg->request.body = (char *) str;
+        ret->msg->request.body = (char *) str;
 
-        return msg;
+        return ret;
 }
 
 /* Received response to action message */
@@ -653,62 +661,44 @@ action_got_response (SoupMessage             *msg,
 }
 
 /* Finishes an action message and sends it off */
-static GUPnPServiceProxyAction *
-finish_action_msg (GUPnPServiceProxy              *proxy,
-                   const char                     *action,
-                   SoupMessage                    *msg,
-                   GUPnPServiceProxyActionCallback callback,
-                   gpointer                        user_data)
+static void
+finish_action_msg (GUPnPServiceProxyAction *action,
+                   const char              *action_name)
 {
-        GUPnPServiceProxyAction *ret;
         GUPnPContext *context;
         SoupSession *session;
         GString *str;
 
         /* Retrieve our GString, which we temporarily and evillishly
          * stored into msg->request.body .. */
-        str = (GString *) msg->request.body;
+        str = (GString *) action->msg->request.body;
 
         /* Finish message */
         g_string_append (str, "</u:");
-        g_string_append (str, action);
+        g_string_append (str, action_name);
         g_string_append_c (str, '>');
 
         g_string_append (str,
                          "</s:Body>"
                          "</s:Envelope>");
 
-        msg->request.owner  = SOUP_BUFFER_SYSTEM_OWNED;
-        msg->request.body   = g_string_free (str, FALSE);
-        msg->request.length = strlen (msg->request.body);
-
-        /* Create action structure */
-        ret = g_slice_new (GUPnPServiceProxyAction);
-
-        ret->proxy = proxy;
-
-        ret->msg   = msg;
-
-        ret->callback  = callback;
-        ret->user_data = user_data;
-
-        proxy->priv->pending_actions =
-                g_list_prepend (proxy->priv->pending_actions, ret);
+        action->msg->request.owner  = SOUP_BUFFER_SYSTEM_OWNED;
+        action->msg->request.body   = g_string_free (str, FALSE);
+        action->msg->request.length = strlen (action->msg->request.body);
 
         /* We need to keep our own reference to the message as well,
          * in order for send_action() to work. */
-        g_object_ref (msg);
+        g_object_ref (action->msg);
 
         /* Send the message */
-        context = gupnp_service_info_get_context (GUPNP_SERVICE_INFO (proxy));
+        context = gupnp_service_info_get_context
+                                (GUPNP_SERVICE_INFO (action->proxy));
         session = _gupnp_context_get_session (context);
 
         soup_session_queue_message (session,
-                                    SOUP_MESSAGE (msg),
+                                    SOUP_MESSAGE (action->msg),
                                     (SoupMessageCallbackFn) action_got_response,
-                                    ret);
-
-        return ret;
+                                    action);
 }
 
 /* Writes a parameter name and GValue pair to @msg */
@@ -736,15 +726,15 @@ write_in_parameter (const char  *arg_name,
  * @callback: The callback to call when sending the action has succeeded
  * or failed
  * @user_data: User data for @callback
- * @error: The location where to store any error, or NULL
  * @var_args: A va_list of tuples of in parameter name, in paramater type, and
  * in parameter value
  *
  * See gupnp_service_proxy_begin_action(); this version takes a va_list for
  * use by language bindings.
  *
- * Return value: A #GUPnPServiceProxyAction handle, or NULL on error. This will
- * be freed automatically on @callback calling.
+ * Return value: A #GUPnPServiceProxyAction handle. This will
+ * be freed when calling gupnp_service_proxy_cancel_action() or
+ * gupnp_service_proxy_end_action_valist().
  **/
 GUPnPServiceProxyAction *
 gupnp_service_proxy_begin_action_valist
@@ -752,11 +742,9 @@ gupnp_service_proxy_begin_action_valist
                                     const char                     *action,
                                     GUPnPServiceProxyActionCallback callback,
                                     gpointer                        user_data,
-                                    GError                        **error,
                                     va_list                         var_args)
 {
         const char *arg_name;
-        SoupMessage *msg;
         GUPnPServiceProxyAction *ret;
 
         g_return_val_if_fail (GUPNP_IS_SERVICE_PROXY (proxy), NULL);
@@ -764,9 +752,13 @@ gupnp_service_proxy_begin_action_valist
         g_return_val_if_fail (callback, NULL);
 
         /* Create message */
-        msg = begin_action_msg (proxy, action, error);
-        if (msg == NULL)
-                return NULL;
+        ret = begin_action_msg (proxy, action, callback, user_data);
+
+        if (ret->error) {
+                callback (proxy, ret, user_data);
+
+                return ret;
+        }
 
         /* Arguments */
         arg_name = va_arg (var_args, const char *);
@@ -780,7 +772,7 @@ gupnp_service_proxy_begin_action_valist
 
                 G_VALUE_COLLECT (&value, var_args, 0, &collect_error);
                 if (!collect_error) {
-                        write_in_parameter (arg_name, &value, msg);
+                        write_in_parameter (arg_name, &value, ret->msg);
 
                         g_value_unset (&value);
 
@@ -799,7 +791,7 @@ gupnp_service_proxy_begin_action_valist
         }
 
         /* Finish and send off */
-        ret = finish_action_msg (proxy, action, msg, callback, user_data);
+        finish_action_msg (ret, action);
 
         /* Save the current position in the va_list for send_action_valist() */
         G_VA_COPY (ret->var_args, var_args);
@@ -814,14 +806,14 @@ gupnp_service_proxy_begin_action_valist
  * @callback: The callback to call when sending the action has succeeded
  * or failed
  * @user_data: User data for @callback
- * @error: The location where to store any error, or NULL
  * @hash: A #GHashTable of in parameter name and #GValue pairs
  *
  * See gupnp_service_proxy_begin_action(); this version takes a #GHashTable
  * for runtime generated parameter lists.
  *
- * Return value: A #GUPnPServiceProxyAction handle, or NULL on error. This will
- * be freed automatically on @callback calling.
+ * Return value: A #GUPnPServiceProxyAction handle. This will
+ * be freed when calling gupnp_service_proxy_cancel_action() or
+ * gupnp_service_proxy_end_action_hash().
  **/
 GUPnPServiceProxyAction *
 gupnp_service_proxy_begin_action_hash
@@ -829,25 +821,30 @@ gupnp_service_proxy_begin_action_hash
                                     const char                     *action,
                                     GUPnPServiceProxyActionCallback callback,
                                     gpointer                        user_data,
-                                    GError                        **error,
                                     GHashTable                     *hash)
 {
-        SoupMessage *msg;
+        GUPnPServiceProxyAction *ret;
 
         g_return_val_if_fail (GUPNP_IS_SERVICE_PROXY (proxy), NULL);
         g_return_val_if_fail (action, NULL);
         g_return_val_if_fail (callback, NULL);
 
         /* Create message */
-        msg = begin_action_msg (proxy, action, error);
-        if (msg == NULL)
-                return NULL;
+        ret = begin_action_msg (proxy, action, callback, user_data);
+
+        if (ret->error) {
+                callback (proxy, ret, user_data);
+
+                return ret;
+        }
 
         /* Arguments */
-        g_hash_table_foreach (hash, (GHFunc) write_in_parameter, msg);
+        g_hash_table_foreach (hash, (GHFunc) write_in_parameter, ret->msg);
 
         /* Finish and send off */
-        return finish_action_msg (proxy, action, msg, callback, user_data);
+        finish_action_msg (ret, action);
+
+        return ret;
 }
 
 /**
@@ -1054,10 +1051,25 @@ gupnp_service_proxy_end_action_valist (GUPnPServiceProxy       *proxy,
         g_return_val_if_fail (GUPNP_IS_SERVICE_PROXY (proxy), FALSE);
         g_return_val_if_fail (action, FALSE);
 
+        /* Check for saved error from begin_action() */
+        if (action->error) {
+                if (error)
+                        *error = action->error;
+                else
+                        g_error_free (action->error);
+
+                gupnp_service_proxy_action_free (action);
+
+                return FALSE;
+        }
+
         /* Check response for errors and do initial parsing */
         response = check_action_response (proxy, action, error);
-        if (response == NULL)
+        if (response == NULL) {
+                gupnp_service_proxy_action_free (action);
+
                 return FALSE;
+        }
 
         /* Arguments */
         arg_name = va_arg (var_args, const char *);
@@ -1116,10 +1128,25 @@ gupnp_service_proxy_end_action_hash (GUPnPServiceProxy       *proxy,
         g_return_val_if_fail (GUPNP_IS_SERVICE_PROXY (proxy), FALSE);
         g_return_val_if_fail (action, FALSE);
 
+        /* Check for saved error from begin_action() */
+        if (action->error) {
+                if (error)
+                        *error = action->error;
+                else
+                        g_error_free (action->error);
+
+                gupnp_service_proxy_action_free (action);
+
+                return FALSE;
+        }
+
         /* Check response for errors and do initial parsing */
         response = check_action_response (proxy, action, error);
-        if (response == NULL)
+        if (response == NULL) {
+                gupnp_service_proxy_action_free (action);
+
                 return FALSE;
+        }
 
         /* Read arguments */
         g_hash_table_foreach (hash, (GHFunc) read_out_parameter, response);
@@ -1149,12 +1176,16 @@ gupnp_service_proxy_cancel_action (GUPnPServiceProxy       *proxy,
         g_return_if_fail (GUPNP_IS_SERVICE_PROXY (proxy));
         g_return_if_fail (action);
 
-        context = gupnp_service_info_get_context (GUPNP_SERVICE_INFO (proxy));
-        session = _gupnp_context_get_session (context);
+        if (action->msg != NULL) {
+                context = gupnp_service_info_get_context
+                                        (GUPNP_SERVICE_INFO (proxy));
+                session = _gupnp_context_get_session (context);
 
-        soup_message_set_status (SOUP_MESSAGE (action->msg),
-                                 SOUP_STATUS_CANCELLED);
-        soup_session_cancel_message (session, SOUP_MESSAGE (action->msg));
+                soup_message_set_status (SOUP_MESSAGE (action->msg),
+                                         SOUP_STATUS_CANCELLED);
+                soup_session_cancel_message (session,
+                                             SOUP_MESSAGE (action->msg));
+        }
 
         gupnp_service_proxy_action_free (action);
 }
