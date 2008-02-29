@@ -1,3 +1,9 @@
+2008-02-29  Zeeshan Ali Khattak  <zeenix@gmail.com>
+
+	* libgupnp/gupnp-service-proxy.c:
+
+	Critical bug fix: Don't free the action in check_action_response().
+
 2008-02-26  Jorn Baayen  <jorn@openedhand.com>
 
 	* autogen.sh:

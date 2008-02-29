@@ -904,8 +904,6 @@ check_action_response (GUPnPServiceProxy       *proxy,
         default:
                 set_server_error (error, soup_msg);
 
-                gupnp_service_proxy_action_free (action);
-
                 return NULL;
         }
 
@@ -929,8 +927,6 @@ check_action_response (GUPnPServiceProxy       *proxy,
                                      soup_msg->reason_phrase);
                 }
 
-                gupnp_service_proxy_action_free (action);
-
                 return NULL;
 	}
 
@@ -952,8 +948,6 @@ check_action_response (GUPnPServiceProxy       *proxy,
                                      GUPNP_SERVER_ERROR_INVALID_RESPONSE,
                                      "Invalid Fault");
 
-                        gupnp_service_proxy_action_free (action);
-
                         g_object_unref (response);
 
                         return NULL;
@@ -969,8 +963,6 @@ check_action_response (GUPnPServiceProxy       *proxy,
                                      GUPNP_SERVER_ERROR,
                                      GUPNP_SERVER_ERROR_INVALID_RESPONSE,
                                      "Invalid Fault");
-
-                        gupnp_service_proxy_action_free (action);
 
                         g_object_unref (response);
 
@@ -991,9 +983,6 @@ check_action_response (GUPnPServiceProxy       *proxy,
                                    desc);
 
                 g_free (desc);
-
-                /* Cleanup */
-                gupnp_service_proxy_action_free (action);
 
                 g_object_unref (response);
 
