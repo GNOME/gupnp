@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006, 2007 OpenedHand Ltd.
+ * Copyright (C) 2006, 2007, 2008 OpenedHand Ltd.
  *
  * Author: Jorn Baayen <jorn@openedhand.com>
  *
@@ -938,6 +938,7 @@ gupnp_device_info_get_device (GUPnPDeviceInfo *info,
                 if (!strcmp ("device", (char *) element->name)) {
                         xmlNode *type_element;
                         xmlChar *type_str;
+                        gboolean match;
 
                         type_element = xml_util_get_element (element,
                                                              "deviceType",
@@ -949,10 +950,24 @@ gupnp_device_info_get_device (GUPnPDeviceInfo *info,
                         if (!type_str)
                                 continue;
 
-                        if (!strcmp (type, (char *) type_str))
-                                device = class->get_device (info, element);
+                        match = !strcmp (type, (char *) type_str);
+                        if (!match) {
+                                /* Attempt to match without version */
+                                char *colon;
+                                
+                                colon = strrchr ((char *) type_str, ':');
+                                if (colon) {
+                                        *colon = 0;
+
+                                        match = !strcmp (type,
+                                                         (char *) type_str);
+                                }
+                        }
 
                         xmlFree (type_str);
+
+                        if (match)
+                                device = class->get_device (info, element);
 
                         if (device)
                                 break;
@@ -1088,6 +1103,7 @@ gupnp_device_info_get_service (GUPnPDeviceInfo *info,
                 if (!strcmp ("service", (char *) element->name)) {
                         xmlNode *type_element;
                         xmlChar *type_str;
+                        gboolean match;
 
                         type_element = xml_util_get_element (element,
                                                              "serviceType",
@@ -1099,10 +1115,24 @@ gupnp_device_info_get_service (GUPnPDeviceInfo *info,
                         if (!type_str)
                                 continue;
 
-                        if (!strcmp (type, (char *) type_str))
-                                service = class->get_service (info, element);
+                        match = !strcmp (type, (char *) type_str);
+                        if (!match) {
+                                /* Attempt to match without version */
+                                char *colon;
+                                
+                                colon = strrchr ((char *) type_str, ':');
+                                if (colon) {
+                                        *colon = 0;
+
+                                        match = !strcmp (type,
+                                                         (char *) type_str);
+                                }
+                        }
 
                         xmlFree (type_str);
+
+                        if (match)
+                                service = class->get_service (info, element);
 
                         if (service)
                                 break;

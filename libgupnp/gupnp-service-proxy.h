@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006, 2007 OpenedHand Ltd.
+ * Copyright (C) 2006, 2007, 2008 OpenedHand Ltd.
  *
  * Author: Jorn Baayen <jorn@openedhand.com>
  *
