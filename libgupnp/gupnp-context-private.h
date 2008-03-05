@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006, 2007 OpenedHand Ltd.
+ * Copyright (C) 2006, 2007, 2008 OpenedHand Ltd.
  *
  * Author: Jorn Baayen <jorn@openedhand.com>
  *
@@ -23,15 +23,11 @@
 #define __GUPNP_CONTEXT_PRIVATE_H__
 
 #include <libsoup/soup.h>
-#include <libsoup/soup-server.h>
 
 G_BEGIN_DECLS
 
 G_GNUC_INTERNAL SoupSession *
 _gupnp_context_get_session    (GUPnPContext *context);
-
-G_GNUC_INTERNAL SoupServer *
-_gupnp_context_get_server     (GUPnPContext *context);
 
 G_GNUC_INTERNAL const char *
 _gupnp_context_get_server_url (GUPnPContext *context);

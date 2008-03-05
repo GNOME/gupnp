@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006, 2007 OpenedHand Ltd.
+ * Copyright (C) 2006, 2007, 2008 OpenedHand Ltd.
  *
  * Author: Jorn Baayen <jorn@openedhand.com>
  *
@@ -23,6 +23,7 @@
 #define __GUPNP_CONTEXT_H__
 
 #include <libgssdp/gssdp-client.h>
+#include <libsoup/soup-server.h>
 
 G_BEGIN_DECLS
 
@@ -79,6 +80,9 @@ gupnp_context_get_host_ip              (GUPnPContext *context);
 
 guint
 gupnp_context_get_port                 (GUPnPContext *context);
+
+SoupServer *
+gupnp_context_get_server               (GUPnPContext *context);
 
 void
 gupnp_context_set_subscription_timeout (GUPnPContext *context,

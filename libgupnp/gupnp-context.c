@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006, 2007 OpenedHand Ltd.
+ * Copyright (C) 2006, 2007, 2008 OpenedHand Ltd.
  *
  * Author: Jorn Baayen <jorn@openedhand.com>
  *
@@ -72,6 +72,7 @@ enum {
         PROP_0,
         PROP_HOST_IP,
         PROP_PORT,
+        PROP_SERVER,
         PROP_SUBSCRIPTION_TIMEOUT
 };
 
@@ -219,6 +220,10 @@ gupnp_context_get_property (GObject    *object,
                 g_value_set_uint (value,
                                   gupnp_context_get_port (context));
                 break;
+        case PROP_SERVER:
+                g_value_set_object (value,
+                                    gupnp_context_get_server (context));
+                break;
         case PROP_SUBSCRIPTION_TIMEOUT:
                 g_value_set_uint (value,
                                   gupnp_context_get_subscription_timeout
@@ -321,6 +326,23 @@ gupnp_context_class_init (GUPnPContextClass *klass)
                                     G_PARAM_STATIC_BLURB));
 
         /**
+         * GUPnPContext:server
+         *
+         * The #SoupServer HTTP server used by GUPnP.
+         **/
+        g_object_class_install_property
+                (object_class,
+                 PROP_SERVER,
+                 g_param_spec_object ("server",
+                                      "SoupServer",
+                                      "SoupServer HTTP server",
+                                      SOUP_TYPE_SERVER,
+                                      G_PARAM_READABLE |
+                                      G_PARAM_STATIC_NAME |
+                                      G_PARAM_STATIC_NICK |
+                                      G_PARAM_STATIC_BLURB));
+
+        /**
          * GUPnPContext:subscription-timeout
          *
          * The preferred subscription timeout: the number of seconds after
@@ -360,9 +382,17 @@ default_server_handler (SoupServerContext *server_context,
         soup_message_set_status (msg, SOUP_STATUS_NOT_FOUND);
 }
 
+/**
+ * gupnp_context_get_server
+ * @context: A #GUPnPContext
+ *
+ * Return value: The #SoupServer HTTP server used by GUPnP.
+ **/
 SoupServer *
-_gupnp_context_get_server (GUPnPContext *context)
+gupnp_context_get_server (GUPnPContext *context)
 {
+        g_return_val_if_fail (GUPNP_IS_CONTEXT (context), NULL);
+
         if (context->priv->server == NULL) {
                 context->priv->server = soup_server_new (SOUP_SERVER_PORT,
                                                          context->priv->port,
@@ -390,7 +420,7 @@ make_server_url (GUPnPContext *context)
                 context->priv->host_ip = get_default_host_ip ();
 
         /* What port are we running on? */
-        server = _gupnp_context_get_server (context);
+        server = gupnp_context_get_server (context);
         port = soup_server_get_port (server);
 
         /* Put it all together */
@@ -460,7 +490,7 @@ gupnp_context_get_port (GUPnPContext *context)
 
         g_return_val_if_fail (GUPNP_IS_CONTEXT (context), 0);
 
-        server = _gupnp_context_get_server (context);
+        server = gupnp_context_get_server (context);
         return soup_server_get_port (server);
 }
 
@@ -679,7 +709,7 @@ gupnp_context_host_path (GUPnPContext *context,
         g_return_if_fail (local_path != NULL);
         g_return_if_fail (server_path != NULL);
 
-        server = _gupnp_context_get_server (context);
+        server = gupnp_context_get_server (context);
 
         soup_server_add_handler (server, server_path, NULL,
                                  hosting_server_handler,
@@ -703,7 +733,7 @@ gupnp_context_unhost_path (GUPnPContext *context,
         g_return_if_fail (GUPNP_IS_CONTEXT (context));
         g_return_if_fail (server_path != NULL);
 
-        server = _gupnp_context_get_server (context);
+        server = gupnp_context_get_server (context);
 
         soup_server_remove_handler (server, server_path);
 }

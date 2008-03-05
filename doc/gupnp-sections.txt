@@ -152,6 +152,7 @@ GUPnPContext
 gupnp_context_new
 gupnp_context_get_host_ip
 gupnp_context_get_port
+gupnp_context_get_server
 gupnp_context_set_subscription_timeout
 gupnp_context_get_subscription_timeout
 gupnp_context_host_path

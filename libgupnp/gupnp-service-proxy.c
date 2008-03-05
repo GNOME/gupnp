@@ -1660,7 +1660,7 @@ subscribe_got_response (SoupMessage       *msg,
                 context = gupnp_service_info_get_context
                                         (GUPNP_SERVICE_INFO (proxy));
 
-                server = _gupnp_context_get_server (context);
+                server = gupnp_context_get_server (context);
                 soup_server_remove_handler (server, proxy->priv->path);
         }
 }
@@ -1735,7 +1735,7 @@ subscribe (GUPnPServiceProxy *proxy)
         g_free (timeout);
 
         /* Listen for events */
-        server = _gupnp_context_get_server (context);
+        server = gupnp_context_get_server (context);
 
         soup_server_add_handler (server,
                                  proxy->priv->path,
@@ -1808,7 +1808,7 @@ unsubscribe (GUPnPServiceProxy *proxy)
         }
 
         /* Remove server handler */
-        server = _gupnp_context_get_server (context);
+        server = gupnp_context_get_server (context);
         soup_server_remove_handler (server, proxy->priv->path);
 }
 

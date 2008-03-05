@@ -1042,7 +1042,7 @@ gupnp_service_constructor (GType                  type,
 
         /* Get server */
         context = gupnp_service_info_get_context (info);
-        server = _gupnp_context_get_server (context);
+        server = gupnp_context_get_server (context);
 
         /* Run listener on controlURL */
         url = gupnp_service_info_get_control_url (info);

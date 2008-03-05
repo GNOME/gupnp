@@ -1,5 +1,21 @@
 2008-03-05  Jorn Baayen  <jorn@openedhand.com>
 
+	* doc/gupnp-sections.txt:
+	* libgupnp/gupnp-context-private.h:
+	* libgupnp/gupnp-context.c (gupnp_context_get_property),
+	(gupnp_context_class_init), (gupnp_context_get_server),
+	(make_server_url), (gupnp_context_get_port),
+	(gupnp_context_host_path), (gupnp_context_unhost_path):
+	* libgupnp/gupnp-context.h:
+	* libgupnp/gupnp-service-proxy.c (subscribe_got_response),
+	(subscribe), (unsubscribe):
+	* libgupnp/gupnp-service.c (gupnp_service_constructor):
+
+	Make gupnp_context_get_server() public.
+	Fixes #832.
+
+2008-03-05  Jorn Baayen  <jorn@openedhand.com>
+
 	* libgupnp/gupnp-device-info.c (resource_type_match),
 	(gupnp_device_info_get_device), (gupnp_device_info_get_service):
 
