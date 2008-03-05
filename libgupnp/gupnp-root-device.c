@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007 OpenedHand Ltd.
+ * Copyright (C) 2007, 2008 OpenedHand Ltd.
  *
  * Author: Jorn Baayen <jorn@openedhand.com>
  *
@@ -146,6 +146,57 @@ gupnp_root_device_get_property (GObject    *object,
         }
 }
 
+/* Adds @udn::@resource_type to @group, together with all earlier versions
+ * of @resource_type.
+ *
+ * Note: @resource_type is modified in this function. */
+static void
+add_resource_with_earlier_versions (GSSDPResourceGroup *group,
+                                    const char         *udn,
+                                    const char         *resource_type,
+                                    const char         *location)
+{
+        char *colon, *usn;
+        int version, i;
+
+        /* Add specified version */
+        usn = g_strdup_printf ("%s::%s", (char *) udn, (char *) resource_type);
+        gssdp_resource_group_add_resource_simple (group,
+                                                  (const char *) resource_type,
+                                                  usn,
+                                                  location);
+        g_free (usn);
+
+        /* Try to parse version */
+        colon = strrchr (resource_type, ':');
+        if (G_UNLIKELY (*colon == 0))
+                return;
+
+        colon += 1;
+        if (G_UNLIKELY (*colon == 0))
+                return;
+
+        version = atoi (colon);
+        
+        /* Add earlier versions */
+        *colon = 0;
+
+        for (i = 1; i < version; i++) {
+                char *type;
+
+                type = g_strdup_printf ("%s%d", (char *) resource_type, i);
+                usn = g_strdup_printf ("%s::%s", (char *) udn, (char *) type);
+
+                gssdp_resource_group_add_resource_simple (group,
+                                                          type,
+                                                          usn,
+                                                          location);
+
+                g_free (usn);
+                g_free (type);
+        }
+}
+
 static void
 fill_resource_group (xmlNode            *element,
                      const char         *location,
@@ -153,7 +204,6 @@ fill_resource_group (xmlNode            *element,
 {
         xmlNode *child;
         xmlChar *udn, *device_type;
-        char *usn;
 
         /* Add device */
         udn = xml_util_get_child_element_content (element, "UDN");
@@ -176,12 +226,10 @@ fill_resource_group (xmlNode            *element,
                                                   (const char *) udn,
                                                   location);
 
-        usn = g_strdup_printf ("%s::%s", (char *) udn, (char *) device_type);
-        gssdp_resource_group_add_resource_simple (group,
-                                                  (const char *) device_type,
-                                                  (const char *) usn,
-                                                  location);
-        g_free (usn);
+        add_resource_with_earlier_versions (group,
+                                            (const char *) udn,
+                                            (const char *) device_type,
+                                            location);
 
         xmlFree (device_type);
 
@@ -201,15 +249,11 @@ fill_resource_group (xmlNode            *element,
                         if (!service_type)
                                 continue;
 
-                        usn = g_strdup_printf ("%s::%s",
-                                               (char *) udn,
-                                               (char *) service_type);
-                        gssdp_resource_group_add_resource_simple
-                                                (group,
-                                                 (const char *) service_type,
-                                                 (const char *) usn,
-                                                 location);
-                        g_free (usn);
+                        add_resource_with_earlier_versions
+                                (group,
+                                 (const char *) udn,
+                                 (const char *) service_type,
+                                 location);
 
                         xmlFree (service_type);
                 }

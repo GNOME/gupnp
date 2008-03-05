@@ -1,3 +1,17 @@
+2008-03-05  Jorn Baayen  <jorn@openedhand.com>
+
+	* libgupnp/gupnp-device-info.c (resource_type_match),
+	(gupnp_device_info_get_device), (gupnp_device_info_get_service):
+
+	Return subresources with version greater or equal than
+	requested version.
+
+	* libgupnp/gupnp-root-device.c
+	(add_resource_with_earlier_versions), (fill_resource_group):
+
+	Announce all earlier versions of resources in addition to the
+	implemented version.
+
 2008-03-04  Jorn Baayen  <jorn@openedhand.com>
 
 	* libgupnp/gupnp-device-info.c (gupnp_device_info_get_device),

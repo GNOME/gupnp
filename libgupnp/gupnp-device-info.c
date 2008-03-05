@@ -812,6 +812,62 @@ gupnp_device_info_get_icon_url (GUPnPDeviceInfo *info,
         return ret;
 }
 
+/* Returns TRUE if @query matches against @base. 
+ * - If @query does not specify a version, it matches any version specified
+ *   in @base.
+ * - If @query specifies a version, it matches any version specified in @base
+ *   that is greater or equal.
+ * */
+gboolean
+resource_type_match (const char *query,
+                     const char *base)
+{
+        gboolean match;
+        guint type_len;
+        char *colon;
+        guint query_ver, base_ver;
+
+        /* Inspect last colon (if any!) on @base */
+        colon = strrchr (base, ':');
+        if (G_UNLIKELY (*colon == 0))
+                return !strcmp (query, base); /* No colon */
+
+        /* Length of type until last colon */
+        type_len = strlen (base) - strlen (colon);
+
+        /* Match initial portions */
+        match = strncmp (query, base, type_len);
+        if (match == FALSE)
+                return FALSE;
+
+        /* Initial portions matched. Try to position pointers after
+         * last colons of both @query and @base. */
+        colon += 1;
+        if (G_UNLIKELY (*colon == 0))
+                return TRUE;
+
+        query += type_len;
+        switch (*query) {
+        case 0:
+                return TRUE; /* @query does not specify a version */
+        case ':':
+                query += 1;
+                if (G_UNLIKELY (*query == 0))
+                        return TRUE;
+
+                break;
+        default:
+                return FALSE; /* Hmm, not EOS, nor colon.. bad */
+        }
+
+        /* Parse versions */
+        query_ver = atoi (query);
+        base_ver  = atoi (colon);
+
+        /* Compare versions */
+        return (query_ver <= base_ver);
+}
+
 /**
  * gupnp_device_info_list_devices
  * @info: A #GUPnPDeviceInfo
@@ -938,7 +994,6 @@ gupnp_device_info_get_device (GUPnPDeviceInfo *info,
                 if (!strcmp ("device", (char *) element->name)) {
                         xmlNode *type_element;
                         xmlChar *type_str;
-                        gboolean match;
 
                         type_element = xml_util_get_element (element,
                                                              "deviceType",
@@ -950,24 +1005,10 @@ gupnp_device_info_get_device (GUPnPDeviceInfo *info,
                         if (!type_str)
                                 continue;
 
-                        match = !strcmp (type, (char *) type_str);
-                        if (!match) {
-                                /* Attempt to match without version */
-                                char *colon;
-                                
-                                colon = strrchr ((char *) type_str, ':');
-                                if (colon) {
-                                        *colon = 0;
-
-                                        match = !strcmp (type,
-                                                         (char *) type_str);
-                                }
-                        }
+                        if (resource_type_match (type, (char *) type_str))
+                                device = class->get_device (info, element);
 
                         xmlFree (type_str);
-
-                        if (match)
-                                device = class->get_device (info, element);
 
                         if (device)
                                 break;
@@ -1103,7 +1144,6 @@ gupnp_device_info_get_service (GUPnPDeviceInfo *info,
                 if (!strcmp ("service", (char *) element->name)) {
                         xmlNode *type_element;
                         xmlChar *type_str;
-                        gboolean match;
 
                         type_element = xml_util_get_element (element,
                                                              "serviceType",
@@ -1115,24 +1155,10 @@ gupnp_device_info_get_service (GUPnPDeviceInfo *info,
                         if (!type_str)
                                 continue;
 
-                        match = !strcmp (type, (char *) type_str);
-                        if (!match) {
-                                /* Attempt to match without version */
-                                char *colon;
-                                
-                                colon = strrchr ((char *) type_str, ':');
-                                if (colon) {
-                                        *colon = 0;
-
-                                        match = !strcmp (type,
-                                                         (char *) type_str);
-                                }
-                        }
+                        if (resource_type_match (type, (char *) type_str))
+                                service = class->get_service (info, element);
 
                         xmlFree (type_str);
-
-                        if (match)
-                                service = class->get_service (info, element);
 
                         if (service)
                                 break;
