@@ -1,3 +1,9 @@
+2008-03-06  Jorn Baayen  <jorn@openedhand.com>
+
+	* libgupnp/gupnp-device-info.c (resource_type_match):
+
+	Interpret strncmp() return value correctly.
+
 2008-03-05  Jorn Baayen  <jorn@openedhand.com>
 
 	* doc/gupnp-sections.txt:

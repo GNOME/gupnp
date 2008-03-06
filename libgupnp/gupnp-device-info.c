@@ -836,7 +836,7 @@ resource_type_match (const char *query,
         type_len = strlen (base) - strlen (colon);
 
         /* Match initial portions */
-        match = strncmp (query, base, type_len);
+        match = (strncmp (query, base, type_len) == 0);
         if (match == FALSE)
                 return FALSE;
 
