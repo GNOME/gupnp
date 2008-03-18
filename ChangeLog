@@ -1,3 +1,10 @@
+2008-03-18  Jorn Baayen  <jorn@openedhand.com>
+
+	* configure.ac:
+	* libgupnp/gupnp-service.c (gupnp_service_signals_autoconnect):
+
+	Release gupnp 0.8.
+
 2008-03-06  Jorn Baayen  <jorn@openedhand.com>
 
 	* libgupnp/gupnp-device-info.c (resource_type_match):

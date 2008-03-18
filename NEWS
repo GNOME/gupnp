@@ -1,3 +1,18 @@
+0.8
+===
+
+- New API allowing for subclassing of resource types. 
+  [Zeeshan Ali, Jorn Baayen]
+- GUPnPDeviceInfo returns subresources with version greater or equal than
+  requested version. [Jorn Baayen]
+- Servers announce versions less or equal than implemented version.
+  [Jorn Baayen]
+- Make gupnp_context_get_server() public. [Jorn Baayen]
+- GError arguments added to all error signals. [Jorn Baayen]
+- Improved resubscription handling. [Jorn Baayen]
+- Various other fixes and internal improvements
+  [Ross Burton, Zeeshan Ali, Jorn Baayen].
+
 0.6
 ===
 

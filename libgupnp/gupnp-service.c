@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007 OpenedHand Ltd.
+ * Copyright (C) 2007, 2008 OpenedHand Ltd.
  *
  * Author: Jorn Baayen <jorn@openedhand.com>
  *
@@ -1834,4 +1834,3 @@ gupnp_service_signals_autoconnect (GUPnPService *service,
         g_module_close (module);
         g_object_unref (introspection);
 }
-
