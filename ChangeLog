@@ -1,3 +1,9 @@
+2008-03-19  Jorn Baayen  <jorn@openedhand.com>
+
+	* libgupnp/gupnp-context.c (gupnp_context_init):
+
+	Use SOUP_SESSION_IDLE_TIMEOUT when available.
+
 2008-03-18  Jorn Baayen  <jorn@openedhand.com>
 
 	* configure.ac:

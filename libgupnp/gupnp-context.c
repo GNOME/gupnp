@@ -170,6 +170,13 @@ gupnp_context_init (GUPnPContext *context)
 
         context->priv->session = soup_session_async_new ();
 
+#ifdef SOUP_SESSION_IDLE_TIMEOUT
+        g_object_set (context->priv->session,
+                      SOUP_SESSION_IDLE_TIMEOUT,
+                      60,
+                      NULL);
+#endif /* SOUP_SESSION_IDLE_TIMEOUT */
+
         server_id = make_server_id ();
         gssdp_client_set_server_id (GSSDP_CLIENT (context), server_id);
         g_free (server_id);
