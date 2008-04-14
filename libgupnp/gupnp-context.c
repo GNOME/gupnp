@@ -78,6 +78,11 @@ enum {
 
 #define LOOPBACK_IP "127.0.0.1"
 
+typedef struct {
+        char *local_path;
+        char *server_path;
+} PathData;
+
 /**
  * Generates the default server ID.
  **/
@@ -542,21 +547,20 @@ gupnp_context_get_subscription_timeout (GUPnPContext *context)
 static void
 hosting_server_handler (SoupServer        *server,
                         SoupMessage       *msg, 
-                        const char        *server_path,
+                        const char        *path,
                         GHashTable        *query,
                         SoupClientContext *client,
                         gpointer           user_data)
 {
-        const char *local_path, *lang, *mime;
-        char *path, *path_to_open, *path_locale, *slash;
+        PathData *path_data;
+        const char *lang, *mime;
+        char *path_to_open, *path_locale, *slash;
         gpointer response_body;
         struct stat st;
         int fd, path_offset;
         GList *locales;
 
-        local_path = (const char *) user_data;
-
-        path = soup_uri_to_string (soup_message_get_uri (msg), TRUE);
+        path_data = (PathData *) user_data;
 
         if (msg->method != SOUP_METHOD_GET &&
             msg->method != SOUP_METHOD_HEAD) {
@@ -575,7 +579,7 @@ hosting_server_handler (SoupServer        *server,
                 }
 
                 /* Skip the server path */
-                path_offset = strlen (server_path);
+                path_offset = strlen (path_data->server_path);
         } else {
                 path = g_strdup ("");
 
@@ -594,7 +598,9 @@ hosting_server_handler (SoupServer        *server,
         } else
                 path_locale = g_strdup (path + path_offset);
 
-        path_to_open = g_build_filename (local_path, path_locale, NULL);
+        path_to_open = g_build_filename (path_data->local_path,
+                                         path_locale,
+                                         NULL);
 
  AGAIN:
         if (stat (path_to_open, &st) == -1) {
@@ -634,7 +640,7 @@ hosting_server_handler (SoupServer        *server,
                 }
 
                 g_free (path_to_open);
-                path_to_open = g_build_filename (local_path,
+                path_to_open = g_build_filename (path_data->local_path,
                                                  path_locale,
                                                  "index.html", NULL);
                 goto AGAIN;
@@ -683,12 +689,33 @@ hosting_server_handler (SoupServer        *server,
 
  DONE:
         /* Cleanup */
-        g_free (path);
-
         while (locales) {
                 g_free (locales->data);
                 locales = g_list_delete_link (locales, locales);
         }
+}
+
+PathData *
+path_data_new (const char *local_path,
+               const char *server_path)
+{
+        PathData *path_data;
+
+        path_data = g_slice_new (PathData);
+
+        path_data->local_path  = g_strdup (local_path);
+        path_data->server_path = g_strdup (server_path);
+
+        return path_data;
+}
+
+void
+path_data_free (PathData *path_data)
+{
+        g_free (path_data->local_path);
+        g_free (path_data->server_path);
+
+        g_slice_free (PathData, path_data);
 }
 
 /**
@@ -707,6 +734,7 @@ gupnp_context_host_path (GUPnPContext *context,
                          const char   *server_path)
 {
         SoupServer *server;
+        PathData *path_data;
 
         g_return_if_fail (GUPNP_IS_CONTEXT (context));
         g_return_if_fail (local_path != NULL);
@@ -714,10 +742,13 @@ gupnp_context_host_path (GUPnPContext *context,
 
         server = gupnp_context_get_server (context);
 
-        soup_server_add_handler (server, server_path,
+        path_data = path_data_new (local_path, server_path);
+
+        soup_server_add_handler (server,
+                                 server_path,
                                  hosting_server_handler,
-                                 g_strdup (local_path),
-                                 g_free);
+                                 path_data,
+                                 (GDestroyNotify) path_data_free);
 }
 
 /**
