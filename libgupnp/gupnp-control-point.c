@@ -177,8 +177,9 @@ gupnp_control_point_dispose (GObject *object)
                 context = gupnp_control_point_get_context (control_point);
                 session = _gupnp_context_get_session (context);
 
-                soup_message_set_status (data->message, SOUP_STATUS_CANCELLED);
-                soup_session_cancel_message (session, data->message);
+                soup_session_cancel_message (session,
+                                             data->message,
+                                             SOUP_STATUS_CANCELLED);
 
                 get_description_url_data_free (data);
         }
@@ -216,7 +217,7 @@ process_service_list (xmlNode           *element,
                       const char        *udn,
                       const char        *service_type,
                       const char        *description_url,
-                      SoupUri           *url_base)
+                      SoupURI           *url_base)
 {
         for (element = element->children; element; element = element->next) {
                 xmlChar *prop;
@@ -275,7 +276,7 @@ process_device_list (xmlNode           *element,
                      const char        *udn,
                      const char        *service_type,
                      const char        *description_url,
-                     SoupUri           *url_base)
+                     SoupURI           *url_base)
 {
         for (element = element->children; element; element = element->next) {
                 xmlNode *children;
@@ -370,7 +371,7 @@ description_loaded (GUPnPControlPoint *control_point,
                     const char        *description_url)
 {
         xmlNode *element;
-        SoupUri *url_base;
+        SoupURI *url_base;
 
         /* Save the URL base, if any */
         element = xml_util_get_element ((xmlNode *) doc->doc,
@@ -400,7 +401,8 @@ description_loaded (GUPnPControlPoint *control_point,
  * Description URL downloaded.
  **/
 static void
-got_description_url (SoupMessage           *msg,
+got_description_url (SoupSession           *session,
+                     SoupMessage           *msg,
                      GetDescriptionURLData *data)
 {
         XmlDocWrapper *doc;
@@ -430,8 +432,8 @@ got_description_url (SoupMessage           *msg,
                 xmlDoc *xml_doc;
 
                 /* Parse response */
-                xml_doc = xmlParseMemory (msg->response.body,
-                                          msg->response.length);
+                xml_doc = xmlParseMemory (msg->response_body->data,
+                                          msg->response_body->length);
                 if (xml_doc) {
                         doc = xml_doc_wrapper_new (xml_doc);
 
@@ -526,7 +528,7 @@ load_description (GUPnPControlPoint *control_point,
 
 	        soup_session_queue_message (session,
                                             data->message,
-                                            (SoupMessageCallbackFn)
+                                            (SoupSessionCallback)
                                                    got_description_url,
                                             data);
         }

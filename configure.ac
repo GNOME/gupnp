@@ -1,5 +1,5 @@
 AC_PREREQ(2.53)
-AC_INIT(gupnp, 0.8, http://www.gupnp.org/)
+AC_INIT(gupnp, 0.8.99, http://www.gupnp.org/)
 AM_INIT_AUTOMAKE()
 AC_CONFIG_SRCDIR(libgupnp/gupnp.h)
 AM_CONFIG_HEADER(config.h)
@@ -13,8 +13,8 @@ AC_FUNC_MMAP
 
 PKG_CHECK_MODULES(LIBGUPNP, gobject-2.0 >= 2.9.1 \
                             gmodule-2.0 \
-                            gssdp-1.0 >= 0.3 \
-                            libsoup-2.2 \
+                            gssdp-1.0 >= 0.4.2.99 \
+                            libsoup-2.4 >= 2.4.1 \
                             libxml-2.0 \
                             shared-mime-info \
                             uuid)

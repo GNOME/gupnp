@@ -32,7 +32,6 @@
 #include <libsoup/soup-date.h>
 #include <uuid/uuid.h>
 #include <string.h>
-
 #include "gupnp-service.h"
 #include "gupnp-root-device.h"
 #include "gupnp-context-private.h"
@@ -557,8 +556,11 @@ query_state_variable (GUPnPService       *service,
 
 /* controlURL handler */
 static void
-control_server_handler (SoupServerContext *server_context,
-                        SoupMessage       *msg,
+control_server_handler (SoupServer        *soup_server,
+                        SoupMessage       *msg, 
+                        const char        *server_path,
+                        GHashTable        *query,
+                        SoupClientContext *soup_client,
                         gpointer           user_data)
 {
         GUPnPService *service;
@@ -567,12 +569,13 @@ control_server_handler (SoupServerContext *server_context,
         xmlDoc *doc;
         xmlNode *action_node;
         const char *soap_action, *action_name;
-        char *end, *date;
+        char *end;
+        gpointer response_body;
         GUPnPServiceAction *action;
 
         service = GUPNP_SERVICE (user_data);
 
-        if (strcmp (msg->method, SOUP_METHOD_POST) != 0) {
+        if (msg->method != SOUP_METHOD_POST) {
                 soup_message_set_status (msg, SOUP_STATUS_NOT_IMPLEMENTED);
 
                 return;
@@ -582,8 +585,8 @@ control_server_handler (SoupServerContext *server_context,
         client = GSSDP_CLIENT (context);
 
         /* Get action name */
-        soap_action = soup_message_get_header (msg->request_headers,
-                                               "SOAPAction");
+        soap_action = soup_message_headers_get (msg->request_headers,
+                                                "SOAPAction");
         action_name = strchr (soap_action, '#');
         if (!action_name) {
                 soup_message_set_status (msg, SOUP_STATUS_PRECONDITION_FAILED);
@@ -598,7 +601,8 @@ control_server_handler (SoupServerContext *server_context,
         *end = '\0';
 
         /* Parse action_node */
-        doc = xmlParseMemory (msg->request.body, msg->request.length);
+        doc = xmlParseMemory (msg->request_body->data,
+                              msg->request_body->length);
         action_node = xml_util_get_element ((xmlNode *) doc,
                                             "Envelope",
                                             "Body",
@@ -656,24 +660,21 @@ control_server_handler (SoupServerContext *server_context,
                          "</s:Body>"
                          "</s:Envelope>");
 
-        msg->response.owner  = SOUP_BUFFER_SYSTEM_OWNED;
-        msg->response.body   = g_string_free (action->response_str, FALSE);
-        msg->response.length = strlen (msg->response.body);
+        response_body = g_string_free (action->response_str, FALSE);
+
+        soup_message_set_response (msg,
+                                   "text/xml",
+                                   SOUP_MEMORY_TAKE,
+                                   response_body,
+                                   strlen (response_body));
 
         /* Cleanup */
         g_slice_free (GUPnPServiceAction, action);
 
         /* Server header on response */
-        soup_message_add_header (msg->response_headers,
-                                 "Server",
-                                 gssdp_client_get_server_id (client));
-
-        /* Date header on response */
-        date = soup_date_generate (time (NULL));
-        soup_message_add_header (msg->response_headers,
-                                 "Date",
-                                 date);
-        g_free (date);
+        soup_message_headers_append (msg->response_headers,
+                                     "Server",
+                                     gssdp_client_get_server_id (client));
 }
 
 /* Generates a standard (re)subscription response */
@@ -691,21 +692,14 @@ subscription_response (GUPnPService *service,
         client = GSSDP_CLIENT (context);
 
         /* Server header on response */
-        soup_message_add_header (msg->response_headers,
-                                 "Server",
-                                 gssdp_client_get_server_id (client));
-
-        /* Date header on response */
-        tmp = soup_date_generate (time (NULL));
-        soup_message_add_header (msg->response_headers,
-                                 "Date",
-                                 tmp);
-        g_free (tmp);
+        soup_message_headers_append (msg->response_headers,
+                                     "Server",
+                                     gssdp_client_get_server_id (client));
 
         /* SID header */
-        soup_message_add_header (msg->response_headers,
-                                 "SID",
-                                 sid);
+        soup_message_headers_append (msg->response_headers,
+                                     "SID",
+                                     sid);
 
         /* Timeout header */
         if (timeout > 0)
@@ -713,9 +707,9 @@ subscription_response (GUPnPService *service,
         else
                 tmp = g_strdup ("infinite");
 
-        soup_message_add_header (msg->response_headers,
-                                 "Timeout",
-                                 tmp);
+        soup_message_headers_append (msg->response_headers,
+                                     "Timeout",
+                                     tmp);
         g_free (tmp);
 
         /* 200 OK */
@@ -913,8 +907,11 @@ unsubscribe (GUPnPService *service,
 
 /* eventSubscriptionURL handler */
 static void
-subscription_server_handler (SoupServerContext *server_context,
-                             SoupMessage       *msg,
+subscription_server_handler (SoupServer        *soup_server,
+                             SoupMessage       *msg, 
+                             const char        *server_path,
+                             GHashTable        *query,
+                             SoupClientContext *soup_client,
                              gpointer           user_data)
 {
         GUPnPService *service;
@@ -922,10 +919,10 @@ subscription_server_handler (SoupServerContext *server_context,
 
         service = GUPNP_SERVICE (user_data);
 
-        callback = soup_message_get_header (msg->request_headers, "Callback");
-        nt       = soup_message_get_header (msg->request_headers, "NT");
-        timeout  = soup_message_get_header (msg->request_headers, "Timeout");
-        sid      = soup_message_get_header (msg->request_headers, "SID");
+        callback = soup_message_headers_get (msg->request_headers, "Callback");
+        nt       = soup_message_headers_get (msg->request_headers, "NT");
+        timeout  = soup_message_headers_get (msg->request_headers, "Timeout");
+        sid      = soup_message_headers_get (msg->request_headers, "SID");
 
         /* Choose appropriate handler */
         if (strcmp (msg->method, GENA_METHOD_SUBSCRIBE) == 0) {
@@ -996,7 +993,7 @@ gupnp_service_constructor (GType                  type,
         const GList *state_variables, *l;
         GUPnPContext *context;
         SoupServer *server;
-        SoupUri *uri;
+        SoupURI *uri;
         char *url;
 
         object_class = G_OBJECT_CLASS (gupnp_service_parent_class);
@@ -1052,8 +1049,8 @@ gupnp_service_constructor (GType                  type,
         url = soup_uri_to_string (uri, TRUE);
         soup_uri_free (uri);
 
-        soup_server_add_handler (server, url, NULL,
-                                 control_server_handler, NULL, object);
+        soup_server_add_handler (server, url,
+                                 control_server_handler, object, NULL);
         g_free (url);
 
         /* Run listener on eventSubscriptionURL */
@@ -1064,8 +1061,8 @@ gupnp_service_constructor (GType                  type,
         url = soup_uri_to_string (uri, TRUE);
         soup_uri_free (uri);
 
-        soup_server_add_handler (server, url, NULL,
-                                 subscription_server_handler, NULL, object);
+        soup_server_add_handler (server, url,
+                                 subscription_server_handler, object, NULL);
         g_free (url);
 
         return object;
@@ -1182,8 +1179,9 @@ gupnp_service_dispose (GObject *object)
 
                 msg = service->priv->pending_messages->data;
 
-                soup_message_set_status (msg, SOUP_STATUS_CANCELLED);
-                soup_session_cancel_message (session, msg);
+                soup_session_cancel_message (session,
+                                             msg,
+                                             SOUP_STATUS_CANCELLED);
 
                 service->priv->pending_messages =
                         g_list_delete_link (service->priv->pending_messages,
@@ -1397,7 +1395,8 @@ gupnp_service_notify_valist (GUPnPService *service,
 
 /* Receiveid notify response. */
 static void
-notify_got_response (SoupMessage *msg,
+notify_got_response (SoupSession *session,
+                     SoupMessage *msg,
                      gpointer     user_data)
 {
         SubscriptionData *data;
@@ -1418,7 +1417,7 @@ notify_got_response (SoupMessage *msg,
         } else {
                 /* Notify failed */
                 if (data->callbacks->next) {
-                        SoupUri *uri;
+                        SoupURI *uri;
                         GUPnPContext *context;
                         SoupSession *session;
 
@@ -1487,27 +1486,22 @@ notify_subscriber (gpointer key,
                 return;
         }
 
-        /* Add headers */
-        soup_message_add_header (msg->request_headers,
-                                 "Content-Type",
-                                 "text/xml");
+        soup_message_headers_append (msg->request_headers,
+                                     "NT",
+                                     "upnp:event");
 
-        soup_message_add_header (msg->request_headers,
-                                 "NT",
-                                 "upnp:event");
+        soup_message_headers_append (msg->request_headers,
+                                     "NTS",
+                                     "upnp:propchange");
 
-        soup_message_add_header (msg->request_headers,
-                                 "NTS",
-                                 "upnp:propchange");
-
-        soup_message_add_header (msg->request_headers,
-                                 "SID",
-                                 data->sid);
+        soup_message_headers_append (msg->request_headers,
+                                     "SID",
+                                     data->sid);
 
         tmp = g_strdup_printf ("%d", data->seq);
-        soup_message_add_header (msg->request_headers,
-                                 "SEQ",
-                                 tmp);
+        soup_message_headers_append (msg->request_headers,
+                                     "SEQ",
+                                     tmp);
         g_free (tmp);
 
         /* Handle overflow */
@@ -1517,9 +1511,11 @@ notify_subscriber (gpointer key,
                 data->seq = 1;
 
         /* Add body */
-        msg->request.owner  = SOUP_BUFFER_SYSTEM_OWNED;
-        msg->request.body   = g_strdup (property_set);
-        msg->request.length = strlen (property_set);
+        soup_message_set_response (msg,
+                                   "text/xml",
+                                   SOUP_MEMORY_TAKE,
+                                   g_strdup (property_set),
+                                   strlen (property_set));
 
         /* Queue */
         data->service->priv->pending_messages = 

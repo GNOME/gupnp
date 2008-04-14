@@ -86,8 +86,8 @@ accept_language_get_locales (SoupMessage *message)
         int i, j;
         GList *locales;
 
-        header = soup_message_get_header (message->request_headers,
-                                          "Accept-Language");
+        header = soup_message_headers_get (message->request_headers,
+                                           "Accept-Language");
         if (header == NULL)
                 return NULL;
 
@@ -239,7 +239,7 @@ message_set_user_agent (SoupMessage *message)
                 g_atexit (free_user_agent);
         }
 
-        soup_message_add_header (message->request_headers,
-				 "User-Agent",
-                                 user_agent);
+        soup_message_headers_append (message->request_headers,
+				     "User-Agent",
+                                     user_agent);
 }

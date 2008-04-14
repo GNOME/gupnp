@@ -28,7 +28,7 @@
  * #GUPnPServiceInfo interface.
  */
 
-#include <libsoup/soup-soap-message.h>
+#include <libsoup/soup.h>
 #include <gobject/gvaluecollector.h>
 #include <string.h>
 #include <locale.h>
@@ -80,6 +80,7 @@ struct _GUPnPServiceProxyAction {
         GUPnPServiceProxy *proxy;
 
         SoupMessage *msg;
+        GString *msg_str;
 
         GUPnPServiceProxyActionCallback callback;
         gpointer user_data;
@@ -103,7 +104,8 @@ typedef struct {
 } CallbackData;
 
 static void
-subscribe_got_response (SoupMessage       *msg,
+subscribe_got_response (SoupSession       *session,
+                        SoupMessage       *msg,
                         GUPnPServiceProxy *proxy);
 static void
 subscribe (GUPnPServiceProxy *proxy);
@@ -231,8 +233,9 @@ gupnp_service_proxy_dispose (GObject *object)
 
                 msg = proxy->priv->pending_messages->data;
 
-                soup_message_set_status (msg, SOUP_STATUS_CANCELLED);
-                soup_session_cancel_message (session, msg);
+                soup_session_cancel_message (session,
+                                             msg,
+                                             SOUP_STATUS_CANCELLED);
 
                 proxy->priv->pending_messages =
                         g_list_delete_link (proxy->priv->pending_messages,
@@ -520,7 +523,6 @@ begin_action_msg (GUPnPServiceProxy              *proxy,
         GUPnPServiceProxyAction *ret;
         char *control_url, *lang, *full_action;
         const char *service_type;
-        GString *str;
 
         /* Create action structure */
         ret = g_slice_new (GUPnPServiceProxyAction);
@@ -569,27 +571,28 @@ begin_action_msg (GUPnPServiceProxy              *proxy,
         /* Specify language */
         lang = accept_language_get_header ();
         if (lang) {
-                soup_message_add_header
+                soup_message_headers_append
                         (SOUP_MESSAGE (ret->msg)->request_headers,
                          "Accept-Language",
                          lang);
+
                 g_free (lang);
         }
 
         /* Specify action */
         full_action = g_strdup_printf ("\"%s#%s\"", service_type, action);
-        soup_message_add_header (SOUP_MESSAGE (ret->msg)->request_headers,
-				 "SOAPAction",
-                                 full_action);
+        soup_message_headers_append (SOUP_MESSAGE (ret->msg)->request_headers,
+				     "SOAPAction",
+                                     full_action);
         g_free (full_action);
 
         /* Specify user agent */
         message_set_user_agent (SOUP_MESSAGE (ret->msg));
 
         /* Set up envelope */
-        str = xml_util_new_string ();
+        ret->msg_str = xml_util_new_string ();
 
-        g_string_append (str,
+        g_string_append (ret->msg_str,
                          "<?xml version=\"1.0\"?>"
                          "<s:Envelope xmlns:s="
                                 "\"http://schemas.xmlsoap.org/soap/envelope/\" "
@@ -597,28 +600,22 @@ begin_action_msg (GUPnPServiceProxy              *proxy,
                                 "\"http://schemas.xmlsoap.org/soap/encoding/\">"
                          "<s:Body>");
 
-        g_string_append (str, "<u:");
-        g_string_append (str, action);
-        g_string_append (str, " xmlns:u=\"");
-        g_string_append (str, service_type);
-        g_string_append (str, "\">");
-
-        /* Store our GString temporarily and evillishly into
-         * msg->request.body. We do this to save us the trouble of setting it
-         * as user-data onto the object. */
-        ret->msg->request.body = (char *) str;
+        g_string_append (ret->msg_str, "<u:");
+        g_string_append (ret->msg_str, action);
+        g_string_append (ret->msg_str, " xmlns:u=\"");
+        g_string_append (ret->msg_str, service_type);
+        g_string_append (ret->msg_str, "\">");
 
         return ret;
 }
 
 /* Received response to action message */
 static void
-action_got_response (SoupMessage             *msg,
+action_got_response (SoupSession             *session,
+                     SoupMessage             *msg,
                      GUPnPServiceProxyAction *action)
 {
         const char *full_action;
-        GUPnPContext *context;
-        SoupSession *session;
 
         switch (msg->status_code) {
         case SOUP_STATUS_CANCELLED:
@@ -629,25 +626,21 @@ action_got_response (SoupMessage             *msg,
                 /* Retry with M-POST */
                 msg->method = "M-POST";
 
-                soup_message_add_header
+                soup_message_headers_append
                         (msg->request_headers,
                          "Man",
                          "\"http://schemas.xmlsoap.org/soap/envelope/\"; ns=s");
 
                 /* Rename "SOAPAction" to "s-SOAPAction" */
-                full_action = soup_message_get_header (msg->request_headers,
-                                                       "SOAPAction");
-                soup_message_add_header (msg->request_headers,
-                                         "s-SOAPAction",
-                                         full_action);
-                soup_message_remove_header (msg->request_headers,
+                full_action = soup_message_headers_get (msg->request_headers,
+                                                        "SOAPAction");
+                soup_message_headers_append (msg->request_headers,
+                                             "s-SOAPAction",
+                                             full_action);
+                soup_message_headers_remove (msg->request_headers,
                                             "SOAPAction");
 
                 /* And re-queue */
-                context = gupnp_service_info_get_context
-                                (GUPNP_SERVICE_INFO (action->proxy));
-                session = _gupnp_context_get_session (context);
-
                 soup_session_requeue_message (session, msg);
 
                 break;
@@ -667,24 +660,23 @@ finish_action_msg (GUPnPServiceProxyAction *action,
 {
         GUPnPContext *context;
         SoupSession *session;
-        GString *str;
-
-        /* Retrieve our GString, which we temporarily and evillishly
-         * stored into msg->request.body .. */
-        str = (GString *) action->msg->request.body;
 
         /* Finish message */
-        g_string_append (str, "</u:");
-        g_string_append (str, action_name);
-        g_string_append_c (str, '>');
+        g_string_append (action->msg_str, "</u:");
+        g_string_append (action->msg_str, action_name);
+        g_string_append_c (action->msg_str, '>');
 
-        g_string_append (str,
+        g_string_append (action->msg_str,
                          "</s:Body>"
                          "</s:Envelope>");
 
-        action->msg->request.owner  = SOUP_BUFFER_SYSTEM_OWNED;
-        action->msg->request.body   = g_string_free (str, FALSE);
-        action->msg->request.length = strlen (action->msg->request.body);
+        soup_message_set_request (action->msg,
+                                  "text/xml",
+                                  SOUP_MEMORY_TAKE,
+                                  action->msg_str->str,
+                                  action->msg_str->len);
+
+        g_string_free (action->msg_str, FALSE);
 
         /* We need to keep our own reference to the message as well,
          * in order for send_action() to work. */
@@ -697,26 +689,20 @@ finish_action_msg (GUPnPServiceProxyAction *action,
 
         soup_session_queue_message (session,
                                     SOUP_MESSAGE (action->msg),
-                                    (SoupMessageCallbackFn) action_got_response,
+                                    (SoupSessionCallback) action_got_response,
                                     action);
 }
 
 /* Writes a parameter name and GValue pair to @msg */
 static void
-write_in_parameter (const char  *arg_name,
-                    GValue      *value,
-                    SoupMessage *msg)
+write_in_parameter (const char *arg_name,
+                    GValue     *value,
+                    GString    *msg_str)
 {
-        GString *str;
-
-        /* Retrieve our GString, which we temporarily and evillishly
-         * stored into msg->request.body .. */
-        str = (GString *) msg->request.body;
-
         /* Write parameter pair */
-        xml_util_start_element (str, arg_name);
-        gvalue_util_value_append_to_xml_string (value, str);
-        xml_util_end_element (str, arg_name);
+        xml_util_start_element (msg_str, arg_name);
+        gvalue_util_value_append_to_xml_string (value, msg_str);
+        xml_util_end_element (msg_str, arg_name);
 }
 
 /**
@@ -772,7 +758,7 @@ gupnp_service_proxy_begin_action_valist
 
                 G_VALUE_COLLECT (&value, var_args, 0, &collect_error);
                 if (!collect_error) {
-                        write_in_parameter (arg_name, &value, ret->msg);
+                        write_in_parameter (arg_name, &value, ret->msg_str);
 
                         g_value_unset (&value);
 
@@ -839,7 +825,7 @@ gupnp_service_proxy_begin_action_hash
         }
 
         /* Arguments */
-        g_hash_table_foreach (hash, (GHFunc) write_in_parameter, ret->msg);
+        g_hash_table_foreach (hash, (GHFunc) write_in_parameter, ret->msg_str);
 
         /* Finish and send off */
         finish_action_msg (ret, action);
@@ -882,16 +868,15 @@ gupnp_service_proxy_end_action (GUPnPServiceProxy       *proxy,
 }
 
 /* Checks an action response for errors and returns the parsed
- * SoupSoapResponse object. */
-static SoupSoapResponse *
+ * xmlDoc object. */
+static xmlDoc *
 check_action_response (GUPnPServiceProxy       *proxy,
                        GUPnPServiceProxyAction *action,
+                       xmlNode                **params,
                        GError                 **error)
 {
         SoupMessage *soup_msg;
-        SoupSoapResponse *response;
-        SoupSoapParameter *param;
-        char *tmp;
+        xmlDoc *response;
         int code;
 
         soup_msg = SOUP_MESSAGE (action->msg);
@@ -908,10 +893,8 @@ check_action_response (GUPnPServiceProxy       *proxy,
         }
 
         /* Parse response */
-        tmp = g_malloc0 (action->msg->response.length + 1);
-        strncpy (tmp, action->msg->response.body, action->msg->response.length);
-        response = soup_soap_response_new_from_string (tmp);
-        g_free (tmp);
+        response = xmlParseMemory (action->msg->response_body->data,
+                                   action->msg->response_body->length);
 
 	if (!response) {
                 if (soup_msg->status_code == SOUP_STATUS_OK) {
@@ -930,17 +913,45 @@ check_action_response (GUPnPServiceProxy       *proxy,
                 return NULL;
 	}
 
+        /* Get parameter list */
+        *params = xml_util_get_element ((xmlNode *) response,
+                                        "Envelope",
+                                        NULL);
+        if (*params != NULL)
+                *params = xml_util_real_node ((*params)->children);
+
+        if (*params != NULL) {
+                if (strcmp ((const char *) (*params)->name, "Header") == 0)
+                        *params = xml_util_real_node ((*params)->next);
+
+                if (*params != NULL)
+                        if (strcmp ((const char *) (*params)->name, "Body") != 0)
+                                *params = NULL;
+        }
+
+        if (*params != NULL)
+                *params = xml_util_real_node ((*params)->children);
+
+        if (*params == NULL) {
+                g_set_error (error,
+                             GUPNP_SERVER_ERROR,
+                             GUPNP_SERVER_ERROR_INVALID_RESPONSE,
+                             "Invalid Envelope");
+
+                xmlFreeDoc (response);
+
+                return NULL;
+        }
+
         /* Check whether we have a Fault */
         if (soup_msg->status_code == SOUP_STATUS_INTERNAL_SERVER_ERROR) {
-                SoupSoapParameter *child;
+                xmlNode *param;
                 char *desc;
 
-                param = soup_soap_response_get_first_parameter_by_name
-                                                        (response, "detail");
-                if (param) {
-                        param = soup_soap_parameter_get_first_child_by_name
-                                                        (param, "UPnPError");
-                }
+                param = xml_util_get_element (*params,
+                                              "detail",
+                                              "UPnPError",
+                                              NULL);
 
                 if (!param) {
                         g_set_error (error,
@@ -948,33 +959,29 @@ check_action_response (GUPnPServiceProxy       *proxy,
                                      GUPNP_SERVER_ERROR_INVALID_RESPONSE,
                                      "Invalid Fault");
 
-                        g_object_unref (response);
+                        xmlFreeDoc (response);
 
                         return NULL;
                 }
 
                 /* Code */
-                child = soup_soap_parameter_get_first_child_by_name
-                                                (param, "errorCode");
-                if (child)
-                        code = soup_soap_parameter_get_int_value (child);
-                else {
+                code = xml_util_get_child_element_content_int
+                                        (param, "errorCode");
+                if (code == -1) {
                         g_set_error (error,
                                      GUPNP_SERVER_ERROR,
                                      GUPNP_SERVER_ERROR_INVALID_RESPONSE,
                                      "Invalid Fault");
 
-                        g_object_unref (response);
+                        xmlFreeDoc (response);
 
                         return NULL;
                 }
 
                 /* Description */
-                child = soup_soap_parameter_get_first_child_by_name
-                                                (param, "errorDescription");
-                if (child)
-                        desc = soup_soap_parameter_get_string_value (child);
-                else
+                desc = xml_util_get_child_element_content_glib
+                                        (param, "errorDescription");
+                if (desc == NULL)
                         desc = g_strdup (soup_msg->reason_phrase);
 
                 set_error_literal (error,
@@ -984,7 +991,7 @@ check_action_response (GUPnPServiceProxy       *proxy,
 
                 g_free (desc);
 
-                g_object_unref (response);
+                xmlFreeDoc (response);
 
                 return NULL;
         }
@@ -995,15 +1002,16 @@ check_action_response (GUPnPServiceProxy       *proxy,
 /* Reads a value into the parameter name and initialised GValue pair
  * from @response */
 static void
-read_out_parameter (const char       *arg_name,
-                    GValue           *value,
-                    SoupSoapResponse *response)
+read_out_parameter (const char *arg_name,
+                    GValue     *value,
+                    xmlNode    *params)
 {
-        SoupSoapParameter *param;
+        xmlNode *param;
 
-        /* Try to find a matching paramater in the response */
-        param = soup_soap_response_get_first_parameter_by_name
-                                                (response, arg_name);
+        /* Try to find a matching paramater in the response*/
+        param = xml_util_get_element (params,
+                                      arg_name,
+                                      NULL);
         if (!param) {
                 g_warning ("Could not find variable \"%s\" in response",
                            arg_name);
@@ -1011,7 +1019,7 @@ read_out_parameter (const char       *arg_name,
                 return;
         }
 
-        gvalue_util_set_value_from_xml_node (value, (xmlNode *) param);
+        gvalue_util_set_value_from_xml_node (value, param);
 }
 
 /**
@@ -1034,7 +1042,8 @@ gupnp_service_proxy_end_action_valist (GUPnPServiceProxy       *proxy,
                                        GError                 **error,
                                        va_list                  var_args)
 {
-        SoupSoapResponse *response;
+        xmlDoc *response;
+        xmlNode *params;
         const char *arg_name;
 
         g_return_val_if_fail (GUPNP_IS_SERVICE_PROXY (proxy), FALSE);
@@ -1053,7 +1062,7 @@ gupnp_service_proxy_end_action_valist (GUPnPServiceProxy       *proxy,
         }
 
         /* Check response for errors and do initial parsing */
-        response = check_action_response (proxy, action, error);
+        response = check_action_response (proxy, action, &params, error);
         if (response == NULL) {
                 gupnp_service_proxy_action_free (action);
 
@@ -1071,7 +1080,7 @@ gupnp_service_proxy_end_action_valist (GUPnPServiceProxy       *proxy,
 
                 g_value_init (&value, arg_type);
 
-                read_out_parameter (arg_name, &value, response);
+                read_out_parameter (arg_name, &value, params);
 
                 G_VALUE_LCOPY (&value, var_args, 0, &copy_error);
 
@@ -1089,7 +1098,7 @@ gupnp_service_proxy_end_action_valist (GUPnPServiceProxy       *proxy,
         /* Cleanup */
         gupnp_service_proxy_action_free (action);
 
-        g_object_unref (response);
+        xmlFreeDoc (response);
 
         return TRUE;
 }
@@ -1112,7 +1121,8 @@ gupnp_service_proxy_end_action_hash (GUPnPServiceProxy       *proxy,
                                      GError                 **error,
                                      GHashTable              *hash)
 {
-        SoupSoapResponse *response;
+        xmlDoc *response;
+        xmlNode *params;
 
         g_return_val_if_fail (GUPNP_IS_SERVICE_PROXY (proxy), FALSE);
         g_return_val_if_fail (action, FALSE);
@@ -1130,7 +1140,7 @@ gupnp_service_proxy_end_action_hash (GUPnPServiceProxy       *proxy,
         }
 
         /* Check response for errors and do initial parsing */
-        response = check_action_response (proxy, action, error);
+        response = check_action_response (proxy, action, &params, error);
         if (response == NULL) {
                 gupnp_service_proxy_action_free (action);
 
@@ -1138,12 +1148,12 @@ gupnp_service_proxy_end_action_hash (GUPnPServiceProxy       *proxy,
         }
 
         /* Read arguments */
-        g_hash_table_foreach (hash, (GHFunc) read_out_parameter, response);
+        g_hash_table_foreach (hash, (GHFunc) read_out_parameter, params);
 
         /* Cleanup */
         gupnp_service_proxy_action_free (action);
 
-        g_object_unref (response);
+        xmlFreeDoc (response);
 
         return TRUE;
 }
@@ -1170,10 +1180,9 @@ gupnp_service_proxy_cancel_action (GUPnPServiceProxy       *proxy,
                                         (GUPNP_SERVICE_INFO (proxy));
                 session = _gupnp_context_get_session (context);
 
-                soup_message_set_status (SOUP_MESSAGE (action->msg),
-                                         SOUP_STATUS_CANCELLED);
                 soup_session_cancel_message (session,
-                                             SOUP_MESSAGE (action->msg));
+                                             SOUP_MESSAGE (action->msg),
+                                             SOUP_STATUS_CANCELLED);
         }
 
         if (action->error != NULL)
@@ -1318,8 +1327,11 @@ gupnp_service_proxy_remove_notify (GUPnPServiceProxy              *proxy,
  * message with our SID.
  **/
 static void
-server_handler (SoupServerContext *server_context,
-                SoupMessage       *msg,
+server_handler (SoupServer        *soup_server,
+                SoupMessage       *msg, 
+                const char        *server_path,
+                GHashTable        *query,
+                SoupClientContext *soup_client,
                 gpointer           user_data)
 {
         GUPnPServiceProxy *proxy;
@@ -1337,7 +1349,7 @@ server_handler (SoupServerContext *server_context,
                 return;
         }
 
-        hdr = soup_message_get_header (msg->request_headers, "NT");
+        hdr = soup_message_headers_get (msg->request_headers, "NT");
         if (hdr == NULL || strcmp (hdr, "upnp:event") != 0) {
                 /* Proper NT header lacking */
                 soup_message_set_status (msg, SOUP_STATUS_PRECONDITION_FAILED);
@@ -1345,7 +1357,7 @@ server_handler (SoupServerContext *server_context,
                 return;
         }
 
-        hdr = soup_message_get_header (msg->request_headers, "NTS");
+        hdr = soup_message_headers_get (msg->request_headers, "NTS");
         if (hdr == NULL || strcmp (hdr, "upnp:propchange") != 0) {
                 /* Proper NTS header lacking */
                 soup_message_set_status (msg, SOUP_STATUS_PRECONDITION_FAILED);
@@ -1353,7 +1365,7 @@ server_handler (SoupServerContext *server_context,
                 return;
         }
 
-        hdr = soup_message_get_header (msg->request_headers, "SID");
+        hdr = soup_message_headers_get (msg->request_headers, "SID");
         if (hdr == NULL ||
             (proxy->priv->sid && (strcmp (hdr, proxy->priv->sid) != 0))) {
                 /* No SID or not ours */
@@ -1384,7 +1396,7 @@ server_handler (SoupServerContext *server_context,
                 }
         }
 
-        hdr = soup_message_get_header (msg->request_headers, "SEQ");
+        hdr = soup_message_headers_get (msg->request_headers, "SEQ");
         if (hdr == NULL) {
                 /* No SEQ header */
                 soup_message_set_status (msg, SOUP_STATUS_PRECONDITION_FAILED);
@@ -1411,8 +1423,8 @@ server_handler (SoupServerContext *server_context,
                 proxy->priv->seq = 1;
 
         /* Parse the actual XML message content */
-        doc = xmlParseMemory (msg->request.body,
-                              msg->request.length);
+        doc = xmlParseMemory (msg->request_body->data,
+                              msg->request_body->length);
         if (doc == NULL) {
                 /* Failed */
                 g_warning ("Failed to parse NOTIFY message body");
@@ -1534,14 +1546,14 @@ subscription_expire (gpointer user_data)
         g_assert (msg != NULL);
 
         /* Add headers */
-        soup_message_add_header (msg->request_headers,
-                                 "SID",
-                                 proxy->priv->sid);
+        soup_message_headers_append (msg->request_headers,
+                                    "SID",
+                                    proxy->priv->sid);
 
         timeout = make_timeout_header (context);
-        soup_message_add_header (msg->request_headers,
-                                 "Timeout",
-                                 timeout);
+        soup_message_headers_append (msg->request_headers,
+                                     "Timeout",
+                                     timeout);
         g_free (timeout);
 
         /* And send it off */
@@ -1552,7 +1564,7 @@ subscription_expire (gpointer user_data)
 
         soup_session_queue_message (session,
                                     msg,
-                                    (SoupMessageCallbackFn)
+                                    (SoupSessionCallback)
                                         subscribe_got_response,
                                     proxy);
 
@@ -1563,7 +1575,8 @@ subscription_expire (gpointer user_data)
  * Received subscription response.
  **/
 static void
-subscribe_got_response (SoupMessage       *msg,
+subscribe_got_response (SoupSession       *session,
+                        SoupMessage       *msg,
                         GUPnPServiceProxy *proxy)
 {
         GError *error;
@@ -1591,7 +1604,7 @@ subscribe_got_response (SoupMessage       *msg,
                 int timeout;
 
                 /* Save SID. */
-                hdr = soup_message_get_header (msg->response_headers, "SID");
+                hdr = soup_message_headers_get (msg->response_headers, "SID");
                 if (hdr == NULL) {
                         error = g_error_new
                                         (GUPNP_EVENTING_ERROR,
@@ -1604,8 +1617,8 @@ subscribe_got_response (SoupMessage       *msg,
                 proxy->priv->sid = g_strdup (hdr);
 
                 /* Figure out when the subscription times out */
-                hdr = soup_message_get_header (msg->response_headers,
-                                               "Timeout");
+                hdr = soup_message_headers_get (msg->response_headers,
+                                                "Timeout");
                 if (hdr == NULL) {
                         g_warning ("No Timeout in SUBSCRIBE response.");
 
@@ -1719,19 +1732,19 @@ subscribe (GUPnPServiceProxy *proxy)
         delivery_url = g_strdup_printf ("<%s%s>",
                                         server_url,
                                         proxy->priv->path);
-        soup_message_add_header (msg->request_headers,
-                                 "Callback",
-                                 delivery_url);
+        soup_message_headers_append (msg->request_headers,
+                                     "Callback",
+                                     delivery_url);
         g_free (delivery_url);
 
-        soup_message_add_header (msg->request_headers,
-                                 "NT",
-                                 "upnp:event");
+        soup_message_headers_append (msg->request_headers,
+                                     "NT",
+                                     "upnp:event");
 
         timeout = make_timeout_header (context);
-        soup_message_add_header (msg->request_headers,
-                                 "Timeout",
-                                 timeout);
+        soup_message_headers_append (msg->request_headers,
+                                     "Timeout",
+                                     timeout);
         g_free (timeout);
 
         /* Listen for events */
@@ -1739,10 +1752,9 @@ subscribe (GUPnPServiceProxy *proxy)
 
         soup_server_add_handler (server,
                                  proxy->priv->path,
-                                 NULL,
                                  server_handler,
-                                 NULL,
-                                 proxy);
+                                 proxy,
+                                 NULL);
 
         /* And send our subscription message off */
         proxy->priv->pending_messages =
@@ -1752,7 +1764,7 @@ subscribe (GUPnPServiceProxy *proxy)
 
         soup_session_queue_message (session,
                                     msg,
-                                    (SoupMessageCallbackFn)
+                                    (SoupSessionCallback)
                                         subscribe_got_response,
                                     proxy);
 }
@@ -1785,9 +1797,9 @@ unsubscribe (GUPnPServiceProxy *proxy)
         g_assert (msg != NULL);
 
         /* Add headers */
-        soup_message_add_header (msg->request_headers,
-                                 "SID",
-                                 proxy->priv->sid);
+        soup_message_headers_append (msg->request_headers,
+                                     "SID",
+                                     proxy->priv->sid);
 
         /* And queue it */
         session = _gupnp_context_get_session (context);

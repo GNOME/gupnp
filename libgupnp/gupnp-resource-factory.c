@@ -124,7 +124,7 @@ gupnp_resource_factory_create_device_proxy
                                  xmlNode              *element,
                                  const char           *udn,
                                  const char           *location,
-                                 const SoupUri        *url_base)
+                                 const SoupURI        *url_base)
 {
         GUPnPDeviceProxy *proxy;
         const char       *upnp_type;
@@ -184,7 +184,7 @@ gupnp_resource_factory_create_service_proxy
                                  const char             *udn,
                                  const char             *service_type,
                                  const char             *location,
-                                 const SoupUri          *url_base)
+                                 const SoupURI          *url_base)
 {
         GUPnPServiceProxy *proxy;
         GType              proxy_type = GUPNP_TYPE_SERVICE_PROXY;
@@ -239,7 +239,7 @@ gupnp_resource_factory_create_device
                                  xmlNode              *element,
                                  const char           *udn,
                                  const char           *location,
-                                 const SoupUri        *url_base)
+                                 const SoupURI        *url_base)
 {
         GUPnPDevice *device;
         const char  *upnp_type;
@@ -296,7 +296,7 @@ gupnp_resource_factory_create_service
                                  xmlNode              *element,
                                  const char           *udn,
                                  const char           *location,
-                                 const SoupUri        *url_base)
+                                 const SoupURI        *url_base)
 {
         GUPnPService *service;
         const char   *upnp_type;

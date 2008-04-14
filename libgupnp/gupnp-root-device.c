@@ -287,7 +287,7 @@ gupnp_root_device_constructor (GType                  type,
         int i;
         xmlDoc *description_doc;
         xmlNode *root_element, *element;
-        SoupUri *url_base;
+        SoupURI *url_base;
 
         /* Get 'description-doc' property value */
         description_doc = NULL;

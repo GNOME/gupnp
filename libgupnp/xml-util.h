@@ -72,18 +72,21 @@ G_GNUC_INTERNAL char *
 xml_util_get_child_element_content_glib (xmlNode    *node,
                                          const char *child_name);
 
-G_GNUC_INTERNAL SoupUri *
+G_GNUC_INTERNAL SoupURI *
 xml_util_get_child_element_content_uri  (xmlNode    *node,
                                          const char *child_name,
-                                         SoupUri    *base);
+                                         SoupURI    *base);
 
 G_GNUC_INTERNAL char *
 xml_util_get_child_element_content_url  (xmlNode    *node,
                                          const char *child_name,
-                                         SoupUri    *base);
+                                         SoupURI    *base);
 G_GNUC_INTERNAL xmlChar *
 xml_util_get_attribute_contents         (xmlNode    *node,
                                          const char *attribute_name);
+
+G_GNUC_INTERNAL xmlNode *
+xml_util_real_node                      (xmlNode    *node);
 
 /* XML string creation helpers */
 G_GNUC_INTERNAL GString *

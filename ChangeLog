@@ -1,3 +1,55 @@
+2008-04-15  Jorn Baayen  <jorn@openedhand.com>
+	    Zeeshan Ali Khattak  <zeenix@gmail.com>
+
+	* configure.ac:
+	* gupnp-1.0-uninstalled.pc.in:
+	* gupnp-1.0.pc.in:
+	* libgupnp/gupnp-context.c (gupnp_context_init),
+	(default_server_handler), (gupnp_context_get_server),
+	(hosting_server_handler), (gupnp_context_host_path):
+	* libgupnp/gupnp-control-point.c (gupnp_control_point_dispose),
+	(process_service_list), (process_device_list),
+	(description_loaded), (got_description_url), (load_description):
+	* libgupnp/gupnp-device-info.c (gupnp_device_info_class_init),
+	(gupnp_device_info_get_icon_url):
+	* libgupnp/gupnp-device-info.h:
+	* libgupnp/gupnp-device-proxy.c (gupnp_device_proxy_get_device),
+	(gupnp_device_proxy_get_service):
+	* libgupnp/gupnp-device.c (gupnp_device_get_device),
+	(gupnp_device_get_service):
+	* libgupnp/gupnp-resource-factory-private.h:
+	* libgupnp/gupnp-resource-factory.c
+	(gupnp_resource_factory_create_device_proxy),
+	(gupnp_resource_factory_create_service_proxy),
+	(gupnp_resource_factory_create_device),
+	(gupnp_resource_factory_create_service):
+	* libgupnp/gupnp-root-device.c (gupnp_root_device_constructor):
+	* libgupnp/gupnp-service-info.c (gupnp_service_info_dispose),
+	(gupnp_service_info_class_init),
+	(gupnp_service_info_get_introspection), (got_scpd_url),
+	(gupnp_service_info_get_introspection_async):
+	* libgupnp/gupnp-service-info.h:
+	* libgupnp/gupnp-service-proxy.c (gupnp_service_proxy_dispose),
+	(begin_action_msg), (action_got_response), (finish_action_msg),
+	(write_in_parameter), (gupnp_service_proxy_begin_action_valist),
+	(gupnp_service_proxy_begin_action_hash), (check_action_response),
+	(read_out_parameter), (gupnp_service_proxy_end_action_valist),
+	(gupnp_service_proxy_end_action_hash),
+	(gupnp_service_proxy_cancel_action), (server_handler),
+	(subscription_expire), (subscribe_got_response), (subscribe),
+	(unsubscribe):
+	* libgupnp/gupnp-service.c (control_server_handler),
+	(subscription_response), (subscription_server_handler),
+	(gupnp_service_constructor), (gupnp_service_dispose),
+	(notify_got_response), (notify_subscriber):
+	* libgupnp/http-headers.c (accept_language_get_locales),
+	(message_set_user_agent):
+	* libgupnp/xml-util.c (xml_util_get_child_element_content_uri),
+	(xml_util_get_child_element_content_url):
+	* libgupnp/xml-util.h:
+
+	Port to libsoup 2.4.
+
 2008-03-19  Jorn Baayen  <jorn@openedhand.com>
 
 	* libgupnp/gupnp-context.c (gupnp_context_init):

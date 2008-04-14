@@ -149,13 +149,13 @@ xml_util_get_child_element_content_glib (xmlNode    *node,
         return copy;
 }
 
-SoupUri *
+SoupURI *
 xml_util_get_child_element_content_uri (xmlNode    *node,
                                         const char *child_name,
-                                        SoupUri    *base)
+                                        SoupURI    *base)
 {
         xmlChar *content;
-        SoupUri *uri;
+        SoupURI *uri;
 
         content = xml_util_get_child_element_content (node, child_name);
         if (!content)
@@ -171,9 +171,9 @@ xml_util_get_child_element_content_uri (xmlNode    *node,
 char *
 xml_util_get_child_element_content_url (xmlNode    *node,
                                         const char *child_name,
-                                        SoupUri    *base)
+                                        SoupURI    *base)
 {
-        SoupUri *uri;
+        SoupURI *uri;
         char *url;
 
         uri = xml_util_get_child_element_content_uri (node, child_name, base);
@@ -204,6 +204,26 @@ xml_util_get_attribute_contents (xmlNode    *node,
                 return xmlNodeGetContent (attribute->children);
         else
                 return NULL;
+}
+
+/**
+ * xml_util_real_node:
+ * @node: an %xmlNodePtr
+ *
+ * Finds the first "real" node (ie, not a comment or whitespace) at or
+ * after @node at its level in the tree.
+ *
+ * Return: a node, or %NULL
+ *
+ * (Taken from libsoup)
+ **/
+xmlNode *
+xml_util_real_node (xmlNode *node)
+{
+	while (node && (node->type == XML_COMMENT_NODE ||
+			xmlIsBlankNode (node)))
+		node = node->next;
+	return node;
 }
 
 /* XML string creation helpers */

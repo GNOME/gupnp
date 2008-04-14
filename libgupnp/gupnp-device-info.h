@@ -87,7 +87,7 @@ gupnp_device_info_get_context           (GUPnPDeviceInfo *info);
 const char *
 gupnp_device_info_get_location          (GUPnPDeviceInfo *info);
 
-const SoupUri *
+const SoupURI *
 gupnp_device_info_get_url_base          (GUPnPDeviceInfo *info);
 
 const char *

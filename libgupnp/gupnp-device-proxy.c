@@ -47,7 +47,7 @@ gupnp_device_proxy_get_device (GUPnPDeviceInfo *info,
         GUPnPContext         *context;
         XmlDocWrapper        *doc;
         const char           *location;
-        const SoupUri        *url_base;
+        const SoupURI        *url_base;
 
         proxy = GUPNP_DEVICE_PROXY (info);
 
@@ -78,7 +78,7 @@ gupnp_device_proxy_get_service (GUPnPDeviceInfo *info,
         GUPnPContext         *context;
         XmlDocWrapper        *doc;
         const char           *location, *udn;
-        const SoupUri        *url_base;
+        const SoupURI        *url_base;
 
         proxy = GUPNP_DEVICE_PROXY (info);
 

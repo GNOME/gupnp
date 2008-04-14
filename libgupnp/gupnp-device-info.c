@@ -46,7 +46,7 @@ struct _GUPnPDeviceInfoPrivate {
         char *udn;
         char *device_type;
 
-        SoupUri *url_base;
+        SoupURI *url_base;
 
         XmlDocWrapper *doc;
 
@@ -308,7 +308,7 @@ gupnp_device_info_class_init (GUPnPDeviceInfoClass *klass)
         /**
          * GUPnPDeviceInfo:url-base
          *
-         * The URL base (#SoupUri).
+         * The URL base (#SoupURI).
          **/
         g_object_class_install_property
                 (object_class,
@@ -412,7 +412,7 @@ gupnp_device_info_get_location (GUPnPDeviceInfo *info)
  *
  * Return value: The URL base.
  **/
-const SoupUri *
+const SoupURI *
 gupnp_device_info_get_url_base (GUPnPDeviceInfo *info)
 {
         g_return_val_if_fail (GUPNP_IS_DEVICE_INFO (info), NULL);
@@ -782,7 +782,7 @@ gupnp_device_info_get_icon_url (GUPnPDeviceInfo *info,
                         *height = icon->height;
 
                 if (icon->url) {
-                        SoupUri *uri;
+                        SoupURI *uri;
 
                         uri = soup_uri_new_with_base (info->priv->url_base,
                                                       (const char *) icon->url);

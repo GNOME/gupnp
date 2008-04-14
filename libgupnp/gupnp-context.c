@@ -170,12 +170,10 @@ gupnp_context_init (GUPnPContext *context)
 
         context->priv->session = soup_session_async_new ();
 
-#ifdef SOUP_SESSION_IDLE_TIMEOUT
         g_object_set (context->priv->session,
                       SOUP_SESSION_IDLE_TIMEOUT,
                       60,
                       NULL);
-#endif /* SOUP_SESSION_IDLE_TIMEOUT */
 
         server_id = make_server_id ();
         gssdp_client_set_server_id (GSSDP_CLIENT (context), server_id);
@@ -382,8 +380,11 @@ _gupnp_context_get_session (GUPnPContext *context)
  * Default server handler: Return 404 not found.
  **/
 static void
-default_server_handler (SoupServerContext *server_context,
-                        SoupMessage       *msg,
+default_server_handler (SoupServer        *server,
+                        SoupMessage       *msg, 
+                        const char        *path,
+                        GHashTable        *query,
+                        SoupClientContext *client,
                         gpointer           user_data)
 {
         soup_message_set_status (msg, SOUP_STATUS_NOT_FOUND);
@@ -405,8 +406,9 @@ gupnp_context_get_server (GUPnPContext *context)
                                                          context->priv->port,
                                                          NULL);
 
-                soup_server_add_handler (context->priv->server, NULL, NULL,
-                                         default_server_handler, NULL, context);
+                soup_server_add_handler (context->priv->server, NULL,
+                                         default_server_handler, context,
+                                         NULL);
 
                 soup_server_run_async (context->priv->server);
         }
@@ -538,13 +540,16 @@ gupnp_context_get_subscription_timeout (GUPnPContext *context)
 
 /* Modified from libsoup simple-httpd.c */
 static void
-hosting_server_handler (SoupServerContext *server_context,
-                        SoupMessage       *msg,
+hosting_server_handler (SoupServer        *server,
+                        SoupMessage       *msg, 
+                        const char        *server_path,
+                        GHashTable        *query,
+                        SoupClientContext *client,
                         gpointer           user_data)
 {
         const char *local_path, *lang, *mime;
         char *path, *path_to_open, *path_locale, *slash;
-        SoupMethodId method;
+        gpointer response_body;
         struct stat st;
         int fd, path_offset;
         GList *locales;
@@ -553,8 +558,8 @@ hosting_server_handler (SoupServerContext *server_context,
 
         path = soup_uri_to_string (soup_message_get_uri (msg), TRUE);
 
-        method = soup_method_get_id (msg->method);
-        if (method != SOUP_METHOD_ID_GET && method != SOUP_METHOD_ID_HEAD) {
+        if (msg->method != SOUP_METHOD_GET &&
+            msg->method != SOUP_METHOD_HEAD) {
                 soup_message_set_status (msg, SOUP_STATUS_NOT_IMPLEMENTED);
                 locales = NULL;
                 goto DONE;
@@ -570,7 +575,7 @@ hosting_server_handler (SoupServerContext *server_context,
                 }
 
                 /* Skip the server path */
-                path_offset = strlen (server_context->handler->path);
+                path_offset = strlen (server_path);
         } else {
                 path = g_strdup ("");
 
@@ -618,8 +623,8 @@ hosting_server_handler (SoupServerContext *server_context,
                         uri = soup_uri_to_string (soup_message_get_uri (msg),
                                                   FALSE);
                         redir_uri = g_strdup_printf ("%s/", uri);
-                        soup_message_add_header (msg->response_headers,
-                                                 "Location", redir_uri);
+                        soup_message_headers_append (msg->response_headers,
+                                                     "Location", redir_uri);
                         soup_message_set_status (msg,
                                                  SOUP_STATUS_MOVED_PERMANENTLY);
                         g_free (redir_uri);
@@ -646,21 +651,20 @@ hosting_server_handler (SoupServerContext *server_context,
                 goto DONE;
         }
 
-        msg->response.owner = SOUP_BUFFER_SYSTEM_OWNED;
-        msg->response.length = st.st_size;
-
-        msg->response.body = g_malloc (msg->response.length);
-        read (fd, msg->response.body, msg->response.length);
+        response_body = g_malloc (st.st_size);
+        read (fd, response_body, st.st_size);
 
         close (fd);
 
         /* Set Content-Type */
-        mime = xdg_mime_get_mime_type_for_data (msg->response.body,
-                                                msg->response.length);
+        mime = xdg_mime_get_mime_type_for_data (response_body,
+                                                st.st_size);
 
-        soup_message_add_header (msg->response_headers,
-                                 "Content-Type",
-                                 mime);
+        soup_message_set_response (msg,
+                                   mime,
+                                   SOUP_MEMORY_TAKE,
+                                   response_body,
+                                   st.st_size);
 
         /* Set Content-Language */
         if (locales) {
@@ -670,9 +674,9 @@ hosting_server_handler (SoupServerContext *server_context,
         } else
                 lang = "en";
 
-        soup_message_add_header (msg->response_headers,
-                                 "Content-Language",
-                                 lang);
+        soup_message_headers_append (msg->response_headers,
+                                     "Content-Language",
+                                     lang);
 
         /* OK */
         soup_message_set_status (msg, SOUP_STATUS_OK);
@@ -685,14 +689,6 @@ hosting_server_handler (SoupServerContext *server_context,
                 g_free (locales->data);
                 locales = g_list_delete_link (locales, locales);
         }
-}
-
-static void
-unregister_hosting_server_handler (SoupServer        *server,
-                                   SoupServerHandler *handler,
-                                   gpointer           user_data)
-{
-        g_free (user_data);
 }
 
 /**
@@ -718,10 +714,10 @@ gupnp_context_host_path (GUPnPContext *context,
 
         server = gupnp_context_get_server (context);
 
-        soup_server_add_handler (server, server_path, NULL,
+        soup_server_add_handler (server, server_path,
                                  hosting_server_handler,
-                                 unregister_hosting_server_handler,
-                                 g_strdup (local_path));
+                                 g_strdup (local_path),
+                                 g_free);
 }
 
 /**

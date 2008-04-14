@@ -49,7 +49,7 @@ struct _GUPnPServiceInfoPrivate {
         char *udn;
         char *service_type;
 
-        SoupUri *url_base;
+        SoupURI *url_base;
 
         XmlDocWrapper *doc;
 
@@ -193,9 +193,9 @@ gupnp_service_info_dispose (GObject *object)
 
                         data = info->priv->pending_gets->data;
 
-                        soup_message_set_status (data->message,
-                                                 SOUP_STATUS_CANCELLED);
-                        soup_session_cancel_message (session, data->message);
+                        soup_session_cancel_message (session,
+                                                     data->message,
+                                                     SOUP_STATUS_CANCELLED);
 
                         get_scpd_url_data_free (data);
 
@@ -319,7 +319,7 @@ gupnp_service_info_class_init (GUPnPServiceInfoClass *klass)
         /**
          * GUPnPServiceInfo:url-base
          *
-         * The URL base (#SoupUri).
+         * The URL base (#SoupURI).
          **/
         g_object_class_install_property
                 (object_class,
@@ -409,7 +409,7 @@ gupnp_service_info_get_location (GUPnPServiceInfo *info)
  *
  * Return value: The URL base.
  **/
-const SoupUri *
+const SoupURI *
 gupnp_service_info_get_url_base (GUPnPServiceInfo *info)
 {
         g_return_val_if_fail (GUPNP_IS_SERVICE_INFO (info), NULL);
@@ -573,7 +573,8 @@ gupnp_service_info_get_introspection (GUPnPServiceInfo *info,
                 return NULL;
         }
 
-        scpd = xmlParseMemory (msg->response.body, msg->response.length);
+        scpd = xmlParseMemory (msg->response_body->data,
+                               msg->response_body->length);
 
         g_object_unref (msg);
 
@@ -597,7 +598,8 @@ gupnp_service_info_get_introspection (GUPnPServiceInfo *info,
  * SCPD URL downloaded.
  **/
 static void
-got_scpd_url (SoupMessage    *msg,
+got_scpd_url (SoupSession    *session,
+              SoupMessage    *msg,
               GetSCPDURLData *data)
 {
         GUPnPServiceIntrospection *introspection;
@@ -612,8 +614,8 @@ got_scpd_url (SoupMessage    *msg,
         if (SOUP_STATUS_IS_SUCCESSFUL (msg->status_code)) {
                 xmlDoc *scpd;
 
-                scpd = xmlParseMemory (msg->response.body,
-                                       msg->response.length);
+                scpd = xmlParseMemory (msg->response_body->data,
+                                       msg->response_body->length);
                 if (scpd) {
                         introspection = gupnp_service_introspection_new (scpd);
 
@@ -709,6 +711,6 @@ gupnp_service_info_get_introspection_async
 
         soup_session_queue_message (session,
                                     data->message,
-                                    (SoupMessageCallbackFn) got_scpd_url,
+                                    (SoupSessionCallback) got_scpd_url,
                                     data);
 }
