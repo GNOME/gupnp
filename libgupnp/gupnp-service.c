@@ -1511,11 +1511,11 @@ notify_subscriber (gpointer key,
                 data->seq = 1;
 
         /* Add body */
-        soup_message_set_response (msg,
-                                   "text/xml",
-                                   SOUP_MEMORY_TAKE,
-                                   g_strdup (property_set),
-                                   strlen (property_set));
+        soup_message_set_request (msg,
+                                  "text/xml",
+                                  SOUP_MEMORY_TAKE,
+                                  g_strdup (property_set),
+                                  strlen (property_set));
 
         /* Queue */
         data->service->priv->pending_messages = 

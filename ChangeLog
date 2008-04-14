@@ -1,4 +1,10 @@
 2008-04-15  Jorn Baayen  <jorn@openedhand.com>
+
+	* libgupnp/gupnp-service.c (notify_subscriber):
+
+	Set request, not response.
+
+2008-04-15  Jorn Baayen  <jorn@openedhand.com>
 	    Zeeshan Ali Khattak  <zeenix@gmail.com>
 
 	* configure.ac:
