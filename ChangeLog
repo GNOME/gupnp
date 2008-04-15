@@ -1,5 +1,17 @@
 2008-04-15  Jorn Baayen  <jorn@openedhand.com>
 
+	* configure.ac:
+	* libgupnp/Makefile.am:
+	* libgupnp/gupnp-context.c (hosting_server_handler):
+
+	Use GContentType.
+
+	* libgupnp/xdgmime:
+	
+	Removed.
+
+2008-04-15  Jorn Baayen  <jorn@openedhand.com>
+
 	* libgupnp/gupnp-service-proxy.c (subscribe_got_response):
 	* libgupnp/gupnp-service.c (subscribe), (resubscribe):
 

@@ -44,8 +44,6 @@
 #include <ifaddrs.h>
 #include <libsoup/soup-address.h>
 
-#include "xdgmime/xdgmime.h"
-
 #include "gupnp-context.h"
 #include "gupnp-context-private.h"
 #include "gupnp-marshal.h"
@@ -553,8 +551,8 @@ hosting_server_handler (SoupServer        *server,
                         gpointer           user_data)
 {
         PathData *path_data;
-        const char *lang, *mime;
-        char *path_to_open, *path_locale, *slash;
+        const char *lang;
+        char *path_to_open, *path_locale, *slash, *mime;
         gpointer response_body;
         struct stat st;
         int fd, path_offset;
@@ -663,14 +661,18 @@ hosting_server_handler (SoupServer        *server,
         close (fd);
 
         /* Set Content-Type */
-        mime = xdg_mime_get_mime_type_for_data (response_body,
-                                                st.st_size);
+        mime = g_content_type_guess (path_to_open,
+                                     response_body,
+                                     st.st_size,
+                                     NULL);
 
         soup_message_set_response (msg,
                                    mime,
                                    SOUP_MEMORY_TAKE,
                                    response_body,
                                    st.st_size);
+
+        g_free (mime);
 
         /* Set Content-Language */
         if (locales) {

@@ -16,7 +16,6 @@ PKG_CHECK_MODULES(LIBGUPNP, gobject-2.0 >= 2.9.1 \
                             gssdp-1.0 >= 0.4.2.99 \
                             libsoup-2.4 >= 2.4.1 \
                             libxml-2.0 \
-                            shared-mime-info \
                             uuid)
 
 # glib-genmarshal
@@ -34,13 +33,9 @@ fi
 # Gtk-doc
 GTK_DOC_CHECK([1.0])
 
-# Don't collide with other xdgmimes
-AC_DEFINE_UNQUOTED(XDG_PREFIX, [_gupnp_xdg], [xdgmime prefix])
-
 AC_OUTPUT([
 Makefile
 libgupnp/Makefile
-libgupnp/xdgmime/Makefile
 tests/Makefile
 doc/Makefile
 doc/version.xml
