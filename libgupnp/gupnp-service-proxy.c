@@ -1643,9 +1643,9 @@ subscribe_got_response (SoupSession       *session,
 
                         /* Add actual timeout */
                         proxy->priv->subscription_timeout_id =
-                                g_timeout_add (timeout * 1000,
-                                               subscription_expire,
-                                               proxy);
+                                g_timeout_add_seconds (timeout,
+                                                       subscription_expire,
+                                                       proxy);
                 }
         } else {
                 GUPnPContext *context;

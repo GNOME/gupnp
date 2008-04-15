@@ -1,5 +1,13 @@
 2008-04-15  Jorn Baayen  <jorn@openedhand.com>
 
+	* libgupnp/gupnp-service-proxy.c (subscribe_got_response):
+	* libgupnp/gupnp-service.c (subscribe), (resubscribe):
+
+	Use g_timeout_add_seconds(). We can because soup 2.4 depends
+	on glib 2.16.
+
+2008-04-15  Jorn Baayen  <jorn@openedhand.com>
+
 	* libgupnp/gupnp-context.c (hosting_server_handler),
 	(path_data_new), (path_data_free), (gupnp_context_host_path):
 

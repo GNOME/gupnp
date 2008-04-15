@@ -812,9 +812,9 @@ subscribe (GUPnPService *service,
         /* Add timeout */
         timeout_seconds = parse_and_limit_timeout (timeout);
         if (timeout_seconds > 0) {
-                data->timeout_id = g_timeout_add (timeout_seconds * 1000,
-                                                  subscription_timeout,
-                                                  data);
+                data->timeout_id = g_timeout_add_seconds (timeout_seconds,
+                                                          subscription_timeout,
+                                                          data);
         }
 
         /* Add to hash */
@@ -884,9 +884,9 @@ resubscribe (GUPnPService *service,
 
         timeout_seconds = parse_and_limit_timeout (timeout);
         if (timeout_seconds > 0) {
-                data->timeout_id = g_timeout_add (timeout_seconds * 1000,
-                                                  subscription_timeout,
-                                                  data);
+                data->timeout_id = g_timeout_add_seconds (timeout_seconds,
+                                                          subscription_timeout,
+                                                          data);
         }
 
         /* Respond */
