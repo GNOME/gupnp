@@ -1,6 +1,14 @@
 2008-04-29  Jorn Baayen  <jorn@openedhand.com>
 
 	* libgupnp/gupnp-context.c (hosting_server_handler):
+	* libgupnp/http-headers.c (range_get):
+	* libgupnp/http-headers.h:
+
+	Support HTTP Range header.
+
+2008-04-29  Jorn Baayen  <jorn@openedhand.com>
+
+	* libgupnp/gupnp-context.c (hosting_server_handler):
 
 	Use GMappedFile.
 

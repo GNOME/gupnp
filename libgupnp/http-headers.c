@@ -27,6 +27,60 @@
 
 #include "http-headers.h"
 
+/* Parses the HTTP Range header on @message and sets:
+ *
+ * @have_range to TRUE if a range was specified,
+ * @offset to the requested offset (left unset if none specified),
+ * @length to the requested length (left unset if none specified).
+ *
+ * Returns TRUE on success. */
+gboolean
+range_get (SoupMessage *message,
+           gboolean    *have_range,
+           guint64     *offset,
+           guint64     *length)
+{
+        const char *header;
+        char **v;
+
+        header = soup_message_headers_get (message->request_headers, "Range");
+        if (header == NULL) {
+                *have_range = FALSE;
+
+                return TRUE;
+        }
+
+        /* We have a Range header. Parse. */
+        if (strncmp (header, "bytes=", 6) != 0)
+                return FALSE;
+
+        header += 6;
+
+        v = g_strsplit (header, "-", 2);
+
+        /* Get first byte position */
+        if (v[0] != NULL && *v[0] != 0)
+                *offset = atoll (v[0]);
+
+        else {
+                /* We don't support ranges without first byte position */
+                g_strfreev (v);
+
+                return FALSE;
+        }
+
+        /* Get last byte position if specified */
+        if (v[1] != NULL && *v[1] != 0)
+                *length = atoll (v[1]) - *offset;
+
+        *have_range = TRUE;
+
+        /* Cleanup */
+        g_strfreev (v);
+
+        return TRUE;
+}
+
 /* Returns the language taken from the current locale, in a format
  * suitable for the HTTP Accept-Language header. */
 char *

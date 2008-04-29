@@ -26,6 +26,12 @@
 
 G_BEGIN_DECLS
 
+G_GNUC_INTERNAL gboolean
+range_get                   (SoupMessage *message,
+                             gboolean    *have_offset,
+                             guint64     *offset,
+                             guint64     *length);
+
 G_GNUC_INTERNAL char *
 accept_language_get_header  (void);
 

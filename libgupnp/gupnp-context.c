@@ -551,13 +551,12 @@ hosting_server_handler (SoupServer        *server,
                         gpointer           user_data)
 {
         PathData *path_data;
-        const char *lang;
+        const char *lang, *range;
         char *path_to_open, *path_locale, *slash, *mime;
         struct stat st;
         int path_offset;
         GList *locales;
         GMappedFile *mapped_file;
-        SoupBuffer *buffer;
         GError *error;
 
         path_data = (PathData *) user_data;
@@ -666,15 +665,71 @@ hosting_server_handler (SoupServer        *server,
                 goto DONE;
         }
 
-        buffer = soup_buffer_new_with_owner
-                                (g_mapped_file_get_contents (mapped_file),
-                                 st.st_size,
-                                 mapped_file,
-                                 (GDestroyNotify) g_mapped_file_free);
+        if (msg->method == SOUP_METHOD_GET) {
+                guint64 offset, length;
+                gboolean have_range;
+                SoupBuffer *buffer;
 
-        soup_message_body_append_buffer (msg->response_body, buffer);
+                /* Find out range */
+                have_range = FALSE;
 
-        soup_buffer_free (buffer);
+                offset = 0;
+                length = st.st_size;
+
+                if (!range_get (msg, &have_range, &offset, &length)) {
+                        soup_message_set_status
+                                (msg,
+                                 SOUP_STATUS_REQUESTED_RANGE_NOT_SATISFIABLE);
+
+                        goto DONE;
+                }
+
+                if (have_range && (length < 0                   ||
+                                   offset < 0                   ||
+                                   length > st.st_size - offset ||
+                                   offset >= st.st_size)) {
+                        soup_message_set_status
+                                (msg,
+                                 SOUP_STATUS_REQUESTED_RANGE_NOT_SATISFIABLE);
+
+                        goto DONE;
+                }
+
+                /* Add requested content */
+                buffer = soup_buffer_new_with_owner
+                             (g_mapped_file_get_contents (mapped_file) + offset,
+                              length,
+                              mapped_file,
+                              (GDestroyNotify) g_mapped_file_free);
+
+                soup_message_body_append_buffer (msg->response_body, buffer);
+
+                soup_buffer_free (buffer);
+
+                /* Set status */
+                if (have_range) {
+                        char *content_range;
+
+                        content_range = g_strdup_printf
+                                ("bytes %" G_GUINT64_FORMAT "-%"
+                                 G_GUINT64_FORMAT "/%" G_GUINT64_FORMAT,
+                                 offset,
+                                 offset + length,
+                                 st.st_size);
+
+                        soup_message_headers_append (msg->response_headers,
+                                                     "Content-Range",
+                                                     content_range);
+
+                        g_free (content_range);
+
+                        soup_message_set_status (msg,
+                                                 SOUP_STATUS_PARTIAL_CONTENT);
+                } else
+                        soup_message_set_status (msg, SOUP_STATUS_OK);
+
+        } else /* SOUP_METHOD_HEAD */
+                soup_message_set_status (msg, SOUP_STATUS_OK);
 
         /* Set Content-Type */
         mime = g_content_type_guess (path_to_open,
@@ -700,8 +755,10 @@ hosting_server_handler (SoupServer        *server,
                                      "Content-Language",
                                      lang);
 
-        /* OK */
-        soup_message_set_status (msg, SOUP_STATUS_OK);
+        /* Set Accept-Ranges */
+        soup_message_headers_append (msg->response_headers,
+                                     "Accept-Ranges",
+                                     "bytes");
 
  DONE:
         /* Cleanup */
