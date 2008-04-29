@@ -1,3 +1,9 @@
+2008-04-29  Jorn Baayen  <jorn@openedhand.com>
+
+	* libgupnp/gupnp-context.c (hosting_server_handler):
+
+	Use GMappedFile.
+
 2008-04-15  Jorn Baayen  <jorn@openedhand.com>
 
 	* configure.ac:

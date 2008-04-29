@@ -553,10 +553,12 @@ hosting_server_handler (SoupServer        *server,
         PathData *path_data;
         const char *lang;
         char *path_to_open, *path_locale, *slash, *mime;
-        gpointer response_body;
         struct stat st;
-        int fd, path_offset;
+        int path_offset;
         GList *locales;
+        GMappedFile *mapped_file;
+        SoupBuffer *buffer;
+        GError *error;
 
         path_data = (PathData *) user_data;
 
@@ -601,7 +603,7 @@ hosting_server_handler (SoupServer        *server,
                                          NULL);
 
  AGAIN:
-        if (stat (path_to_open, &st) == -1) {
+        if (g_stat (path_to_open, &st) == -1) {
                 g_free (path_to_open);
                 if (errno == EPERM)
                         soup_message_set_status (msg, SOUP_STATUS_FORBIDDEN);
@@ -646,31 +648,43 @@ hosting_server_handler (SoupServer        *server,
 
         g_free (path_locale);
 
-        /* Read file */
-        fd = open (path_to_open, O_RDONLY);
+        /* Map file */
+        error = NULL;
+        mapped_file = g_mapped_file_new (path_to_open, FALSE, &error);
+
         g_free (path_to_open);
-        if (fd == -1) {
+
+        if (mapped_file == NULL) {
+                g_warning ("Unable to map file %s: %s",
+                           path_to_open, error->message);
+
+                g_error_free (error);
+
                 soup_message_set_status (msg,
                                          SOUP_STATUS_INTERNAL_SERVER_ERROR);
+
                 goto DONE;
         }
 
-        response_body = g_malloc (st.st_size);
-        read (fd, response_body, st.st_size);
+        buffer = soup_buffer_new_with_owner
+                                (g_mapped_file_get_contents (mapped_file),
+                                 st.st_size,
+                                 mapped_file,
+                                 (GDestroyNotify) g_mapped_file_free);
 
-        close (fd);
+        soup_message_body_append_buffer (msg->response_body, buffer);
+
+        soup_buffer_free (buffer);
 
         /* Set Content-Type */
         mime = g_content_type_guess (path_to_open,
-                                     response_body,
+                                     g_mapped_file_get_contents (mapped_file),
                                      st.st_size,
                                      NULL);
 
-        soup_message_set_response (msg,
-                                   mime,
-                                   SOUP_MEMORY_TAKE,
-                                   response_body,
-                                   st.st_size);
+        soup_message_headers_append (msg->response_headers,
+                                     "Content-Type",
+                                     mime);
 
         g_free (mime);
 
