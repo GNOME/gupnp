@@ -1,5 +1,10 @@
 2008-05-06  Ross Burton  <ross@openedhand.com>
 
+	* doc/gupnp.types:
+	Add a .types file so the objects get introspected.
+
+2008-05-06  Ross Burton  <ross@openedhand.com>
+
 	* configure.ac:
 	Add AC_SYS_LARGEFILE to use 64-bit offsets, thus both fixing
 	32-bit compiles and making the world a better place.
