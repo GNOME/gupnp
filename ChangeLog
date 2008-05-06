@@ -4,6 +4,7 @@
 	* libgupnp/gupnp-service-introspection.c:
 	* libgupnp/gupnp-service-proxy.c:
 	* libgupnp/gupnp-error.c:
+	* libgupnp/gupnp-service-proxy.h:
 	Fix small problems which upset gtk-doc.
 
 2008-05-06  Ross Burton  <ross@openedhand.com>

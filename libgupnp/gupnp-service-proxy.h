@@ -145,7 +145,7 @@ gupnp_service_proxy_begin_action_hash
                                     const char                     *action,
                                     GUPnPServiceProxyActionCallback callback,
                                     gpointer                        user_data,
-                                    GHashTable                     *args);
+                                    GHashTable                     *hash);
 
 gboolean
 gupnp_service_proxy_end_action     (GUPnPServiceProxy              *proxy,
