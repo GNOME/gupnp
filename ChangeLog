@@ -1,5 +1,10 @@
 2008-05-06  Ross Burton  <ross@openedhand.com>
 
+	* doc/gupnp-sections.txt:
+	Add missing symbols.
+
+2008-05-06  Ross Burton  <ross@openedhand.com>
+
 	* doc/gupnp.types:
 	Add a .types file so the objects get introspected.
 

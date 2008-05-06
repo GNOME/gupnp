@@ -9,6 +9,7 @@ gupnp_control_point_get_context
 gupnp_control_point_list_device_proxies
 gupnp_control_point_list_service_proxies
 <SUBSECTION Standard>
+GUPnPControlPointClass
 GUPNP_CONTROL_POINT
 GUPNP_IS_CONTROL_POINT
 GUPNP_TYPE_CONTROL_POINT
@@ -47,6 +48,7 @@ gupnp_device_info_list_services
 gupnp_device_info_list_service_types
 gupnp_device_info_get_service
 <SUBSECTION Standard>
+GUPnPDeviceInfoClass
 GUPNP_DEVICE_INFO
 GUPNP_IS_DEVICE_INFO
 GUPNP_TYPE_DEVICE_INFO
@@ -80,6 +82,7 @@ gupnp_service_proxy_remove_notify
 gupnp_service_proxy_set_subscribed
 gupnp_service_proxy_get_subscribed
 <SUBSECTION Standard>
+GUPnPServiceProxyClass
 GUPNP_SERVICE_PROXY
 GUPNP_IS_SERVICE_PROXY
 GUPNP_TYPE_SERVICE_PROXY
@@ -113,6 +116,7 @@ gupnp_service_freeze_notify
 gupnp_service_thaw_notify
 gupnp_service_signals_autoconnect
 <SUBSECTION Standard>
+GUPnPServiceClass
 GUPNP_SERVICE
 GUPNP_IS_SERVICE
 GUPNP_TYPE_SERVICE
@@ -134,6 +138,7 @@ gupnp_root_device_set_available
 gupnp_root_device_get_available
 gupnp_root_device_get_relative_location
 <SUBSECTION Standard>
+GUPnPRootDeviceClass
 GUPNP_ROOT_DEVICE
 GUPNP_IS_ROOT_DEVICE
 GUPNP_TYPE_ROOT_DEVICE
@@ -158,6 +163,7 @@ gupnp_context_get_subscription_timeout
 gupnp_context_host_path
 gupnp_context_unhost_path
 <SUBSECTION Standard>
+GUPnPContextClass
 GUPNP_CONTEXT
 GUPNP_IS_CONTEXT
 GUPNP_TYPE_CONTEXT
@@ -174,6 +180,7 @@ GUPnPContextPrivate
 <TITLE>GUPnPDevice</TITLE>
 GUPnPDevice
 <SUBSECTION Standard>
+GUPnPDeviceClass
 GUPNP_DEVICE
 GUPNP_IS_DEVICE
 GUPNP_TYPE_DEVICE
@@ -200,6 +207,7 @@ gupnp_service_introspection_list_state_variable_names
 gupnp_service_introspection_list_state_variables
 gupnp_service_introspection_get_state_variable
 <SUBSECTION Standard>
+GUPnPServiceIntrospectionClass
 GUPNP_SERVICE_INTROSPECTION
 GUPNP_IS_SERVICE_INTROSPECTION
 GUPNP_TYPE_SERVICE_INTROSPECTION
@@ -226,6 +234,7 @@ gupnp_service_info_get_event_subscription_url
 gupnp_service_info_get_introspection
 gupnp_service_info_get_introspection_async
 <SUBSECTION Standard>
+GUPnPServiceInfoClass
 GUPNP_SERVICE_INFO
 GUPNP_IS_SERVICE_INFO
 GUPNP_TYPE_SERVICE_INFO
@@ -242,6 +251,7 @@ GUPnPServiceInfoPrivate
 <TITLE>GUPnPDeviceProxy</TITLE>
 GUPnPDeviceProxy
 <SUBSECTION Standard>
+GUPnPDeviceProxyClass
 GUPNP_DEVICE_PROXY
 GUPNP_IS_DEVICE_PROXY
 GUPNP_TYPE_DEVICE_PROXY
@@ -249,6 +259,8 @@ gupnp_device_proxy_get_type
 GUPNP_DEVICE_PROXY_CLASS
 GUPNP_IS_DEVICE_PROXY_CLASS
 GUPNP_DEVICE_PROXY_GET_CLASS
+<SUBSECTION Private>
+GUPnPDeviceProxyPrivate
 </SECTION>
 
 <SECTION>
@@ -266,7 +278,7 @@ gupnp_resource_factory_unregister_resource_proxy_type
 GUPNP_RESOURCE_FACTORY
 GUPNP_IS_RESOURCE_FACTORY
 GUPNP_TYPE_RESOURCE_FACTORY
-gupnp_device_proxy_get_type
+gupnp_resource_factory_get_type
 GUPNP_RESOURCE_FACTORY_CLASS
 GUPNP_IS_RESOURCE_FACTORY_CLASS
 GUPNP_RESOURCE_FACTORY_GET_CLASS
@@ -297,6 +309,7 @@ gupnp_time_tz_get_type
 gupnp_uri_get_type
 gupnp_uuid_get_type
 gupnp_value_get_string
+gupnp_value_get_xml_node
 </SECTION>
 
 <SECTION>
