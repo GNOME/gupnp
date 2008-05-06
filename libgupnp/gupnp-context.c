@@ -43,6 +43,7 @@
 #include <net/if.h>
 #include <ifaddrs.h>
 #include <libsoup/soup-address.h>
+#include <glib/gstdio.h>
 
 #include "gupnp-context.h"
 #include "gupnp-context-private.h"
@@ -551,7 +552,7 @@ hosting_server_handler (SoupServer        *server,
                         gpointer           user_data)
 {
         PathData *path_data;
-        const char *lang, *range;
+        const char *lang;
         char *path_to_open, *path_locale, *slash, *mime;
         struct stat st;
         int path_offset;
@@ -733,7 +734,7 @@ hosting_server_handler (SoupServer        *server,
 
         /* Set Content-Type */
         mime = g_content_type_guess (path_to_open,
-                                     g_mapped_file_get_contents (mapped_file),
+                                     (guchar*)g_mapped_file_get_contents (mapped_file),
                                      st.st_size,
                                      NULL);
 

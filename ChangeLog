@@ -1,3 +1,8 @@
+2008-05-06  Ross Burton  <ross@openedhand.com>
+
+	* libgupnp/gupnp-context.c:
+	Fix some compile warnings.
+
 2008-04-29  Jorn Baayen  <jorn@openedhand.com>
 
 	* libgupnp/gupnp-context.c (hosting_server_handler):
