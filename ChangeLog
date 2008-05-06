@@ -1,5 +1,13 @@
 2008-05-06  Ross Burton  <ross@openedhand.com>
 
+	* libgupnp/gupnp-control-point.c:
+	* libgupnp/gupnp-service-introspection.c:
+	* libgupnp/gupnp-service-proxy.c:
+	* libgupnp/gupnp-error.c:
+	Fix small problems which upset gtk-doc.
+
+2008-05-06  Ross Burton  <ross@openedhand.com>
+
 	* doc/gupnp-sections.txt:
 	Add missing symbols.
 

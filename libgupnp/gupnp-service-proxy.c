@@ -1322,10 +1322,10 @@ gupnp_service_proxy_remove_notify (GUPnPServiceProxy              *proxy,
         return found;
 }
 
-/**
+/*
  * HTTP server received a message. Handle, if this was a NOTIFY
  * message with our SID.
- **/
+ */
 static void
 server_handler (SoupServer        *soup_server,
                 SoupMessage       *msg, 
@@ -1499,10 +1499,10 @@ server_handler (SoupServer        *soup_server,
         soup_message_set_status (msg, SOUP_STATUS_OK);
 }
 
-/**
+/*
  * Generates a timeout header for the subscription timeout specified
  * in our GUPnPContext.
- **/
+ */
 static char *
 make_timeout_header (GUPnPContext *context)
 {

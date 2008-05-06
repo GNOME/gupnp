@@ -454,12 +454,12 @@ set_variable_type (GUPnPServiceStateVariableInfo *variable,
         return TRUE;
 }
 
-/**
+/*
  *
  * Creates a #GUPnPServiceStateVariableInfo, constructed from the stateVariable
  * node @variable_node in the SCPD document
  *
- **/
+ */
 static GUPnPServiceStateVariableInfo *
 get_state_variable (xmlNodePtr variable_node)
 {
@@ -503,12 +503,12 @@ get_state_variable (xmlNodePtr variable_node)
         return variable;
 }
 
-/**
+/*
  *
  * Creates a #GUPnPServiceActionArgInfo, constructed from the argument node
  * @argument_node in the SCPD document
  *
- **/
+ */
 static GUPnPServiceActionArgInfo *
 get_action_argument (xmlNodePtr argument_node)
 {
@@ -549,12 +549,12 @@ get_action_argument (xmlNodePtr argument_node)
         return argument;
 }
 
-/**
+/*
  *
  * Creates a #GList of all the arguments (of type #GUPnPServiceActionArgInfo)
  * from the action node @action_node in the SCPD document
  *
- **/
+ */
 static GList *
 get_action_arguments (xmlNodePtr action_node)
 {
@@ -587,12 +587,12 @@ get_action_arguments (xmlNodePtr action_node)
         return argument_list;
 }
 
-/**
+/*
  *
  * Creates a #GList of all the actions (of type #GUPnPServiceActionInfo) from
  * the SCPD document.
  *
- **/
+ */
 static GList *
 get_actions (xmlNode *list_element)
 {
@@ -632,12 +632,12 @@ get_actions (xmlNode *list_element)
         return actions;
 }
 
-/**
+/*
  *
  * Creates a #GList of all the state variables (of type
  * #GUPnPServiceStateVariableInfo) from the SCPD document.
  *
- **/
+ */
 static GList *
 get_state_variables (xmlNode *list_element)
 {

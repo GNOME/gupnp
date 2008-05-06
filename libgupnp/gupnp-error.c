@@ -23,9 +23,11 @@
 #include "gupnp-error-private.h"
 
 /**
- * gupnp_server_error_quark
+ * GUPNP_SERVER_ERROR:
  *
- * Returns a #GQuark uniquely used by GUPnP's server errors.
+ * The #GQuark uniquely used by GUPnP's server errors.
+ *
+ * Returns: a #GQuark uniquely used by GUPnP's server errors.
  **/
 GQuark
 gupnp_server_error_quark (void)
@@ -39,9 +41,11 @@ gupnp_server_error_quark (void)
 }
 
 /**
- * gupnp_eventing_error_quark
+ * GUPNP_EVENTING_ERROR:
  *
- * Returns a #GQuark uniquely used by GUPnP's eventing errors.
+ * The #GQuark uniquely used by GUPnP's eventing errors.
+ *
+ * Returns: a #GQuark uniquely used by GUPnP's eventing errors.
  **/
 GQuark
 gupnp_eventing_error_quark (void)
@@ -55,9 +59,11 @@ gupnp_eventing_error_quark (void)
 }
 
 /**
- * gupnp_control_error_quark
+ * GUPNP_CONTROL_ERROR:
  *
- * Returns a #GQuark uniquely used by GUPnP's control errors.
+ * The #GQuark uniquely used by GUPnP's control errors.
+ *
+ * Returns: a #GQuark uniquely used by GUPnP's control errors.
  **/
 GQuark
 gupnp_control_error_quark (void)

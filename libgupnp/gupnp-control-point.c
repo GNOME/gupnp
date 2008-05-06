@@ -360,9 +360,9 @@ process_device_list (xmlNode           *element,
         }
 }
 
-/**
+/*
  * Called when the description document is loaded.
- **/
+ */
 static void
 description_loaded (GUPnPControlPoint *control_point,
                     XmlDocWrapper     *doc,
@@ -397,9 +397,9 @@ description_loaded (GUPnPControlPoint *control_point,
         soup_uri_free (url_base);
 }
 
-/**
+/*
  * Description URL downloaded.
- **/
+ */
 static void
 got_description_url (SoupSession           *session,
                      SoupMessage           *msg,
@@ -466,14 +466,14 @@ got_description_url (SoupSession           *session,
         get_description_url_data_free (data);
 }
 
-/**
+/*
  * Downloads and parses (or takes from cache) @description_url,
  * creating:
  *  - A #GUPnPDeviceProxy for the device specified by @udn if @service_type
  *    is NULL.
  *  - A #GUPnPServiceProxy for the service of type @service_type from the device
  *    specified by @udn if @service_type is not NULL.
- **/
+ */
 static void
 load_description (GUPnPControlPoint *control_point,
                   const char        *description_url,
