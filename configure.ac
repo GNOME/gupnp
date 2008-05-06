@@ -10,6 +10,7 @@ AC_PROG_CC
 AC_STDC_HEADERS
 AC_PROG_LIBTOOL
 AC_FUNC_MMAP
+AC_SYS_LARGEFILE
 
 PKG_CHECK_MODULES(LIBGUPNP, gobject-2.0 >= 2.9.1 \
                             gmodule-2.0 \

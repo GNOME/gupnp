@@ -1,5 +1,11 @@
 2008-05-06  Ross Burton  <ross@openedhand.com>
 
+	* configure.ac:
+	Add AC_SYS_LARGEFILE to use 64-bit offsets, thus both fixing
+	32-bit compiles and making the world a better place.
+
+2008-05-06  Ross Burton  <ross@openedhand.com>
+
 	* libgupnp/gupnp-context.c:
 	Fix some compile warnings.
 
