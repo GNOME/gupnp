@@ -25,6 +25,9 @@
  *
  * #GUPnPContext wraps the networking bits that are used by the various
  * GUPnP classes. It automatically starts a web server on demand.
+ *
+ * For debugging, it is possible to see the messages being sent and received by
+ * exporting #GUPNP_DEBUG.
  */
 
 #include <config.h>
@@ -182,6 +185,12 @@ gupnp_context_init (GUPnPContext *context)
         server_id = make_server_id ();
         gssdp_client_set_server_id (GSSDP_CLIENT (context), server_id);
         g_free (server_id);
+
+	if (g_getenv ("GUPNP_DEBUG")) {
+		SoupLogger *logger;
+		logger = soup_logger_new (SOUP_LOGGER_LOG_BODY, -1);
+		soup_logger_attach (logger, context->priv->session);
+	}
 }
 
 static void

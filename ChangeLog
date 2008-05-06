@@ -1,5 +1,11 @@
 2008-05-06  Ross Burton  <ross@openedhand.com>
 
+	* libgupnp/gupnp-context.c:
+	Add the ability to set GUPNP_DEBUG to spew the HTTP messages to
+	the console.
+
+2008-05-06  Ross Burton  <ross@openedhand.com>
+
 	* libgupnp/gupnp-control-point.c:
 	* libgupnp/gupnp-service-introspection.c:
 	* libgupnp/gupnp-service-proxy.c:
