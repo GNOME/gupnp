@@ -1176,7 +1176,6 @@ gupnp_service_dispose (GObject *object)
 {
         GUPnPService *service;
         GObjectClass *object_class;
-        SoupSession *session;
 
         service = GUPNP_SERVICE (object);
 
@@ -1401,7 +1400,7 @@ gupnp_service_notify_valist (GUPnPService *service,
         }
 }
 
-/* Receiveid notify response. */
+/* Received notify response. */
 static void
 notify_got_response (SoupSession *session,
                      SoupMessage *msg,

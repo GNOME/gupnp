@@ -1,3 +1,8 @@
+2008-05-07  Ross Burton  <ross@openedhand.com>
+
+	* libgupnp/gupnp-service.c:
+	Fix typo, remove unused variable.
+
 2008-05-07  Jorn Baayen  <jorn@openedhand.com>
 
 	* libgupnp/gupnp-service.c (subscription_data_free),
