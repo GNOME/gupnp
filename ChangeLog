@@ -1,3 +1,11 @@
+2008-05-07  Jorn Baayen  <jorn@openedhand.com>
+
+	* libgupnp/gupnp-service.c (subscription_data_free),
+	(gupnp_service_dispose), (notify_got_response),
+	(notify_subscriber):
+
+	Store pending notifications on the SubscriptionData structure.
+
 2008-05-07  Ross Burton  <ross@openedhand.com>
 
 	* libgupnp/gvalue-util.c:

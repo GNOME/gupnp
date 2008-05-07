@@ -58,9 +58,6 @@ struct _GUPnPServicePrivate {
         GQueue          *notify_queue;
 
         gboolean         notify_frozen;
-
-        GList           *pending_messages; /* Pending SoupMessages from this
-                                              service */
 };
 
 enum {
@@ -94,11 +91,37 @@ typedef struct {
         int           seq;
 
         guint         timeout_id;
+
+        GList        *pending_messages; /* Pending SoupMessages from this
+                                           subscription */
 } SubscriptionData;
 
 static void
 subscription_data_free (SubscriptionData *data)
 {
+        GUPnPContext *context;
+        SoupSession *session;
+
+        context = gupnp_service_info_get_context
+                        (GUPNP_SERVICE_INFO (data->service));
+        session = _gupnp_context_get_session (context);
+
+        /* Cancel pending messages */
+        while (data->pending_messages) {
+                SoupMessage *msg;
+
+                msg = data->pending_messages->data;
+
+                soup_session_cancel_message (session,
+                                             msg,
+                                             SOUP_STATUS_CANCELLED);
+
+                data->pending_messages =
+                        g_list_delete_link (data->pending_messages,
+                                            data->pending_messages);
+        }
+       
+        /* Further cleanup */
         while (data->callbacks) {
                 g_free (data->callbacks->data);
                 data->callbacks = g_list_delete_link (data->callbacks,
@@ -1153,7 +1176,6 @@ gupnp_service_dispose (GObject *object)
 {
         GUPnPService *service;
         GObjectClass *object_class;
-        GUPnPContext *context;
         SoupSession *session;
 
         service = GUPNP_SERVICE (object);
@@ -1172,25 +1194,7 @@ gupnp_service_dispose (GObject *object)
         }
 
         /* Cancel pending messages */
-        context = gupnp_service_info_get_context (GUPNP_SERVICE_INFO (service));
-        if (context)
-                session = _gupnp_context_get_session (context);
-        else
-                session = NULL; /* Not the first time dispose is called. */
-
-        while (service->priv->pending_messages) {
-                SoupMessage *msg;
-
-                msg = service->priv->pending_messages->data;
-
-                soup_session_cancel_message (session,
-                                             msg,
-                                             SOUP_STATUS_CANCELLED);
-
-                service->priv->pending_messages =
-                        g_list_delete_link (service->priv->pending_messages,
-                                            service->priv->pending_messages);
-        }
+        g_hash_table_remove_all (service->priv->subscriptions);
 
         /* Call super */
         object_class = G_OBJECT_CLASS (gupnp_service_parent_class);
@@ -1412,8 +1416,7 @@ notify_got_response (SoupSession *session,
         data = user_data;
 
         /* Remove from pending messages list */
-        data->service->priv->pending_messages = 
-                g_list_remove (data->service->priv->pending_messages, msg);
+        data->pending_messages = g_list_remove (data->pending_messages, msg);
 
         if (SOUP_STATUS_IS_SUCCESSFUL (msg->status_code)) {
                 /* Success: reset callbacks pointer */
@@ -1433,10 +1436,8 @@ notify_got_response (SoupSession *session,
                         soup_uri_free (uri);
 
                         /* And re-queue */
-                        data->service->priv->pending_messages = 
-                                g_list_prepend
-                                        (data->service->priv->pending_messages,
-                                         msg);
+                        data->pending_messages = 
+                                g_list_prepend (data->pending_messages, msg);
 
                         context = gupnp_service_info_get_context
                                         (GUPNP_SERVICE_INFO (data->service));
@@ -1522,8 +1523,7 @@ notify_subscriber (gpointer key,
                                   strlen (property_set));
 
         /* Queue */
-        data->service->priv->pending_messages = 
-                g_list_prepend (data->service->priv->pending_messages, msg);
+        data->pending_messages = g_list_prepend (data->pending_messages, msg);
 
         context = gupnp_service_info_get_context
                         (GUPNP_SERVICE_INFO (data->service));
