@@ -438,6 +438,7 @@ set_variable_type (GUPnPServiceStateVariableInfo *variable,
                 g_value_set_double (&variable->step, 1.0);
                 variable->is_numeric = TRUE;
         }
+        /* TODO: "float", "int" */
 
         else {
                 type = gupnp_data_type_to_gtype (data_type);
