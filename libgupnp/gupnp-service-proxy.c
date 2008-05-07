@@ -1859,7 +1859,9 @@ gupnp_service_proxy_set_subscribed (GUPnPServiceProxy *proxy,
  * gupnp_service_proxy_get_subscribed
  * @proxy: A #GUPnPServiceProxy
  *
- * Return value: TRUE if we are subscribed to this service.
+ * Returns if we are subscribed to this service.
+ *
+ * Return value: %TRUE if we are subscribed to this service, otherwise %FALSE.
  **/
 gboolean
 gupnp_service_proxy_get_subscribed (GUPnPServiceProxy *proxy)

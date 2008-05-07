@@ -53,6 +53,12 @@ gupnp_service_proxy_get_type (void) G_GNUC_CONST;
 
 typedef struct _GUPnPServiceProxyPrivate GUPnPServiceProxyPrivate;
 
+/**
+ * GUPnPServiceProxy:
+ *
+ * This struct contains private data only, and should be accessed using the
+ * functions below.
+ */
 typedef struct {
         GUPnPServiceInfo parent;
 
@@ -85,6 +91,9 @@ typedef struct _GUPnPServiceProxyAction GUPnPServiceProxyAction;
  * @proxy: The #GUPnPServiceProxy @action is called from
  * @action: The #GUPnPServiceProxyAction in progress
  * @user_data: User data
+ *
+ * Callback notifying that @action on @proxy has returned and
+ * gupnp_service_proxy_end_action() etc can be called.
  **/
 typedef void (* GUPnPServiceProxyActionCallback) (
                                      GUPnPServiceProxy       *proxy,
@@ -97,6 +106,9 @@ typedef void (* GUPnPServiceProxyActionCallback) (
  * @variable: The name of the variable being notified
  * @value: The #GValue of the variable being notified
  * @user_data: User data
+ *
+ * Callback notifying that the state variable @variable on @proxy has changed to
+ * @value.
  **/
 typedef void (* GUPnPServiceProxyNotifyCallback) (GUPnPServiceProxy *proxy,
                                                   const char        *variable,

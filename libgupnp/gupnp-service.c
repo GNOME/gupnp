@@ -141,6 +141,8 @@ struct _GUPnPServiceAction {
  * gupnp_service_action_get_name
  * @action: A #GUPnPServiceAction
  *
+ * Get the name of @action.
+ *
  * Return value: The name of @action
  **/
 const char *
@@ -155,8 +157,10 @@ gupnp_service_action_get_name (GUPnPServiceAction *action)
  * gupnp_service_action_get_locales
  * @action: A #GUPnPServiceAction
  *
- * Return value: An ordered (preferred first) #GList of locales preferred by
+ * Get an ordered (preferred first) #GList of locales preferred by
  * the client. Free list and elements after use.
+ *
+ * Return value: A #GList of #char* locale names.
  **/
 GList *
 gupnp_service_action_get_locales (GUPnPServiceAction *action)

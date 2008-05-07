@@ -903,6 +903,8 @@ gupnp_control_point_class_init (GUPnPControlPointClass *klass)
  * @context: A #GUPnPContext
  * @target: The search target
  *
+ * Create a new #GUPnPControlPoint with the specified @context and @target.
+ *
  * Return value: A new #GUPnPControlPoint object.
  **/
 GUPnPControlPoint *
@@ -923,6 +925,9 @@ gupnp_control_point_new (GUPnPContext *context,
  * @context: A #GUPnPContext
  * @factory: A #GUPnPResourceFactory
  * @target: The search target
+ *
+ * Create a new #GUPnPControlPoint with the specified @context, @factory and
+ * @target.
  *
  * Return value: A new #GUPnPControlPoint object.
  **/
@@ -945,7 +950,9 @@ gupnp_control_point_new_full (GUPnPContext         *context,
  * gupnp_control_point_get_context
  * @control_point: A #GUPnPControlPoint
  *
- * Return value: The #GUPnPContext associated with @control_point.
+ * Get the #GUPnPControlPoint associated with @control_point.
+ *
+ * Return value: The #GUPnPContext.
  **/
 GUPnPContext *
 gupnp_control_point_get_context (GUPnPControlPoint *control_point)
@@ -964,8 +971,10 @@ gupnp_control_point_get_context (GUPnPControlPoint *control_point)
  * gupnp_control_point_list_device_proxies
  * @control_point: A #GUPnPControlPoint
  *
- * Return value: A #GList of discovered #GUPnPDeviceProxy objects. Do not
- * free the list nor its elements.
+ * Get the #GList of discovered #GUPnPDeviceProxy objects. Do not free the list
+ * nor its elements.
+ *
+ * Return value: a #GList of #GUPnPDeviceProxy objects.
  **/
 const GList *
 gupnp_control_point_list_device_proxies (GUPnPControlPoint *control_point)
@@ -979,8 +988,10 @@ gupnp_control_point_list_device_proxies (GUPnPControlPoint *control_point)
  * gupnp_control_point_list_service_proxies
  * @control_point: A #GUPnPControlPoint
  *
- * Return value: A #GList of discovered #GUPnPServiceProxy objects. Do not
- * free the list nor its elements.
+ * Get the #GList of discovered #GUPnPServiceProxy objects. Do not free the list
+ * nor its elements.
+ *
+ * Return value: a #GList of #GUPnPServiceProxy objects.
  **/
 const GList *
 gupnp_control_point_list_service_proxies (GUPnPControlPoint *control_point)
@@ -994,7 +1005,9 @@ gupnp_control_point_list_service_proxies (GUPnPControlPoint *control_point)
  * gupnp_control_point_get_resource_factory
  * @control_point: A #GUPnPControlPoint
  *
- * Return value: The #GUPnPResourceFactory used by the @control_point.
+ * Get the #GUPnPResourceFactory used by the @control_point.
+ *
+ * Return value: A #GUPnPResourceFactory.
  **/
 GUPnPResourceFactory *
 gupnp_control_point_get_resource_factory (GUPnPControlPoint *control_point)

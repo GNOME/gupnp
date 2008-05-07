@@ -52,6 +52,12 @@ gupnp_device_get_type (void) G_GNUC_CONST;
 
 typedef struct _GUPnPDevicePrivate GUPnPDevicePrivate;
 
+/**
+ * GUPnPDevice:
+ *
+ * This struct contains private data only, and should be accessed using the
+ * functions below.
+ */
 typedef struct {
         GUPnPDeviceInfo parent;
 

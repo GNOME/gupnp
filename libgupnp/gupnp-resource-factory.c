@@ -77,7 +77,9 @@ gupnp_resource_factory_class_init (GUPnPResourceFactoryClass *klass)
 /**
  * gupnp_resource_factory_new
  *
- * Return value: A new #GUPnPResourceFactory object.
+ * Create a new #GUPnPResourceFactory object.
+ *
+ * Return value: A #GUPnPResourceFactory object.
  **/
 GUPnPResourceFactory *
 gupnp_resource_factory_new (void)
@@ -88,7 +90,9 @@ gupnp_resource_factory_new (void)
 /**
  * gupnp_resource_factory_get_default
  *
- * Return value: The default singleton #GUPnPResourceFactory object.
+ * Get the default singleton #GUPnPResourceFactory object.
+ *
+ * Return value: A @GUPnPResourceFactory object.
  **/
 GUPnPResourceFactory *
 gupnp_resource_factory_get_default (void)

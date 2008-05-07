@@ -407,7 +407,9 @@ default_server_handler (SoupServer        *server,
  * gupnp_context_get_server
  * @context: A #GUPnPContext
  *
- * Return value: The #SoupServer HTTP server used by GUPnP.
+ * Get the #SoupServer HTTP server that GUPnP is using.
+ *
+ * Return value: The #SoupServer used by GUPnP.  Do not unref this when finished.
  **/
 SoupServer *
 gupnp_context_get_server (GUPnPContext *context)
@@ -464,9 +466,11 @@ _gupnp_context_get_server_url (GUPnPContext *context)
  * @host_ip: The local host's IP address, or NULL to use the IP address
  * of the first non-loopback network interface.
  * @port: Port to run on, or 0 if you don't care what port is used.
- * @error: A location to store a #GError, or NULL
+ * @error: A location to store a #GError, or %NULL
  *
- * Return value: A new #GUPnPContext object.
+ * Create a new #GUPnPContext with the specified @main_context, @host_ip and @port.
+ *
+ * Return value: A new #GUPnPContext object, or %NULL on an error
  **/
 GUPnPContext *
 gupnp_context_new (GMainContext *main_context,
@@ -486,7 +490,9 @@ gupnp_context_new (GMainContext *main_context,
  * gupnp_context_get_host_ip
  * @context: A #GUPnPContext
  *
- * Return value: The IP address we advertise ourselves as using. Do not free.
+ * Get the IP address we advertise ourselves as using.
+ *
+ * Return value: The IP address. This string should not be freed.
  **/
 const char *
 gupnp_context_get_host_ip (GUPnPContext *context)
@@ -503,6 +509,8 @@ gupnp_context_get_host_ip (GUPnPContext *context)
  * gupnp_context_get_port
  * @context: A #GUPnPContext
  *
+ * Get the port that the SOAP server is running on.
+ 
  * Return value: The port the SOAP server is running on.
  **/
 guint
@@ -540,8 +548,9 @@ gupnp_context_set_subscription_timeout (GUPnPContext *context,
  * gupnp_context_get_subscription_timeout
  * @context: A #GUPnPContext
  *
- * Return value: The event subscription timeout in seconds, or 0, meaning
- * no timeout.
+ * Get the event subscription timeout (in seconds), or 0 meaning there is no timeout.
+ * 
+ * Return value: The event subscription timeout in seconds.
  **/
 guint
 gupnp_context_get_subscription_timeout (GUPnPContext *context)

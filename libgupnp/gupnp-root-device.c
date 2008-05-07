@@ -499,6 +499,8 @@ gupnp_root_device_new (GUPnPContext *context,
  * @relative_location: Location to use for this device, relative to the
  * HTTP root
  *
+ * Create a new #GUPnPRootDevice.
+ *
  * Return value: A new #GUPnPRootDevice object.
  **/
 GUPnPRootDevice *
@@ -543,7 +545,9 @@ gupnp_root_device_set_available (GUPnPRootDevice *root_device,
  * gupnp_root_device_get_available
  * @root_device: A #GUPnPRootDevice
  *
- * Return value: TRUE if @root_device is available.
+ * Get whether or not @root_device is available (announcing its presence).
+ *
+ * Return value: %TRUE if @root_device is available, %FALSE otherwise.
  **/
 gboolean
 gupnp_root_device_get_available (GUPnPRootDevice *root_device)
@@ -556,6 +560,8 @@ gupnp_root_device_get_available (GUPnPRootDevice *root_device)
 /**
  * gupnp_root_device_get_relative_location
  * @root_device: A #GUPnPRootDevice
+ *
+ * Get the relative location of @root_device.
  *
  * Return value: The relative location of @root_device.
  **/

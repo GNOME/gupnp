@@ -54,9 +54,10 @@ gupnp_service_introspection_get_type (void) G_GNUC_CONST;
 
 /**
  * GUPnPServiceActionArgDirection
+ * @GUPNP_SERVICE_ACTION_ARG_DIRECTION_IN: An "in" variable, to the service.
+ * @GUPNP_SERVICE_ACTION_ARG_DIRECTION_OUT: An "out" variable, from the service.
  *
  * Represents the direction of a service state variable.
- *
  **/
 typedef enum
 {
@@ -129,6 +130,12 @@ typedef struct {
 typedef struct _GUPnPServiceIntrospectionPrivate
                 GUPnPServiceIntrospectionPrivate;
 
+/**
+ * GUPnPServiceIntrospection:
+ *
+ * This struct contains private data only, and should be accessed using the
+ * functions below.
+ */
 typedef struct {
         GObject parent;
 

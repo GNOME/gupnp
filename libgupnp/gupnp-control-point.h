@@ -57,6 +57,12 @@ gupnp_control_point_get_type (void) G_GNUC_CONST;
 
 typedef struct _GUPnPControlPointPrivate GUPnPControlPointPrivate;
 
+/**
+ * GUPnPControlPoint:
+ *
+ * This struct contains private data only, and should be accessed using the
+ * functions below.
+ */
 typedef struct {
         GSSDPResourceBrowser parent;
 

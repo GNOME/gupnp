@@ -50,7 +50,7 @@ CFILE_GLOB=$(top_srcdir)/libgupnp/*.c
 IGNORE_HFILES=gena-protocol.h				\
 	      xml-util.h				\
 	      gvalue-util.h				\
-	      accept-language.h				\
+	      http-headers.h				\
 	      gupnp-marshal.h				\
 	      gupnp-context-private.h			\
 	      gupnp-device-info-private.h		\

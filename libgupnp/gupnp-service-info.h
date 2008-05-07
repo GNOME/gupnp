@@ -57,6 +57,12 @@ gupnp_service_info_get_type (void) G_GNUC_CONST;
 
 typedef struct _GUPnPServiceInfoPrivate GUPnPServiceInfoPrivate;
 
+/**
+ * GUPnPServiceInfo:
+ *
+ * This struct contains private data only, and should be accessed using the
+ * functions below.
+ */
 typedef struct {
         GObject parent;
 
@@ -79,6 +85,8 @@ typedef struct {
  * @introspection: The new #GUPnPServiceIntrospection object, or NULL
  * @error: The #GError that occurred, or NULL
  * @user_data: User data
+ *
+ * Callback notifying that @introspection for @info has been obtained.
  **/
 typedef void (* GUPnPServiceIntrospectionCallback) (
                                  GUPnPServiceInfo           *info,

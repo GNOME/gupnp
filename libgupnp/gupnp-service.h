@@ -61,6 +61,12 @@ typedef struct _GUPnPServiceAction GUPnPServiceAction;
 
 typedef struct _GUPnPServicePrivate GUPnPServicePrivate;
 
+/**
+ * GUPnPService:
+ *
+ * This struct contains private data only, and should be accessed using the
+ * functions below.
+ */
 typedef struct {
         GUPnPServiceInfo parent;
 
