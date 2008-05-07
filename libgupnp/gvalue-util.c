@@ -97,7 +97,7 @@ gvalue_util_set_value_from_string (GValue     *value,
 
         case G_TYPE_DOUBLE:
                 d = atof (str);
-                g_value_set_float (value, d);
+                g_value_set_double (value, d);
 
                 break;
 

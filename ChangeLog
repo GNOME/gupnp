@@ -1,5 +1,10 @@
 2008-05-07  Ross Burton  <ross@openedhand.com>
 
+	* libgupnp/gvalue-util.c:
+	Fix type marshalling for doubles.
+
+2008-05-07  Ross Burton  <ross@openedhand.com>
+
 	* libgupnp/gupnp-control-point.c:
 	* libgupnp/gupnp-control-point.h:
 	* libgupnp/gupnp-root-device.c:
