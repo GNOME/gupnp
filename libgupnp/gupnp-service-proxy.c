@@ -1374,27 +1374,8 @@ server_handler (SoupServer        *soup_server,
                 return;
         }
 
-        if (!proxy->priv->sid) {
-                GUPnPContext *context;
-                GMainContext *main_context;
-
-                context = gupnp_service_info_get_context
-                                        (GUPNP_SERVICE_INFO (proxy));
-                main_context = gssdp_client_get_main_context
-                                        (GSSDP_CLIENT (context));
-
-                /* Wait. Perhaps the subscription response has not yet
-                 * been processed. */
-                g_main_context_iteration (main_context, FALSE);
-
-                if (!proxy->priv->sid || strcmp (hdr, proxy->priv->sid) != 0) {
-                        /* Really not our SID */
-                        soup_message_set_status
-                                (msg, SOUP_STATUS_PRECONDITION_FAILED);
-
-                        return;
-                }
-        }
+        /* We do not error out if proxy->priv->sid is NIL as the subscription
+         * response may not have been processed yet. */
 
         hdr = soup_message_headers_get (msg->request_headers, "SEQ");
         if (hdr == NULL) {
