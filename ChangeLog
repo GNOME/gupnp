@@ -1,3 +1,10 @@
+2008-05-09  Jorn Baayen  <jorn@openedhand.com>
+
+	* libgupnp/gupnp-service-proxy.c (emit_notifications),
+	(server_handler):
+
+	Cosmetic: fit into 80 columns.
+
 2008-05-09  Ross Burton  <ross@openedhand.com>
 
 	* libgupnp/gupnp-service-proxy.c:

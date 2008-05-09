@@ -1337,6 +1337,7 @@ gupnp_service_proxy_remove_notify (GUPnPServiceProxy              *proxy,
         return found;
 }
 
+/* Emit pending notifications. See comment below on why we do this. */
 static gboolean
 emit_notifications (gpointer user_data)
 {
@@ -1365,16 +1366,17 @@ emit_notifications (gpointer user_data)
                                 GValue value = {0, };
                                 GList *l;
                                 
-                                data = g_hash_table_lookup (proxy->priv->notify_hash,
-                                                            var_node->name);
+                                data = g_hash_table_lookup
+                                        (proxy->priv->notify_hash,
+                                         var_node->name);
                                 if (data == NULL)
                                         continue;
                                 
                                 /* Make a GValue of the desired type */
                                 g_value_init (&value, data->type);
                                 
-                                if (!gvalue_util_set_value_from_xml_node (&value,
-                                                                          var_node)) {
+                                if (!gvalue_util_set_value_from_xml_node
+                                                        (&value, var_node)) {
                                         g_value_unset (&value);
                                         
                                         continue;
@@ -1400,11 +1402,14 @@ emit_notifications (gpointer user_data)
                 
                 /* Cleanup */
                 xmlFreeDoc (doc);
-                proxy->priv->pending_notifies = g_list_delete_link (proxy->priv->pending_notifies,
-                                                                   proxy->priv->pending_notifies);
+
+                proxy->priv->pending_notifies =
+                        g_list_delete_link (proxy->priv->pending_notifies,
+                                            proxy->priv->pending_notifies);
         }
         
         proxy->priv->notify_idle_id = 0;
+
 	return FALSE;
 }
 
@@ -1537,9 +1542,11 @@ server_handler (SoupServer        *soup_server,
 	 * call the callbacks in an idle handler so that if the client calls the
 	 * device in the notify callback the server can actually respond.
 	 */
-        proxy->priv->pending_notifies = g_list_append (proxy->priv->pending_notifies, doc);
+        proxy->priv->pending_notifies =
+                g_list_append (proxy->priv->pending_notifies, doc);
         if (!proxy->priv->notify_idle_id)
-                proxy->priv->notify_idle_id = g_idle_add (emit_notifications, proxy);
+                proxy->priv->notify_idle_id =
+                        g_idle_add (emit_notifications, proxy);
         
         /* Everything went OK */
         soup_message_set_status (msg, SOUP_STATUS_OK);
