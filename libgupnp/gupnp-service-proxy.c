@@ -62,6 +62,9 @@ struct _GUPnPServiceProxyPrivate {
         GHashTable *notify_hash;
 
         GList *pending_messages; /* Pending SoupMessages from this proxy */
+
+        GList *pending_notifies; /* Pending notifications to be sent (xmlDoc*) */
+        guint notify_idle_id; /* Idle handler ID of notification emiter */
 };
 
 enum {
@@ -242,6 +245,18 @@ gupnp_service_proxy_dispose (GObject *object)
                                             proxy->priv->pending_messages);
         }
 
+        /* Cancel pending notifications */
+        if (proxy->priv->notify_idle_id) {
+                g_source_remove (proxy->priv->notify_idle_id);
+                proxy->priv->notify_idle_id = 0;
+        }
+        
+        while (proxy->priv->pending_notifies) {
+                xmlFreeDoc (proxy->priv->pending_notifies->data);
+                proxy->priv->pending_notifies = g_list_delete_link (proxy->priv->pending_notifies,
+                                                                   proxy->priv->pending_notifies);
+        }
+        
         /* Call super */
         object_class = G_OBJECT_CLASS (gupnp_service_proxy_parent_class);
         object_class->dispose (object);
@@ -1322,6 +1337,77 @@ gupnp_service_proxy_remove_notify (GUPnPServiceProxy              *proxy,
         return found;
 }
 
+static gboolean
+emit_notifications (gpointer user_data)
+{
+        GUPnPServiceProxy *proxy = user_data;
+
+        g_assert (user_data);
+        
+        while (proxy->priv->pending_notifies != NULL) {
+                xmlDoc *doc;
+                xmlNode *node;
+
+                doc = proxy->priv->pending_notifies->data;
+                node = xmlDocGetRootElement (doc);
+                
+                /* Iterate over all provided properties */
+                for (node = node->children; node; node = node->next) {
+                        xmlNode *var_node;
+                        
+                        if (strcmp ((char *) node->name, "property") != 0)
+                                continue;
+                        
+                        /* property */
+                        for (var_node = node->children; var_node;
+                             var_node = var_node->next) {
+                                NotifyData *data;
+                                GValue value = {0, };
+                                GList *l;
+                                
+                                data = g_hash_table_lookup (proxy->priv->notify_hash,
+                                                            var_node->name);
+                                if (data == NULL)
+                                        continue;
+                                
+                                /* Make a GValue of the desired type */
+                                g_value_init (&value, data->type);
+                                
+                                if (!gvalue_util_set_value_from_xml_node (&value,
+                                                                          var_node)) {
+                                        g_value_unset (&value);
+                                        
+                                        continue;
+                                }
+                                
+                                /* Call callbacks */
+                                for (l = data->callbacks; l; l = l->next) {
+                                        CallbackData *callback_data;
+                                        
+                                        callback_data = l->data;
+                                        
+                                        callback_data->callback
+                                                (proxy,
+                                                 (const char *) var_node->name,
+                                                 &value,
+                                                 callback_data->user_data);
+                                }
+                                
+                                /* Cleanup */
+                                g_value_unset (&value);
+                        }
+                }
+                
+                /* Cleanup */
+                xmlFreeDoc (doc);
+                proxy->priv->pending_notifies = g_list_delete_link (proxy->priv->pending_notifies,
+                                                                   proxy->priv->pending_notifies);
+        }
+        
+        proxy->priv->notify_idle_id = 0;
+	return FALSE;
+}
+
 /*
  * HTTP server received a message. Handle, if this was a NOTIFY
  * message with our SID.
@@ -1445,56 +1531,16 @@ server_handler (SoupServer        *soup_server,
 
                 return;
         }
-
-        /* Iterate over all provided properties */
-        for (node = node->children; node; node = node->next) {
-                xmlNode *var_node;
-
-                if (strcmp ((char *) node->name, "property") != 0)
-                        continue;
-
-                /* property */
-                for (var_node = node->children; var_node;
-                     var_node = var_node->next) {
-                        NotifyData *data;
-                        GValue value = {0, };
-                        GList *l;
-
-                        data = g_hash_table_lookup (proxy->priv->notify_hash,
-                                                    var_node->name);
-                        if (data == NULL)
-                                continue;
-
-                        /* Make a GValue of the desired type */
-                        g_value_init (&value, data->type);
-
-                        if (!gvalue_util_set_value_from_xml_node (&value,
-                                                                  var_node)) {
-                                g_value_unset (&value);
-
-                                continue;
-                        }
-
-                        /* Call callbacks */
-                        for (l = data->callbacks; l; l = l->next) {
-                                CallbackData *callback_data;
-
-                                callback_data = l->data;
-
-                                callback_data->callback
-                                        (proxy,
-                                         (const char *) var_node->name,
-                                         &value,
-                                         callback_data->user_data);
-                        }
-
-                        /* Cleanup */
-                        g_value_unset (&value);
-                }
-        }
-
-        xmlFreeDoc (doc);
-
+	
+	/*
+	 * Some UPnP stacks (hello, myigd/1.0) block when sending a NOTIFY, so
+	 * call the callbacks in an idle handler so that if the client calls the
+	 * device in the notify callback the server can actually respond.
+	 */
+        proxy->priv->pending_notifies = g_list_append (proxy->priv->pending_notifies, doc);
+        if (!proxy->priv->notify_idle_id)
+                proxy->priv->notify_idle_id = g_idle_add (emit_notifications, proxy);
+        
         /* Everything went OK */
         soup_message_set_status (msg, SOUP_STATUS_OK);
 }

@@ -1,3 +1,9 @@
+2008-05-09  Ross Burton  <ross@openedhand.com>
+
+	* libgupnp/gupnp-service-proxy.c:
+	Emit notifications in an idle handler, because some stacks block
+	when sending the NOTIFY message.
+
 2008-05-07  Ross Burton  <ross@openedhand.com>
 
 	* libgupnp/gupnp-service.c:
