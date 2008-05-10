@@ -1,3 +1,10 @@
+2008-05-10  Jorn Baayen  <jorn@openedhand.com>
+
+	* libgupnp/gupnp-service-proxy.c (server_handler):
+
+	Do not error out if proxy->priv->sid is NIL as the subscription
+	response may not have been processed yet.
+
 2008-05-09  Jorn Baayen  <jorn@openedhand.com>
 
 	* libgupnp/gupnp-service-proxy.c (emit_notifications),
