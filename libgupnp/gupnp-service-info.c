@@ -379,7 +379,9 @@ gupnp_service_info_class_init (GUPnPServiceInfoClass *klass)
  * gupnp_service_info_get_context
  * @info: A #GUPnPServiceInfo
  *
- * Return value: The #GUPnPContext associated with @info.
+ * Get the #GUPnPContext associated with @info.
+ *
+ * Returns: A #GUPnPContext.
  **/
 GUPnPContext *
 gupnp_service_info_get_context (GUPnPServiceInfo *info)
@@ -393,7 +395,9 @@ gupnp_service_info_get_context (GUPnPServiceInfo *info)
  * gupnp_service_info_get_location
  * @info: A #GUPnPServiceInfo
  *
- * Return value: The location of the device description file.
+ * Get the location of the device description file.
+ *
+ * Returns: A constant string.
  **/
 const char *
 gupnp_service_info_get_location (GUPnPServiceInfo *info)
@@ -407,7 +411,9 @@ gupnp_service_info_get_location (GUPnPServiceInfo *info)
  * gupnp_service_info_get_url_base
  * @info: A #GUPnPServiceInfo
  *
- * Return value: The URL base.
+ * Get the URL base of this service.
+ *
+ * Returns: A constant #SoupURI.
  **/
 const SoupURI *
 gupnp_service_info_get_url_base (GUPnPServiceInfo *info)
@@ -421,7 +427,9 @@ gupnp_service_info_get_url_base (GUPnPServiceInfo *info)
  * gupnp_service_info_get_udn
  * @info: A #GUPnPServiceInfo
  *
- * Return value: The UDN of the containing device.
+ * Get the Unique Device Name of the containing device.
+ *
+ * Returns: A constant string.
  **/
 const char *
 gupnp_service_info_get_udn (GUPnPServiceInfo *info)
@@ -435,7 +443,9 @@ gupnp_service_info_get_udn (GUPnPServiceInfo *info)
  * gupnp_service_info_get_service_type
  * @info: A #GUPnPServiceInfo
  *
- * Return value: The UPnP service type, or NULL.
+ * Get the UPnP service type, or %NULL.
+ *
+ * Returns: A constant string.
  **/
 const char *
 gupnp_service_info_get_service_type (GUPnPServiceInfo *info)
@@ -455,7 +465,9 @@ gupnp_service_info_get_service_type (GUPnPServiceInfo *info)
  * gupnp_service_info_get_id
  * @info: A #GUPnPServiceInfo
  *
- * Return value: The ID, or NULL. g_free() after use.
+ * Get the ID of this service, or %NULL if there is no ID.
+ *
+ * Return value: A string. This string should be freed with g_free() after use.
  **/
 char *
 gupnp_service_info_get_id (GUPnPServiceInfo *info)
@@ -470,7 +482,9 @@ gupnp_service_info_get_id (GUPnPServiceInfo *info)
  * gupnp_service_info_get_scpd_url
  * @info: A #GUPnPServiceInfo
  *
- * Return value: The SCPD URL, or NULL. g_free() after use.
+ * Get the SCPD URL for this service, or %NULL if there is no SCPD.
+ *
+ * Return value: A string. This string should be freed with g_free() after use.
  **/
 char *
 gupnp_service_info_get_scpd_url (GUPnPServiceInfo *info)
@@ -486,7 +500,9 @@ gupnp_service_info_get_scpd_url (GUPnPServiceInfo *info)
  * gupnp_service_info_get_control_url
  * @info: A #GUPnPServiceInfo
  *
- * Return value: The control URL, or NULL. g_free() after use.
+ * Get the control URL for this service, or %NULL..
+ *
+ * Return value: A string. This string should be freed with g_free() after use.
  **/
 char *
 gupnp_service_info_get_control_url (GUPnPServiceInfo *info)
@@ -502,7 +518,9 @@ gupnp_service_info_get_control_url (GUPnPServiceInfo *info)
  * gupnp_service_info_get_event_subscription_url
  * @info: A #GUPnPServiceInfo
  *
- * Return value: The event subscription URL, or NULL. g_free() after use.
+ * Get the event subscription URL for this service, or NULL.
+ *
+ * Return value: A string. This string should be freed with g_free() after use.
  **/
 char *
 gupnp_service_info_get_event_subscription_url (GUPnPServiceInfo *info)
