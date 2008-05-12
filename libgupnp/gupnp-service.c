@@ -272,19 +272,26 @@ gupnp_service_action_get_value (GUPnPServiceAction *action,
                                 GValue             *value)
 {
         xmlNode *node;
+        gboolean found;
 
         g_return_if_fail (action != NULL);
         g_return_if_fail (argument != NULL);
         g_return_if_fail (value != NULL);
 
+        found = FALSE;
         for (node = action->node->children; node; node = node->next) {
                 if (strcmp ((char *) node->name, argument) != 0)
                         continue;
 
-                gvalue_util_set_value_from_xml_node (value, node);
+                found = gvalue_util_set_value_from_xml_node (value, node);
 
                 break;
         }
+
+        if (!found)
+                g_warning ("Failed to retreive '%s' argument of '%s' action",
+                           argument,
+                           action->name);
 }
 
 /**

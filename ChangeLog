@@ -1,3 +1,15 @@
+2008-05-11  Zeeshan Ali Khattak  <zeenix@gmail.com>
+
+	* libgupnp/gupnp-service.c:
+
+	Emit a warning on failure to retreive requested action argument.
+
+2008-05-11  Zeeshan Ali Khattak  <zeenix@gmail.com>
+
+	* libgupnp/gupnp-context.c:
+
+	GContentType is not guaranteed to be a mime-type.
+
 2008-05-10  Jorn Baayen  <jorn@openedhand.com>
 
 	* libgupnp/gupnp-service-proxy.c (server_handler):

@@ -571,7 +571,7 @@ hosting_server_handler (SoupServer        *server,
 {
         PathData *path_data;
         const char *lang;
-        char *path_to_open, *path_locale, *slash, *mime;
+        char *path_to_open, *path_locale, *slash, *content_type, *mime;
         struct stat st;
         int path_offset;
         GList *locales;
@@ -751,16 +751,22 @@ hosting_server_handler (SoupServer        *server,
                 soup_message_set_status (msg, SOUP_STATUS_OK);
 
         /* Set Content-Type */
-        mime = g_content_type_guess (path_to_open,
-                                     (guchar*)g_mapped_file_get_contents (mapped_file),
-                                     st.st_size,
-                                     NULL);
+        content_type = g_content_type_guess
+                                (path_to_open,
+                                 (guchar*)
+                                 g_mapped_file_get_contents (mapped_file),
+                                 st.st_size,
+                                 NULL);
+        mime = g_content_type_get_mime_type (content_type);
+        if (mime == NULL)
+                mime = g_strdup ("application/octet-stream");
 
         soup_message_headers_append (msg->response_headers,
                                      "Content-Type",
                                      mime);
 
         g_free (mime);
+        g_free (content_type);
 
         /* Set Content-Language */
         if (locales) {
