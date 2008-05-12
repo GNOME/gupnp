@@ -27,22 +27,67 @@
 
 G_BEGIN_DECLS
 
+/**
+ * GUPNP_TYPE_BIN_BASE64:
+ *
+ * A string type containing Base-64 encoded binary data.
+ */
 #define GUPNP_TYPE_BIN_BASE64 \
                 (gupnp_bin_base64_get_type ())
+/**
+ * GUPNP_TYPE_BIN_HEX:
+ *
+ * A string type containing binary hexadecimal encoded binary data.
+ */
 #define GUPNP_TYPE_BIN_HEX \
                 (gupnp_bin_hex_get_type ())
+/**
+ * GUPNP_TYPE_DATE:
+ *
+ * A string type representing a date in ISO 8601 format with no time or timezone.
+ */
 #define GUPNP_TYPE_DATE \
                 (gupnp_date_get_type ())
+/**
+ * GUPNP_TYPE_DATE_TIME:
+ *
+ * A string type representing a date in ISO 8601 format with optional time but no timezone.
+ */
 #define GUPNP_TYPE_DATE_TIME \
                 (gupnp_date_time_get_type ())
+/**
+ * GUPNP_TYPE_DATE_TIME_TZ:
+ *
+ * A string type representing a date in ISO 8601 format with optional time and timezone.
+ */
 #define GUPNP_TYPE_DATE_TIME_TZ \
                 (gupnp_date_time_tz_get_type ())
+/**
+ * GUPNP_TYPE_TIME:
+ *
+ * A string type representing a time in ISO 8601 format with no date or timezone.
+ */
 #define GUPNP_TYPE_TIME \
                 (gupnp_time_get_type ())
+/**
+ * GUPNP_TYPE_TIME_TZ:
+ *
+ * A string type representing a time in ISO 8601 format with optional timezone and no date.
+ */
 #define GUPNP_TYPE_TIME_TZ \
                 (gupnp_time_tz_get_type ())
+/**
+ * GUPNP_TYPE_URI:
+ *
+ * A string type representing a Universal Resource Indentifier.
+ */
 #define GUPNP_TYPE_URI \
                 (gupnp_uri_get_type ())
+/**
+ * GUPNP_TYPE_UUID:
+ *
+ * A Universally Unique ID represented as a hexadecimal-encoded string.
+ */
 #define GUPNP_TYPE_UUID \
                 (gupnp_uuid_get_type ())
 

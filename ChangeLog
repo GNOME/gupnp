@@ -1,5 +1,10 @@
 2008-05-12  Ross Burton  <ross@openedhand.com>
 
+	* libgupnp/gupnp-types.h:
+	Document the special types.
+
+2008-05-12  Ross Burton  <ross@openedhand.com>
+
 	* libgupnp/gupnp-service-info.c:
 	Complete API documentation.
 
