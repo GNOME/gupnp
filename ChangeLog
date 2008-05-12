@@ -1,3 +1,8 @@
+2008-05-12  Ross Burton  <ross@openedhand.com>
+
+	* libgupnp/gupnp-control-point.c:
+	Document the search target, and enforce target != NULL.
+
 2008-05-11  Zeeshan Ali Khattak  <zeenix@gmail.com>
 
 	* libgupnp/gupnp-service.c:

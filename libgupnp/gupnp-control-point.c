@@ -905,6 +905,10 @@ gupnp_control_point_class_init (GUPnPControlPointClass *klass)
  *
  * Create a new #GUPnPControlPoint with the specified @context and @target.
  *
+ * @target should be a service or device name, such as
+ * <literal>urn:schemas-upnp-org:service:WANIPConnection:1</literal> or
+ * <literal>urn:schemas-upnp-org:device:MediaRenderer:1</literal>.
+ *
  * Return value: A new #GUPnPControlPoint object.
  **/
 GUPnPControlPoint *
@@ -929,6 +933,10 @@ gupnp_control_point_new (GUPnPContext *context,
  * Create a new #GUPnPControlPoint with the specified @context, @factory and
  * @target.
  *
+ * @target should be a service or device name, such as
+ * <literal>urn:schemas-upnp-org:service:WANIPConnection:1</literal> or
+ * <literal>urn:schemas-upnp-org:device:MediaRenderer:1</literal>.
+ *
  * Return value: A new #GUPnPControlPoint object.
  **/
 GUPnPControlPoint *
@@ -938,6 +946,7 @@ gupnp_control_point_new_full (GUPnPContext         *context,
 {
         g_return_val_if_fail (GUPNP_IS_CONTEXT (context), NULL);
         g_return_val_if_fail (GUPNP_IS_RESOURCE_FACTORY (factory), NULL);
+        g_return_val_if_fail (target, NULL);
 
         return g_object_new (GUPNP_TYPE_CONTROL_POINT,
                              "client", context,
