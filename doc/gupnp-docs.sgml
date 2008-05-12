@@ -11,7 +11,8 @@
 
     <copyright>
       <year>2007</year>
-      <holder>OpenedHand LTD</holder>
+      <year>2008</year>
+      <holder>OpenedHand Ltd</holder>
     </copyright>
 
     <legalnotice>
@@ -37,37 +38,58 @@
     </legalnotice>
   </bookinfo>
 
-  <chapter>
-    <title>Device Information</title>
+  <part id="overview">
+    <title>Overview</title>
+    <para>
+      GUPnP is a library for writing both UPnP clients and services in C, using
+      GObject.
+    </para>
+    <para>
+      Note that this documentation assumes some familiarity with UPnP.
+    </para>
+  </part>
 
-    <xi:include href="xml/gupnp-device-info.xml"/>
-    <xi:include href="xml/gupnp-service-info.xml"/>
-    <xi:include href="xml/gupnp-service-introspection.xml"/>
-  </chapter>
-
-  <chapter>
-    <title>Device Control</title>
-
-    <xi:include href="xml/gupnp-control-point.xml"/>
-    <xi:include href="xml/gupnp-device-proxy.xml"/>
-    <xi:include href="xml/gupnp-service-proxy.xml"/>
-  </chapter>
-
-  <chapter>
-    <title>Device Implementation</title>
-
-    <xi:include href="xml/gupnp-device.xml"/>
-    <xi:include href="xml/gupnp-root-device.xml"/>
-    <xi:include href="xml/gupnp-service.xml"/>
-  </chapter>
-
-  <chapter>
-    <title>Tools</title>
-
-    <xi:include href="xml/gupnp-context.xml"/>
-    <xi:include href="xml/gupnp-resource-factory.xml"/>
-    <xi:include href="xml/gupnp-error.xml"/>
-    <xi:include href="xml/gupnp-types.xml"/>
-  </chapter>
+  <part id="tutorial">
+    <title>Tutorials</title>
+    
+    <xi:include href="client-tutorial.xml"/>
+  </part>
+  
+  <part id="ref">
+    <title>API Reference</title>
+    
+    <chapter>
+      <title>Device Information</title>
+      
+      <xi:include href="xml/gupnp-device-info.xml"/>
+      <xi:include href="xml/gupnp-service-info.xml"/>
+      <xi:include href="xml/gupnp-service-introspection.xml"/>
+    </chapter>
+    
+    <chapter>
+      <title>Device Control</title>
+      
+      <xi:include href="xml/gupnp-control-point.xml"/>
+      <xi:include href="xml/gupnp-device-proxy.xml"/>
+      <xi:include href="xml/gupnp-service-proxy.xml"/>
+    </chapter>
+    
+    <chapter>
+      <title>Device Implementation</title>
+      
+      <xi:include href="xml/gupnp-device.xml"/>
+      <xi:include href="xml/gupnp-root-device.xml"/>
+      <xi:include href="xml/gupnp-service.xml"/>
+    </chapter>
+    
+    <chapter>
+      <title>Tools</title>
+      
+      <xi:include href="xml/gupnp-context.xml"/>
+      <xi:include href="xml/gupnp-resource-factory.xml"/>
+      <xi:include href="xml/gupnp-error.xml"/>
+      <xi:include href="xml/gupnp-types.xml"/>
+    </chapter>
+  </part>
 
 </book>

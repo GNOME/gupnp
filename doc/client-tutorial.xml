@@ -1,0 +1,117 @@
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.2//EN" "http://www.oasis-open.org/docbook/xml/4.4/docbookx.dtd">
+
+<chapter id="client-tutorial">
+  <title>Writing a UPnP Client</title>
+  <para>
+    In this tutorial we will write an application which fetches the external IP
+    address from an UPnP-compliant ADSL modem.  To do this a <firstterm>Control
+    Point</firstterm> is created, which searches for services of the type
+    <literal>urn:schemas-upnp-org:service:WANIPConnection:1</literal>.  As
+    services are found <firstterm>Service Proxy</firstterm> objects are created
+    to allow interaction with the service, on which we can call
+    <function>GetExternalIPAddress</function> to fetch the external IP address.
+  </para>
+  <para>
+    First, we initialize GUPnP and create a control point targeting the service
+    type.  Then we connect a signal handler so that we are notified when
+    services we are interested in are found.
+  </para>
+  <programlisting>#include &lt;libgupnp/gupnp-control-point.h&gt;
+
+static GMainLoop *main_loop;
+
+int
+main (int argc, char **argv)
+{
+  GError *error = NULL;
+  GUPnPContext *context;
+  GUPnPControlPoint *cp;
+  
+  /* Required initialisation */
+  g_thread_init (NULL);
+  g_type_init ();
+
+  /* Create a new GUPnP Context.  By here we are using the default GLib main
+     context, and connecting to the current machine's default IP on an
+     automatically generated port. */
+  context = gupnp_context_new (NULL, NULL, 0, &amp;error);
+  if (error) g_error (error->message);
+
+  /* Create a Control Point targeting WAN IP Connection services */
+  cp = gupnp_control_point_new
+    (context, "urn:schemas-upnp-org:service:WANIPConnection:1");
+
+  /* The service-proxy-available signal is emitted when any services which match
+     our target are found, so connect to it */
+  g_signal_connect (cp,
+		    "service-proxy-available",
+		    G_CALLBACK (service_proxy_available_cb),
+		    NULL);
+
+  /* Tell the Control Point to start searching */
+  gssdp_resource_browser_set_active (GSSDP_RESOURCE_BROWSER (cp), TRUE);
+  
+  /* Enter the main loop. This will start the search and result in callbacks to
+     service_proxy_available_cb. */
+  main_loop = g_main_loop_new (NULL, FALSE);
+  g_main_loop_run (main_loop);
+
+  /* Clean up */
+  g_main_loop_unref (main_loop);
+  g_object_unref (cp);
+  g_object_unref (context);
+  
+  return 0;
+}
+
+static void
+service_proxy_available_cb (GUPnPControlPoint *cp,
+                            GUPnPServiceProxy *proxy)
+{
+  /* ... */
+}</programlisting>
+    <para>
+      Now we have an application which searches for the service we specified and
+      calls <literal>service_proxy_available_cb</literal> for each one it found.
+      To get the external IP address we need to invoke the
+      <literal>GetExternalIPAddress</literal> action.  This action takes no in
+      arguments, and has a single out argument called "NewExternalIPAddress".
+      GUPnP has a set of methods to invoke actions (which will be very familiar
+      to anyone who has used <literal>dbus-glib</literal>) where you pass a
+      <literal>NULL</literal>-terminated varargs list of (name, GType, value)
+      tuples for the in arguments, then a <literal>NULL</literal>-terminated
+      varargs list of (name, GType, return location) tuples for the out
+      arguments.
+    </para>
+    <programlisting>static void
+service_proxy_available_cb (GUPnPControlPoint *cp,
+                            GUPnPServiceProxy *proxy)
+{
+  GError *error = NULL;
+  char *ip = NULL;
+  
+  gupnp_service_proxy_send_action (proxy,
+				   /* Action name and error location */
+				   "GetExternalIPAddress", &amp;error,
+				   /* IN args */
+				   NULL,
+				   /* OUT args */
+				   "NewExternalIPAddress",
+				   G_TYPE_STRING, &amp;ip,
+				   NULL);
+  
+  if (error == NULL) {
+    g_print ("External IP address is %s\n", ip);
+    g_free (ip);
+  } else {
+    g_printerr ("Error: %s\n", error-&gt;message);
+    g_error_free (error);
+  }
+  g_main_loop_quit (main_loop);
+}</programlisting>
+    <para>
+      Note that <literal>_send_action</literal> blocks until the service has replied.  If you
+      need to make non-blocking calls then
+      use <literal>gupnp_service_proxy_begin_action</literal> which takes a callback.
+    </para>
+  </chapter>

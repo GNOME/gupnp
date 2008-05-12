@@ -1,5 +1,12 @@
 2008-05-12  Ross Burton  <ross@openedhand.com>
 
+	* doc/gupnp-docs.sgml:
+	* doc/Makefile.am:
+	* docs/client-tutorial.xml:
+	Add *very basic* first draft at a tutorial.
+
+2008-05-12  Ross Burton  <ross@openedhand.com>
+
 	* libgupnp/gupnp-control-point.c:
 	Document the search target, and enforce target != NULL.
 
