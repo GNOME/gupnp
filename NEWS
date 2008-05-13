@@ -1,3 +1,15 @@
+0.10
+====
+
+- Use libsoup 2.4. [Zeeshan Ali Khattak, Jorn Baayen]
+- Use g_timeout_add_seconds(). [Jorn Baayen]
+- Use GIO instead of xdgmime. [Jorn Baayen]
+- Support HTTP Range header in the HTTP server. [Jorn Baayen]
+- Use GMappedFile to mmap served files of read()ing them. [Jorn Baayen]
+- Improved documentation. [Ross Burton]
+- Spew HTTP messages to console when GUPNP_DEBUG is set. [Ross Burton]
+- Various other fixes. [Ross Burton, Zeeshan Ali Khattak, Jorn Baayen]
+
 0.8
 ===
 
