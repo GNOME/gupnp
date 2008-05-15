@@ -612,9 +612,9 @@ gupnp_service_info_get_introspection (GUPnPServiceInfo *info,
         return introspection;
 }
 
-/**
+/*
  * SCPD URL downloaded.
- **/
+ */
 static void
 got_scpd_url (SoupSession    *session,
               SoupMessage    *msg,

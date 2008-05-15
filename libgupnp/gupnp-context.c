@@ -85,7 +85,7 @@ typedef struct {
         char *server_path;
 } PathData;
 
-/**
+/*
  * Generates the default server ID.
  **/
 static char *
@@ -101,7 +101,7 @@ make_server_id (void)
                                 VERSION);
 }
 
-/**
+/*
  * Looks up the IP address of the first non-loopback network interface.
  **/
 static char *
@@ -389,7 +389,7 @@ _gupnp_context_get_session (GUPnPContext *context)
         return context->priv->session;
 }
 
-/**
+/*
  * Default server handler: Return 404 not found.
  **/
 static void
@@ -431,7 +431,7 @@ gupnp_context_get_server (GUPnPContext *context)
         return context->priv->server;
 }
 
-/**
+/*
  * Makes an URL that refers to our server.
  **/
 static char *

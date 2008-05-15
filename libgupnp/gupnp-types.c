@@ -20,6 +20,11 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:gupnp-types
+ * @short_description: Extra types for use when calling UPnP actions.
+ */
+
 #include <string.h>
 
 #include "gupnp-types.h"

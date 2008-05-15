@@ -31,6 +31,18 @@ gupnp_server_error_quark (void) G_GNUC_CONST;
 
 #define GUPNP_SERVER_ERROR (gupnp_server_error_quark ())
 
+/**
+ * GUPnPServerError:
+ * @GUPNP_SERVER_ERROR_INTERNAL_SERVER_ERROR: Internal server error.
+ * @GUPNP_SERVER_ERROR_NOT_FOUND: The resource was not found.
+ * @GUPNP_SERVER_ERROR_NOT_IMPLEMENTED: This method is not implemented.
+ * @GUPNP_SERVER_ERROR_INVALID_RESPONSE: Invalid response.
+ * @GUPNP_SERVER_ERROR_INVALID_URL: Invalid URL.
+ * @GUPNP_SERVER_ERROR_OTHER: Unknown/unhandled error.
+ *
+ * #GError codes used for errors in the #GUPNP_SERVER_ERROR domain, when there
+ * is communication with another server.
+ */
 typedef enum {
         GUPNP_SERVER_ERROR_INTERNAL_SERVER_ERROR,
         GUPNP_SERVER_ERROR_NOT_FOUND,
@@ -45,6 +57,15 @@ gupnp_eventing_error_quark (void) G_GNUC_CONST;
 
 #define GUPNP_EVENTING_ERROR (gupnp_eventing_error_quark ())
 
+/**
+ * GUPnPEventingError:
+ * @GUPNP_EVENTING_ERROR_SUBSCRIPTION_FAILED: The subscription attempt failed.
+ * @GUPNP_EVENTING_ERROR_SUBSCRIPTION_LOST: The subscription was lost.
+ * @GUPNP_EVENTING_ERROR_NOTIFY_FAILED: The notification failed.
+ *
+ * #GError codes used for errors in the #GUPNP_EVENTING_ERROR domain, during
+ * eventing of state variables.
+ */
 typedef enum {
         GUPNP_EVENTING_ERROR_SUBSCRIPTION_FAILED,
         GUPNP_EVENTING_ERROR_SUBSCRIPTION_LOST,
@@ -56,6 +77,16 @@ gupnp_control_error_quark (void) G_GNUC_CONST;
 
 #define GUPNP_CONTROL_ERROR (gupnp_control_error_quark ())
 
+/**
+ * GUPnPControlError:
+ * @GUPNP_CONTROL_ERROR_INVALID_ACTION: The action name was invalid.
+ * @GUPNP_CONTROL_ERROR_INVALID_ARGS: The action arguments were invalid.
+ * @GUPNP_CONTROL_ERROR_OUT_OF_SYNC: Out of sync (deprecated).
+ * @GUPNP_CONTROL_ERROR_ACTION_FAILED: The action failed.
+ *
+ * #GError codes used for errors in the #GUPNP_CONTROL_ERROR domain, during
+ * invocation of service actions.
+ */
 typedef enum {
         GUPNP_CONTROL_ERROR_INVALID_ACTION = 401,
         GUPNP_CONTROL_ERROR_INVALID_ARGS   = 402,

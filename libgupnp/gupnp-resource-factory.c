@@ -117,8 +117,11 @@ gupnp_resource_factory_get_default (void)
  * @location: The location of the device description file
  * @url_base: The URL base for this device, or NULL if none
  *
- * Return value: A #GUPnPDeviceProxy for the device with element @element, as
+ *
+ * Create a #GUPnPDeviceProxy for the device with element @element, as
  * read from the device description file specified by @location.
+ *
+ * Return value: A new #GUPnPDeviceProxy.
  **/
 GUPnPDeviceProxy *
 gupnp_resource_factory_create_device_proxy
@@ -176,8 +179,10 @@ gupnp_resource_factory_create_device_proxy
  * @service_type: The service type
  * @url_base: The URL base for this service, or NULL if none
  *
- * Return value: A #GUPnPServiceProxy for the service with element @element, as
+ * Create a #GUPnPServiceProxy for the service with element @element, as
  * read from the service description file specified by @location.
+ *
+ * Return value: A new #GUPnPServiceProxy.
  **/
 GUPnPServiceProxy *
 gupnp_resource_factory_create_service_proxy
@@ -232,8 +237,10 @@ gupnp_resource_factory_create_service_proxy
  * @location: The location of the device description file
  * @url_base: The URL base for this device
  *
- * Return value: A #GUPnPDevice for the device with element @element, as
+ * Create a #GUPnPDevice for the device with element @element, as
  * read from the device description file specified by @location.
+ *
+ * Return value: A new #GUPnPDevice.
  **/
 GUPnPDevice *
 gupnp_resource_factory_create_device
@@ -289,8 +296,10 @@ gupnp_resource_factory_create_device
  * @location: The location of the service description file
  * @url_base: The URL base for this service
  *
- * Return value: A #GUPnPService for the service with element @element, as
+ * Create a #GUPnPService for the service with element @element, as
  * read from the service description file specified by @location.
+ *
+ * Return value: A new #GUPnPService.
  **/
 GUPnPService *
 gupnp_resource_factory_create_service

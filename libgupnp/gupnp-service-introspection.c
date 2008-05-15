@@ -729,9 +729,10 @@ collect_variable_names (gpointer data,
  * gupnp_service_introspection_new
  * @scpd: Pointer to the SCPD of the service to create a introspection for
  *
- * Return value: A #GUPnPServiceIntrospection for the service created from the
- * SCPD @scpd or NULL.
+ * Create a new #GUPnPServiceIntrospection for the service created from the
+ * SCPD @scpd or %NULL.
  *
+ * Return value: A new #GUPnPServiceIntrospection.
  **/
 GUPnPServiceIntrospection *
 gupnp_service_introspection_new (xmlDoc *scpd)

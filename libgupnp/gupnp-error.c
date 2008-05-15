@@ -23,6 +23,11 @@
 #include "gupnp-error-private.h"
 
 /**
+ * SECTION:gupnp-error
+ * @short_description: Error domains and codes.
+ */
+
+/**
  * GUPNP_SERVER_ERROR:
  *
  * The #GQuark uniquely used by GUPnP's server errors.

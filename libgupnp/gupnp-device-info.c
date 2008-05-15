@@ -368,7 +368,9 @@ gupnp_device_info_class_init (GUPnPDeviceInfoClass *klass)
  * gupnp_device_info_get_resource_factory
  * @device_info: A #GUPnPDeviceInfo
  *
- * Return value: The #GUPnPResourceFactory used by the @device_info.
+ * Get the #GUPnPResourceFactory used by the @device_info.
+ *
+ * Returns: A #GUPnPResourceFactory.
  **/
 GUPnPResourceFactory *
 gupnp_device_info_get_resource_factory (GUPnPDeviceInfo *info)
@@ -382,7 +384,9 @@ gupnp_device_info_get_resource_factory (GUPnPDeviceInfo *info)
  * gupnp_device_info_get_context
  * @info: A #GUPnPDeviceInfo
  *
- * Return value: The associated #GUPnPContext.
+ * Get the associated #GUPnPContext.
+ *
+ * Returns: A #GUPnPContext.
  **/
 GUPnPContext *
 gupnp_device_info_get_context (GUPnPDeviceInfo *info)
@@ -396,7 +400,9 @@ gupnp_device_info_get_context (GUPnPDeviceInfo *info)
  * gupnp_device_info_get_location
  * @info: A #GUPnPDeviceInfo
  *
- * Return value: The location of the device description file.
+ * Get the location of the device description file.
+ *
+ * Returns: A constant string.
  **/
 const char *
 gupnp_device_info_get_location (GUPnPDeviceInfo *info)
@@ -410,7 +416,9 @@ gupnp_device_info_get_location (GUPnPDeviceInfo *info)
  * gupnp_device_info_get_url_base
  * @info: A #GUPnPDeviceInfo
  *
- * Return value: The URL base.
+ * Get the URL base of this device.
+ *
+ * Returns: A #SoupURI.
  **/
 const SoupURI *
 gupnp_device_info_get_url_base (GUPnPDeviceInfo *info)
@@ -424,7 +432,9 @@ gupnp_device_info_get_url_base (GUPnPDeviceInfo *info)
  * gupnp_device_info_get_udn
  * @info: A #GUPnPDeviceInfo
  *
- * Return value: The UDN.
+ * Get the Unique Device Name of the device.
+ *
+ * Returns: A constant string.
  **/
 const char *
 gupnp_device_info_get_udn (GUPnPDeviceInfo *info)
@@ -444,7 +454,9 @@ gupnp_device_info_get_udn (GUPnPDeviceInfo *info)
  * gupnp_device_info_get_device_type
  * @info: A #GUPnPDeviceInfo
  *
- * Return value: The UPnP device type, or NULL.
+ * Get the UPnP device type.
+ *
+ * Returns: A constant string, or %NULL.
  **/
 const char *
 gupnp_device_info_get_device_type (GUPnPDeviceInfo *info)
@@ -464,7 +476,9 @@ gupnp_device_info_get_device_type (GUPnPDeviceInfo *info)
  * gupnp_device_info_get_friendly_name
  * @info: A #GUPnPDeviceInfo
  *
- * Return value: The friendly name, or NULL. g_free() after use.
+ * Get the friendly name of the device.
+ * 
+ * Return value: A string, or %NULL. g_free() after use.
  **/
 char *
 gupnp_device_info_get_friendly_name (GUPnPDeviceInfo *info)
@@ -479,7 +493,9 @@ gupnp_device_info_get_friendly_name (GUPnPDeviceInfo *info)
  * gupnp_device_info_get_manufacturer
  * @info: A #GUPnPDeviceInfo
  *
- * Return value: The manufacturer, or NULL. g_free() after use.
+ * Get the manufacturer of the device.
+ *
+ * Return value: A string, or %NULL. g_free() after use.
  **/
 char *
 gupnp_device_info_get_manufacturer (GUPnPDeviceInfo *info)
@@ -494,8 +510,9 @@ gupnp_device_info_get_manufacturer (GUPnPDeviceInfo *info)
  * gupnp_device_info_get_manufacturer_url
  * @info: A #GUPnPDeviceInfo
  *
- * Return value: A URL pointing to the manufacturers website, or NULL.
- * g_free() after use.
+ * Get a URL pointing to the manufacturer's website.
+ *
+ * Return value: A string, or %NULL. g_free() after use.
  **/
 char *
 gupnp_device_info_get_manufacturer_url (GUPnPDeviceInfo *info)
@@ -511,8 +528,9 @@ gupnp_device_info_get_manufacturer_url (GUPnPDeviceInfo *info)
  * gupnp_device_info_get_model_description
  * @info: A #GUPnPDeviceInfo
  *
- * Return value: The description of the device model, or NULL. g_free() after
- * use.
+ * Get the description of the device model.
+ *
+ * Return value: A string, or %NULL. g_free() after use.
  **/
 char *
 gupnp_device_info_get_model_description (GUPnPDeviceInfo *info)
@@ -527,7 +545,9 @@ gupnp_device_info_get_model_description (GUPnPDeviceInfo *info)
  * gupnp_device_info_get_model_name
  * @info: A #GUPnPDeviceInfo
  *
- * Return value: The name of the device model, or NULL. g_free() after use.
+ * Get the model name of the device.
+ *
+ * Return value: A string, or %NULL. g_free() after use.
  **/
 char *
 gupnp_device_info_get_model_name (GUPnPDeviceInfo *info)
@@ -542,7 +562,9 @@ gupnp_device_info_get_model_name (GUPnPDeviceInfo *info)
  * gupnp_device_info_get_model_number
  * @info: A #GUPnPDeviceInfo
  *
- * Return value: The model number, or NULL. g_free() after use.
+ * Get the model number of the device.
+ *
+ * Return value: A string, or %NULL. g_free() after use.
  **/
 char *
 gupnp_device_info_get_model_number (GUPnPDeviceInfo *info)
@@ -557,8 +579,9 @@ gupnp_device_info_get_model_number (GUPnPDeviceInfo *info)
  * gupnp_device_info_get_model_url
  * @info: A #GUPnPDeviceInfo
  *
- * Return value: A URL pointing to the device models website, or NULL.
- * g_free() after use.
+ * Get a URL pointing to the device model's website.
+ * 
+ * Return value: A string, or %NULL. g_free() after use.
  **/
 char *
 gupnp_device_info_get_model_url (GUPnPDeviceInfo *info)
@@ -574,7 +597,9 @@ gupnp_device_info_get_model_url (GUPnPDeviceInfo *info)
  * gupnp_device_info_get_serial_number
  * @info: A #GUPnPDeviceInfo
  *
- * Return value: The serial number, or NULL. g_free() after use.
+ * Get the serial number of the device.
+ * 
+ * Return value: A string, or %NULL. g_free() after use.
  **/
 char *
 gupnp_device_info_get_serial_number (GUPnPDeviceInfo *info)
@@ -589,7 +614,9 @@ gupnp_device_info_get_serial_number (GUPnPDeviceInfo *info)
  * gupnp_device_info_get_upc
  * @info: A #GUPnPDeviceInfo
  *
- * Return value: The UPC, or NULL. g_free() after use.
+ * Get the Universal Product Code of the device.
+ *
+ * Return value: A string, or %NULL. g_free() after use.
  **/
 char *
 gupnp_device_info_get_upc (GUPnPDeviceInfo *info)
@@ -658,13 +685,15 @@ icon_free (Icon *icon)
  * @width: The location where to store the width of the returned icon, or NULL
  * @height: The location where to store the height of the returned icon, or NULL
  *
- * Return value: A URL pointing to the icon most closely matching the
- * given criteria, or NULL. If @requested_mime_type is set, only icons with
+ * Get a URL pointing to the icon most closely matching the
+ * given criteria, or %NULL. If @requested_mime_type is set, only icons with
  * this mime type will be returned. If @requested_depth is set, only icons with
  * this or lower depth will be returned. If @requested_width and/or
  * @requested_height are set, only icons that are this size or smaller are
  * returned, unless @prefer_bigger is set, in which case the next biggest icon
  * will be returned. The returned strings should be freed.
+ *
+ * Return value: a string, or %NULL.  g_free() after use.
  **/
 char *
 gupnp_device_info_get_icon_url (GUPnPDeviceInfo *info,
@@ -818,7 +847,7 @@ gupnp_device_info_get_icon_url (GUPnPDeviceInfo *info,
  * - If @query specifies a version, it matches any version specified in @base
  *   that is greater or equal.
  * */
-gboolean
+static gboolean
 resource_type_match (const char *query,
                      const char *base)
 {
@@ -872,7 +901,7 @@ resource_type_match (const char *query,
  * gupnp_device_info_list_devices
  * @info: A #GUPnPDeviceInfo
  *
- * Return value: A #GList of new objects implementing #GUPnPDeviceInfo
+ * Get a #GList of new objects implementing #GUPnPDeviceInfo
  * representing the devices directly contained in @info. The returned list
  * should be g_list_free()'d and the elements should be g_object_unref()'d.
  *
@@ -880,6 +909,8 @@ resource_type_match (const char *query,
  * call this function new objects are created. The application
  * must cache any used devices if it wishes to keep them around and re-use
  * them.
+ *
+ * Return value: a #GList of new #GUPnPDeviceInfo objects.
  **/
 GList *
 gupnp_device_info_list_devices (GUPnPDeviceInfo *info)
@@ -918,9 +949,11 @@ gupnp_device_info_list_devices (GUPnPDeviceInfo *info)
  * gupnp_device_info_list_device_types
  * @info: A #GUPnPDeviceInfo
  *
- * Return value: A #GList of strings representing the types of the devices
- * directly contained in @info. The returned list should be g_list_free()'d
- * and the elements should be g_free()'d.
+ * Get a #GList of strings representing the types of the devices
+ * directly contained in @info.
+ *
+ * Return value: A #GList of strings. The elements should be g_free()'d and the
+ * list should be g_list_free()'d.
  **/
 GList *
 gupnp_device_info_list_device_types (GUPnPDeviceInfo *info)
@@ -959,14 +992,16 @@ gupnp_device_info_list_device_types (GUPnPDeviceInfo *info)
  * @info: A #GUPnPDeviceInfo
  * @type: The type of the device to be retrieved.
  *
- * Return value: The service with type @type directly contained in @info as
- * a new object implementing #GUPnPDeviceInfo, or NULL if no such device
+ * Get the service with type @type directly contained in @info as
+ * a new object implementing #GUPnPDeviceInfo, or %NULL if no such device
  * was found. The returned object should be unreffed when done.
  *
  * Note that devices are not cached internally, so that every time you
  * call this function a new object is created. The application
  * must cache any used devices if it wishes to keep them around and re-use
  * them.
+ *
+ * Return value: A new #GUPnPDeviceInfo.
  **/
 GUPnPDeviceInfo *
 gupnp_device_info_get_device (GUPnPDeviceInfo *info,
@@ -1022,7 +1057,7 @@ gupnp_device_info_get_device (GUPnPDeviceInfo *info,
  * gupnp_device_info_list_services
  * @info: A #GUPnPDeviceInfo
  *
- * Return value: A #GList of new objects implementing #GUPnPServiceInfo
+ * Get a #GList of new objects implementing #GUPnPServiceInfo
  * representing the services directly contained in @info. The returned list
  * should be g_list_free()'d and the elements should be g_object_unref()'d.
  *
@@ -1030,6 +1065,8 @@ gupnp_device_info_get_device (GUPnPDeviceInfo *info,
  * call this function new objects are created. The application
  * must cache any used services if it wishes to keep them around and re-use
  * them.
+ *
+ * Return value: A #GList of new #GUPnPServiceInfo objects.
  **/
 GList *
 gupnp_device_info_list_services (GUPnPDeviceInfo *info)
@@ -1068,9 +1105,11 @@ gupnp_device_info_list_services (GUPnPDeviceInfo *info)
  * gupnp_device_info_list_service_types
  * @info: A #GUPnPDeviceInfo
  *
- * Return value: A #GList of strings representing the types of the services
- * directly contained in @info. The returned list should be g_list_free()'d
- * and the elements should be g_free()'d.
+ * Get a #GList of strings representing the types of the services
+ * directly contained in @info.
+ *
+ * Return value: A #GList of strings. The elements should be g_free()'d and the
+ * list should be g_list_free()'d.
  **/
 GList *
 gupnp_device_info_list_service_types (GUPnPDeviceInfo *info)
@@ -1109,14 +1148,16 @@ gupnp_device_info_list_service_types (GUPnPDeviceInfo *info)
  * @info: A #GUPnPDeviceInfo
  * @type: The type of the service to be retrieved.
  *
- * Return value: The service with type @type directly contained in @info as
- * a new object implementing #GUPnPServiceInfo, or NULL if no such device
+ * Get the service with type @type directly contained in @info as
+ * a new object implementing #GUPnPServiceInfo, or %NULL if no such device
  * was found. The returned object should be unreffed when done.
  *
  * Note that services are not cached internally, so that every time you
  * call this function a new object is created. The application
  * must cache any used services if it wishes to keep them around and re-use
  * them.
+ *
+ * Return value: A #GUPnPServiceInfo.
  **/
 GUPnPServiceInfo *
 gupnp_device_info_get_service (GUPnPDeviceInfo *info,

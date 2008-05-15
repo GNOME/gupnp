@@ -1572,9 +1572,9 @@ make_timeout_header (GUPnPContext *context)
                 return g_strdup ("infinite");
 }
 
-/**
+/*
  * Subscription expired.
- **/
+ */
 static gboolean
 subscription_expire (gpointer user_data)
 {
@@ -1628,9 +1628,9 @@ subscription_expire (gpointer user_data)
         return FALSE;
 }
 
-/**
+/*
  * Received subscription response.
- **/
+ */
 static void
 subscribe_got_response (SoupSession       *session,
                         SoupMessage       *msg,
@@ -1735,9 +1735,9 @@ subscribe_got_response (SoupSession       *session,
         }
 }
 
-/**
+/*
  * Subscribe to this service.
- **/
+ */
 static void
 subscribe (GUPnPServiceProxy *proxy)
 {
@@ -1826,9 +1826,9 @@ subscribe (GUPnPServiceProxy *proxy)
                                     proxy);
 }
 
-/**
+/*
  * Unsubscribe from this service.
- **/
+ */
 static void
 unsubscribe (GUPnPServiceProxy *proxy)
 {

@@ -1,3 +1,16 @@
+2008-05-15  Ross Burton  <ross@openedhand.com>
+
+	* libgupnp/gupnp-context.c:
+	* libgupnp/gupnp-service-info.c:
+	* libgupnp/gupnp-service-introspection.c:
+	* libgupnp/gupnp-types.c:
+	* libgupnp/gupnp-service-proxy.c:
+	* libgupnp/gupnp-device-info.c:
+	* libgupnp/gupnp-error.c:
+	* libgupnp/gupnp-resource-factory.c:
+	* libgupnp/gupnp-error.h:
+	More documentation work, almost at 100% now.
+
 2008-05-13  Jorn Baayen  <jorn@openedhand.com>
 
 	* NEWS:
