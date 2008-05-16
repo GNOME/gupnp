@@ -1,0 +1,57 @@
+# Relax NG schema for UPnP Device Description files.  See section 2.1 of UPnP
+# Device Architecture 1.0 for the canonical reference.
+
+default namespace = "urn:schemas-upnp-org:device-1-0"
+
+start = root
+
+root = element root {
+   element specVersion {
+      element major { text } &
+      element minor { text }
+   } &
+   
+   element URLBase { text }? &
+   
+   device
+}
+
+device = element device {
+   element deviceType { text } &
+   element friendlyName { text } &
+   element manufacturer { text } &
+   element manufacturerURL { text }? &
+   element modelDescription { text }? &
+   element modelName { text } &
+   element modelNumber { text }? &
+   element modelURL { text }? &
+   element serialNumber { text }? &
+   element UDN { text } &
+   element UPC { text }? &
+   
+   element iconList {
+      element icon {
+         element mimetype { text } &
+         element width { text } &
+         element height { text } &
+         element depth { text } &
+         element url { text }
+      }+
+   }? &
+   
+   element serviceList {
+      element service {
+         element serviceType { text } &
+         element serviceId { text } &
+         element SCPDURL { text } &
+         element controlURL { text } &
+         element eventSubURL { text }
+      }+
+   }? &
+   
+   element deviceList {
+      device+
+   }? &
+   
+   element presentationURL { text }?
+}+

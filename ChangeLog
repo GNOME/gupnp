@@ -1,5 +1,14 @@
 2008-05-16  Ross Burton  <ross@openedhand.com>
 
+	* doc/Makefile.am:
+	* doc/device-description.rnc:
+	* doc/service-description.rnc:
+	* doc/gupnp-docs.sgml:
+	Add RELAX NG schemas for the device and service description files,
+	and add them to the reference manual.
+
+2008-05-16  Ross Burton  <ross@openedhand.com>
+
 	* libgupnp/gupnp-types.c:
 	Last missing bit of documentation, now 100% API coverage.
 

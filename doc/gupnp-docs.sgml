@@ -32,8 +32,7 @@
           The Free Software Foundation, Inc.,
           <street>59 Temple Place</street> - Suite 330,
           <city>Boston</city>, <state>MA</state> <postcode>02111-1307</postcode>,
-          <country>USA</country>
-        </address>
+          <country>USA</country></address>
       </para>
     </legalnotice>
   </bookinfo>
@@ -92,4 +91,23 @@
     </chapter>
   </part>
 
+  <part id="schemas">
+    <title>XML Schemas</title>
+    <chapter>
+      <title>Device Description</title>
+      <para>
+        This is the schema for the UPnP Device Description document, in the
+        RELAX NG Compact syntax.
+      </para>
+      <programlisting><xi:include href="device-description.rnc" parse="text"/></programlisting>
+    </chapter>
+    <chapter>
+      <title>Service Description</title>
+      <para>
+        This is the schema for the UPnP Service Description document, in the
+        RELAX NG Compact syntax.
+      </para>
+      <programlisting><xi:include href="service-description.rnc" parse="text"/></programlisting>
+    </chapter>
+  </part>
 </book>

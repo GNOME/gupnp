@@ -1,0 +1,53 @@
+# Relax NG schema for the UPnP Service Control Protocol Definition files.  See
+# section 2.3 of UPnP Device Architecture 1.0 for the canonical reference.
+
+default namespace = "urn:schemas-upnp-org:service-1-0"
+
+start = scpd
+
+scpd = element scpd {
+   element specVersion {
+      element major { text } &
+      element minor { text }
+   } &
+   
+   element actionList {
+      element action {
+         element name { text } &
+         element argumentList {
+            element argument {
+               element name { text } &
+               element direction { "in"|"out" } &
+               element retval { text }? &
+               element relatedStateVariable { text }
+            }+
+         }?
+      }+
+   }? &
+   
+   element serviceStateTable {
+      element stateVariable {
+         attribute sendEvents { "yes"|"no" }? &
+         element name { text } &
+         element dataType {
+            "ui1"|"ui2"|"ui4"|"i1"|"i2"|"i4"|"int"|
+            "r4"|"r8"|"number"|"fixed.14.4"|"float"|
+            "char"|"string"|
+            "date"|"dateTime"|"dateTime.tz"|"time"|"time.tz"|
+            "boolean"|"bin.base64"|"bin.hex"|"uri"|"uuid"
+         } &
+         element defaultValue { text }? &
+         (
+            element allowedValueList {
+               element allowedValue { text }+
+            }
+          |
+            element allowedValueRange {
+               element minimum { text } &
+               element maximum { text } &
+               element step { text }?
+            }
+         )?
+      }+
+   }
+}
