@@ -23,6 +23,9 @@
 /**
  * SECTION:gupnp-types
  * @short_description: Extra types for use when calling UPnP actions.
+ *
+ * These GTypes are used to marshal to and from string data to particular UPnP
+ * types when invoking actions on a #GUPnPServiceProxy.
  */
 
 #include <string.h>

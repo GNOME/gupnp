@@ -1,3 +1,8 @@
+2008-05-16  Ross Burton  <ross@openedhand.com>
+
+	* libgupnp/gupnp-types.c:
+	Last missing bit of documentation, now 100% API coverage.
+
 2008-05-15  Ross Burton  <ross@openedhand.com>
 
 	* libgupnp/gupnp-context.c:
