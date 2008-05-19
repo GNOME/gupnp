@@ -1,3 +1,11 @@
+2008-05-19  Jorn Baayen  <jorn@openedhand.com>
+
+	* NEWS:
+	* configure.ac:
+	* libgupnp/Makefile.am:
+
+	Bump soname, and release 0.10.1.
+
 2008-05-16  Ross Burton  <ross@openedhand.com>
 
 	* doc/Makefile.am:

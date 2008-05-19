@@ -1,3 +1,5 @@
+LTVERSION = 1:0:0
+
 AM_CFLAGS = $(LIBGUPNP_CFLAGS) -I$(top_srcdir)
 
 libgupnpincdir = $(includedir)/gupnp-1.0/libgupnp
@@ -26,6 +28,8 @@ gupnp-marshal.h: gupnp-marshal.list
 	$(GLIB_GENMARSHAL) --prefix=gupnp_marshal $(srcdir)/gupnp-marshal.list --header > gupnp-marshal.h
 
 BUILT_SOURCES = gupnp-marshal.c gupnp-marshal.h
+
+libgupnp_1_0_la_LDFLAGS = -version-info $(LTVERSION)
 
 libgupnp_1_0_la_SOURCES = http-headers.c			\
 			  http-headers.h			\
