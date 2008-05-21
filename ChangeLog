@@ -1,3 +1,9 @@
+2008-05-21  Ross Burton  <ross@openedhand.com>
+
+	* libgupnp/gupnp-context.c:
+	When guessing the host's IP address, try and use the default
+	route's interface.
+
 2008-05-19  Jorn Baayen  <jorn@openedhand.com>
 
 	* NEWS:

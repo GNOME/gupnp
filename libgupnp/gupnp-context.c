@@ -102,10 +102,11 @@ make_server_id (void)
 }
 
 /*
- * Looks up the IP address of the first non-loopback network interface.
- **/
+ * Get the host IP for the specified interface, or the first up and non-loopback
+ * interface if no name is specified.
+ */
 static char *
-get_default_host_ip (void)
+get_host_ip (const char *name)
 {
         struct ifaddrs *ifa_list, *ifa;
         char *ret;
@@ -132,6 +133,10 @@ get_default_host_ip (void)
                     !(ifa->ifa_flags & IFF_UP))
                         continue;
 
+                /* If a name was specified, check it */
+                if (name && strcmp (name, ifa->ifa_name) != 0)
+                        continue;
+                
                 p = NULL;
 
                 switch (ifa->ifa_addr->sa_family) {
@@ -163,6 +168,42 @@ get_default_host_ip (void)
         }
 
         return ret;
+}
+
+/*
+ * Get the host IP of the interface used for the default route.  On any error,
+ * the first up and non-loopback interface is used.
+ */
+static char *
+get_default_host_ip (void)
+{
+        FILE *fp;
+        int ret;
+        char dev[32];
+        unsigned long dest;
+        gboolean found = FALSE;
+        
+        /* TODO: error checking */
+
+        fp = fopen ("/proc/net/route", "r");
+        
+        /* Skip the header */
+        fscanf (fp, "%*[^\n]\n");
+        
+        while ((ret = fscanf (fp,
+                              "%31s %lx %*x %*X %*d %*d %*d %*x %*d %*d %*d",
+                              dev, &dest)) != EOF) {
+                /* If we got a device name and destination, and the destination
+                   is 0, then we have the default route */
+                if (ret == 2 && dest == 0) {
+                        found = TRUE;
+                        break;
+                }
+        }
+        
+        fclose (fp);
+
+        return get_host_ip (found ? dev : NULL);
 }
 
 static void
