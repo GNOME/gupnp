@@ -16,6 +16,13 @@
 # St, Fifth Floor, Boston, MA 02110-1301 USA
 
 
+# TODO:
+# - async wrappers
+# - add the rest of the types
+# - finish code cleanup
+# - add optional service namespacing to functions
+
+
 class Action:
     def __init__(self):
         self.name = None
