@@ -627,6 +627,25 @@ gupnp_device_info_get_upc (GUPnPDeviceInfo *info)
                                                         "UPC");
 }
 
+/**
+ * gupnp_device_info_get_presentation_url
+ * @info: A #GUPnPDeviceInfo
+ *
+ * Get a URL pointing to the device's presentation page, for web-based
+ * administration.
+ * 
+ * Return value: A string, or %NULL. g_free() after use.
+ **/
+char *
+gupnp_device_info_get_presentation_url (GUPnPDeviceInfo *info)
+{
+        g_return_val_if_fail (GUPNP_IS_DEVICE_INFO (info), NULL);
+
+        return xml_util_get_child_element_content_url (info->priv->element,
+                                                       "presentationURL",
+                                                       info->priv->url_base);
+}
+
 typedef struct {
         xmlChar *mime_type;
         int      width;

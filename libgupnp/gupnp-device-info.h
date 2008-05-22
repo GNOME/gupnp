@@ -141,6 +141,9 @@ gupnp_device_info_get_icon_url          (GUPnPDeviceInfo *info,
                                          int             *width,
                                          int             *height);
 
+char *
+gupnp_device_info_get_presentation_url (GUPnPDeviceInfo *info);
+
 GList *
 gupnp_device_info_list_devices          (GUPnPDeviceInfo *info);
 
