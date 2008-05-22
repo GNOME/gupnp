@@ -1,3 +1,9 @@
+2008-05-22  Jorn Baayen  <jorn@openedhand.com>
+
+	* configure.ac:
+
+	Version to 0.10.1.99.
+
 2008-05-22  Ross Burton  <ross@openedhand.com>
 
 	* libgupnp/gupnp-device-info.[ch]:
