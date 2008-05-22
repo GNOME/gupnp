@@ -1,0 +1,126 @@
+#! /usr/bin/python
+
+# Copyright (C) 2008 OpenedHand Ltd
+#
+# This program is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License as published by the Free Software
+# Foundation; either version 2, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+# details.
+#
+# You should have received a copy of the GNU General Public License along with
+# this program; if not, write to the Free Software Foundation, Inc., 51 Franklin
+# St, Fifth Floor, Boston, MA 02110-1301 USA
+
+
+class Action:
+    def __init__(self):
+        self.name = None
+        self.in_args = []
+        self.out_args = []
+
+
+class Argument:
+    def __init__(self):
+        self.name = None
+        self.direction = None
+        self.gtype = None
+        self.ctype = None
+
+
+def findStateArgType(scpd, name):
+    for argElement in scpd.findall("{urn:schemas-upnp-org:service-1-0}serviceStateTable/{urn:schemas-upnp-org:service-1-0}stateVariable"):
+        arg_name = argElement.find("{urn:schemas-upnp-org:service-1-0}name").text
+        if arg_name == name:
+            return argElement.find("{urn:schemas-upnp-org:service-1-0}dataType").text
+    return None
+
+
+def mapTypes(scpd, argElement):
+    dataType = findStateArgType(scpd, argElement.find("{urn:schemas-upnp-org:service-1-0}relatedStateVariable").text)
+    if dataType == "string":
+        return ("char *", "G_TYPE_STRING")
+    elif dataType == "ui2":
+        # Stupid GType doesn't have short types, so use an int anyway.
+        return ("unsigned int", "G_TYPE_UINT")
+    elif dataType == "ui4":
+        return ("unsigned int", "G_TYPE_UINT")
+    elif dataType == "boolean":
+        return ("gboolean", "G_TYPE_BOOLEAN")
+    # TODO: lots of types missing
+    else:
+        raise Exception("Unknown dataType %s" % dataType)
+
+
+def getActions(scpd):
+    """
+    Parse the SCPD provided into a list of Action objects.
+    """
+    
+    actions = []
+
+    for actionElement in scpd.findall("{urn:schemas-upnp-org:service-1-0}actionList/{urn:schemas-upnp-org:service-1-0}action"):
+        a = Action()
+        actions.append(a)
+        a.name = actionElement.find("{urn:schemas-upnp-org:service-1-0}name").text
+
+        if a.name is None:
+            raise Exception("No name found for action")
+
+        for argElement in actionElement.findall("{urn:schemas-upnp-org:service-1-0}argumentList/{urn:schemas-upnp-org:service-1-0}argument"):
+                arg = Argument()
+
+                arg.name = argElement.find("{urn:schemas-upnp-org:service-1-0}name").text
+                if arg.name is None:
+                    raise Exception("No name found for argument")
+                (arg.ctype, arg.gtype) = mapTypes(scpd, argElement)
+                arg.direction = argElement.find("{urn:schemas-upnp-org:service-1-0}direction").text
+                
+                if arg.direction == "in":
+                        a.in_args.append(arg)
+                else:
+                        a.out_args.append(arg)
+    return actions
+
+
+def printSyncBinding(a):
+    indent = (2 + len (a.name)) * " "
+
+    print "static inline gboolean"
+    print "%s (GUPnPServiceProxy *proxy," % a.name
+        
+    for arg in a.in_args:
+        print "%s%s in_%s," % (indent, arg.ctype, arg.name)
+        
+    for arg in a.out_args:
+        print "%s%s* out_%s," % (indent, arg.ctype, arg.name)
+        
+    print "%sGError **error)" % indent
+    
+    print "{"
+
+    print "  return gupnp_service_proxy_send_action (proxy, \"%s\", error, " % a.name
+    
+    for arg in a.in_args:
+        print "    \"%s\", %s, in_%s," % (arg.name, arg.gtype, arg.name)
+    print "    NULL, "
+    
+    for arg in a.out_args:
+        print "    \"%s\", %s, out_%s," % (arg.name, arg.gtype, arg.name)
+    print "    NULL"
+    print "  );"
+    
+    print "}\n"
+
+
+def printBindings(actions):
+    for a in actions:
+        printSyncBinding(a)
+
+
+import sys, xml.etree.ElementTree as ET
+
+printBindings(getActions(ET.parse(sys.argv[1])))

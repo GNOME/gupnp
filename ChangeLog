@@ -1,3 +1,12 @@
+2008-05-22  Ross Burton  <ross@openedhand.com>
+
+	* tools/gupnp-binding-tool:
+	* tools/Makefile.am:
+	* configure.ac:
+	* Makefile.am:
+	Initial commit of gupnp-binding-tool, to generate convenience C
+	wrappers for GUPnP service definitions.
+
 2008-05-22  Jorn Baayen  <jorn@openedhand.com>
 
 	* configure.ac:
