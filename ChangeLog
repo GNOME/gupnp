@@ -1,3 +1,8 @@
+2008-05-23  Ross Burton  <ross@openedhand.com>
+
+	* tools/gupnp-binding-tool:
+	Add async wrappers too.
+
 2008-05-23  Jorn Baayen  <jorn@openedhand.com>
 
 	* libgupnp/gupnp-marshal.list:
