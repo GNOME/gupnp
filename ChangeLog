@@ -1,3 +1,13 @@
+2008-05-23  Jorn Baayen  <jorn@openedhand.com>
+
+	* libgupnp/gupnp-marshal.list:
+	* libgupnp/gupnp-service.c (gupnp_service_action_get_type),
+	(gupnp_service_class_init):
+	* libgupnp/gupnp-service.h:
+
+	Use G_TYPE_VALUE and GUPNP_TYPE_SERVICE_ACTION in signal declarations
+	where appropriate.
+
 2008-05-22  Ross Burton  <ross@openedhand.com>
 
 	* tools/gupnp-binding-tool:

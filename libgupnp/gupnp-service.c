@@ -160,6 +160,18 @@ struct _GUPnPServiceAction {
         GString     *response_str;
 };
 
+GType
+gupnp_service_action_get_type (void)
+{
+        static GType our_type = 0;
+
+        if (our_type == 0)
+                our_type = g_pointer_type_register_static
+                                        ("GUPnPServiceAction");
+
+        return our_type;
+}
+
 /**
  * gupnp_service_action_get_name
  * @action: A #GUPnPServiceAction
@@ -1293,7 +1305,7 @@ gupnp_service_class_init (GUPnPServiceClass *klass)
                               g_cclosure_marshal_VOID__POINTER,
                               G_TYPE_NONE,
                               1,
-                              G_TYPE_POINTER);
+                              GUPNP_TYPE_SERVICE_ACTION);
 
         /**
          * GUPnPService::query-variable
@@ -1312,11 +1324,11 @@ gupnp_service_class_init (GUPnPServiceClass *klass)
                                                query_variable),
                               NULL,
                               NULL,
-                              gupnp_marshal_VOID__STRING_POINTER,
+                              gupnp_marshal_VOID__STRING_BOXED,
                               G_TYPE_NONE,
                               2,
                               G_TYPE_STRING,
-                              G_TYPE_POINTER);
+                              G_TYPE_VALUE);
 
         /**
          * GUPnPService::notify-failed

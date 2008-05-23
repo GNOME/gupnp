@@ -59,6 +59,8 @@ gupnp_service_get_type (void) G_GNUC_CONST;
  **/
 typedef struct _GUPnPServiceAction GUPnPServiceAction;
 
+#define GUPNP_TYPE_SERVICE_ACTION (gupnp_service_action_get_type ())
+
 typedef struct _GUPnPServicePrivate GUPnPServicePrivate;
 
 /**
