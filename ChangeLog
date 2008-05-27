@@ -1,5 +1,10 @@
 2008-05-27  Ross Burton  <ross@openedhand.com>
 
+	* libgupnp/gupnp-service.c:
+	Fix doc typo.
+
+2008-05-27  Ross Burton  <ross@openedhand.com>
+
 	* libgupnp/gupnp-control-point.c:
 	* libgupnp/gupnp-root-device.c:
 	* libgupnp/gupnp-context.c:

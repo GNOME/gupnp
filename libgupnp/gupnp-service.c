@@ -1381,7 +1381,7 @@ gupnp_service_notify (GUPnPService *service,
  * @var_args: A va_list of tuples of variable name, variable type, and variable
  * value, terminated with %NULL.
  *
- * See gupnp_service_notify_valist(); this version takes a va_list for
+ * See gupnp_service_notify(); this version takes a va_list for
  * use by language bindings.
  **/
 void
