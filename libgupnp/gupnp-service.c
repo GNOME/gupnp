@@ -209,7 +209,7 @@ gupnp_service_action_get_locales (GUPnPServiceAction *action)
  * gupnp_service_action_get
  * @action: A #GUPnPServiceAction
  * @Varargs: tuples of argument name, argument type, and argument value
- * location, terminated with NULL.
+ * location, terminated with %NULL.
  *
  * Retrieves the specified action arguments.
  **/
@@ -310,7 +310,7 @@ gupnp_service_action_get_value (GUPnPServiceAction *action,
  * gupnp_service_action_set
  * @action: A #GUPnPServiceAction
  * @Varargs: tuples of return value name, return value type, and
- * actual return value, terminated with NULL.
+ * actual return value, terminated with %NULL.
  *
  * Sets the specified action return values.
  **/
@@ -421,7 +421,7 @@ gupnp_service_action_return (GUPnPServiceAction *action)
  * gupnp_service_action_return_error
  * @action: A #GUPnPServiceAction
  * @error_code: The error code
- * @error_description: The error description, or NULL if @error_code is
+ * @error_description: The error description, or %NULL if @error_code is
  * one of #GUPNP_CONTROL_ERROR_INVALID_ACTION,
  * #GUPNP_CONTROL_ERROR_INVALID_ARGS, #GUPNP_CONTROL_ERROR_OUT_OF_SYNC or
  * #GUPNP_CONTROL_ERROR_ACTION_FAILED, in which case a description is
@@ -1357,7 +1357,7 @@ gupnp_service_class_init (GUPnPServiceClass *klass)
  * gupnp_service_notify
  * @service: A #GUPnPService
  * @Varargs: Tuples of variable name, variable type, and variable value,
- * terminated with NULL.
+ * terminated with %NULL.
  *
  * Notifies listening clients that the properties listed in @Varargs
  * have changed to the specified values.
@@ -1379,7 +1379,7 @@ gupnp_service_notify (GUPnPService *service,
  * gupnp_service_notify_valist
  * @service: A #GUPnPService
  * @var_args: A va_list of tuples of variable name, variable type, and variable
- * value, terminated with NULL.
+ * value, terminated with %NULL.
  *
  * See gupnp_service_notify_valist(); this version takes a va_list for
  * use by language bindings.
@@ -1780,7 +1780,7 @@ connect_names_to_signal_handlers (GUPnPService *service,
  * gupnp_service_signals_autoconnect
  * @service: A #GUPnPService
  * @user_data: the data to pass to each of the callbacks
- * @error: return location for a GError, or NULL
+ * @error: return location for a #GError, or %NULL
  *
  * A convenience function that attempts to connect all possible "action-invoked"
  * and "query-variable" signals to appropriate callbacks for the service

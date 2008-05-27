@@ -1,3 +1,17 @@
+2008-05-27  Ross Burton  <ross@openedhand.com>
+
+	* libgupnp/gupnp-control-point.c:
+	* libgupnp/gupnp-root-device.c:
+	* libgupnp/gupnp-context.c:
+	* libgupnp/gupnp-service-info.c:
+	* libgupnp/gupnp-service-introspection.c:
+	* libgupnp/gupnp-service.c:
+	* libgupnp/http-headers.c:
+	* libgupnp/gupnp-service-proxy.c:
+	* libgupnp/gupnp-device-info.c:
+	* libgupnp/gupnp-resource-factory.c:
+	Documentation cleanups.
+
 2008-05-23  Ross Burton  <ross@openedhand.com>
 
 	* tools/gupnp-binding-tool:

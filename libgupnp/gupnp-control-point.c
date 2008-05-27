@@ -470,9 +470,9 @@ got_description_url (SoupSession           *session,
  * Downloads and parses (or takes from cache) @description_url,
  * creating:
  *  - A #GUPnPDeviceProxy for the device specified by @udn if @service_type
- *    is NULL.
+ *    is %NULL.
  *  - A #GUPnPServiceProxy for the service of type @service_type from the device
- *    specified by @udn if @service_type is not NULL.
+ *    specified by @udn if @service_type is not %NULL.
  */
 static void
 load_description (GUPnPControlPoint *control_point,

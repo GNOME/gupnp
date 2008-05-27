@@ -760,7 +760,7 @@ gupnp_service_introspection_new (xmlDoc *scpd)
  *
  * Returns a GList of names of all the actions in this service.
  *
- * Return value: A GList of names of all the actions or NULL. Do not modify
+ * Return value: A GList of names of all the actions or %NULL. Do not modify
  * or free it or its contents.
  **/
 const GList *
@@ -783,10 +783,10 @@ gupnp_service_introspection_list_action_names
  * gupnp_service_introspection_list_actions
  * @introspection: A #GUPnPServiceIntrospection
  *
- * Returns a GList of all the actions (of type #GUPnPServiceActionInfo) in
+ * Returns a #GList of all the actions (of type #GUPnPServiceActionInfo) in
  * this service.
  *
- * Return value: A GList of all the actions or NULL. Do not modify or free it
+ * Return value: A #GList of all the actions or %NULL. Do not modify or free it
  * or its contents.
  *
  **/
@@ -804,7 +804,7 @@ gupnp_service_introspection_list_actions
  * Returns a GList of all the state variables (of type
  * #GUPnPServiceStateVariableInfo) in this service.
  *
- * Return value: A GList of all the state variables or NULL. Do not modify or
+ * Return value: A #GList of all the state variables or %NULL. Do not modify or
  * free it or its contents.
  *
  **/
@@ -819,9 +819,9 @@ gupnp_service_introspection_list_state_variables
  * gupnp_service_introspection_list_state_variable_names
  * @introspection: A #GUPnPServiceIntrospection
  *
- * Returns a GList of names of all the state variables in this service.
+ * Returns a #GList of names of all the state variables in this service.
  *
- * Return value: A GList of names of all the state variables or NULL. Do not
+ * Return value: A #GList of names of all the state variables or %NULL. Do not
  * modify or free it or its contents.
  **/
 const GList *
@@ -854,7 +854,7 @@ state_variable_search_func (GUPnPServiceStateVariableInfo *variable,
  *
  * Returns the state variable by the name @variable_name in this service.
  *
- * Return value: the state variable or NULL. Do not modify or free it.
+ * Return value: the state variable or %NULL. Do not modify or free it.
  **/
 const GUPnPServiceStateVariableInfo *
 gupnp_service_introspection_get_state_variable
@@ -888,7 +888,7 @@ action_search_func (GUPnPServiceActionInfo *action,
  *
  * Returns the action by the name @action_name in this service.
  *
- * Return value: the action or NULL. Do not modify or free it.
+ * Return value: the action or %NULL. Do not modify or free it.
  **/
 const GUPnPServiceActionInfo *
 gupnp_service_introspection_get_action

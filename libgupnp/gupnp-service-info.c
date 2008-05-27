@@ -518,7 +518,7 @@ gupnp_service_info_get_control_url (GUPnPServiceInfo *info)
  * gupnp_service_info_get_event_subscription_url
  * @info: A #GUPnPServiceInfo
  *
- * Get the event subscription URL for this service, or NULL.
+ * Get the event subscription URL for this service, or %NULL.
  *
  * Return value: A string. This string should be freed with g_free() after use.
  **/
@@ -535,13 +535,13 @@ gupnp_service_info_get_event_subscription_url (GUPnPServiceInfo *info)
 /**
  * gupnp_service_info_get_introspection
  * @info: A #GUPnPServiceInfo
- * @error: return location for a GError, or NULL
+ * @error: return location for a #GError, or %NULL
  *
  * Note that introspection object is created from the information in service
  * description document (SCPD) provided by the service so it can not be created
  * if the service does not provide an SCPD.
  *
- * Return value: A new #GUPnPServiceIntrospection for this service or NULL.
+ * Return value: A new #GUPnPServiceIntrospection for this service or %NULL.
  * Unref after use.
  **/
 GUPnPServiceIntrospection *

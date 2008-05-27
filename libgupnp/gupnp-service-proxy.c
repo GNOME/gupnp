@@ -338,16 +338,16 @@ gupnp_service_proxy_class_init (GUPnPServiceProxyClass *klass)
  * gupnp_service_proxy_send_action
  * @proxy: A #GUPnPServiceProxy
  * @action: An action
- * @error: The location where to store any error, or NULL
+ * @error: The location where to store any error, or %NULL
  * @Varargs: tuples of in parameter name, in paramater type, and in parameter
- * value, followed by NULL, and then tuples of out paramater name,
- * out parameter type, and out parameter value location, terminated with NULL
+ * value, followed by %NULL, and then tuples of out paramater name,
+ * out parameter type, and out parameter value location, terminated with %NULL
  *
  * Sends action @action with parameters @Varargs to the service exposed by
  * @proxy synchronously. If an error occurred, @error will be set. In case of
  * a UPnPError the error code will be the same in @error.
  *
- * Return value: TRUE if sending the action was succesful.
+ * Return value: %TRUE if sending the action was succesful.
  **/
 gboolean
 gupnp_service_proxy_send_action (GUPnPServiceProxy *proxy,
@@ -380,15 +380,15 @@ stop_main_loop (GUPnPServiceProxy       *proxy,
  * gupnp_service_proxy_send_action_valist
  * @proxy: A #GUPnPServiceProxy
  * @action: An action
- * @error: The location where to store any error, or NULL
+ * @error: The location where to store any error, or %NULL
  * @var_args: va_list of tuples of in parameter name, in paramater type, and in
- * parameter value, followed by NULL, and then tuples of out paramater name,
+ * parameter value, followed by %NULL, and then tuples of out paramater name,
  * out parameter type, and out parameter value location
  *
  * See gupnp_service_proxy_send_action(); this version takes a va_list for
  * use by language bindings.
  *
- * Return value: TRUE if sending the action was succesful.
+ * Return value: %TRUE if sending the action was succesful.
  **/
 gboolean
 gupnp_service_proxy_send_action_valist (GUPnPServiceProxy *proxy,
@@ -433,7 +433,7 @@ gupnp_service_proxy_send_action_valist (GUPnPServiceProxy *proxy,
  * gupnp_service_proxy_send_action_hash
  * @proxy: A #GUPnPServiceProxy
  * @action: An action
- * @error: The location where to store any error, or NULL
+ * @error: The location where to store any error, or %NULL
  * @in_hash: A #GHashTable of in parameter name and #GValue pairs
  * @out_hash: A #GHashTable of out parameter name and initialized
  * #GValue pairs
@@ -441,7 +441,7 @@ gupnp_service_proxy_send_action_valist (GUPnPServiceProxy *proxy,
  * See gupnp_service_proxy_send_action(); this version takes a pair of
  * #GHashTable<!-- -->s for runtime determined parameter lists.
  *
- * Return value: TRUE if sending the action was succesful.
+ * Return value: %TRUE if sending the action was succesful.
  **/
 gboolean
 gupnp_service_proxy_send_action_hash (GUPnPServiceProxy *proxy,
@@ -496,7 +496,7 @@ gupnp_service_proxy_send_action_hash (GUPnPServiceProxy *proxy,
  * or failed
  * @user_data: User data for @callback
  * @Varargs: tuples of in parameter name, in paramater type, and in parameter
- * value, terminated with NULL
+ * value, terminated with %NULL
  *
  * Sends action @action with parameters @Varargs to the service exposed by
  * @proxy asynchronously, calling @callback on completion. From @callback, call
@@ -852,16 +852,16 @@ gupnp_service_proxy_begin_action_hash
  * gupnp_service_proxy_end_action
  * @proxy: A #GUPnPServiceProxy
  * @action: A #GUPnPServiceProxyAction handle
- * @error: The location where to store any error, or NULL
+ * @error: The location where to store any error, or %NULL
  * @Varargs: tuples of out parameter name, out paramater type, and out parameter
- * value location, terminated with NULL. The out parameter values should be
+ * value location, terminated with %NULL. The out parameter values should be
  * freed after use
  *
  * Retrieves the result of @action. The out parameters in @Varargs will be
  * filled in, and if an error occurred, @error will be set. In case of
  * a UPnPError the error code will be the same in @error.
  *
- * Return value: TRUE on success.
+ * Return value: %TRUE on success.
  **/
 gboolean
 gupnp_service_proxy_end_action (GUPnPServiceProxy       *proxy,
@@ -1041,7 +1041,7 @@ read_out_parameter (const char *arg_name,
  * gupnp_service_proxy_end_action_valist
  * @proxy: A #GUPnPServiceProxy
  * @action: A #GUPnPServiceProxyAction handle
- * @error: The location where to store any error, or NULL
+ * @error: The location where to store any error, or %NULL
  * @var_args: A va_list of tuples of out parameter name, out paramater type,
  * and out parameter value location. The out parameter values should be
  * freed after use
@@ -1049,7 +1049,7 @@ read_out_parameter (const char *arg_name,
  * See gupnp_service_proxy_end_action(); this version takes a va_list for
  * use by language bindings.
  *
- * Return value: TRUE on success.
+ * Return value: %TRUE on success.
  **/
 gboolean
 gupnp_service_proxy_end_action_valist (GUPnPServiceProxy       *proxy,
@@ -1122,13 +1122,13 @@ gupnp_service_proxy_end_action_valist (GUPnPServiceProxy       *proxy,
  * gupnp_service_proxy_end_action_hash
  * @proxy: A #GUPnPServiceProxy
  * @action: A #GUPnPServiceProxyAction handle
- * @error: The location where to store any error, or NULL
+ * @error: The location where to store any error, or %NULL
  * @hash: A #GHashTable of out parameter name and initialised #GValue pairs
  *
  * See gupnp_service_proxy_end_action(); this version takes a #GHashTable
  * for runtime generated parameter lists.
  *
- * Return value: TRUE on success.
+ * Return value: %TRUE on success.
  **/
 gboolean
 gupnp_service_proxy_end_action_hash (GUPnPServiceProxy       *proxy,
@@ -1217,7 +1217,7 @@ gupnp_service_proxy_cancel_action (GUPnPServiceProxy       *proxy,
  * Sets up @callback to be called whenever a change notification for
  * @variable is recieved.
  *
- * Return value: TRUE on success.
+ * Return value: %TRUE on success.
  **/
 gboolean
 gupnp_service_proxy_add_notify (GUPnPServiceProxy              *proxy,
@@ -1279,7 +1279,7 @@ gupnp_service_proxy_add_notify (GUPnPServiceProxy              *proxy,
  *
  * Cancels the variable change notification for @callback and @user_data.
  *
- * Return value: TRUE on success.
+ * Return value: %TRUE on success.
  **/
 gboolean
 gupnp_service_proxy_remove_notify (GUPnPServiceProxy              *proxy,
@@ -1884,7 +1884,7 @@ unsubscribe (GUPnPServiceProxy *proxy)
 /**
  * gupnp_service_proxy_set_subscribed
  * @proxy: A #GUPnPServiceProxy
- * @subscribed: TRUE to subscribe to this service
+ * @subscribed: %TRUE to subscribe to this service
  *
  * (Un)subscribes to this service.
  *

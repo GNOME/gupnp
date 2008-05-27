@@ -524,7 +524,7 @@ gupnp_root_device_new_full (GUPnPContext         *context,
 /**
  * gupnp_root_device_set_available
  * @root_device: A #GUPnPRootDevice
- * @available: TRUE if @root_device should be available
+ * @available: %TRUE if @root_device should be available
  *
  * Controls whether or not @root_device is available (announcing
  * its presence).

@@ -29,11 +29,11 @@
 
 /* Parses the HTTP Range header on @message and sets:
  *
- * @have_range to TRUE if a range was specified,
+ * @have_range to %TRUE if a range was specified,
  * @offset to the requested offset (left unset if none specified),
  * @length to the requested length (left unset if none specified).
  *
- * Returns TRUE on success. */
+ * Returns %TRUE on success. */
 gboolean
 range_get (SoupMessage *message,
            gboolean    *have_range,

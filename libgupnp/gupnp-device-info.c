@@ -692,17 +692,17 @@ icon_free (Icon *icon)
 /**
  * gupnp_device_info_get_icon_url
  * @info: A #GUPnPDeviceInfo
- * @requested_mime_type: The requested file format, or NULL for any
+ * @requested_mime_type: The requested file format, or %NULL for any
  * @requested_depth: The requested color depth, or -1 for any
  * @requested_width: The requested width, or -1 for any
  * @requested_height: The requested height, or -1 for any
- * @prefer_bigger: TRUE if a bigger, rather than a smaller icon should be
+ * @prefer_bigger: %TRUE if a bigger, rather than a smaller icon should be
  * returned if no exact match could be found
  * @mime_type: The location where to store the the format of the returned icon,
- * or NULL. The returned string should be freed after use
- * @depth: The location where to store the depth of the returned icon, or NULL
- * @width: The location where to store the width of the returned icon, or NULL
- * @height: The location where to store the height of the returned icon, or NULL
+ * or %NULL. The returned string should be freed after use
+ * @depth: The location where to store the depth of the returned icon, or %NULL
+ * @width: The location where to store the width of the returned icon, or %NULL
+ * @height: The location where to store the height of the returned icon, or %NULL
  *
  * Get a URL pointing to the icon most closely matching the
  * given criteria, or %NULL. If @requested_mime_type is set, only icons with

@@ -503,8 +503,8 @@ _gupnp_context_get_server_url (GUPnPContext *context)
 
 /**
  * gupnp_context_new
- * @main_context: A #GMainContext, or NULL to use the default one
- * @host_ip: The local host's IP address, or NULL to use the IP address
+ * @main_context: A #GMainContext, or %NULL to use the default one
+ * @host_ip: The local host's IP address, or %NULL to use the IP address
  * of the first non-loopback network interface.
  * @port: Port to run on, or 0 if you don't care what port is used.
  * @error: A location to store a #GError, or %NULL

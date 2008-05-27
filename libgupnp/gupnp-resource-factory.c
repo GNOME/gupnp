@@ -115,7 +115,7 @@ gupnp_resource_factory_get_default (void)
  * @element: The #xmlNode ponting to the right device element
  * @udn: The UDN of the device to create a proxy for
  * @location: The location of the device description file
- * @url_base: The URL base for this device, or NULL if none
+ * @url_base: The URL base for this device, or %NULL if none
  *
  *
  * Create a #GUPnPDeviceProxy for the device with element @element, as
@@ -177,7 +177,7 @@ gupnp_resource_factory_create_device_proxy
  * @location: The location of the service description file
  * @udn: The UDN of the device the service is contained in
  * @service_type: The service type
- * @url_base: The URL base for this service, or NULL if none
+ * @url_base: The URL base for this service, or %NULL if none
  *
  * Create a #GUPnPServiceProxy for the service with element @element, as
  * read from the service description file specified by @location.
@@ -375,7 +375,7 @@ gupnp_resource_factory_register_resource_type (GUPnPResourceFactory *factory,
  *
  * Unregisters the GType assignment for the resource of UPnP type @upnp_type.
  *
- * Return value: TRUE if GType assignment was removed successfully, FALSE
+ * Return value: %TRUE if GType assignment was removed successfully, %FALSE
  * otherwise.
  **/
 gboolean
@@ -419,7 +419,7 @@ gupnp_resource_factory_register_resource_proxy_type
  * Unregisters the GType assignment for the proxy of resource of UPnP type
  * @upnp_type.
  *
- * Return value: TRUE if GType assignment was removed successfully, FALSE
+ * Return value: %TRUE if GType assignment was removed successfully, %FALSE
  * otherwise.
  **/
 gboolean
