@@ -97,9 +97,9 @@ GUPnPServiceProxyPrivate
 
 <SECTION>
 <FILE>gupnp-service</FILE>
-GUPnPServiceAction
 <TITLE>GUPnPService</TITLE>
 GUPnPService
+GUPnPServiceAction
 gupnp_service_action_get_name
 gupnp_service_action_get_locales
 gupnp_service_action_get
@@ -125,6 +125,7 @@ gupnp_service_get_type
 GUPNP_SERVICE_CLASS
 GUPNP_IS_SERVICE_CLASS
 GUPNP_SERVICE_GET_CLASS
+GUPNP_TYPE_SERVICE_ACTION
 <SUBSECTION Private>
 GUPnPServicePrivate
 </SECTION>

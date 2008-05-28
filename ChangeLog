@@ -1,3 +1,8 @@
+2008-05-28  Ross Burton  <ross@openedhand.com>
+
+	* doc/gupnp-sections.txt:
+	Add a symbol which somehow decided it wanted to be documented.
+
 2008-05-27  Ross Burton  <ross@openedhand.com>
 
 	* libgupnp/gupnp-service.c:
