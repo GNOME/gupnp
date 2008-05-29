@@ -1,5 +1,13 @@
 2008-05-29  Ross Burton  <ross@openedhand.com>
 
+	* doc/client-tutorial.xml:
+	* doc/gupnp-docs.sgml:
+	* doc/Makefile.am:
+	Run the client tutorial through gtk-doc for symbol linking and fix
+	some tags.
+
+2008-05-29  Ross Burton  <ross@openedhand.com>
+
 	* doc/server-tutorial.xml:
 	* doc/gupnp-docs.sgml:
 	* doc/Makefile.am:

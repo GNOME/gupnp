@@ -70,7 +70,7 @@ content_files=client-tutorial.xml server-tutorial.xml device-description.rnc ser
 # SGML files where gtk-doc abbrevations (#GtkWidget) are expanded
 # These files must be listed here *and* in content_files
 # e.g. expand_content_files=running.sgml
-expand_content_files=server-tutorial.xml
+expand_content_files=client-tutorial.xml server-tutorial.xml
 
 # CFLAGS and LDFLAGS for compiling gtkdoc-scangobj with your library.
 # Only needed if you are using gtkdoc-scangobj to dynamically query widget

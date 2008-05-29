@@ -51,7 +51,7 @@
   <part id="tutorial">
     <title>Tutorials</title>
     
-    <xi:include href="client-tutorial.xml"/>
+    <xi:include href="xml/client-tutorial.xml"/>
     <xi:include href="xml/server-tutorial.xml"/>
   </part>
   

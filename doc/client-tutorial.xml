@@ -72,14 +72,14 @@ service_proxy_available_cb (GUPnPControlPoint *cp,
 }</programlisting>
     <para>
       Now we have an application which searches for the service we specified and
-      calls <literal>service_proxy_available_cb</literal> for each one it found.
-      To get the external IP address we need to invoke the
+      calls <function>service_proxy_available_cb</function> for each one it
+      found.  To get the external IP address we need to invoke the
       <literal>GetExternalIPAddress</literal> action.  This action takes no in
       arguments, and has a single out argument called "NewExternalIPAddress".
       GUPnP has a set of methods to invoke actions (which will be very familiar
       to anyone who has used <literal>dbus-glib</literal>) where you pass a
-      <literal>NULL</literal>-terminated varargs list of (name, GType, value)
-      tuples for the in arguments, then a <literal>NULL</literal>-terminated
+      <constant>NULL</constant>-terminated varargs list of (name, GType, value)
+      tuples for the in arguments, then a <constant>NULL</constant>-terminated
       varargs list of (name, GType, return location) tuples for the out
       arguments.
     </para>
@@ -110,8 +110,8 @@ service_proxy_available_cb (GUPnPControlPoint *cp,
   g_main_loop_quit (main_loop);
 }</programlisting>
     <para>
-      Note that <literal>_send_action</literal> blocks until the service has replied.  If you
-      need to make non-blocking calls then
-      use <literal>gupnp_service_proxy_begin_action</literal> which takes a callback.
+      Note that gupnp_service_proxy_send_action() blocks until the service has
+      replied.  If you need to make non-blocking calls then use
+      gupnp_service_proxy_begin_action() which takes a callback.
     </para>
   </chapter>
