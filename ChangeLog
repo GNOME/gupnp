@@ -1,3 +1,10 @@
+2008-05-29  Ross Burton  <ross@openedhand.com>
+
+	* doc/server-tutorial.xml:
+	* doc/gupnp-docs.sgml:
+	* doc/Makefile.am:
+	Add rather poor first draft of the server guide.
+
 2008-05-28  Ross Burton  <ross@openedhand.com>
 
 	* doc/gupnp-sections.txt:
