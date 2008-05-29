@@ -1782,21 +1782,22 @@ connect_names_to_signal_handlers (GUPnPService *service,
  * @user_data: the data to pass to each of the callbacks
  * @error: return location for a #GError, or %NULL
  *
- * A convenience function that attempts to connect all possible "action-invoked"
- * and "query-variable" signals to appropriate callbacks for the service
- * @service. It uses service introspection and GModule's introspective
- * features. It is very simillar to glade_xml_signal_autoconnect except that it
- * attempts to guess the names of the signal handlers on its own.
+ * A convenience function that attempts to connect all possible
+ * #GUPnPService::action-invoked and #GUPnPService::query-variable signals to
+ * appropriate callbacks for the service @service. It uses service introspection
+ * and GModule's introspective features. It is very simillar to
+ * glade_xml_signal_autoconnect() except that it attempts to guess the names of
+ * the signal handlers on its own.
  *
  * For this function to do its magic, the application must name the callback
- * functions for "action-invoked" signals by striping the CamelCase off the
- * action names and either prepend "on_" or append "_cb" to them. Same goes
- * for "query-variable" signals, except that "query_" should be prepended to
- * the variable name. For example, callback function for "GetSystemUpdateID"
- * action should be either named as "get_system_update_id_cb" or
- * "on_get_system_update_id" and callback function for the query of
- * "SystemUpdateID" state variable should be named "query_system_update_id_cb"
- * or "on_query_system_update_id".
+ * functions for #GUPnPService::action-invoked signals by striping the CamelCase
+ * off the action names and either prepend "on_" or append "_cb" to them. Same
+ * goes for #GUPnPService::query-variable signals, except that "query_" should
+ * be prepended to the variable name. For example, callback function for
+ * "GetSystemUpdateID" action should be either named as
+ * "get_system_update_id_cb" or "on_get_system_update_id" and callback function
+ * for the query of "SystemUpdateID" state variable should be named
+ * "query_system_update_id_cb" or "on_query_system_update_id".
  *
  * Note that this function will not work correctly if GModule is not supported
  * on the platform or introspection is not available for service @service.

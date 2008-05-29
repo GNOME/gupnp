@@ -1,5 +1,10 @@
 2008-05-29  Ross Burton  <ross@openedhand.com>
 
+	* libgupnp/gupnp-service.c:
+	Add gtk-doc markup to signal names so they are links.
+
+2008-05-29  Ross Burton  <ross@openedhand.com>
+
 	* doc/client-tutorial.xml:
 	* doc/gupnp-docs.sgml:
 	* doc/Makefile.am:
