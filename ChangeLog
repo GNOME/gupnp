@@ -1,3 +1,8 @@
+2008-05-30  Ross Burton  <ross@openedhand.com>
+
+	* doc/server-tutorial.xml:
+	Add more content.
+
 2008-05-29  Ross Burton  <ross@openedhand.com>
 
 	* libgupnp/gupnp-service.c:

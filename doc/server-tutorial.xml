@@ -27,7 +27,8 @@
       services it provides.  For the full details see the <ulink
       url="http://upnp.org/specs/arch/UPnP-DeviceArchitecture-v1.0.pdf">UPnP
       Device Architecture</ulink> specification, section 2.1.  This is the
-      minimal device description file which is valid and useful:
+      minimal device description file describes a single device (the
+      <firstterm>root device</firstterm>) which exposes a single service.
     </para>
 <programlisting>&lt;?xml version="1.0"?&gt;
 &lt;root xmlns="urn:schemas-upnp-org:device-1-0"&gt;
@@ -177,33 +178,78 @@ service = gupnp_device_info_get_service
       action to take.  Alternatively, handlers can be targetted at specific
       actions or variables by using the <firstterm>signal detail</firstterm>
       when connecting.  For example, this causes
-      <function>on_set_name_action</function> to be called when the
-      <function>SetName</function> action is invoked and
       <function>on_get_name_action</function> to be called when the
-      <function>GetName</function> action is invoked.
+      <function>GetName</function> action is invoked:
     </para>
-    <programlisting>char *name;
+    <programlisting>static void on_get_name_action (GUPnPService *service, GUPnPServiceAction *action, gpointer user_data);
+  ...
+  g_signal_connect (service, "action-invoked::GetName", G_CALLBACK (on_get_name_action), NULL);</programlisting>
+    <para>
+      The implementation of action handlers is quite simple.  The handler is
+      passed a #GUPnPServiceAction object which represents the in-progress
+      action.  If required it can be queried using
+      gupnp_service_action_get_name() to identify the action (this isn't
+      required if detailed signals were connected).  Any
+      <firstterm>in</firstterm> arguments can be retrieving using
+      gupnp_service_action_get(), and then return values set using
+      gupnp_service_action_set().  Once the action has been performed, either
+      gupnp_service_action_return() or gupnp_service_action_return_error()
+      should be called to either return successfully or return an error code.
+      If any evented state variables were modified during the action then a
+      notification should be emitted using gupnp_service_notify().  This is an
+      example implementation of <function>GetName</function> and
+      <function>SetName</function>:
+    </para>
+    <programlisting>static char *name;
 
 static void
-on_get_name_action (GUPnPService *service, GUPnPServiceAction *action, gpointer user_data)
+get_name_cb (GUPnPService *service, GUPnPServiceAction *action, gpointer user_data)
 {
-  gupnp_service_action_set (action, "CurrentName", G_TYPE_STRING, name, NULL);
+  gupnp_service_action_set (action,
+                            "CurrentName", G_TYPE_STRING, name,
+                            NULL);
+  gupnp_service_action_return (action);
 }
 
-static void
-on_set_name_action (GUPnPService *service, GUPnPServiceAction *action, gpointer user_data)
+void
+set_name_cb (GUPnPService *service, GUPnPServiceAction *action, gpointer user_data)
 {
   g_free (name);
-  gupnp_service_action_get (action, "NewName", G_TYPE_STRING, &amp;name, NULL);
+  gupnp_service_action_get (action,
+                            "NewName", G_TYPE_STRING, &amp;name,
+                            NULL);
+  gupnp_service_action_return (action);
+  gupnp_service_notify (service, "Name", G_TYPE_STRING, name, NULL);
 }
 
   ...
-  g_signal_connect (service, "action-invoked::GetName", G_CALLBACK (on_get_name_action), NULL);
-  g_signal_connect (service, "action-invoked::SetName", G_CALLBACK (on_set_name_action), NULL);</programlisting>
+  g_signal_connect (service, "action-invoked::GetName", G_CALLBACK (get_name_cb), NULL);
+  g_signal_connect (service, "action-invoked::SetName", G_CALLBACK (set_name_cb), NULL);</programlisting>
+    <para>
+      State variable query handlers are called with the name of the variable and
+      a #GValue.  This value should be initialized with the relevant type and
+      then set to the current value.  Again signal detail can be used to connect
+      handlers to specific state variable callbacks.
+    </para>
+    <programlisting>static char *name;
+
+static void
+query_name_cb (GUPnPService *service, char *variable, GValue *value, gpointer user_data)
+{
+  g_value_init (value, G_TYPE_STRING);
+  g_value_set_string (value, name);
+}
+
+  ...
+  g_signal_connect (service, "query-variable::Name", G_CALLBACK (query_name_cb), NULL);</programlisting>
     <para>
       For services which have many actions and variables there is a convenience
       method gupnp_service_signals_autoconnect() which will automatically
-      connect handlers to signals.
+      connect specially named handlers to signals.
+    </para>
+    <para>
+      The service is now fully implemented.  To complete it, enter a GLib main
+      loop and wait for a client to connect.
     </para>
   </simplesect>
 </chapter>
