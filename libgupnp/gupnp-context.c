@@ -720,8 +720,6 @@ host_path_handler (SoupServer        *server,
         error = NULL;
         mapped_file = g_mapped_file_new (path_to_open, FALSE, &error);
 
-        g_free (path_to_open);
-
         if (mapped_file == NULL) {
                 g_warning ("Unable to map file %s: %s",
                            path_to_open, error->message);
@@ -750,6 +748,8 @@ host_path_handler (SoupServer        *server,
                                 (msg,
                                  SOUP_STATUS_REQUESTED_RANGE_NOT_SATISFIABLE);
 
+                        g_free (path_to_open);
+
                         goto DONE;
                 }
 
@@ -760,6 +760,8 @@ host_path_handler (SoupServer        *server,
                         soup_message_set_status
                                 (msg,
                                  SOUP_STATUS_REQUESTED_RANGE_NOT_SATISFIABLE);
+
+                        g_free (path_to_open);
 
                         goto DONE;
                 }
@@ -817,6 +819,7 @@ host_path_handler (SoupServer        *server,
 
         g_free (mime);
         g_free (content_type);
+        g_free (path_to_open);
 
         /* Set Content-Language */
         if (locales) {

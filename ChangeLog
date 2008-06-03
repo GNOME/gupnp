@@ -1,5 +1,10 @@
 2008-06-03  Jorn Baayen  <jorn@openedhand.com>
 
+	* libgupnp/gupnp-context.c (host_path_handler):
+	Don't free path_to_open too early.
+
+2008-06-03  Jorn Baayen  <jorn@openedhand.com>
+
 	* doc/server-tutorial.xml:
 	Update for new gupnp_root_device_new() API.
 
