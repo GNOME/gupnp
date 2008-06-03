@@ -1,4 +1,4 @@
-LTVERSION = 1:0:0
+LTVERSION = 2:0:0
 
 AM_CFLAGS = $(LIBGUPNP_CFLAGS) -I$(top_srcdir)
 

@@ -35,10 +35,10 @@
  *
  * Returns %TRUE on success. */
 gboolean
-range_get (SoupMessage *message,
-           gboolean    *have_range,
-           guint64     *offset,
-           guint64     *length)
+message_get_range (SoupMessage *message,
+                   gboolean    *have_range,
+                   guint64     *offset,
+                   guint64     *length)
 {
         const char *header;
         char **v;
@@ -81,10 +81,10 @@ range_get (SoupMessage *message,
         return TRUE;
 }
 
-/* Returns the language taken from the current locale, in a format
- * suitable for the HTTP Accept-Language header. */
-char *
-accept_language_get_header (void)
+/* Sets the Accept-Language on @message with the language taken from the
+ * current locale. */
+void
+message_set_accept_language (SoupMessage *message)
 {
         char *locale, *lang;
         int dash_index;
@@ -92,10 +92,10 @@ accept_language_get_header (void)
 
         locale = setlocale (LC_ALL, NULL);
         if (locale == NULL)
-                return NULL;
+                return;
 
         if (strcmp (locale, "C") == 0)
-                return NULL;
+                return;
 
         lang = g_strdup (locale);
 
@@ -116,7 +116,11 @@ accept_language_get_header (void)
 
         g_free (lang);
 
-        return g_string_free (tmp, FALSE);
+        soup_message_headers_append (message->request_headers,
+				     "Accept-Language",
+                                     tmp->str);
+
+        g_string_free (tmp, TRUE);
 }
 
 static double
@@ -133,7 +137,7 @@ get_quality (char *val)
 /* Parses the Accept-Language header in @message, and returns its values
  * in an ordered list in UNIX locale format */
 GList *
-accept_language_get_locales (SoupMessage *message)
+message_get_accept_locales (SoupMessage *message)
 {
         const char *header;
         char **bits;

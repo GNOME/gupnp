@@ -32,6 +32,7 @@
 
 #include "gupnp-root-device.h"
 #include "gupnp-context-private.h"
+#include "http-headers.h"
 #include "xml-util.h"
 
 G_DEFINE_TYPE (GUPnPRootDevice,
@@ -40,6 +41,7 @@ G_DEFINE_TYPE (GUPnPRootDevice,
 
 struct _GUPnPRootDevicePrivate {
         xmlDoc *description_doc;
+        gboolean own_description_doc;
 
         GSSDPResourceGroup *group;
 
@@ -62,6 +64,9 @@ gupnp_root_device_finalize (GObject *object)
         device = GUPNP_ROOT_DEVICE (object);
 
         g_free (device->priv->relative_location);
+
+        if (device->priv->own_description_doc)
+                xmlFreeDoc (device->priv->description_doc);
 
         /* Call super */
         object_class = G_OBJECT_CLASS (gupnp_root_device_parent_class);
@@ -92,6 +97,8 @@ gupnp_root_device_init (GUPnPRootDevice *device)
         device->priv = G_TYPE_INSTANCE_GET_PRIVATE (device,
                                                     GUPNP_TYPE_ROOT_DEVICE,
                                                     GUPnPRootDevicePrivate);
+
+        device->priv->own_description_doc = FALSE;
 }
 
 static void
@@ -282,15 +289,22 @@ gupnp_root_device_constructor (GType                  type,
         GObject *object;
         GUPnPRootDevice *device;
         GUPnPContext *context;
-        const char *server_url, *udn;
+        const char *relative_location, *udn;
+        gboolean own_description_doc;
         char *location, *usn;
         int i;
         xmlDoc *description_doc;
         xmlNode *root_element, *element;
         SoupURI *url_base;
 
-        /* Get 'description-doc' property value */
-        description_doc = NULL;
+        object = NULL;
+        own_description_doc = FALSE;
+
+        /* Get 'description-doc', 'context' and 'relative-location' property
+         * values */
+        description_doc   = NULL;
+        context           = NULL;
+        relative_location = NULL;
 
         for (i = 0; i < n_construct_params; i++) {
                 const char *par_name;
@@ -301,14 +315,84 @@ gupnp_root_device_constructor (GType                  type,
                         description_doc =
                                 g_value_get_pointer (construct_params[i].value);
 
-                        break;
+                        continue;
+                } 
+
+                if (strcmp (par_name, "context") == 0) {
+                        context =
+                                g_value_get_object (construct_params[i].value);
+
+                        continue;
+                }
+
+                if (strcmp (par_name, "relative-location") == 0) {
+                        relative_location =
+                                g_value_get_string (construct_params[i].value);
+
+                        continue;
                 }
         }
 
-        if (!description_doc) {
-                g_warning ("No description document specified.");
+        if (!context) {
+                g_warning ("No context specified.");
 
                 return NULL;
+        }
+
+        if (!relative_location) {
+                g_warning ("No relative location specified.");
+
+                return NULL;
+        }
+
+
+        /* Generate full location */
+        location = g_build_path ("/",
+                                 _gupnp_context_get_server_url (context),
+                                 relative_location,
+                                 NULL);
+
+        /* Check whether we have a parsed description document */
+        if (!description_doc) {
+                /* We don't, so download and parse it */
+                SoupSession *session;
+                SoupMessage *msg;
+                int status;
+
+                session = _gupnp_context_get_session (context);
+
+                msg = soup_message_new (SOUP_METHOD_GET, location);
+                if (msg == NULL) {
+                        g_warning ("Invalid URL: %s", location);
+
+                        goto DONE;
+                }
+
+                message_set_user_agent (msg);
+                message_set_accept_language (msg);
+
+                status = soup_session_send_message (session, msg);
+                if (!SOUP_STATUS_IS_SUCCESSFUL (status)) {
+                        g_warning ("Unable to download description document "
+                                   "from %s", location);
+
+                        g_object_unref (msg);
+
+                        goto DONE;
+                }
+
+                description_doc = xmlParseMemory (msg->response_body->data,
+                                                  msg->response_body->length); 
+
+                g_object_unref (msg);
+
+                if (description_doc == NULL) {
+                        g_warning ("Failed to parse %s\n", location);
+
+                        goto DONE;
+                }
+
+                own_description_doc = TRUE;
         }
 
         /* Find correct element */
@@ -318,7 +402,7 @@ gupnp_root_device_constructor (GType                  type,
         if (!root_element) {
                 g_warning ("\"/root\" element not found.");
 
-                return NULL;
+                goto DONE;
         }
 
         element = xml_util_get_element (root_element,
@@ -327,10 +411,10 @@ gupnp_root_device_constructor (GType                  type,
         if (!element) {
                 g_warning ("\"/root/device\" element not found.");
 
-                return NULL;
+                goto DONE;
         }
 
-        /* Set element */
+        /* Set 'element' and 'description-doc' properties */
         for (i = 0; i < n_construct_params; i++) {
                 const char *par_name;
 
@@ -340,7 +424,14 @@ gupnp_root_device_constructor (GType                  type,
                         g_value_set_pointer (construct_params[i].value,
                                              element);
 
-                        break;
+                        continue;
+                }
+
+                if (strcmp (par_name, "description-doc") == 0) {
+                        g_value_set_pointer (construct_params[i].value,
+                                             description_doc);
+
+                        continue;
                 }
         }
 
@@ -352,18 +443,6 @@ gupnp_root_device_constructor (GType                  type,
                                             construct_params);
         device = GUPNP_ROOT_DEVICE (object);
 
-        /* Get context */
-        context = gupnp_device_info_get_context (GUPNP_DEVICE_INFO (device));
-
-        /* Get server URL */
-        server_url = _gupnp_context_get_server_url (context);
-
-        /* Generate full location */
-        location = g_build_path ("/",
-                                 server_url,
-                                 device->priv->relative_location,
-                                 NULL);
-
         /* Save the URL base, if any */
         url_base = xml_util_get_child_element_content_uri (root_element,
                                                            "URLBase",
@@ -371,11 +450,13 @@ gupnp_root_device_constructor (GType                  type,
         if (!url_base)
                 url_base = soup_uri_new (location);
 
-        /* Set .. */
+        /* Set additional properties */
         g_object_set (object,
                       "location", location,
                       "url-base", url_base,
                       NULL);
+
+        device->priv->own_description_doc = own_description_doc;
 
         /* Create resource group */
         device->priv->group = gssdp_resource_group_new (GSSDP_CLIENT (context));
@@ -391,6 +472,7 @@ gupnp_root_device_constructor (GType                  type,
 
         fill_resource_group (element, location, device->priv->group);
 
+ DONE:
         /* Cleanup */
         g_free (location);
 
@@ -468,17 +550,16 @@ gupnp_root_device_class_init (GUPnPRootDeviceClass *klass)
 /**
  * gupnp_root_device_new
  * @context: The #GUPnPContext
- * @description_doc: Pointer to the device description document
- * @relative_location: Location to use for this device, relative to the
- * HTTP root
+ * @relative_location: Location of the description file for this device,
+ * relative to the HTTP root
  *
- * Create a new #GUPnPRootDevice object.
+ * Create a new #GUPnPRootDevice object, automatically downloading and
+ * parsing @relative_location.
  *
  * Return value: A new @GUPnPRootDevice object.
  **/
 GUPnPRootDevice *
 gupnp_root_device_new (GUPnPContext *context,
-                       xmlDoc       *description_doc,
                        const char   *relative_location)
 {
         GUPnPResourceFactory *factory;
@@ -487,7 +568,7 @@ gupnp_root_device_new (GUPnPContext *context,
 
         return gupnp_root_device_new_full (context,
                                            factory,
-                                           description_doc,
+                                           NULL,
                                            relative_location);
 }
 
@@ -495,11 +576,12 @@ gupnp_root_device_new (GUPnPContext *context,
  * gupnp_root_device_new_full
  * @context: A #GUPnPContext
  * @factory: A #GUPnPResourceFactory
- * @description_doc: Pointer to the device description document
- * @relative_location: Location to use for this device, relative to the
- * HTTP root
+ * @description_doc: Pointer to the device description document, or %NULL
+ * @relative_location: Location of the description file for this device,
+ * relative to the HTTP root
  *
- * Create a new #GUPnPRootDevice.
+ * Create a new #GUPnPRootDevice, automatically downloading and parsing
+ * @relative_location if @description_doc is %NULL.
  *
  * Return value: A new #GUPnPRootDevice object.
  **/

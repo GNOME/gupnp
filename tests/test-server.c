@@ -107,7 +107,6 @@ main (int argc, char **argv)
 {
         GError *error;
         GUPnPContext *context;
-        xmlDoc *doc;
         GUPnPRootDevice *dev;
         GUPnPServiceInfo *content_dir;
         struct sigaction sig_action;
@@ -136,16 +135,9 @@ main (int argc, char **argv)
         /* Host current directory */
         gupnp_context_host_path (context, ".", "");
 
-        /* Parse device description file */
-        doc = xmlParseFile (argv[1]);
-
         /* Create root device */
         dev = gupnp_root_device_new (context,
-                                     doc,
                                      "/description.xml");
-
-        /* Free doc when root device is destroyed */
-        g_object_weak_ref (G_OBJECT (dev), (GWeakNotify) xmlFreeDoc, doc);
 
         /* Implement Browse action on ContentDirectory if available */
         content_dir = gupnp_device_info_get_service

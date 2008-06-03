@@ -1,3 +1,33 @@
+2008-06-03  Jorn Baayen  <jorn@openedhand.com>
+
+	* libgupnp/Makefile.am:
+	Bump ABI version.
+
+	* libgupnp/gupnp-context.c (host_path_handler),
+	(gupnp_context_host_path):
+	Fix a couple of bugs regarding Accept-Language handling.
+
+	* libgupnp/gupnp-control-point.c (load_description):
+	* libgupnp/gupnp-service-proxy.c (begin_action_msg),
+	(finish_action_msg), (check_action_response),
+	(gupnp_service_proxy_cancel_action):
+	* libgupnp/gupnp-service.c (gupnp_service_action_get_locales):
+	* libgupnp/http-headers.c (message_get_range),
+	(message_set_accept_language), (message_get_accept_locales):
+	* libgupnp/http-headers.h:
+	Add Accept-Language header to more messages.
+	Some restructuring for clarity.
+
+	* libgupnp/gupnp-root-device.c (gupnp_root_device_finalize),
+	(gupnp_root_device_init), (gupnp_root_device_constructor),
+	(gupnp_root_device_new):
+	* libgupnp/gupnp-root-device.h:
+	Remove xmlDoc argument from gupnp_root_device_new() for simplicity.
+	xmlDocs can still be passed to gupnp_root_device_new_full().
+
+	* tests/test-server.c (main):
+	Update for API change.
+
 2008-05-30  Ross Burton  <ross@openedhand.com>
 
 	* doc/server-tutorial.xml:

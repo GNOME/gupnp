@@ -536,7 +536,7 @@ begin_action_msg (GUPnPServiceProxy              *proxy,
                   gpointer                        user_data)
 {
         GUPnPServiceProxyAction *ret;
-        char *control_url, *lang, *full_action;
+        char *control_url, *full_action;
         const char *service_type;
 
         /* Create action structure */
@@ -583,26 +583,16 @@ begin_action_msg (GUPnPServiceProxy              *proxy,
                 return ret;
         }
 
-        /* Specify language */
-        lang = accept_language_get_header ();
-        if (lang) {
-                soup_message_headers_append
-                        (SOUP_MESSAGE (ret->msg)->request_headers,
-                         "Accept-Language",
-                         lang);
-
-                g_free (lang);
-        }
-
         /* Specify action */
         full_action = g_strdup_printf ("\"%s#%s\"", service_type, action);
-        soup_message_headers_append (SOUP_MESSAGE (ret->msg)->request_headers,
+        soup_message_headers_append (ret->msg->request_headers,
 				     "SOAPAction",
                                      full_action);
         g_free (full_action);
 
-        /* Specify user agent */
-        message_set_user_agent (SOUP_MESSAGE (ret->msg));
+        /* Specify user agent and language */
+        message_set_user_agent (ret->msg);
+        message_set_accept_language (ret->msg);
 
         /* Set up envelope */
         ret->msg_str = xml_util_new_string ();
@@ -703,7 +693,7 @@ finish_action_msg (GUPnPServiceProxyAction *action,
         session = _gupnp_context_get_session (context);
 
         soup_session_queue_message (session,
-                                    SOUP_MESSAGE (action->msg),
+                                    action->msg,
                                     (SoupSessionCallback) action_got_response,
                                     action);
 }
@@ -890,19 +880,16 @@ check_action_response (GUPnPServiceProxy       *proxy,
                        xmlNode                **params,
                        GError                 **error)
 {
-        SoupMessage *soup_msg;
         xmlDoc *response;
         int code;
 
-        soup_msg = SOUP_MESSAGE (action->msg);
-
         /* Check for errors */
-        switch (soup_msg->status_code) {
+        switch (action->msg->status_code) {
         case SOUP_STATUS_OK:
         case SOUP_STATUS_INTERNAL_SERVER_ERROR:
                 break;
         default:
-                set_server_error (error, soup_msg);
+                set_server_error (error, action->msg);
 
                 return NULL;
         }
@@ -912,7 +899,7 @@ check_action_response (GUPnPServiceProxy       *proxy,
                                    action->msg->response_body->length);
 
 	if (!response) {
-                if (soup_msg->status_code == SOUP_STATUS_OK) {
+                if (action->msg->status_code == SOUP_STATUS_OK) {
                         g_set_error (error,
                                      GUPNP_SERVER_ERROR,
                                      GUPNP_SERVER_ERROR_INVALID_RESPONSE,
@@ -922,7 +909,7 @@ check_action_response (GUPnPServiceProxy       *proxy,
                                     (error,
                                      GUPNP_SERVER_ERROR,
                                      GUPNP_SERVER_ERROR_INTERNAL_SERVER_ERROR,
-                                     soup_msg->reason_phrase);
+                                     action->msg->reason_phrase);
                 }
 
                 return NULL;
@@ -959,7 +946,7 @@ check_action_response (GUPnPServiceProxy       *proxy,
         }
 
         /* Check whether we have a Fault */
-        if (soup_msg->status_code == SOUP_STATUS_INTERNAL_SERVER_ERROR) {
+        if (action->msg->status_code == SOUP_STATUS_INTERNAL_SERVER_ERROR) {
                 xmlNode *param;
                 char *desc;
 
@@ -997,7 +984,7 @@ check_action_response (GUPnPServiceProxy       *proxy,
                 desc = xml_util_get_child_element_content_glib
                                         (param, "errorDescription");
                 if (desc == NULL)
-                        desc = g_strdup (soup_msg->reason_phrase);
+                        desc = g_strdup (action->msg->reason_phrase);
 
                 set_error_literal (error,
                                    GUPNP_CONTROL_ERROR,
@@ -1196,7 +1183,7 @@ gupnp_service_proxy_cancel_action (GUPnPServiceProxy       *proxy,
                 session = _gupnp_context_get_session (context);
 
                 soup_session_cancel_message (session,
-                                             SOUP_MESSAGE (action->msg),
+                                             action->msg,
                                              SOUP_STATUS_CANCELLED);
         }
 

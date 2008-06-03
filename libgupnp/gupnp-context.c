@@ -589,7 +589,8 @@ gupnp_context_set_subscription_timeout (GUPnPContext *context,
  * gupnp_context_get_subscription_timeout
  * @context: A #GUPnPContext
  *
- * Get the event subscription timeout (in seconds), or 0 meaning there is no timeout.
+ * Get the event subscription timeout (in seconds), or 0 meaning there is no
+ * timeout.
  * 
  * Return value: The event subscription timeout in seconds.
  **/
@@ -601,18 +602,20 @@ gupnp_context_get_subscription_timeout (GUPnPContext *context)
         return context->priv->subscription_timeout;
 }
 
-/* Modified from libsoup simple-httpd.c */
+/* Serve @path. Note that we do not need to check for path including bogus
+ * '..' as libsoup does this for us. */
+/* XXX check for slash */
 static void
-hosting_server_handler (SoupServer        *server,
-                        SoupMessage       *msg, 
-                        const char        *path,
-                        GHashTable        *query,
-                        SoupClientContext *client,
-                        gpointer           user_data)
+host_path_handler (SoupServer        *server,
+                   SoupMessage       *msg, 
+                   const char        *path,
+                   GHashTable        *query,
+                   SoupClientContext *client,
+                   gpointer           user_data)
 {
         PathData *path_data;
         const char *lang;
-        char *path_to_open, *path_locale, *slash, *content_type, *mime;
+        char *local_path, *path_to_open, *slash, *content_type, *mime;
         struct stat st;
         int path_offset;
         GList *locales;
@@ -629,8 +632,9 @@ hosting_server_handler (SoupServer        *server,
         }
 
         /* Get preferred locales */
-        locales = accept_language_get_locales (msg);
+        locales = message_get_accept_locales (msg);
 
+        /* Construct base local path */
         if (path) {
                 if (*path != '/') {
                         soup_message_set_status (msg, SOUP_STATUS_BAD_REQUEST);
@@ -645,23 +649,20 @@ hosting_server_handler (SoupServer        *server,
                 path_offset = 0;
         }
 
-        path_locale = NULL;
-
- NEXT_LOCALE:
-        g_free (path_locale);
-
-        if (locales) {
-                path_locale = g_strdup_printf ("%s.%s",
-                                               path + path_offset,
-                                               (char *) locales->data);
-        } else
-                path_locale = g_strdup (path + path_offset);
-
-        path_to_open = g_build_filename (path_data->local_path,
-                                         path_locale,
-                                         NULL);
+        local_path = g_build_filename (path_data->local_path,
+                                       path + path_offset,
+                                       NULL);
 
  AGAIN:
+        /* Add locale suffix if available */
+        if (locales) {
+                path_to_open = g_strdup_printf ("%s.%s",
+                                                local_path,
+                                                (char *) locales->data);
+        } else
+                path_to_open = g_strdup (local_path);
+
+        /* See what we've got */
         if (g_stat (path_to_open, &st) == -1) {
                 g_free (path_to_open);
                 if (errno == EPERM)
@@ -669,20 +670,26 @@ hosting_server_handler (SoupServer        *server,
                 else if (errno == ENOENT) {
                         if (locales) {
                                 locales = locales->next;
-                                goto NEXT_LOCALE;
+                                goto AGAIN;
                         } else
                                 soup_message_set_status (msg,
                                                          SOUP_STATUS_NOT_FOUND);
                 } else
                         soup_message_set_status
                                 (msg, SOUP_STATUS_INTERNAL_SERVER_ERROR);
+
+                g_free (local_path);
+
                 goto DONE;
         }
 
         /* Handle directories */
         if (S_ISDIR (st.st_mode)) {
+                g_free (local_path);
+
                 slash = strrchr (path_to_open, '/');
                 if (!slash || slash[1]) {
+                        /* path_to_open doesn't end with a slash */
                         char *uri, *redir_uri;
 
                         uri = soup_uri_to_string (soup_message_get_uri (msg),
@@ -695,17 +702,19 @@ hosting_server_handler (SoupServer        *server,
                         g_free (redir_uri);
                         g_free (uri);
                         g_free (path_to_open);
+
                         goto DONE;
                 }
 
+                local_path = g_build_filename (path_to_open,
+                                               "index.html",
+                                               NULL);
                 g_free (path_to_open);
-                path_to_open = g_build_filename (path_data->local_path,
-                                                 path_locale,
-                                                 "index.html", NULL);
+
                 goto AGAIN;
         }
 
-        g_free (path_locale);
+        g_free (local_path);
 
         /* Map file */
         error = NULL;
@@ -736,7 +745,7 @@ hosting_server_handler (SoupServer        *server,
                 offset = 0;
                 length = st.st_size;
 
-                if (!range_get (msg, &have_range, &offset, &length)) {
+                if (!message_get_range (msg, &have_range, &offset, &length)) {
                         soup_message_set_status
                                 (msg,
                                  SOUP_STATUS_REQUESTED_RANGE_NOT_SATISFIABLE);
@@ -794,7 +803,7 @@ hosting_server_handler (SoupServer        *server,
         /* Set Content-Type */
         content_type = g_content_type_guess
                                 (path_to_open,
-                                 (guchar*)
+                                 (guchar *)
                                  g_mapped_file_get_contents (mapped_file),
                                  st.st_size,
                                  NULL);
@@ -885,7 +894,7 @@ gupnp_context_host_path (GUPnPContext *context,
 
         soup_server_add_handler (server,
                                  server_path,
-                                 hosting_server_handler,
+                                 host_path_handler,
                                  path_data,
                                  (GDestroyNotify) path_data_free);
 }

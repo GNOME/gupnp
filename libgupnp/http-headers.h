@@ -27,16 +27,16 @@
 G_BEGIN_DECLS
 
 G_GNUC_INTERNAL gboolean
-range_get                   (SoupMessage *message,
+message_get_range           (SoupMessage *message,
                              gboolean    *have_offset,
                              guint64     *offset,
                              guint64     *length);
 
-G_GNUC_INTERNAL char *
-accept_language_get_header  (void);
+G_GNUC_INTERNAL void
+message_set_accept_language (SoupMessage *message);
 
 G_GNUC_INTERNAL GList *
-accept_language_get_locales (SoupMessage *message);
+message_get_accept_locales  (SoupMessage *message);
 
 G_GNUC_INTERNAL int
 http_language_from_locale   (char        *lang);

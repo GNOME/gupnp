@@ -515,6 +515,7 @@ load_description (GUPnPControlPoint *control_point,
                 }
 
                 message_set_user_agent (data->message);
+                message_set_accept_language (data->message);
 
                 data->control_point   = control_point;
 

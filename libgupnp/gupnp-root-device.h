@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007 OpenedHand Ltd.
+ * Copyright (C) 2007, 2008 OpenedHand Ltd.
  *
  * Author: Jorn Baayen <jorn@openedhand.com>
  *
@@ -80,7 +80,6 @@ typedef struct {
 
 GUPnPRootDevice *
 gupnp_root_device_new             (GUPnPContext         *context,
-                                   xmlDoc               *description_doc,
                                    const char           *relative_location);
 
 GUPnPRootDevice *
