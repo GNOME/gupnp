@@ -1,5 +1,10 @@
 2008-06-03  Jorn Baayen  <jorn@openedhand.com>
 
+	* doc/server-tutorial.xml:
+	Update for new gupnp_root_device_new() API.
+
+2008-06-03  Jorn Baayen  <jorn@openedhand.com>
+
 	* libgupnp/Makefile.am:
 	Bump ABI version.
 
