@@ -1,5 +1,12 @@
 2008-06-04  Jorn Baayen  <jorn@openedhand.com>
 
+	* libgupnp/gupnp-root-device.c (download_and_parse),
+	(gupnp_root_device_constructor):
+	Split out description document downloading code into a separate 
+	function.
+
+2008-06-04  Jorn Baayen  <jorn@openedhand.com>
+
 	* libgupnp/gupnp-context.c (construct_local_path), (append_locale),
 	(redirect_to_folder), (host_path_handler), (host_path_data_new),
 	(host_path_data_free), (gupnp_context_host_path):

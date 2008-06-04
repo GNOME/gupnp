@@ -280,6 +280,52 @@ fill_resource_group (xmlNode            *element,
         }
 }
 
+/* Download and parse @location as an XML document, synchronously. */
+static xmlDoc *
+download_and_parse (GUPnPContext *context,
+                    const char   *location)
+{
+        xmlDoc *description_doc;
+        SoupSession *session;
+        SoupMessage *msg;
+        int status;
+
+        session = _gupnp_context_get_session (context);
+
+        msg = soup_message_new (SOUP_METHOD_GET, location);
+        if (msg == NULL) {
+                g_warning ("Invalid URL: %s", location);
+
+                return NULL;
+        }
+
+        http_request_set_user_agent (msg);
+        http_request_set_accept_language (msg);
+
+        status = soup_session_send_message (session, msg);
+        if (!SOUP_STATUS_IS_SUCCESSFUL (status)) {
+                g_warning ("Unable to download description document "
+                           "from %s", location);
+
+                g_object_unref (msg);
+
+                return NULL;
+        }
+
+        description_doc = xmlParseMemory (msg->response_body->data,
+                                          msg->response_body->length); 
+
+        g_object_unref (msg);
+
+        if (description_doc == NULL) {
+                g_warning ("Failed to parse %s\n", location);
+
+                return NULL;
+        }
+
+        return description_doc;
+}
+
 static GObject *
 gupnp_root_device_constructor (GType                  type,
                                guint                  n_construct_params,
@@ -355,43 +401,10 @@ gupnp_root_device_constructor (GType                  type,
         /* Check whether we have a parsed description document */
         if (!description_doc) {
                 /* We don't, so download and parse it */
-                SoupSession *session;
-                SoupMessage *msg;
-                int status;
-
-                session = _gupnp_context_get_session (context);
-
-                msg = soup_message_new (SOUP_METHOD_GET, location);
-                if (msg == NULL) {
-                        g_warning ("Invalid URL: %s", location);
-
+                description_doc = download_and_parse (context, location);
+                if (description_doc == NULL)
                         goto DONE;
-                }
-
-                http_request_set_user_agent (msg);
-                http_request_set_accept_language (msg);
-
-                status = soup_session_send_message (session, msg);
-                if (!SOUP_STATUS_IS_SUCCESSFUL (status)) {
-                        g_warning ("Unable to download description document "
-                                   "from %s", location);
-
-                        g_object_unref (msg);
-
-                        goto DONE;
-                }
-
-                description_doc = xmlParseMemory (msg->response_body->data,
-                                                  msg->response_body->length); 
-
-                g_object_unref (msg);
-
-                if (description_doc == NULL) {
-                        g_warning ("Failed to parse %s\n", location);
-
-                        goto DONE;
-                }
-
+                
                 own_description_doc = TRUE;
         }
 
