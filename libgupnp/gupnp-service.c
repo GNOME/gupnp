@@ -202,7 +202,7 @@ gupnp_service_action_get_locales (GUPnPServiceAction *action)
 {
         g_return_val_if_fail (action != NULL, NULL);
 
-        return message_get_accept_locales (action->msg);
+        return http_request_get_accept_locales (action->msg);
 }
 
 /**

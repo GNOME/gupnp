@@ -591,8 +591,8 @@ begin_action_msg (GUPnPServiceProxy              *proxy,
         g_free (full_action);
 
         /* Specify user agent and language */
-        message_set_user_agent (ret->msg);
-        message_set_accept_language (ret->msg);
+        http_request_set_user_agent (ret->msg);
+        http_request_set_accept_language (ret->msg);
 
         /* Set up envelope */
         ret->msg_str = xml_util_new_string ();

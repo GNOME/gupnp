@@ -27,25 +27,35 @@
 G_BEGIN_DECLS
 
 G_GNUC_INTERNAL gboolean
-message_get_range           (SoupMessage *message,
-                             gboolean    *have_offset,
-                             guint64     *offset,
-                             guint64     *length);
+http_request_get_range           (SoupMessage  *message,
+                                  gboolean     *have_offset,
+                                  gsize        *offset,
+                                  gsize        *length);
 
 G_GNUC_INTERNAL void
-message_set_accept_language (SoupMessage *message);
+http_request_set_accept_language (SoupMessage  *message);
 
 G_GNUC_INTERNAL GList *
-message_get_accept_locales  (SoupMessage *message);
-
-G_GNUC_INTERNAL int
-http_language_from_locale   (char        *lang);
-
-G_GNUC_INTERNAL int
-locale_from_http_language   (char        *lang);
+http_request_get_accept_locales  (SoupMessage  *message);
 
 G_GNUC_INTERNAL void
-message_set_user_agent      (SoupMessage *message);
+http_request_set_user_agent      (SoupMessage  *message);
+
+G_GNUC_INTERNAL void
+http_response_set_content_locale (SoupMessage  *message,
+                                  const char   *locale);
+
+G_GNUC_INTERNAL void
+http_response_set_content_type   (SoupMessage  *message,
+                                  const char   *path,
+                                  const guchar *data,
+                                  gsize         data_size);
+
+G_GNUC_INTERNAL void
+http_response_set_content_range  (SoupMessage  *message,
+                                  gsize         offset,
+                                  gsize         length,
+                                  gsize         total);
 
 G_END_DECLS
 

@@ -368,8 +368,8 @@ gupnp_root_device_constructor (GType                  type,
                         goto DONE;
                 }
 
-                message_set_user_agent (msg);
-                message_set_accept_language (msg);
+                http_request_set_user_agent (msg);
+                http_request_set_accept_language (msg);
 
                 status = soup_session_send_message (session, msg);
                 if (!SOUP_STATUS_IS_SUCCESSFUL (status)) {

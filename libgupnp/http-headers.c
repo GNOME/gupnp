@@ -24,8 +24,90 @@
 #include <locale.h>
 #include <stdlib.h>
 #include <string.h>
+#include <gio/gio.h>
 
 #include "http-headers.h"
+
+/* Converts @lang from HTTP language tag format into locale format.
+ * Return value: The index of the '-' character. */
+static int
+http_language_from_locale (char *lang)
+{
+        gboolean tolower;
+        int i, dash_index;
+
+        tolower = FALSE;
+        dash_index = -1;
+
+        for (i = 0; lang[i] != '\0'; i++) {
+                switch (lang[i]) {
+                case '_':
+                        /* Underscores to dashes */
+                        lang[i] = '-';
+
+                        /* Lowercase country bit */
+                        tolower = TRUE;
+
+                        /* Save dash index */
+                        dash_index = i;
+
+                        break;
+                case '.':
+                case '@':
+                        /* Terminate our string here */
+                        lang[i] = '\0';
+
+                        return dash_index;
+                default:
+                        if (tolower)
+                                lang[i] = g_ascii_tolower (lang[i]);
+
+                        break;
+                }
+        }
+
+        return dash_index;
+}
+
+/* Converts @lang from locale format into HTTP language tag format.
+ * Return value: The index of the '_' character. */
+static int
+locale_from_http_language (char *lang)
+{
+        gboolean toupper;
+        int i, underscore_index;
+
+        toupper = FALSE;
+        underscore_index = -1;
+
+        for (i = 0; lang[i] != '\0'; i++) {
+                switch (lang[i]) {
+                case '-':
+                        /* Dashes to underscores */
+                        lang[i] = '_';
+
+                        /* Uppercase country bit */
+                        toupper = TRUE;
+
+                        /* Save underscore index */
+                        underscore_index = i;
+
+                        break;
+                case ';':
+                        /* Terminate our string here */
+                        lang[i] = '\0';
+
+                        return underscore_index;
+                default:
+                        if (toupper)
+                                lang[i] = g_ascii_toupper (lang[i]);
+
+                        break;
+                }
+        }
+
+        return underscore_index;
+}
 
 /* Parses the HTTP Range header on @message and sets:
  *
@@ -35,10 +117,10 @@
  *
  * Returns %TRUE on success. */
 gboolean
-message_get_range (SoupMessage *message,
-                   gboolean    *have_range,
-                   guint64     *offset,
-                   guint64     *length)
+http_request_get_range (SoupMessage *message,
+                        gboolean    *have_range,
+                        gsize       *offset,
+                        gsize       *length)
 {
         const char *header;
         char **v;
@@ -84,7 +166,7 @@ message_get_range (SoupMessage *message,
 /* Sets the Accept-Language on @message with the language taken from the
  * current locale. */
 void
-message_set_accept_language (SoupMessage *message)
+http_request_set_accept_language (SoupMessage *message)
 {
         char *locale, *lang;
         int dash_index;
@@ -137,7 +219,7 @@ get_quality (char *val)
 /* Parses the Accept-Language header in @message, and returns its values
  * in an ordered list in UNIX locale format */
 GList *
-message_get_accept_locales (SoupMessage *message)
+http_request_get_accept_locales (SoupMessage *message)
 {
         const char *header;
         char **bits;
@@ -196,87 +278,6 @@ message_get_accept_locales (SoupMessage *message)
         return locales;
 }
 
-/* Converts @lang from HTTP language tag format into locale format.
- * Return value: The index of the '-' character. */
-int
-http_language_from_locale (char *lang)
-{
-        gboolean tolower;
-        int i, dash_index;
-
-        tolower = FALSE;
-        dash_index = -1;
-
-        for (i = 0; lang[i] != '\0'; i++) {
-                switch (lang[i]) {
-                case '_':
-                        /* Underscores to dashes */
-                        lang[i] = '-';
-
-                        /* Lowercase country bit */
-                        tolower = TRUE;
-
-                        /* Save dash index */
-                        dash_index = i;
-
-                        break;
-                case '.':
-                case '@':
-                        /* Terminate our string here */
-                        lang[i] = '\0';
-
-                        return dash_index;
-                default:
-                        if (tolower)
-                                lang[i] = g_ascii_tolower (lang[i]);
-
-                        break;
-                }
-        }
-
-        return dash_index;
-}
-
-/* Converts @lang from locale format into HTTP language tag format.
- * Return value: The index of the '_' character. */
-int
-locale_from_http_language (char *lang)
-{
-        gboolean toupper;
-        int i, underscore_index;
-
-        toupper = FALSE;
-        underscore_index = -1;
-
-        for (i = 0; lang[i] != '\0'; i++) {
-                switch (lang[i]) {
-                case '-':
-                        /* Dashes to underscores */
-                        lang[i] = '_';
-
-                        /* Uppercase country bit */
-                        toupper = TRUE;
-
-                        /* Save underscore index */
-                        underscore_index = i;
-
-                        break;
-                case ';':
-                        /* Terminate our string here */
-                        lang[i] = '\0';
-
-                        return underscore_index;
-                default:
-                        if (toupper)
-                                lang[i] = g_ascii_toupper (lang[i]);
-
-                        break;
-                }
-        }
-
-        return underscore_index;
-}
-
 static char *user_agent = NULL;
 
 static void
@@ -287,7 +288,7 @@ free_user_agent (void)
 
 /* Sets the User-Agent header on @message */
 void
-message_set_user_agent (SoupMessage *message)
+http_request_set_user_agent (SoupMessage *message)
 {
         if (G_UNLIKELY (user_agent == NULL)) {
                 user_agent = g_strdup_printf
@@ -300,4 +301,71 @@ message_set_user_agent (SoupMessage *message)
         soup_message_headers_append (message->request_headers,
 				     "User-Agent",
                                      user_agent);
+}
+
+/* Set Accept-Language header according to @locale. */
+void
+http_response_set_content_locale (SoupMessage *msg,
+                                  const char  *locale)
+{
+        char *lang;
+
+        lang = g_strdup (locale);
+        http_language_from_locale (lang);
+
+        soup_message_headers_append (msg->response_headers,
+				     "Content-Language",
+                                     lang);
+
+        g_free (lang);
+}
+
+/* Set Content-Type header guessed from @path, @data and @data_size using
+ * g_content_type_guess(). */
+void
+http_response_set_content_type (SoupMessage  *msg,
+                                const char   *path,
+                                const guchar *data,
+                                gsize         data_size)
+{
+        char *content_type, *mime;
+
+        content_type = g_content_type_guess
+                                (path,
+                                 data,
+                                 data_size,
+                                 NULL);
+        mime = g_content_type_get_mime_type (content_type);
+        if (mime == NULL)
+                mime = g_strdup ("application/octet-stream");
+
+        soup_message_headers_append (msg->response_headers,
+                                     "Content-Type",
+                                     mime);
+
+        g_free (mime);
+        g_free (content_type);
+}
+
+/* Set Content-Range header */
+void
+http_response_set_content_range (SoupMessage  *msg,
+                                 gsize         offset,
+                                 gsize         length,
+                                 gsize         total)
+{
+        char *content_range;
+
+        content_range = g_strdup_printf
+                ("bytes %" G_GSIZE_FORMAT "-%"
+                 G_GSIZE_FORMAT "/%" G_GSIZE_FORMAT,
+                 offset,
+                 offset + length,
+                 total);
+
+        soup_message_headers_append (msg->response_headers,
+                                     "Content-Range",
+                                     content_range);
+
+        g_free (content_range);
 }

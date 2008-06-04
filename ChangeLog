@@ -1,3 +1,26 @@
+2008-06-04  Jorn Baayen  <jorn@openedhand.com>
+
+	* libgupnp/gupnp-context.c (construct_local_path), (append_locale),
+	(redirect_to_folder), (host_path_handler), (host_path_data_new),
+	(host_path_data_free), (gupnp_context_host_path):
+	* libgupnp/gupnp-control-point.c (load_description):
+	* libgupnp/gupnp-root-device.c (gupnp_root_device_constructor):
+	* libgupnp/gupnp-service-info.c
+	(gupnp_service_info_get_introspection),
+	(gupnp_service_info_get_introspection_async):
+	* libgupnp/gupnp-service-proxy.c (begin_action_msg):
+	* libgupnp/gupnp-service.c (gupnp_service_action_get_locales):
+	* libgupnp/http-headers.c (http_language_from_locale),
+	(locale_from_http_language), (http_request_get_range),
+	(http_request_set_accept_language),
+	(http_request_get_accept_locales), (http_request_set_user_agent),
+	(http_response_set_content_locale),
+	(http_response_set_content_type),
+	(http_response_set_content_range):
+	* libgupnp/http-headers.h:
+	Cleanup of hosting logic.
+	Reprefix message_ functions with http_request_/http_response_.
+
 2008-06-03  Jorn Baayen  <jorn@openedhand.com>
 
 	* libgupnp/gupnp-context.c (host_path_handler):

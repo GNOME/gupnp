@@ -577,7 +577,7 @@ gupnp_service_info_get_introspection (GUPnPServiceInfo *info,
                 return NULL;
         }
 
-        message_set_user_agent (msg);
+        http_request_set_user_agent (msg);
 
         /* Send off the message */
         session = _gupnp_context_get_session (info->priv->context);
@@ -714,7 +714,7 @@ gupnp_service_info_get_introspection_async
                 return;
         }
 
-        message_set_user_agent (data->message);
+        http_request_set_user_agent (data->message);
 
         data->info      = info;
         data->callback  = callback;

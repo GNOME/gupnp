@@ -83,7 +83,7 @@ enum {
 typedef struct {
         char *local_path;
         char *server_path;
-} PathData;
+} HostPathData;
 
 /*
  * Generates the default server ID.
@@ -602,9 +602,71 @@ gupnp_context_get_subscription_timeout (GUPnPContext *context)
         return context->priv->subscription_timeout;
 }
 
+/* Construct a local path from @requested path, removing the last slash
+ * if any to make sure we append the locale suffix in a canonical way. */
+static char *
+construct_local_path (const char   *requested_path,
+                      HostPathData *host_path_data)
+{
+        GString *str;
+        int len;
+
+        if (!requested_path || *requested_path == 0)
+                return g_strdup (host_path_data->local_path);
+
+        if (*requested_path != '/')
+                return NULL; /* Absolute paths only */
+
+        str = g_string_new (host_path_data->local_path);
+
+        /* Skip the length of the path relative to which @requested_path
+         * is specified. */
+        requested_path += strlen (host_path_data->server_path);
+
+        /* Strip the last slashes to make sure we append the locale suffix
+         * in a canonical way. */
+        len = strlen (requested_path);
+        while (requested_path[len - 1] == '/')
+                len--;
+
+        g_string_append_len (str,
+                             requested_path,
+                             len);
+
+        return g_string_free (str, FALSE);
+}
+
+/* Append locale suffix to @local_path. */
+static char *
+append_locale (const char *local_path, GList *locales)
+{
+        if (!locales)
+                return g_strdup (local_path);
+
+        return g_strdup_printf ("%s.%s",
+                                local_path,
+                                (char *) locales->data);
+}
+
+/* Redirect @msg to the same URI, but with a slash appended. */
+static void
+redirect_to_folder (SoupMessage *msg)
+{
+        char *uri, *redir_uri;
+
+        uri = soup_uri_to_string (soup_message_get_uri (msg),
+                                  FALSE);
+        redir_uri = g_strdup_printf ("%s/", uri);
+        soup_message_headers_append (msg->response_headers,
+                                     "Location", redir_uri);
+        soup_message_set_status (msg,
+                                 SOUP_STATUS_MOVED_PERMANENTLY);
+        g_free (redir_uri);
+        g_free (uri);
+}
+
 /* Serve @path. Note that we do not need to check for path including bogus
  * '..' as libsoup does this for us. */
-/* XXX check for slash */
 static void
 host_path_handler (SoupServer        *server,
                    SoupMessage       *msg, 
@@ -613,63 +675,49 @@ host_path_handler (SoupServer        *server,
                    SoupClientContext *client,
                    gpointer           user_data)
 {
-        PathData *path_data;
-        const char *lang;
-        char *local_path, *path_to_open, *slash, *content_type, *mime;
+        char *local_path, *path_to_open;
         struct stat st;
-        int path_offset;
+        int status;
         GList *locales;
         GMappedFile *mapped_file;
         GError *error;
 
-        path_data = (PathData *) user_data;
+        locales      = NULL;
+        local_path   = NULL;
+        path_to_open = NULL;
 
         if (msg->method != SOUP_METHOD_GET &&
             msg->method != SOUP_METHOD_HEAD) {
                 soup_message_set_status (msg, SOUP_STATUS_NOT_IMPLEMENTED);
-                locales = NULL;
+
+                goto DONE;
+        }
+
+        /* Construct base local path */
+        local_path = construct_local_path (path, (HostPathData *) user_data);
+        if (!local_path) {
+                soup_message_set_status (msg, SOUP_STATUS_BAD_REQUEST);
+
                 goto DONE;
         }
 
         /* Get preferred locales */
-        locales = message_get_accept_locales (msg);
-
-        /* Construct base local path */
-        if (path) {
-                if (*path != '/') {
-                        soup_message_set_status (msg, SOUP_STATUS_BAD_REQUEST);
-                        goto DONE;
-                }
-
-                /* Skip the server path */
-                path_offset = strlen (path_data->server_path);
-        } else {
-                path = g_strdup ("");
-
-                path_offset = 0;
-        }
-
-        local_path = g_build_filename (path_data->local_path,
-                                       path + path_offset,
-                                       NULL);
+        locales = http_request_get_accept_locales (msg);
 
  AGAIN:
         /* Add locale suffix if available */
-        if (locales) {
-                path_to_open = g_strdup_printf ("%s.%s",
-                                                local_path,
-                                                (char *) locales->data);
-        } else
-                path_to_open = g_strdup (local_path);
+        path_to_open = append_locale (local_path, locales);
 
         /* See what we've got */
         if (g_stat (path_to_open, &st) == -1) {
-                g_free (path_to_open);
                 if (errno == EPERM)
                         soup_message_set_status (msg, SOUP_STATUS_FORBIDDEN);
                 else if (errno == ENOENT) {
                         if (locales) {
+                                g_free (path_to_open);
+
                                 locales = locales->next;
+
                                 goto AGAIN;
                         } else
                                 soup_message_set_status (msg,
@@ -678,43 +726,28 @@ host_path_handler (SoupServer        *server,
                         soup_message_set_status
                                 (msg, SOUP_STATUS_INTERNAL_SERVER_ERROR);
 
-                g_free (local_path);
-
                 goto DONE;
         }
 
         /* Handle directories */
         if (S_ISDIR (st.st_mode)) {
-                g_free (local_path);
-
-                slash = strrchr (path_to_open, '/');
-                if (!slash || slash[1]) {
-                        /* path_to_open doesn't end with a slash */
-                        char *uri, *redir_uri;
-
-                        uri = soup_uri_to_string (soup_message_get_uri (msg),
-                                                  FALSE);
-                        redir_uri = g_strdup_printf ("%s/", uri);
-                        soup_message_headers_append (msg->response_headers,
-                                                     "Location", redir_uri);
-                        soup_message_set_status (msg,
-                                                 SOUP_STATUS_MOVED_PERMANENTLY);
-                        g_free (redir_uri);
-                        g_free (uri);
-                        g_free (path_to_open);
+                if (!g_str_has_suffix (path, "/")) {
+                        redirect_to_folder (msg);
 
                         goto DONE;
                 }
 
+                /* This incorporates the locale portion in the folder name
+                 * intentionally. */
+                g_free (local_path);
                 local_path = g_build_filename (path_to_open,
                                                "index.html",
                                                NULL);
+
                 g_free (path_to_open);
 
                 goto AGAIN;
         }
-
-        g_free (local_path);
 
         /* Map file */
         error = NULL;
@@ -732,8 +765,11 @@ host_path_handler (SoupServer        *server,
                 goto DONE;
         }
 
+        /* Handle method (GET or HEAD) */
+        status = SOUP_STATUS_OK;
+
         if (msg->method == SOUP_METHOD_GET) {
-                guint64 offset, length;
+                gsize offset, length;
                 gboolean have_range;
                 SoupBuffer *buffer;
 
@@ -743,7 +779,10 @@ host_path_handler (SoupServer        *server,
                 offset = 0;
                 length = st.st_size;
 
-                if (!message_get_range (msg, &have_range, &offset, &length)) {
+                if (!http_request_get_range (msg,
+                                             &have_range,
+                                             &offset,
+                                             &length)) {
                         soup_message_set_status
                                 (msg,
                                  SOUP_STATUS_REQUESTED_RANGE_NOT_SATISFIABLE);
@@ -779,80 +818,65 @@ host_path_handler (SoupServer        *server,
 
                 /* Set status */
                 if (have_range) {
-                        char *content_range;
+                        http_response_set_content_range (msg,
+                                                         offset,
+                                                         offset + length,
+                                                         st.st_size);
 
-                        content_range = g_strdup_printf
-                                ("bytes %" G_GUINT64_FORMAT "-%"
-                                 G_GUINT64_FORMAT "/%" G_GUINT64_FORMAT,
-                                 offset,
-                                 offset + length,
-                                 st.st_size);
+                        status = SOUP_STATUS_PARTIAL_CONTENT;
+                }
 
-                        soup_message_headers_append (msg->response_headers,
-                                                     "Content-Range",
-                                                     content_range);
+        } else if (msg->method == SOUP_METHOD_HEAD) {
+                char *length;
 
-                        g_free (content_range);
+                length = g_strdup_printf ("%lu", (gulong) st.st_size);
+		soup_message_headers_append (msg->response_headers,
+					     "Content-Length",
+                                             length);
+		g_free (length);
 
-                        soup_message_set_status (msg,
-                                                 SOUP_STATUS_PARTIAL_CONTENT);
-                } else
-                        soup_message_set_status (msg, SOUP_STATUS_OK);
+        } else {
+                g_assert_not_reached ();
 
-        } else /* SOUP_METHOD_HEAD */
-                soup_message_set_status (msg, SOUP_STATUS_OK);
+        }
 
         /* Set Content-Type */
-        content_type = g_content_type_guess
-                                (path_to_open,
-                                 (guchar *)
-                                 g_mapped_file_get_contents (mapped_file),
-                                 st.st_size,
-                                 NULL);
-        mime = g_content_type_get_mime_type (content_type);
-        if (mime == NULL)
-                mime = g_strdup ("application/octet-stream");
-
-        soup_message_headers_append (msg->response_headers,
-                                     "Content-Type",
-                                     mime);
-
-        g_free (mime);
-        g_free (content_type);
-        g_free (path_to_open);
+        http_response_set_content_type (msg,
+                                        path_to_open, 
+                                        (guchar *) g_mapped_file_get_contents
+                                                                (mapped_file),
+                                        st.st_size);
 
         /* Set Content-Language */
-        if (locales) {
-                http_language_from_locale (locales->data);
-
-                lang = locales->data;
-        } else
-                lang = "en";
-
-        soup_message_headers_append (msg->response_headers,
-                                     "Content-Language",
-                                     lang);
+        if (locales)
+               http_response_set_content_locale (msg, locales->data);
 
         /* Set Accept-Ranges */
         soup_message_headers_append (msg->response_headers,
                                      "Accept-Ranges",
                                      "bytes");
 
+        /* Set status */
+        soup_message_set_status (msg, status);
+
  DONE:
         /* Cleanup */
+        g_free (path_to_open);
+        g_free (local_path);
+
         while (locales) {
                 g_free (locales->data);
                 locales = g_list_delete_link (locales, locales);
         }
 }
 
-PathData *
-path_data_new (const char *local_path,
-               const char *server_path)
+HostPathData *
+host_path_data_new (const char *local_path,
+                    const char *server_path)
 {
-        PathData *path_data;
+        HostPathData *path_data;
 
-        path_data = g_slice_new (PathData);
+        path_data = g_slice_new (HostPathData);
 
         path_data->local_path  = g_strdup (local_path);
         path_data->server_path = g_strdup (server_path);
@@ -861,12 +885,12 @@ path_data_new (const char *local_path,
 }
 
 void
-path_data_free (PathData *path_data)
+host_path_data_free (HostPathData *path_data)
 {
         g_free (path_data->local_path);
         g_free (path_data->server_path);
 
-        g_slice_free (PathData, path_data);
+        g_slice_free (HostPathData, path_data);
 }
 
 /**
@@ -885,7 +909,7 @@ gupnp_context_host_path (GUPnPContext *context,
                          const char   *server_path)
 {
         SoupServer *server;
-        PathData *path_data;
+        HostPathData *path_data;
 
         g_return_if_fail (GUPNP_IS_CONTEXT (context));
         g_return_if_fail (local_path != NULL);
@@ -893,13 +917,13 @@ gupnp_context_host_path (GUPnPContext *context,
 
         server = gupnp_context_get_server (context);
 
-        path_data = path_data_new (local_path, server_path);
+        path_data = host_path_data_new (local_path, server_path);
 
         soup_server_add_handler (server,
                                  server_path,
                                  host_path_handler,
                                  path_data,
-                                 (GDestroyNotify) path_data_free);
+                                 (GDestroyNotify) host_path_data_free);
 }
 
 /**
