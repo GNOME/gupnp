@@ -1328,7 +1328,8 @@ gupnp_service_class_init (GUPnPServiceClass *klass)
                               G_TYPE_NONE,
                               2,
                               G_TYPE_STRING,
-                              G_TYPE_POINTER);
+                              G_TYPE_POINTER /* Not G_TYPE_VALUE as this
+                                                is an outward argument! */);
 
         /**
          * GUPnPService::notify-failed
