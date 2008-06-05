@@ -1324,11 +1324,11 @@ gupnp_service_class_init (GUPnPServiceClass *klass)
                                                query_variable),
                               NULL,
                               NULL,
-                              gupnp_marshal_VOID__STRING_BOXED,
+                              gupnp_marshal_VOID__STRING_POINTER,
                               G_TYPE_NONE,
                               2,
                               G_TYPE_STRING,
-                              G_TYPE_VALUE);
+                              G_TYPE_POINTER);
 
         /**
          * GUPnPService::notify-failed
@@ -1439,8 +1439,14 @@ notify_got_response (SoupSession *session,
         if (SOUP_STATUS_IS_SUCCESSFUL (msg->status_code)) {
                 /* Success: reset callbacks pointer */
                 data->callbacks = g_list_first (data->callbacks);
+
+        } else if (msg->status_code == SOUP_STATUS_PRECONDITION_FAILED) {
+                /* Precondition failed: Cancel subscription */
+                g_hash_table_remove (data->service->priv->subscriptions,
+                                     data->sid);
+
         } else {
-                /* Notify failed */
+                /* Other failure: Try next callback or signal failure. */
                 if (data->callbacks->next) {
                         SoupURI *uri;
                         GUPnPContext *context;

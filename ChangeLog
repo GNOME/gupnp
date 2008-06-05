@@ -1,3 +1,13 @@
+2008-06-05  Jorn Baayen  <jorn@openedhand.com>
+
+	* libgupnp/gupnp-marshal.list:
+	* libgupnp/gupnp-service.c (gupnp_service_class_init):
+	Revert back to G_TYPE_POINTER for GValue argument type. We do not
+	want the GValue to be boxed as it is passed as an outward argument.
+
+	* libgupnp/gupnp-service.c (notify_got_response):
+	Cancel subscription on Precondition Failed.
+
 2008-06-04  Jorn Baayen  <jorn@openedhand.com>
 
 	* libgupnp/gupnp-root-device.c (download_and_parse),
