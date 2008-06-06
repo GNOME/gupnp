@@ -37,15 +37,9 @@
     </legalnotice>
   </bookinfo>
 
-  <part id="overview">
-    <title>Overview</title>
-    <para>
-      GUPnP is a library for writing both UPnP clients and services in C, using
-      GObject.
-    </para>
-    <para>
-      Note that this documentation assumes some familiarity with UPnP.
-    </para>
+  <part id="introduction">
+    <title>Introduction</title>
+    <xi:include href="overview.xml"/>
   </part>
 
   <part id="tutorial">

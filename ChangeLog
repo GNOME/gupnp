@@ -1,6 +1,13 @@
 2008-06-06  Ross Burton  <ross@openedhand.com>
 
 	* doc/gupnp-docs.sgml:
+	* doc/overview.xml:
+	* doc/Makefile.am:
+	Split the (currently very small) overview out into a separate file.
+
+2008-06-06  Ross Burton  <ross@openedhand.com>
+
+	* doc/gupnp-docs.sgml:
 	Add more section IDs.
 
 2008-06-05  Zeeshan Ali Khattak  <zeenix@gmail.com>
