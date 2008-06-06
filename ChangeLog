@@ -1,3 +1,8 @@
+2008-06-06  Ross Burton  <ross@openedhand.com>
+
+	* doc/gupnp-docs.sgml:
+	Add more section IDs.
+
 2008-06-05  Zeeshan Ali Khattak  <zeenix@gmail.com>
 
 	* gupnp/libgupnp/gupnp-service.c:

@@ -55,10 +55,10 @@
     <xi:include href="xml/server-tutorial.xml"/>
   </part>
   
-  <part id="ref">
+  <part id="api">
     <title>API Reference</title>
     
-    <chapter>
+    <chapter id="api-device-info">
       <title>Device Information</title>
       
       <xi:include href="xml/gupnp-device-info.xml"/>
@@ -66,7 +66,7 @@
       <xi:include href="xml/gupnp-service-introspection.xml"/>
     </chapter>
     
-    <chapter>
+    <chapter id="api-device-control">
       <title>Device Control</title>
       
       <xi:include href="xml/gupnp-control-point.xml"/>
@@ -74,7 +74,7 @@
       <xi:include href="xml/gupnp-service-proxy.xml"/>
     </chapter>
     
-    <chapter>
+    <chapter id="api-device-impl">
       <title>Device Implementation</title>
       
       <xi:include href="xml/gupnp-device.xml"/>
@@ -82,7 +82,7 @@
       <xi:include href="xml/gupnp-service.xml"/>
     </chapter>
     
-    <chapter>
+    <chapter id="api-tools">
       <title>Tools</title>
       
       <xi:include href="xml/gupnp-context.xml"/>
@@ -94,7 +94,7 @@
 
   <part id="schemas">
     <title>XML Schemas</title>
-    <chapter>
+    <chapter id="schemas-device">
       <title>Device Description</title>
       <para>
         This is the schema for the UPnP Device Description document, in the
@@ -102,7 +102,7 @@
       </para>
       <programlisting><xi:include href="device-description.rnc" parse="text"/></programlisting>
     </chapter>
-    <chapter>
+    <chapter id="schemas-service">
       <title>Service Description</title>
       <para>
         This is the schema for the UPnP Service Description document, in the
