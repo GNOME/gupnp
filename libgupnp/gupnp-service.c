@@ -1710,6 +1710,40 @@ strip_camel_case (char *camel_str)
         return stripped;
 }
 
+static GCallback
+find_callback_by_name (GModule    *module,
+                       const char *name)
+{
+        GCallback callback;
+        char *full_name;
+
+        /* First try with 'on_' prefix */
+        full_name = g_strjoin ("_",
+                               "on",
+                               name,
+                               NULL);
+
+        if (!g_module_symbol (module,
+                              full_name,
+                              (gpointer) &callback)) {
+                g_free (full_name);
+
+                /* Now try with '_cb' postfix */
+                full_name = g_strjoin ("_",
+                                       name,
+                                       "cb",
+                                       NULL);
+
+                g_module_symbol (module,
+                                 full_name,
+                                 (gpointer) &callback);
+        }
+
+        g_free (full_name);
+
+        return callback;
+}
+
 /* Use the strings from @name_list as details to @signal_name, and connect
  * callbacks with names based on these same strings to @signal_name::string. */
 static void
@@ -1728,46 +1762,27 @@ connect_names_to_signal_handlers (GUPnPService *service,
                 GCallback callback;
                 char     *callback_name;
                 char     *signal_detail;
-                char     *tmp;
 
                 signal_detail = (char *) name_node->data;
-                tmp = strip_camel_case (signal_detail);
+                callback_name = strip_camel_case (signal_detail);
 
                 if (callback_prefix) {
-                        callback_name = g_strjoin ("_",
-                                                   callback_prefix,
-                                                   tmp,
-                                                   NULL);
-                        g_free (tmp);
-                        tmp = callback_name;
-                }
+                        char *tmp;
 
-                /* First try with 'on_' prefix */
-                callback_name = g_strjoin ("_",
-                                           "on",
-                                           tmp,
-                                           NULL);
-                if (!g_module_symbol (module,
-                                      callback_name,
-                                      (gpointer) &callback)) {
+                        tmp = g_strjoin ("_",
+                                         callback_prefix,
+                                         callback_name,
+                                         NULL);
+
                         g_free (callback_name);
-                        /* Now try with '_cb' postfix */
-                        callback_name = g_strjoin ("_",
-                                                   tmp,
-                                                   "cb",
-                                                   NULL);
-                        if (!g_module_symbol (module,
-                                              callback_name,
-                                              (gpointer) &callback)) {
-                                g_free (tmp);
-                                g_free (callback_name);
-
-                                continue;
-                        }
+                        callback_name = tmp;
                 }
 
-                g_free (tmp);
+                callback = find_callback_by_name (module, callback_name);
                 g_free (callback_name);
+
+                if (callback == NULL)
+                        continue;
 
                 signal_detail = g_strjoin ("::",
                                            signal_name,

@@ -1,3 +1,9 @@
+2008-06-05  Zeeshan Ali Khattak  <zeenix@gmail.com>
+
+	* gupnp/libgupnp/gupnp-service.c:
+
+	Refactor connect_names_to_signal_handlers() function.
+
 2008-06-05  Jorn Baayen  <jorn@openedhand.com>
 
 	* libgupnp/gupnp-marshal.list:
