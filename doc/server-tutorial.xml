@@ -1,14 +1,14 @@
 <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.2//EN" "http://www.oasis-open.org/docbook/xml/4.4/docbookx.dtd">
 
-<chapter id="server-tutorial">
+<chapter id="server-tutorial" xmlns:xi="http://www.w3.org/2001/XInclude">
   <title>Writing a UPnP Service</title>
 
   <simplesect>
     <title>Introduction</title>
     <para>
       This chapter explains how to implement a UPnP service using GUPnP.  Some
-      knowledge of UPnP is assumed.  For this example we will create a dummy
-      UPnP-enabled GPS device.
+      knowledge of UPnP is assumed.  For this example we will create a virtual
+      UPnP-enabled light bulb.
     </para>
     <para>
       Before any code can be written, the device and services that it implement
@@ -26,35 +26,12 @@
       file.  This is a short XML document which describes the device and what
       services it provides.  For the full details see the <ulink
       url="http://upnp.org/specs/arch/UPnP-DeviceArchitecture-v1.0.pdf">UPnP
-      Device Architecture</ulink> specification, section 2.1.  This is the
-      minimal device description file describes a single device (the
-      <firstterm>root device</firstterm>) which exposes a single service.
+      Device Architecture</ulink> specification, section 2.1.  The UPnP
+      specifications also define standard device types, so here we use the
+      <literal>BinaryLight1</literal> device type.  If none of the existing
+      device types are suitable, then a custom device type can be used.
     </para>
-<programlisting>&lt;?xml version="1.0"?&gt;
-&lt;root xmlns="urn:schemas-upnp-org:device-1-0"&gt;
-  &lt;specVersion&gt;
-    &lt;major&gt;1&lt;/major&gt;
-    &lt;minor&gt;0&lt;/minor&gt;
-  &lt;/specVersion&gt;
-  
-  &lt;device&gt;
-    &lt;deviceType&gt;urn:openedhand-com:device:PositionDevice:1&lt;/deviceType&gt;
-    &lt;friendlyName&gt;Dummy GPS Device&lt;/friendlyName&gt;
-    &lt;manufacturer&gt;OpenedHand&lt;/manufacturer&gt;
-    &lt;modelName&gt;Dummy GPS Device&lt;/modelName&gt;
-    &lt;UDN&gt;uuid:dbf27fdf-8646-40bf-b507-8e4bd8c2e7aa&lt;/UDN&gt;
-    
-    &lt;serviceList&gt;
-      &lt;service&gt;
-	&lt;serviceType&gt;urn:openedhand-com:service:PositionSensor:1&lt;/serviceType&gt;
-	&lt;serviceId&gt;urn:openedhand-com:serviceId:PositionSensor:1&lt;/serviceId&gt;
-	&lt;SCPDURL&gt;/PositionSensor1.xml&lt;/SCPDURL&gt;
-	&lt;controlURL&gt;/Control&lt;/controlURL&gt;
-	&lt;eventSubURL&gt;/Events&lt;/eventSubURL&gt;
-      &lt;/service&gt;
-    &lt;/serviceList&gt;
-  &lt;/device&gt;
-&lt;/root&gt;</programlisting>
+    <programlisting><xi:include href="../../examples/BinaryLight1.xml" parse="text"/></programlisting>
     <para>
       The <sgmltag>specVersion</sgmltag> tag defines what version of the UPnP
       Device Architecture the document conforms to.  At the time of writing the
@@ -64,10 +41,7 @@
       Next there is the root <sgmltag>device</sgmltag> tag.  This contains
       metadata about the device, lists the services it provides and any
       sub-devices present (this is not shown in the example).  The
-      <sgmltag>deviceType</sgmltag> tag specifies the type of the device, UPnP
-      defines a standard set of device types, but as there isn't a GPS device
-      standardised we follow the rules in the specification to generate a custom
-      device type.
+      <sgmltag>deviceType</sgmltag> tag specifies the type of the device.
     </para>
     <para>
       Next we have <sgmltag>friendlyName</sgmltag>,
@@ -85,14 +59,16 @@
       on first boot using the device's serial number or MAC address
     </para>
     <para>
-      Finally we have the <sgmltag>serviceList</sgmltag> which describes all of
-      the services this device provides.  Each service has a service type (again
+      Finally we have the <sgmltag>serviceList</sgmltag> which describes the
+      services this device provides.  Each service has a service type (again
       there are types defined for standardised services or you can create your
-      own), service identifier, and three URLs.  The <sgmltag>SCPDURL</sgmltag>
-      field specifies where the <firstterm>Service Control Protocol
-      Document</firstterm> can be found, this describes the service in more
-      detail and will be covered next.  Finally there are the control and event
-      URLs, which need to be unique on the device and will be managed by GUPnP.
+      own), service identifier, and three URLs.  As a service type we're using
+      the standard <literal>SwitchPower1</literal> service.  The
+      <sgmltag>SCPDURL</sgmltag> field specifies where the <firstterm>Service
+      Control Protocol Document</firstterm> can be found, this describes the
+      service in more detail and will be covered next.  Finally there are the
+      control and event URLs, which need to be unique on the device and will be
+      managed by GUPnP.
     </para>
   </simplesect>
 
@@ -101,6 +77,7 @@
     <para>
       Write me.
     </para>
+    <programlisting><xi:include href="../../examples/SwitchPower1.xml" parse="text"/></programlisting>
   </simplesect>
 
   <simplesect>
@@ -122,14 +99,14 @@ context = gupnp_context_new (NULL, NULL, 0, NULL);</programlisting>
       gupnp_context_host_path() which takes a local filename to send when a
       server path is requested.
     </para>
-<programlisting>gupnp_context_host_path (context, "PositionDevice1.xml", "/PositionDevice1.xml");
-gupnp_context_host_path (context, "PositionSensor1.xml", "/PositionSensor1.xml");</programlisting>
+<programlisting>gupnp_context_host_path (context, "BinaryLight1.xml", "/BinaryLight1.xml");
+gupnp_context_host_path (context, "SwitchPower1.xml", "/SwitchPower1.xml");</programlisting>
     <para>
       Next the root device can be created. 
     </para>
     <programlisting>GUPnPRootDevice *dev;
 /* Create the root device object */
-dev = gupnp_root_device_new (context, "PositionDevice1.xml");
+dev = gupnp_root_device_new (context, "/BinaryLight1.xml");
 /* Activate the root device, so that it announces itself */
 gupnp_root_device_set_available (dev, TRUE);</programlisting>
     <para>
@@ -151,7 +128,7 @@ gupnp_root_device_set_available (dev, TRUE);</programlisting>
     </para>
     <programlisting>GUPnPServiceInfo *service;
 service = gupnp_device_info_get_service
-  (GUPNP_DEVICE_INFO (dev), "urn:openedhand-com:service:PositionSensor:1");</programlisting>
+  (GUPNP_DEVICE_INFO (dev), "urn:schemas-upnp-org:service:SwitchPower:1");</programlisting>
     <para>
       #GUPnPService handles interacting with the network itself, leaving the
       implementation of the service itself to signal handlers that we need to
@@ -171,12 +148,12 @@ service = gupnp_device_info_get_service
       action to take.  Alternatively, handlers can be targetted at specific
       actions or variables by using the <firstterm>signal detail</firstterm>
       when connecting.  For example, this causes
-      <function>on_get_name_action</function> to be called when the
-      <function>GetName</function> action is invoked:
+      <function>on_get_status_action</function> to be called when the
+      <function>GetStatus</function> action is invoked:
     </para>
-    <programlisting>static void on_get_name_action (GUPnPService *service, GUPnPServiceAction *action, gpointer user_data);
+    <programlisting>static void on_get_status_action (GUPnPService *service, GUPnPServiceAction *action, gpointer user_data);
   ...
-  g_signal_connect (service, "action-invoked::GetName", G_CALLBACK (on_get_name_action), NULL);</programlisting>
+  g_signal_connect (service, "action-invoked::GetStatus", G_CALLBACK (on_get_status_action), NULL);</programlisting>
     <para>
       The implementation of action handlers is quite simple.  The handler is
       passed a #GUPnPServiceAction object which represents the in-progress
@@ -190,51 +167,50 @@ service = gupnp_device_info_get_service
       should be called to either return successfully or return an error code.
       If any evented state variables were modified during the action then a
       notification should be emitted using gupnp_service_notify().  This is an
-      example implementation of <function>GetName</function> and
-      <function>SetName</function>:
+      example implementation of <function>GetStatus</function> and
+      <function>SetTarget</function>:
     </para>
-    <programlisting>static char *name;
+    <programlisting>static gboolean status;
 
 static void
-get_name_cb (GUPnPService *service, GUPnPServiceAction *action, gpointer user_data)
+get_status_cb (GUPnPService *service, GUPnPServiceAction *action, gpointer user_data)
 {
   gupnp_service_action_set (action,
-                            "CurrentName", G_TYPE_STRING, name,
+                            "ResultStatus", G_TYPE_BOOLEAN, status,
                             NULL);
   gupnp_service_action_return (action);
 }
 
 void
-set_name_cb (GUPnPService *service, GUPnPServiceAction *action, gpointer user_data)
+set_target_cb (GUPnPService *service, GUPnPServiceAction *action, gpointer user_data)
 {
-  g_free (name);
   gupnp_service_action_get (action,
-                            "NewName", G_TYPE_STRING, &amp;name,
+                            "NewTargetValue", G_TYPE_BOOLEAN, &amp;status,
                             NULL);
   gupnp_service_action_return (action);
-  gupnp_service_notify (service, "Name", G_TYPE_STRING, name, NULL);
+  gupnp_service_notify (service, "Status", G_TYPE_STRING, status, NULL);
 }
 
   ...
-  g_signal_connect (service, "action-invoked::GetName", G_CALLBACK (get_name_cb), NULL);
-  g_signal_connect (service, "action-invoked::SetName", G_CALLBACK (set_name_cb), NULL);</programlisting>
+  g_signal_connect (service, "action-invoked::GetStatus", G_CALLBACK (get_status_cb), NULL);
+  g_signal_connect (service, "action-invoked::SetTarget", G_CALLBACK (set_target_cb), NULL);</programlisting>
     <para>
       State variable query handlers are called with the name of the variable and
       a #GValue.  This value should be initialized with the relevant type and
       then set to the current value.  Again signal detail can be used to connect
       handlers to specific state variable callbacks.
     </para>
-    <programlisting>static char *name;
+    <programlisting>static gboolean status;
 
 static void
-query_name_cb (GUPnPService *service, char *variable, GValue *value, gpointer user_data)
+query_status_cb (GUPnPService *service, char *variable, GValue *value, gpointer user_data)
 {
-  g_value_init (value, G_TYPE_STRING);
-  g_value_set_string (value, name);
+  g_value_init (value, G_TYPE_BOOLEAN);
+  g_value_set_boolean (value, status);
 }
 
   ...
-  g_signal_connect (service, "query-variable::Name", G_CALLBACK (query_name_cb), NULL);</programlisting>
+  g_signal_connect (service, "query-variable::Status", G_CALLBACK (query_status_cb), NULL);</programlisting>
     <para>
       For services which have many actions and variables there is a convenience
       method gupnp_service_signals_autoconnect() which will automatically
@@ -242,7 +218,9 @@ query_name_cb (GUPnPService *service, char *variable, GValue *value, gpointer us
     </para>
     <para>
       The service is now fully implemented.  To complete it, enter a GLib main
-      loop and wait for a client to connect.
+      loop and wait for a client to connect.  To see the complete source code
+      for this example, then see <filename>examples/light-server.c</filename> in
+      the GUPnP sources.
     </para>
   </simplesect>
 </chapter>

@@ -1,5 +1,11 @@
 2008-06-09  Ross Burton  <ross@openedhand.com>
 
+	* doc/server-tutorial.xml:
+	Talk about the UPnP lightbulb instead of a made up interface, so
+	we can refer to the example code.
+
+2008-06-09  Ross Burton  <ross@openedhand.com>
+
 	* examples/:
 	* Makefile.am:
 	* configure.ac:
