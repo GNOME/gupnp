@@ -37,6 +37,7 @@ GTK_DOC_CHECK([1.0])
 AC_OUTPUT([
 Makefile
 libgupnp/Makefile
+examples/Makefile
 tools/Makefile
 tests/Makefile
 doc/Makefile

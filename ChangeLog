@@ -1,5 +1,12 @@
 2008-06-09  Ross Burton  <ross@openedhand.com>
 
+	* examples/:
+	* Makefile.am:
+	* configure.ac:
+	Add some basic but non-trivial examples.
+
+2008-06-09  Ross Burton  <ross@openedhand.com>
+
 	* doc/gupnp-docs.sgml:
 	* doc/glossary.xml:
 	* doc/overview.xml:
