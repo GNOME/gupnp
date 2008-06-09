@@ -1,0 +1,12 @@
+This directory contains some example code, demonstrating how to write GUPnP
+services and control points.
+
+- light-server.c
+
+A virtual BinaryLight device implementing the SwitchPower service.  This is a
+networked light switch which can be on or off.
+
+- light-client.c
+
+A control point which will find a SwitchPower service and either turn it on,
+off, or toggle the setting.
