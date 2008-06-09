@@ -105,4 +105,6 @@
       <programlisting><xi:include href="service-description.rnc" parse="text"/></programlisting>
     </chapter>
   </part>
+
+  <xi:include href="glossary.xml"/>
 </book>

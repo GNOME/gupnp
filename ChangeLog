@@ -1,3 +1,11 @@
+2008-06-09  Ross Burton  <ross@openedhand.com>
+
+	* doc/gupnp-docs.sgml:
+	* doc/glossary.xml:
+	* doc/overview.xml:
+	* doc/Makefile.am:
+	Add a basic glossary, and reference the Intel UPnP book.
+
 2008-06-06  Ross Burton  <ross@openedhand.com>
 
 	* doc/gupnp-docs.sgml:
