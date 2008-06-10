@@ -1,3 +1,4 @@
+<?xml version="1.0"?>
 <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.2//EN" "http://www.oasis-open.org/docbook/xml/4.4/docbookx.dtd">
 
 <chapter id="server-tutorial" xmlns:xi="http://www.w3.org/2001/XInclude">
@@ -6,16 +7,19 @@
   <simplesect>
     <title>Introduction</title>
     <para>
-      This chapter explains how to implement a UPnP service using GUPnP.  Some
-      knowledge of UPnP is assumed.  For this example we will create a virtual
-      UPnP-enabled light bulb.
+      This chapter explains how to implement a UPnP service using GUPnP. For
+      this example we will create a virtual UPnP-enabled light bulb.
     </para>
     <para>
       Before any code can be written, the device and services that it implement
-      need to be described in XML.  Although this can be annoying as it
-      interferes with writing real code, writing the device description is
-      fairly trivial and writing the service description forces you to think
-      about the interface your service exposes to the world.
+      need to be described in XML.  Although this can be frustrating, if you are
+      implementing a standardised service (see <ulink
+      url="http://upnp.org/standardizeddcps/"/> for the list of standard devices
+      and services) then the service description is already written for you and
+      the device description is trivial.  UPnP has standardised <ulink
+      url="http://upnp.org/standardizeddcps/lighting.asp">Lighting
+      Controls</ulink>, so we'll be using the device and service types defined
+      there.
     </para>
   </simplesect>
 
@@ -24,12 +28,11 @@
     <para>
       The first step is to write the <firstterm>device description</firstterm>
       file.  This is a short XML document which describes the device and what
-      services it provides.  For the full details see the <ulink
+      services it provides (for more details see the <ulink
       url="http://upnp.org/specs/arch/UPnP-DeviceArchitecture-v1.0.pdf">UPnP
-      Device Architecture</ulink> specification, section 2.1.  The UPnP
-      specifications also define standard device types, so here we use the
-      <literal>BinaryLight1</literal> device type.  If none of the existing
-      device types are suitable, then a custom device type can be used.
+      Device Architecture</ulink> specification, section 2.1).  We'll be using
+      the <literal>BinaryLight1</literal> device type, but if none of the
+      existing device types are suitable a custom device type can be created.
     </para>
     <programlisting><xi:include href="../../examples/BinaryLight1.xml" parse="text"/></programlisting>
     <para>
@@ -40,7 +43,7 @@
     <para>
       Next there is the root <sgmltag>device</sgmltag> tag.  This contains
       metadata about the device, lists the services it provides and any
-      sub-devices present (this is not shown in the example).  The
+      sub-devices present (there are none in this example).  The
       <sgmltag>deviceType</sgmltag> tag specifies the type of the device.
     </para>
     <para>
@@ -51,12 +54,12 @@
     </para>
     <para>
       Next there is the UDN, or <firstterm>Unique Device Name</firstterm>.  This
-      is a unique identifier which is unique for each device but persistent for
-      a particular device.  Although it has to start with
-      <literal>uuid:</literal> it doesn't have to be an UUID.  There are several
-      alternatives here, for example it could be computed at built-time if the
-      software will only be used on a single machine, or it could be calculated
-      on first boot using the device's serial number or MAC address
+      is an identifier which is unique for each device but persistent for each
+      particular device.  Although it has to start with <literal>uuid:</literal>
+      note that it doesn't have to be an UUID.  There are several alternatives
+      here: for example it could be computed at built-time if the software will
+      only be used on a single machine, or it could be calculated using the
+      device's serial number or MAC address.
     </para>
     <para>
       Finally we have the <sgmltag>serviceList</sgmltag> which describes the
@@ -92,12 +95,11 @@
       Every <sgmltag>action</sgmltag> has a <sgmltag>name</sgmltag> and a list
       of <sgmltag>argument</sgmltag>s.  Arguments also have a name, a direction
       (<literal>in</literal> or <literal>out</literal> for input or output
-      arguments) and a related state variable.  The related state variable is
-      used to determine the type of the argument, and as such is a required
-      element.  This can lead to the creation of otherwise unused state
-      variables to define the type for an argument (the
-      <literal>WANIPConnection</literal> service is a good example of this),
-      thanks to the legacy behind UPnP.
+      arguments) and a related state variable.  The state variable is used to
+      determine the type of the argument, and as such is a required element.
+      This can lead to the creation of otherwise unused state variables to
+      define the type for an argument (the <literal>WANIPConnection</literal>
+      service is a good example of this), thanks to the legacy behind UPnP.
     </para>
     <para>
       <sgmltag>stateVariable</sgmltag>s need to specify their
@@ -110,8 +112,9 @@
       default and valid values for the variable.
     </para>
     <para>
-      For the full specification of the service definition file, see section 2.3
-      of the <ulink
+      For the full specification of the service definition file, including a
+      complete list of valid <sgmltag>dataType</sgmltag>s, see section 2.3 of
+      the <ulink
       url="http://upnp.org/specs/arch/UPnP-DeviceArchitecture-v1.0.pdf">UPnP
       Device Architecture</ulink>.
     </para>
@@ -132,9 +135,9 @@ g_type_init ();
 context = gupnp_context_new (NULL, NULL, 0, NULL);</programlisting>
     <para>
       UPnP uses HTTP to provide the device and service description files, so
-      next we get GUPnP to publish them.  This is done with
+      next we tell GUPnP to publish them.  This is done with
       gupnp_context_host_path() which takes a local filename to send when a
-      server path is requested.
+      certain server path is requested.
     </para>
 <programlisting>gupnp_context_host_path (context, "BinaryLight1.xml", "/BinaryLight1.xml");
 gupnp_context_host_path (context, "SwitchPower1.xml", "/SwitchPower1.xml");</programlisting>
@@ -148,9 +151,9 @@ dev = gupnp_root_device_new (context, "/BinaryLight1.xml");
 gupnp_root_device_set_available (dev, TRUE);</programlisting>
     <para>
       GUPnP scans the device description and any service description files it
-      refers to, so if the main loop was entered the device and service would be
-      available on the network, albeit with no functionality.  The remaining
-      task is to implement the services.
+      refers to, so if the main loop was entered now the device and service
+      would be available on the network, albeit with no functionality.  The
+      remaining task is to implement the services.
     </para>
   </simplesect>
 
@@ -189,8 +192,8 @@ service = gupnp_device_info_get_service
       <function>GetStatus</function> action is invoked:
     </para>
     <programlisting>static void on_get_status_action (GUPnPService *service, GUPnPServiceAction *action, gpointer user_data);
-  ...
-  g_signal_connect (service, "action-invoked::GetStatus", G_CALLBACK (on_get_status_action), NULL);</programlisting>
+&hellip;
+g_signal_connect (service, "action-invoked::GetStatus", G_CALLBACK (on_get_status_action), NULL);</programlisting>
     <para>
       The implementation of action handlers is quite simple.  The handler is
       passed a #GUPnPServiceAction object which represents the in-progress
@@ -198,7 +201,7 @@ service = gupnp_device_info_get_service
       gupnp_service_action_get_name() to identify the action (this isn't
       required if detailed signals were connected).  Any
       <firstterm>in</firstterm> arguments can be retrieving using
-      gupnp_service_action_get(), and then return values set using
+      gupnp_service_action_get(), and then return values can be set using
       gupnp_service_action_set().  Once the action has been performed, either
       gupnp_service_action_return() or gupnp_service_action_return_error()
       should be called to either return successfully or return an error code.
@@ -227,10 +230,9 @@ set_target_cb (GUPnPService *service, GUPnPServiceAction *action, gpointer user_
   gupnp_service_action_return (action);
   gupnp_service_notify (service, "Status", G_TYPE_STRING, status, NULL);
 }
-
-  ...
-  g_signal_connect (service, "action-invoked::GetStatus", G_CALLBACK (get_status_cb), NULL);
-  g_signal_connect (service, "action-invoked::SetTarget", G_CALLBACK (set_target_cb), NULL);</programlisting>
+&hellip;
+g_signal_connect (service, "action-invoked::GetStatus", G_CALLBACK (get_status_cb), NULL);
+g_signal_connect (service, "action-invoked::SetTarget", G_CALLBACK (set_target_cb), NULL);</programlisting>
     <para>
       State variable query handlers are called with the name of the variable and
       a #GValue.  This value should be initialized with the relevant type and
@@ -245,18 +247,18 @@ query_status_cb (GUPnPService *service, char *variable, GValue *value, gpointer 
   g_value_init (value, G_TYPE_BOOLEAN);
   g_value_set_boolean (value, status);
 }
-
-  ...
-  g_signal_connect (service, "query-variable::Status", G_CALLBACK (query_status_cb), NULL);</programlisting>
+&hellip;
+g_signal_connect (service, "query-variable::Status", G_CALLBACK (query_status_cb), NULL);</programlisting>
     <para>
       For services which have many actions and variables there is a convenience
       method gupnp_service_signals_autoconnect() which will automatically
-      connect specially named handlers to signals.
+      connect specially named handlers to signals.  See the documentation for
+      full details on how it works.
     </para>
     <para>
       The service is now fully implemented.  To complete it, enter a GLib main
-      loop and wait for a client to connect.  To see the complete source code
-      for this example, then see <filename>examples/light-server.c</filename> in
+      loop and wait for a client to connect.  The complete source code for this
+      example is available as <filename>examples/light-server.c</filename> in
       the GUPnP sources.
     </para>
   </simplesect>

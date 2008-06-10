@@ -1,29 +1,40 @@
+<?xml version="1.0"?>
 <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.2//EN" "http://www.oasis-open.org/docbook/xml/4.4/docbookx.dtd">
 
 <chapter id="client-tutorial">
   <title>Writing a UPnP Client</title>
-  <para>
-    In this tutorial we will write an application which fetches the external IP
-    address from an UPnP-compliant ADSL modem.  To do this a <firstterm>Control
-    Point</firstterm> is created, which searches for services of the type
-    <literal>urn:schemas-upnp-org:service:WANIPConnection:1</literal>.  As
-    services are found <firstterm>Service Proxy</firstterm> objects are created
-    to allow interaction with the service, on which we can call
-    <function>GetExternalIPAddress</function> to fetch the external IP address.
-  </para>
-  <para>
-    First, we initialize GUPnP and create a control point targeting the service
-    type.  Then we connect a signal handler so that we are notified when
-    services we are interested in are found.
-  </para>
-  <programlisting>#include &lt;libgupnp/gupnp-control-point.h&gt;
+
+  <simplesect>
+    <title>Introduction</title>
+    <para>
+      This chapter explains how to write an application which fetches the
+      external IP address from an UPnP-compliant modem.  To do this a
+      <glossterm>Control Point</glossterm> is created, which searches for
+      services of the type
+      <literal>urn:schemas-upnp-org:service:WANIPConnection:1</literal> (part of
+      the <ulink url="http://upnp.org/standardizeddcps/igd.asp">Internet Gateway
+      Device</ulink> specification).  As services are discovered
+      <firstterm>Service Proxy</firstterm> objects are created by GUPnP to allow
+      interaction with the service, on which we can invoke the action
+      <function>GetExternalIPAddress</function> to fetch the external IP
+      address.
+    </para>
+  </simplesect>
+
+  <simplesect>
+    <title>Finding Services</title>
+    <para>
+      First, we initialize GUPnP and create a control point targeting the
+      service type.  Then we connect a signal handler so that we are notified
+      when services we are interested in are found.
+    </para>
+    <programlisting>#include &lt;libgupnp/gupnp-control-point.h&gt;
 
 static GMainLoop *main_loop;
 
 int
 main (int argc, char **argv)
 {
-  GError *error = NULL;
   GUPnPContext *context;
   GUPnPControlPoint *cp;
   
@@ -34,8 +45,7 @@ main (int argc, char **argv)
   /* Create a new GUPnP Context.  By here we are using the default GLib main
      context, and connecting to the current machine's default IP on an
      automatically generated port. */
-  context = gupnp_context_new (NULL, NULL, 0, &amp;error);
-  if (error) g_error (error->message);
+  context = gupnp_context_new (NULL, NULL, 0, NULL);
 
   /* Create a Control Point targeting WAN IP Connection services */
   cp = gupnp_control_point_new
@@ -68,8 +78,12 @@ static void
 service_proxy_available_cb (GUPnPControlPoint *cp,
                             GUPnPServiceProxy *proxy)
 {
-  /* ... */
+  /* &hellip; */
 }</programlisting>
+  </simplesect>
+
+  <simplesect>
+    <title>Invoking Actions</title>
     <para>
       Now we have an application which searches for the service we specified and
       calls <function>service_proxy_available_cb</function> for each one it
@@ -112,6 +126,21 @@ service_proxy_available_cb (GUPnPControlPoint *cp,
     <para>
       Note that gupnp_service_proxy_send_action() blocks until the service has
       replied.  If you need to make non-blocking calls then use
-      gupnp_service_proxy_begin_action() which takes a callback.
+      gupnp_service_proxy_begin_action(), which takes a callback that will be
+      called from the mainloop when the reply is received.
     </para>
-  </chapter>
+  </simplesect>
+
+  <simplesect>
+    <title>Generating Wrappers</title>
+    <para>
+      After making several method calls using gupnp_service_proxy_send_action()
+      can become tedious, because of the requirement to specify the types.  An
+      alternative is to use <xref linkend="gupnp-binding-tool"/>, which
+      generates wrappers which hide the boilerplate code from you.  Using the
+      generated wrapper would replace gupnp_service_proxy_send_action() with
+      this code:
+    </para>
+    <programlisting>GetExternalIPAddress (proxy, &amp;ip, &amp;error);</programlisting>
+  </simplesect>
+</chapter>

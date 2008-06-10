@@ -1,5 +1,11 @@
 2008-06-10  Ross Burton  <ross@openedhand.com>
 
+	* doc/client-tutorial.xml:
+	* doc/server-tutorial.xml:
+	Lots of proof reading.
+
+2008-06-10  Ross Burton  <ross@openedhand.com>
+
 	* examples/BinaryLight1.xml:
 	Use better friendly and model names.
 
