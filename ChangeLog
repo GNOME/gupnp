@@ -2,6 +2,12 @@
 
 	* doc/gupnp-binding-tool.xml:
 	* doc/gupnp-docs.sgml:
+	Don't use entities to get the version, use XInclude.
+
+2008-06-10  Ross Burton  <ross@openedhand.com>
+
+	* doc/gupnp-binding-tool.xml:
+	* doc/gupnp-docs.sgml:
 	* doc/Makefile.am:
 	Add a refentry for gupnp-binding-tool and add it to the
 	documentation.

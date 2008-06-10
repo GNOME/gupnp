@@ -1,15 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN" 
-               "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd" [
-<!ENTITY version SYSTEM "version.xml">               
-]>
+<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN" "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
 
-<refentry id="gupnp-binding-tool">
+<refentry id="gupnp-binding-tool" xmlns:xi="http://www.w3.org/2003/XInclude">
   <refmeta>
     <refentrytitle>gupnp-binding-tool</refentrytitle>
     <manvolnum>1</manvolnum>
     <refmiscinfo class="source">GUPnP</refmiscinfo>
-    <refmiscinfo class="version">&version;</refmiscinfo>
+    <refmiscinfo class="version"><xi:include href="version.xml" parse="text"/></refmiscinfo>
   </refmeta>
   
   <refnamediv>
