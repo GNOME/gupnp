@@ -56,7 +56,7 @@
       standard device types are <literal>MediaRenderer</literal> or
       <literal>InternetGatewayDevice</literal>.
     </para>
-    <glossseealso>Service</glossseealso>
+    <glossseealso otherterm="service"/>
   </glossdef>
   </glossentry>
 
@@ -73,9 +73,9 @@
       must be present and their semantics.  Examples of these are
       <literal>AVTransport</literal> and <literal>WANIPConnection</literal>.
     </para>
-    <glossseealso>Action</glossseealso>
-    <glossseealso>Device</glossseealso>
-    <glossseealso>State Variable</glossseealso>
+    <glossseealso otherterm="action"/>
+    <glossseealso otherterm="device"/>
+    <glossseealso otherterm="state-variable"/>
   </glossdef>
   </glossentry>
 
@@ -93,9 +93,9 @@
         and <glossterm>State Variables</glossterm> a
         <glossterm>Service</glossterm> implements.
       </para>
-      <glossseealso>Service</glossseealso>
-      <glossseealso>Action</glossseealso>
-      <glossseealso>State Variable</glossseealso>
+      <glossseealso otherterm="service"/>
+      <glossseealso otherterm="action"/>
+      <glossseealso otherterm="state-variable"/>
     </glossdef>
   </glossentry>
   
@@ -130,7 +130,7 @@
         random seed, or use some unique and persistant property such as the
         device's MAC address to create the UDN.
       </para>
-      <glossseealso>Device</glossseealso>
+      <glossseealso otherterm="device"/>
     </glossdef>
   </glossentry>
 

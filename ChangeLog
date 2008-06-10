@@ -1,5 +1,10 @@
 2008-06-10  Ross Burton  <ross@openedhand.com>
 
+	* doc/glossary.xml:
+	Add links to the cross references.
+
+2008-06-10  Ross Burton  <ross@openedhand.com>
+
 	* doc/client-tutorial.xml:
 	* doc/server-tutorial.xml:
 	Lots of proof reading.
