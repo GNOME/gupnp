@@ -1,5 +1,10 @@
 2008-06-10  Ross Burton  <ross@openedhand.com>
 
+	* doc/gupnp-docs.sgml:
+	Add an index.
+
+2008-06-10  Ross Burton  <ross@openedhand.com>
+
 	* doc/server-tutorial.xml:
 	Document service description files.
 

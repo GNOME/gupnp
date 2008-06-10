@@ -107,4 +107,7 @@
   </part>
 
   <xi:include href="glossary.xml"/>
+
+  <index/>
+
 </book>
