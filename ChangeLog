@@ -1,5 +1,10 @@
 2008-06-10  Ross Burton  <ross@openedhand.com>
 
+	* doc/glossary.xml:
+	Add SCPD and remove baseform attributes.
+
+2008-06-10  Ross Burton  <ross@openedhand.com>
+
 	* doc/gupnp-docs.sgml:
 	Merge the overview into the tutorial part.
 

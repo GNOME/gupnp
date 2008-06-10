@@ -26,13 +26,12 @@
   <glossdef>
     <para>
       A <firstterm>Control Point</firstterm> is an entity on the network which
-      communicates with other <glossterm baseterm="Device">Devices</glossterm>
-      and <glossterm baseterm="Service">Services</glossterm>.  In the
-      client-server model the control point is a client and the
-      <glossterm>Service</glossterm> is a server, although it is common for
-      devices to also be a control point because whilst a single control
-      point/service connection is client/server, the UPnP network as whole is
-      peer-to-peer.
+      communicates with other <glossterm>Devices</glossterm> and
+      <glossterm>Services</glossterm>.  In the client-server model the control
+      point is a client and the <glossterm>Service</glossterm> is a server,
+      although it is common for devices to also be a control point because
+      whilst a single control point/service connection is client/server, the
+      UPnP network as whole is peer-to-peer.
     </para>
   </glossdef>
   </glossentry>
@@ -51,8 +50,7 @@
       sub-device and a scanner sub-device.
     </para>
     <para>
-      Every device has zero or more <glossterm
-      baseform="Service">Services</glossterm>.  UPnP defines many standard
+      Every device has zero or more <glossterm>Services</glossterm>.  UPnP defines many standard
       device types, which specify services which are required to be implemented.
       Alternatively, a non-standard device type could be used.  Examples of
       standard device types are <literal>MediaRenderer</literal> or
@@ -79,8 +77,23 @@
     <glossseealso>Device</glossseealso>
     <glossseealso>State Variable</glossseealso>
   </glossdef>
-</glossentry>
+  </glossentry>
 
+  <glossentry id="scpd">
+    <glossterm>Service Control Protocol Document (SCPD)</glossterm>
+    <acronym>SCPD</acronym>
+    <glossdef>
+      <para>
+        An XML document which defines the set of <glossterm>Actions</glossterm>
+        and <glossterm>State Variables</glossterm> a
+        <glossterm>Service</glossterm> implements.
+      </para>
+      <glossseealso>Service</glossseealso>
+      <glossseealso>Action</glossseealso>
+      <glossseealso>State Variable</glossseealso>
+    </glossdef>
+  </glossentry>
+  
   <glossentry id="state-variable"><glossterm>State Variable</glossterm>
   <glossdef>
     <para>
