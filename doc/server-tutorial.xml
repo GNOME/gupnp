@@ -13,9 +13,9 @@
     <para>
       Before any code can be written, the device and services that it implement
       need to be described in XML.  Although this can be annoying as it
-      interferes with writin real code, writing the device description is fairly
-      trivial and writing the service description forces you to think about the
-      interface your service exposes to the world.
+      interferes with writing real code, writing the device description is
+      fairly trivial and writing the service description forces you to think
+      about the interface your service exposes to the world.
     </para>
   </simplesect>
 
@@ -75,9 +75,46 @@
   <simplesect>
     <title>Defining Services</title>
     <para>
-      Write me.
+      Becase we are using a standard service we can use the service description
+      from the specification.  This is the <literal>SwitchPower1</literal>
+      service description file:
     </para>
     <programlisting><xi:include href="../../examples/SwitchPower1.xml" parse="text"/></programlisting>
+    <para>
+      Again, the <sgmltag>specVersion</sgmltag> tag defines the UPnP version
+      that is being used.  The rest of the document consists of an
+      <sgmltag>actionList</sgmltag> defining the <glossterm
+      linkend="action">actions</glossterm> available and a
+      <sgmltag>serviceStateTable</sgmltag> defining the <glossterm
+      linkend="state-variable">state variables</glossterm>.
+    </para>
+    <para>
+      Every <sgmltag>action</sgmltag> has a <sgmltag>name</sgmltag> and a list
+      of <sgmltag>argument</sgmltag>s.  Arguments also have a name, a direction
+      (<literal>in</literal> or <literal>out</literal> for input or output
+      arguments) and a related state variable.  The related state variable is
+      used to determine the type of the argument, and as such is a required
+      element.  This can lead to the creation of otherwise unused state
+      variables to define the type for an argument (the
+      <literal>WANIPConnection</literal> service is a good example of this),
+      thanks to the legacy behind UPnP.
+    </para>
+    <para>
+      <sgmltag>stateVariable</sgmltag>s need to specify their
+      <sgmltag>name</sgmltag> and <sgmltag>dataType</sgmltag>.  State variables
+      by default send notifications when they change, to specify that a variable
+      doesn't do this set the <sgmltag>sendEvents</sgmltag> attribute to
+      <literal>no</literal>.  Finally there are optional
+      <sgmltag>defaultValue</sgmltag>, <sgmltag>allowedValueList</sgmltag> and
+      <sgmltag>allowedValueRange</sgmltag> elements which specify what the
+      default and valid values for the variable.
+    </para>
+    <para>
+      For the full specification of the service definition file, see section 2.3
+      of the <ulink
+      url="http://upnp.org/specs/arch/UPnP-DeviceArchitecture-v1.0.pdf">UPnP
+      Device Architecture</ulink>.
+    </para>
   </simplesect>
 
   <simplesect>
