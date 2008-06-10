@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN" 
+               "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd" [
+<!ENTITY version SYSTEM "version.xml">               
+]>
+
+<refentry id="gupnp-binding-tool">
+  <refmeta>
+    <refentrytitle>gupnp-binding-tool</refentrytitle>
+    <manvolnum>1</manvolnum>
+    <refmiscinfo class="source">GUPnP</refmiscinfo>
+    <refmiscinfo class="version">&version;</refmiscinfo>
+  </refmeta>
+  
+  <refnamediv>
+    <refname>gupnp-binding-tool</refname>
+    <refpurpose>create C convenience wrappers for calling UPnP actions</refpurpose>
+  </refnamediv>
+
+  <refsynopsisdiv>
+    <cmdsynopsis>
+      <command>gupnp-binding-tool</command>
+      <arg choice="req">SCPD file</arg>
+    </cmdsynopsis>
+  </refsynopsisdiv>
+  
+  <refsect1>
+    <title>Description</title>
+    <para>
+      <command>gupnp-binding-tool</command> takes a <glossterm
+      linkend="scpd">SCPD file</glossterm> and generates C functions which call
+      the action using GUPnP.
+    </para>
+    <para>
+      These generated function are less verbose than direct calls to
+      <function>gupnp_service_proxy_send_call()</function> because they have the
+      correct argument types.
+    </para>
+    <para>
+      For example, this action:
+    </para>
+    <programlisting><![CDATA[<action>
+  <name>DeletePortMapping</name>
+  <argumentList>
+    <argument>
+      <name>NewRemoteHost</name>
+      <direction>in</direction>
+      <relatedStateVariable>RemoteHost</relatedStateVariable>
+    </argument>
+    <argument>
+      <name>NewExternalPort</name>
+      <direction>in</direction>
+      <relatedStateVariable>ExternalPort</relatedStateVariable>
+    </argument>
+    <argument>
+      <name>NewProtocol</name>
+      <direction>in</direction>
+      <relatedStateVariable>PortMappingProtocol</relatedStateVariable>
+    </argument>
+  </argumentList>
+</action>]]></programlisting>
+    <para>
+      Will generate the following prototype:
+    </para>
+    <programlisting>static inline gboolean
+DeletePortMapping (GUPnPServiceProxy *proxy,
+                   char * in_NewRemoteHost,
+                   unsigned int in_NewExternalPort,
+                   char * in_NewProtocol,
+                   GError **error);</programlisting>
+    <para>
+      As can be seen, the arguments have the correct types and are prefixed with
+      the argument direction.
+    </para>
+    <para>
+      <command>gupnp-binding-tool</command> generates both synchronous and
+      asynchronous wrappers.  The <function>DeletePortMapping</function> example
+      above is the synchronous form, the asynchronous form is as follows:
+    </para>
+    <programlisting>typedef void (*DeletePortMapping_reply) (GUPnPServiceProxy *proxy,
+                                         GError *error,
+                                         gpointer userdata);
+
+static inline GUPnPServiceProxyAction *
+DeletePortMapping_async (GUPnPServiceProxy *proxy,
+                         char * in_NewRemoteHost,
+                         unsigned int in_NewExternalPort,
+                         char * in_NewProtocol,
+                         DeletePortMapping_reply callback,
+                         gpointer userdata);</programlisting>
+    <para>
+      The asynchronous form (implemented using
+      <function>gupnp_service_proxy_begin_action()</function> and
+      <function>gupnp_service_proxy_end_action()</function>) will return without
+      blocking and later invoke the callback from the main loop when the reply
+      is received.
+    </para>
+  </refsect1>
+</refentry>

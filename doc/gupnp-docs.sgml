@@ -45,7 +45,7 @@
   </part>
   
   <part id="api">
-    <title>API Reference</title>
+    <title>Reference</title>
     
     <chapter id="api-device-info">
       <title>Device Information</title>
@@ -71,13 +71,18 @@
       <xi:include href="xml/gupnp-service.xml"/>
     </chapter>
     
-    <chapter id="api-tools">
-      <title>Tools</title>
+    <chapter id="api-utility">
+      <title>Utility Functions</title>
       
       <xi:include href="xml/gupnp-context.xml"/>
       <xi:include href="xml/gupnp-resource-factory.xml"/>
       <xi:include href="xml/gupnp-error.xml"/>
       <xi:include href="xml/gupnp-types.xml"/>
+    </chapter>
+
+    <chapter id="api-tools">
+      <title>Tools</title>
+      <xi:include href="gupnp-binding-tool.xml"/>
     </chapter>
   </part>
 

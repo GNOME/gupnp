@@ -1,5 +1,13 @@
 2008-06-10  Ross Burton  <ross@openedhand.com>
 
+	* doc/gupnp-binding-tool.xml:
+	* doc/gupnp-docs.sgml:
+	* doc/Makefile.am:
+	Add a refentry for gupnp-binding-tool and add it to the
+	documentation.
+
+2008-06-10  Ross Burton  <ross@openedhand.com>
+
 	* doc/glossary.xml:
 	Add SCPD and remove baseform attributes.
 
