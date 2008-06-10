@@ -37,14 +37,9 @@
     </legalnotice>
   </bookinfo>
 
-  <part id="introduction">
-    <title>Introduction</title>
-    <xi:include href="overview.xml"/>
-  </part>
-
   <part id="tutorial">
-    <title>Tutorials</title>
-    
+    <title>Tutorial</title>
+    <xi:include href="overview.xml"/>
     <xi:include href="xml/client-tutorial.xml"/>
     <xi:include href="xml/server-tutorial.xml"/>
   </part>
