@@ -1,5 +1,12 @@
 2008-06-10  Ross Burton  <ross@openedhand.com>
 
+	* doc/Makefile.am:
+	* doc/gupnp-docs.sgml:
+	* doc/gupnp-docs.xml:
+	Rename the main document to .xml, this isn't 1980 any more.
+
+2008-06-10  Ross Burton  <ross@openedhand.com>
+
 	* doc/gupnp-binding-tool.xml:
 	* doc/gupnp-docs.sgml:
 	Don't use entities to get the version, use XInclude.
