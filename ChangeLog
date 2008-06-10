@@ -1,5 +1,10 @@
 2008-06-10  Ross Burton  <ross@openedhand.com>
 
+	* examples/BinaryLight1.xml:
+	Use better friendly and model names.
+
+2008-06-10  Ross Burton  <ross@openedhand.com>
+
 	* doc/glossary.xml:
 	Add UDN, fix acronyms.
 

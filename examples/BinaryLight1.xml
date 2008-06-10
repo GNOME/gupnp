@@ -7,9 +7,9 @@
 
   <device>
     <deviceType>urn:schemas-upnp-org:device:BinaryLight:1</deviceType>
-    <friendlyName>Test Light</friendlyName>
+    <friendlyName>Kitchen Lights</friendlyName>
     <manufacturer>OpenedHand</manufacturer>
-    <modelName>Test Light</modelName>
+    <modelName>Virtual Light</modelName>
     <UDN>uuid:cc93d8e6-6b8b-4f60-87ca-228c36b5b0e8</UDN>
     
     <serviceList>
