@@ -1,5 +1,10 @@
 2008-06-10  Ross Burton  <ross@openedhand.com>
 
+	* doc/glossary.xml:
+	Add UDN, fix acronyms.
+
+2008-06-10  Ross Burton  <ross@openedhand.com>
+
 	* doc/Makefile.am:
 	* doc/gupnp-docs.sgml:
 	* doc/gupnp-docs.xml:

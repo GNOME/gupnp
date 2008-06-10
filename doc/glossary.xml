@@ -79,8 +79,13 @@
   </glossdef>
   </glossentry>
 
+  <glossentry>
+    <glossterm>SCPD</glossterm>
+    <glosssee otherterm="scpd"/>
+  </glossentry>
+
   <glossentry id="scpd">
-    <glossterm>Service Control Protocol Document (SCPD)</glossterm>
+    <glossterm>Service Control Protocol Document</glossterm>
     <acronym>SCPD</acronym>
     <glossdef>
       <para>
@@ -104,6 +109,29 @@
       a state variable to receive change notifications.
     </para>
   </glossdef>
+  </glossentry>
+
+  <glossentry>
+    <glossterm>UDN</glossterm>
+    <glosssee otherterm="udn"/>
+  </glossentry>
+
+  <glossentry id="udn">
+    <glossterm>Unique Device Name</glossterm>
+    <acronym>UDN</acronym>
+    <glossdef>
+      <para>
+        A a unique identifier which is <emphasis>unique</emphasis> for every
+        device but <emphasis>never changes</emphasis> for each particular
+        device.
+      </para>
+      <para>
+        A common practise is to generate a unique UDN on first boot from a
+        random seed, or use some unique and persistant property such as the
+        device's MAC address to create the UDN.
+      </para>
+      <glossseealso>Device</glossseealso>
+    </glossdef>
   </glossentry>
 
 </glossary>
