@@ -90,7 +90,7 @@
     <glossdef>
       <para>
         An XML document which defines the set of <glossterm>Actions</glossterm>
-        and <glossterm>State Variables</glossterm> a
+        and <glossterm>State Variables</glossterm> that a
         <glossterm>Service</glossterm> implements.
       </para>
       <glossseealso otherterm="service"/>
