@@ -27,7 +27,7 @@
     <para>
       A <firstterm>Control Point</firstterm> is an entity on the network which
       communicates with other <glossterm>Devices</glossterm> and
-      <glossterm>Services</glossterm>.  In the client-server model the control
+      <glossterm>Services</glossterm>.  In the client/server model the control
       point is a client and the <glossterm>Service</glossterm> is a server,
       although it is common for devices to also be a control point because
       whilst a single control point/service connection is client/server, the
