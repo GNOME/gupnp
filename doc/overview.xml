@@ -9,7 +9,7 @@
     services in C, using <ulink url="http://www.gtk.org/">GObject</ulink> and
     <ulink url="http://live.gnome.org/LibSoup">LibSoup</ulink>.  It allows for
     fully asynchronous use without using threads and so cleanly integrates
-    naturally into main loop-based applications, and supports all of the UPnP
+    naturally into main-loop based applications, and supports all of the UPnP
     features.
   </para>
   <para>
