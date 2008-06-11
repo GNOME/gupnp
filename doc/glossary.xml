@@ -16,7 +16,7 @@
     <para>
       Every action argument has a related <glossterm>State Variable</glossterm>,
       which determines the type of the argument.  Note that even if the argument
-      wouldn't need a state variable it is still required, due to historial
+      wouldn't need a state variable it is still required, due to historical
       reasons.
     </para>
   </glossdef>
