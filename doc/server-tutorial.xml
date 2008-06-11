@@ -177,11 +177,12 @@ service = gupnp_device_info_get_service
       when a client invokes an action: the handler is passed a
       #GUPnPServiceAction object that identifies which action was invoked, and
       is used to return values using gupnp_service_action_set().
-      #GUPnPService::query-variable is emitted for evented variables when the
-      service starts (to announce the initial value) or whenever a client
-      queries the value of a state variable (this is deprecated behaviour for
-      UPnP control points): the handler is passed the variable name and a
-      #GValue which should be set to the current value of the variable.
+      #GUPnPService::query-variable is emitted for evented variables when a
+      control point subscribes to the service (to announce the initial value),
+      or whenever a client queries the value of a state variable (note that this
+      is now deprecated behaviour for UPnP control points): the handler is
+      passed the variable name and a #GValue which should be set to the current
+      value of the variable.
     </para>
     <para>
       There are two approaches that clients can take to handle these signals.

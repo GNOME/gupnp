@@ -1,6 +1,11 @@
 2008-06-11  Ross Burton  <ross@openedhand.com>
 
 	* doc/server-tutorial.xml:
+	Add *correct* comments about when query-variable is called.
+
+2008-06-11  Ross Burton  <ross@openedhand.com>
+
+	* doc/server-tutorial.xml:
 	Add comments about when query-variable is called.
 
 2008-06-10  Ross Burton  <ross@openedhand.com>
