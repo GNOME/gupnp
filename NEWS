@@ -1,3 +1,15 @@
+0.12
+====
+
+- Add tool for generating convenience C wrappers for GUPnP service definitions.
+  [Ross Burton]
+- Remove xmlDoc argument from gupnp_root_device_new() for simplicity.
+  (xmlDocs can still be passed to gupnp_root_device_new_full())
+  [Jorn Baayen]
+- Better documentation, new tutorials and sample code. [Ross Burton]
+- Improved support for Accept-Language header. [Jorn Baayen]
+- Various internal improvements. [Zeeshan Ali, Jorn Baayen]
+
 0.10.1
 ======
 
