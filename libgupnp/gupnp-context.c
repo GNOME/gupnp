@@ -826,10 +826,10 @@ host_path_handler (SoupServer        *server,
                 char *length;
 
                 length = g_strdup_printf ("%lu", (gulong) st.st_size);
-		soup_message_headers_append (msg->response_headers,
-					     "Content-Length",
+	        soup_message_headers_append (msg->response_headers,
+                                             "Content-Length",
                                              length);
-		g_free (length);
+                g_free (length);
 
         } else {
                 g_assert_not_reached ();

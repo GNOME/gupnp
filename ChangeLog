@@ -1,5 +1,10 @@
 2008-06-20  Jorn Baayen  <jorn@openedhand.com>
 
+	* libgupnp/http-headers.c (http_request_get_range):
+	Support Range headers without upper bound.
+
+2008-06-20  Jorn Baayen  <jorn@openedhand.com>
+
 	* libgupnp/gupnp-context.c (host_path_handler):
 	Remove superfluous free.
 

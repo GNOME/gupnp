@@ -112,8 +112,11 @@ locale_from_http_language (char *lang)
 /* Parses the HTTP Range header on @message and sets:
  *
  * @have_range to %TRUE if a range was specified,
- * @offset to the requested offset (left unset if none specified),
- * @length to the requested length (left unset if none specified).
+ * @offset to the requested offset (left unchanged if none specified),
+ * @length to the requested length (left unchanged if none specified).
+ *
+ * Both @offset and @length are expected to be initialised to their default
+ * values.
  *
  * Returns %TRUE on success. */
 gboolean
@@ -154,6 +157,8 @@ http_request_get_range (SoupMessage *message,
         /* Get last byte position if specified */
         if (v[1] != NULL && *v[1] != 0)
                 *length = atoll (v[1]) - *offset;
+        else
+                *length = *length - *offset;
 
         *have_range = TRUE;
 
