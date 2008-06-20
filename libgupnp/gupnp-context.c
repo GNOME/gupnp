@@ -787,8 +787,6 @@ host_path_handler (SoupServer        *server,
                                 (msg,
                                  SOUP_STATUS_REQUESTED_RANGE_NOT_SATISFIABLE);
 
-                        g_free (path_to_open);
-
                         goto DONE;
                 }
 
@@ -799,8 +797,6 @@ host_path_handler (SoupServer        *server,
                         soup_message_set_status
                                 (msg,
                                  SOUP_STATUS_REQUESTED_RANGE_NOT_SATISFIABLE);
-
-                        g_free (path_to_open);
 
                         goto DONE;
                 }
