@@ -1,3 +1,9 @@
+0.12.1
+======
+
+- Support Range headers without upper bound. [Jorn Baayen]
+- Fixed memory management in HTTP GET handler. [Jorn Baayen]
+
 0.12
 ====
 

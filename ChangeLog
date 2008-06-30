@@ -1,3 +1,10 @@
+2008-06-30  Jorn Baayen  <jorn@openedhand.com>
+
+	* NEWS:
+	* configure.ac:
+
+	Release 0.12.1.
+
 2008-06-20  Jorn Baayen  <jorn@openedhand.com>
 
 	* libgupnp/http-headers.c (http_request_get_range):
