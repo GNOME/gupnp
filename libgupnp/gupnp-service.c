@@ -151,13 +151,16 @@ notify_data_free (NotifyData *data)
 }
 
 struct _GUPnPServiceAction {
-        const char  *name;
+        GUPnPContext *context;
 
-        SoupMessage *msg;
+        char         *name;
 
-        xmlNode     *node;
+        SoupMessage  *msg;
 
-        GString     *response_str;
+        xmlDoc       *doc;
+        xmlNode      *node;
+
+        GString      *response_str;
 };
 
 GType
@@ -170,6 +173,59 @@ gupnp_service_action_get_type (void)
                                         ("GUPnPServiceAction");
 
         return our_type;
+}
+
+static void
+finalize_action (GUPnPServiceAction *action)
+{
+        SoupServer *server;
+        char *response_body;
+
+        /* Embed action->response_str in a SOAP document */
+        g_string_prepend (action->response_str,
+                          "<?xml version=\"1.0\"?>"
+                          "<s:Envelope xmlns:s="
+                                "\"http://schemas.xmlsoap.org/soap/envelope/\" "
+                          "s:encodingStyle="
+                                "\"http://schemas.xmlsoap.org/soap/encoding/\">"
+                          "<s:Body>");
+
+        if (action->msg->status_code != SOUP_STATUS_INTERNAL_SERVER_ERROR) {
+                g_string_append (action->response_str, "</u:");
+                g_string_append (action->response_str, action->name);
+                g_string_append (action->response_str, "Response>");
+        }
+
+        g_string_append (action->response_str,
+                         "</s:Body>"
+                         "</s:Envelope>");
+
+        response_body = g_string_free (action->response_str, FALSE);
+
+        soup_message_set_response (action->msg,
+                                   "text/xml",
+                                   SOUP_MEMORY_TAKE,
+                                   response_body,
+                                   strlen (response_body));
+
+        /* Server header on response */
+        soup_message_headers_append
+                        (action->msg->response_headers,
+                         "Server",
+                         gssdp_client_get_server_id
+                                (GSSDP_CLIENT (action->context)));
+
+        /* Tell soup server that response is now ready */
+        server = gupnp_context_get_server (action->context);
+        soup_server_unpause_message (server, action->msg);
+
+        /* Cleanup */
+        g_free (action->name);
+        g_object_unref (action->msg);
+        g_object_unref (action->context);
+        xmlFreeDoc (action->doc);
+
+        g_slice_free (GUPnPServiceAction, action);
 }
 
 /**
@@ -415,6 +471,8 @@ gupnp_service_action_return (GUPnPServiceAction *action)
         g_return_if_fail (action != NULL);
 
         soup_message_set_status (action->msg, SOUP_STATUS_OK);
+
+        finalize_action (action);
 }
 
 /**
@@ -496,6 +554,8 @@ gupnp_service_action_return_error (GUPnPServiceAction *action,
 
         soup_message_set_status (action->msg,
                                  SOUP_STATUS_INTERNAL_SERVER_ERROR);
+
+        finalize_action (action);
 }
 
 static void
@@ -602,7 +662,7 @@ query_state_variable (GUPnPService       *service,
 
 /* controlURL handler */
 static void
-control_server_handler (SoupServer        *soup_server,
+control_server_handler (SoupServer        *server,
                         SoupMessage       *msg, 
                         const char        *server_path,
                         GHashTable        *query,
@@ -611,12 +671,10 @@ control_server_handler (SoupServer        *soup_server,
 {
         GUPnPService *service;
         GUPnPContext *context;
-        GSSDPClient *client;
         xmlDoc *doc;
         xmlNode *action_node;
         const char *soap_action, *action_name;
         char *end;
-        gpointer response_body;
         GUPnPServiceAction *action;
 
         service = GUPNP_SERVICE (user_data);
@@ -628,7 +686,6 @@ control_server_handler (SoupServer        *soup_server,
         }
 
         context = gupnp_service_info_get_context (GUPNP_SERVICE_INFO (service));
-        client = GSSDP_CLIENT (context);
 
         /* Get action name */
         soap_action = soup_message_headers_get (msg->request_headers,
@@ -663,64 +720,40 @@ control_server_handler (SoupServer        *soup_server,
         /* Create action structure */
         action = g_slice_new (GUPnPServiceAction);
 
-        action->name         = action_name;
-        action->msg          = msg;
+        action->name         = g_strdup (action_name);
+        action->msg          = g_object_ref (msg);
+        action->doc          = doc;
         action->node         = action_node;
         action->response_str = new_action_response_str (service, action_name);
+        action->context      = g_object_ref (context);
+
+        /* Tell soup server that response is not ready yet */
+        soup_server_pause_message (server, msg);
 
         /* QueryStateVariable? */
         if (strcmp (action_name, "QueryStateVariable") == 0)
                 query_state_variable (service, action);
         else {
-                /* Emit signal. Handler parses request and fills in response. */
-                g_signal_emit (service,
-                               signals[ACTION_INVOKED],
-                               g_quark_from_string (action_name),
-                               action);
+                GQuark action_name_quark;
 
-                /* Was it handled? */
-                if (msg->status_code == SOUP_STATUS_NONE) {
-                        /* No. */
+                action_name_quark = g_quark_from_string (action_name);
+                if (g_signal_has_handler_pending (service,
+                                                  signals[ACTION_INVOKED],
+                                                  action_name_quark,
+                                                  FALSE)) {
+                        /* Emit signal. Handler parses request and fills in
+                         * response. */
+                        g_signal_emit (service,
+                                       signals[ACTION_INVOKED],
+                                       action_name_quark,
+                                       action);
+                } else {
+                        /* No handlers attached. */
                         gupnp_service_action_return_error (action,
                                                            401,
                                                            "Invalid Action");
                 }
         }
-
-        /* Embed action->response_str in a SOAP document */
-        g_string_prepend (action->response_str, 
-                          "<?xml version=\"1.0\"?>"
-                          "<s:Envelope xmlns:s="
-                                "\"http://schemas.xmlsoap.org/soap/envelope/\" "
-                          "s:encodingStyle="
-                                "\"http://schemas.xmlsoap.org/soap/encoding/\">"
-                          "<s:Body>");
-
-        if (action->msg->status_code != SOUP_STATUS_INTERNAL_SERVER_ERROR) {
-                g_string_append (action->response_str, "</u:");
-                g_string_append (action->response_str, action_name);
-                g_string_append (action->response_str, "Response>");
-        }
-
-        g_string_append (action->response_str,
-                         "</s:Body>"
-                         "</s:Envelope>");
-
-        response_body = g_string_free (action->response_str, FALSE);
-
-        soup_message_set_response (msg,
-                                   "text/xml",
-                                   SOUP_MEMORY_TAKE,
-                                   response_body,
-                                   strlen (response_body));
-
-        /* Cleanup */
-        g_slice_free (GUPnPServiceAction, action);
-
-        /* Server header on response */
-        soup_message_headers_append (msg->response_headers,
-                                     "Server",
-                                     gssdp_client_get_server_id (client));
 }
 
 /* Generates a standard (re)subscription response */
@@ -953,7 +986,7 @@ unsubscribe (GUPnPService *service,
 
 /* eventSubscriptionURL handler */
 static void
-subscription_server_handler (SoupServer        *soup_server,
+subscription_server_handler (SoupServer        *server,
                              SoupMessage       *msg, 
                              const char        *server_path,
                              GHashTable        *query,
@@ -1292,7 +1325,8 @@ gupnp_service_class_init (GUPnPServiceClass *klass)
          * @action: The invoked #GUPnPAction
          *
          * Emitted whenever an action is invoked. Handler should process
-         * @action.
+         * @action and must call either gupnp_service_action_return() or
+         * gupnp_service_action_return_error().
          **/
         signals[ACTION_INVOKED] =
                 g_signal_new ("action-invoked",

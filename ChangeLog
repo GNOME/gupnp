@@ -1,3 +1,18 @@
+2008-07-14  Jorn Baayen  <jorn@openedhand.com>
+
+	* configure.ac:
+
+	Bump version to 0.12.1.99.
+
+	* libgupnp/gupnp-service.c (finalize_action),
+	(gupnp_service_action_return), (gupnp_service_action_return_error),
+	(control_server_handler), (subscription_server_handler),
+	(gupnp_service_class_init):
+
+	Support returning actions outside of the 'action-invoked' signal
+	handler. Based on a patch from Zeeshan Ali Khattak
+	<zeenix@gstreamer.net>.
+
 2008-06-30  Jorn Baayen  <jorn@openedhand.com>
 
 	* NEWS:

@@ -450,7 +450,7 @@ default_server_handler (SoupServer        *server,
  *
  * Get the #SoupServer HTTP server that GUPnP is using.
  *
- * Return value: The #SoupServer used by GUPnP.  Do not unref this when finished.
+ * Return value: The #SoupServer used by GUPnP. Do not unref this when finished.
  **/
 SoupServer *
 gupnp_context_get_server (GUPnPContext *context)
