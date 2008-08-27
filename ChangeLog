@@ -1,3 +1,10 @@
+2008-08-27  Jorn Baayen  <jorn@openedhand.com>
+
+	* configure.ac:
+	* tests/Makefile.am:
+
+	Link tests to gthread.
+
 2008-07-14  Jorn Baayen  <jorn@openedhand.com>
 
 	* configure.ac:
