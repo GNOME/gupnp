@@ -1,11 +1,12 @@
-AM_CFLAGS = $(LIBGUPNP_CFLAGS) -I$(top_srcdir)
+AM_CFLAGS = $(LIBGUPNP_CFLAGS) -I$(top_srcdir) $(GTHREAD_CFLAGS)
 LDADD = $(top_builddir)/libgupnp/libgupnp-1.0.la
 
 noinst_PROGRAMS = light-server light-client
 
 light_server_SOURCES = light-server.c
-light_server_LDFLAGS = -export-dynamic
+light_server_LDFLAGS = -export-dynamic $(GTHREAD_LIBS)
 
 light_client_SOURCES = light-client.c
+light_client_LDFLAGS = $(GTHREAD_LIBS)
 
 MAINTAINERCLEANFILES = Makefile.in
