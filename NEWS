@@ -1,3 +1,10 @@
+0.12.2
+======
+
+- Support returning actions outside of the 'action-invoked' signal handler
+  in service implementations. [Zeeshan Ali, Jorn Baayen]
+- Add explicit dependency on gthread. [Zeeshan Ali, Jorn Baayen],
+
 0.12.1
 ======
 
