@@ -227,7 +227,7 @@ gupnp_service_proxy_dispose (GObject *object)
         /* Cancel pending messages */
         context = gupnp_service_info_get_context (GUPNP_SERVICE_INFO (proxy));
         if (context)
-                session = _gupnp_context_get_session (context);
+                session = gupnp_context_get_session (context);
         else
                 session = NULL; /* Not the first time dispose is called. */
 
@@ -691,7 +691,7 @@ finish_action_msg (GUPnPServiceProxyAction *action,
         /* Send the message */
         context = gupnp_service_info_get_context
                                 (GUPNP_SERVICE_INFO (action->proxy));
-        session = _gupnp_context_get_session (context);
+        session = gupnp_context_get_session (context);
 
         soup_session_queue_message (session,
                                     action->msg,
@@ -1181,7 +1181,7 @@ gupnp_service_proxy_cancel_action (GUPnPServiceProxy       *proxy,
         if (action->msg != NULL) {
                 context = gupnp_service_info_get_context
                                         (GUPNP_SERVICE_INFO (proxy));
-                session = _gupnp_context_get_session (context);
+                session = gupnp_context_get_session (context);
 
                 soup_session_cancel_message (session,
                                              action->msg,
@@ -1619,7 +1619,7 @@ subscription_expire (gpointer user_data)
         proxy->priv->pending_messages =
                 g_list_prepend (proxy->priv->pending_messages, msg);
 
-        session = _gupnp_context_get_session (context);
+        session = gupnp_context_get_session (context);
 
         soup_session_queue_message (session,
                                     msg,
@@ -1833,7 +1833,7 @@ subscribe (GUPnPServiceProxy *proxy)
         proxy->priv->pending_messages =
                 g_list_prepend (proxy->priv->pending_messages, msg);
 
-        session = _gupnp_context_get_session (context);
+        session = gupnp_context_get_session (context);
 
         soup_session_queue_message (session,
                                     msg,
@@ -1875,7 +1875,7 @@ unsubscribe (GUPnPServiceProxy *proxy)
                                      proxy->priv->sid);
 
         /* And queue it */
-        session = _gupnp_context_get_session (context);
+        session = gupnp_context_get_session (context);
 
         soup_session_queue_message (session, msg, NULL, NULL);
 

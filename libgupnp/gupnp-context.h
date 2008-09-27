@@ -24,6 +24,7 @@
 
 #include <libgssdp/gssdp-client.h>
 #include <libsoup/soup-server.h>
+#include <libsoup/soup-session.h>
 
 G_BEGIN_DECLS
 
@@ -89,6 +90,9 @@ gupnp_context_get_port                 (GUPnPContext *context);
 
 SoupServer *
 gupnp_context_get_server               (GUPnPContext *context);
+
+SoupSession *
+gupnp_context_get_session              (GUPnPContext *context);
 
 void
 gupnp_context_set_subscription_timeout (GUPnPContext *context,

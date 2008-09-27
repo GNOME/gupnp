@@ -104,7 +104,7 @@ subscription_data_free (SubscriptionData *data)
 
         context = gupnp_service_info_get_context
                         (GUPNP_SERVICE_INFO (data->service));
-        session = _gupnp_context_get_session (context);
+        session = gupnp_context_get_session (context);
 
         /* Cancel pending messages */
         while (data->pending_messages) {
@@ -1527,7 +1527,7 @@ notify_got_response (SoupSession *session,
 
                         context = gupnp_service_info_get_context
                                         (GUPNP_SERVICE_INFO (data->service));
-                        session = _gupnp_context_get_session (context);
+                        session = gupnp_context_get_session (context);
 
                         soup_session_requeue_message (session, msg);
                 } else {
@@ -1613,7 +1613,7 @@ notify_subscriber (gpointer key,
 
         context = gupnp_service_info_get_context
                         (GUPNP_SERVICE_INFO (data->service));
-        session = _gupnp_context_get_session (context);
+        session = gupnp_context_get_session (context);
 
         soup_session_queue_message (session,
                                     msg,

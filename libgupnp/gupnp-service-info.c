@@ -186,7 +186,7 @@ gupnp_service_info_dispose (GObject *object)
         if (info->priv->context) {
                 SoupSession *session;
 
-                session = _gupnp_context_get_session (info->priv->context);
+                session = gupnp_context_get_session (info->priv->context);
 
                 while (info->priv->pending_gets) {
                         GetSCPDURLData *data;
@@ -580,7 +580,7 @@ gupnp_service_info_get_introspection (GUPnPServiceInfo *info,
         http_request_set_user_agent (msg);
 
         /* Send off the message */
-        session = _gupnp_context_get_session (info->priv->context);
+        session = gupnp_context_get_session (info->priv->context);
 
         status = soup_session_send_message (session, msg);
         if (!SOUP_STATUS_IS_SUCCESSFUL (status)) {
@@ -725,7 +725,7 @@ gupnp_service_info_get_introspection_async
                 g_list_prepend (info->priv->pending_gets,
                                 data);
 
-        session = _gupnp_context_get_session (info->priv->context);
+        session = gupnp_context_get_session (info->priv->context);
 
         soup_session_queue_message (session,
                                     data->message,

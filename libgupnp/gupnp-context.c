@@ -75,6 +75,7 @@ enum {
         PROP_HOST_IP,
         PROP_PORT,
         PROP_SERVER,
+        PROP_SESSION,
         PROP_SUBSCRIPTION_TIMEOUT
 };
 
@@ -298,6 +299,10 @@ gupnp_context_get_property (GObject    *object,
                 g_value_set_object (value,
                                     gupnp_context_get_server (context));
                 break;
+        case PROP_SESSION:
+                g_value_set_object (value,
+                                    gupnp_context_get_session (context));
+                break;
         case PROP_SUBSCRIPTION_TIMEOUT:
                 g_value_set_uint (value,
                                   gupnp_context_get_subscription_timeout
@@ -418,6 +423,23 @@ gupnp_context_class_init (GUPnPContextClass *klass)
                                       G_PARAM_STATIC_BLURB));
 
         /**
+         * GUPnPContext:session
+         *
+         * The #SoupSession object used by GUPnP.
+         **/
+        g_object_class_install_property
+                (object_class,
+                 PROP_SESSION,
+                 g_param_spec_object ("session",
+                                      "SoupSession",
+                                      "SoupSession object",
+                                      SOUP_TYPE_SESSION,
+                                      G_PARAM_READABLE |
+                                      G_PARAM_STATIC_NAME |
+                                      G_PARAM_STATIC_NICK |
+                                      G_PARAM_STATIC_BLURB));
+
+        /**
          * GUPnPContext:subscription-timeout
          *
          * The preferred subscription timeout: the number of seconds after
@@ -440,9 +462,20 @@ gupnp_context_class_init (GUPnPContextClass *klass)
                                     G_PARAM_STATIC_BLURB));
 }
 
+/**
+ * gupnp_context_get_session
+ * @context: A #GUPnPContext
+ *
+ * Get the #SoupSession object that GUPnP is using.
+ *
+ * Return value: The #SoupSession used by GUPnP. Do not unref this when
+ * finished.
+ **/
 SoupSession *
-_gupnp_context_get_session (GUPnPContext *context)
+gupnp_context_get_session (GUPnPContext *context)
 {
+        g_return_val_if_fail (GUPNP_IS_CONTEXT (context), NULL);
+
         return context->priv->session;
 }
 

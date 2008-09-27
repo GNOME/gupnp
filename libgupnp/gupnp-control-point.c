@@ -175,7 +175,7 @@ gupnp_control_point_dispose (GObject *object)
                 data = control_point->priv->pending_gets->data;
 
                 context = gupnp_control_point_get_context (control_point);
-                session = _gupnp_context_get_session (context);
+                session = gupnp_context_get_session (context);
 
                 soup_session_cancel_message (session,
                                              data->message,
@@ -499,7 +499,7 @@ load_description (GUPnPControlPoint *control_point,
 
                 context = gupnp_control_point_get_context (control_point);
 
-                session = _gupnp_context_get_session (context);
+                session = gupnp_context_get_session (context);
 
                 data = g_slice_new (GetDescriptionURLData);
 

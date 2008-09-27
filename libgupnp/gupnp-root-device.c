@@ -290,7 +290,7 @@ download_and_parse (GUPnPContext *context,
         SoupMessage *msg;
         int status;
 
-        session = _gupnp_context_get_session (context);
+        session = gupnp_context_get_session (context);
 
         msg = soup_message_new (SOUP_METHOD_GET, location);
         if (msg == NULL) {
