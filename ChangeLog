@@ -1,5 +1,11 @@
 2008-09-27  Jorn Baayen  <jorn@openedhand.com>
 
+	* configure.ac:
+
+	Increase version number.
+
+2008-09-27  Jorn Baayen  <jorn@openedhand.com>
+
 	* libgupnp/gupnp-context.c (gupnp_context_init),
 	(gupnp_context_constructor), (gupnp_context_class_init),
 	(gupnp_context_get_server), (host_path_handler):
