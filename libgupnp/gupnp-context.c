@@ -216,22 +216,37 @@ gupnp_context_init (GUPnPContext *context)
                                              GUPNP_TYPE_CONTEXT,
                                              GUPnPContextPrivate);
 
-        context->priv->session = soup_session_async_new ();
-
-        g_object_set (context->priv->session,
-                      SOUP_SESSION_IDLE_TIMEOUT,
-                      60,
-                      NULL);
-
         server_id = make_server_id ();
         gssdp_client_set_server_id (GSSDP_CLIENT (context), server_id);
         g_free (server_id);
+}
+
+static GObject *
+gupnp_context_constructor (GType                  type,
+                           guint                  n_props,
+                           GObjectConstructParam *props)
+{
+	GObject *object;
+	GUPnPContext *context;
+
+	object = G_OBJECT_CLASS (gupnp_context_parent_class)->constructor
+                (type, n_props, props);
+	context = GUPNP_CONTEXT (object);
+
+        context->priv->session = soup_session_async_new_with_options
+                (SOUP_SESSION_IDLE_TIMEOUT,
+                 60,
+                 SOUP_SESSION_ASYNC_CONTEXT,
+                 gssdp_client_get_main_context (GSSDP_CLIENT (context)),
+                 NULL);
 
 	if (g_getenv ("GUPNP_DEBUG")) {
 		SoupLogger *logger;
 		logger = soup_logger_new (SOUP_LOGGER_LOG_BODY, -1);
 		soup_logger_attach (logger, context->priv->session);
 	}
+
+	return object;
 }
 
 static void
@@ -341,6 +356,7 @@ gupnp_context_class_init (GUPnPContextClass *klass)
 
         object_class = G_OBJECT_CLASS (klass);
 
+        object_class->constructor  = gupnp_context_constructor;
         object_class->set_property = gupnp_context_set_property;
         object_class->get_property = gupnp_context_get_property;
         object_class->dispose      = gupnp_context_dispose;
@@ -458,9 +474,12 @@ gupnp_context_get_server (GUPnPContext *context)
         g_return_val_if_fail (GUPNP_IS_CONTEXT (context), NULL);
 
         if (context->priv->server == NULL) {
-                context->priv->server = soup_server_new (SOUP_SERVER_PORT,
-                                                         context->priv->port,
-                                                         NULL);
+                context->priv->server = soup_server_new
+                        (SOUP_SERVER_PORT,
+                         context->priv->port,
+                         SOUP_SERVER_ASYNC_CONTEXT,
+                         gssdp_client_get_main_context (GSSDP_CLIENT (context)),
+                         NULL);
 
                 soup_server_add_handler (context->priv->server, NULL,
                                          default_server_handler, context,
@@ -678,10 +697,11 @@ host_path_handler (SoupServer        *server,
         char *local_path, *path_to_open;
         struct stat st;
         int status;
-        GList *locales;
+        GList *locales, *orig_locales;
         GMappedFile *mapped_file;
         GError *error;
 
+        orig_locales = NULL;
         locales      = NULL;
         local_path   = NULL;
         path_to_open = NULL;
@@ -702,7 +722,7 @@ host_path_handler (SoupServer        *server,
         }
 
         /* Get preferred locales */
-        locales = http_request_get_accept_locales (msg);
+        orig_locales = locales = http_request_get_accept_locales (msg);
 
  AGAIN:
         /* Add locale suffix if available */
@@ -860,9 +880,9 @@ host_path_handler (SoupServer        *server,
         g_free (path_to_open);
         g_free (local_path);
 
-        while (locales) {
-                g_free (locales->data);
-                locales = g_list_delete_link (locales, locales);
+        while (orig_locales) {
+                g_free (orig_locales->data);
+                orig_locales = g_list_delete_link (orig_locales, orig_locales);
         }
 }
 

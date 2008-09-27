@@ -55,7 +55,7 @@ struct _GUPnPServiceProxyPrivate {
         char *path; /* Path to this proxy */
 
         char *sid; /* Subscription ID */
-        guint subscription_timeout_id;
+        GSource *subscription_timeout_src;
 
         int seq; /* Event sequence number */
 
@@ -63,8 +63,8 @@ struct _GUPnPServiceProxyPrivate {
 
         GList *pending_messages; /* Pending SoupMessages from this proxy */
 
-        GList *pending_notifies; /* Pending notifications to be sent (xmlDoc*) */
-        guint notify_idle_id; /* Idle handler ID of notification emiter */
+        GList *pending_notifies; /* Pending notifications to be sent (xmlDoc) */
+        GSource *notify_idle_src; /* Idle handler src of notification emiter */
 };
 
 enum {
@@ -246,15 +246,16 @@ gupnp_service_proxy_dispose (GObject *object)
         }
 
         /* Cancel pending notifications */
-        if (proxy->priv->notify_idle_id) {
-                g_source_remove (proxy->priv->notify_idle_id);
-                proxy->priv->notify_idle_id = 0;
+        if (proxy->priv->notify_idle_src) {
+                g_source_destroy (proxy->priv->notify_idle_src);
+                proxy->priv->notify_idle_src = NULL;
         }
         
         while (proxy->priv->pending_notifies) {
                 xmlFreeDoc (proxy->priv->pending_notifies->data);
-                proxy->priv->pending_notifies = g_list_delete_link (proxy->priv->pending_notifies,
-                                                                   proxy->priv->pending_notifies);
+                proxy->priv->pending_notifies =
+                        g_list_delete_link (proxy->priv->pending_notifies,
+                                            proxy->priv->pending_notifies);
         }
         
         /* Call super */
@@ -1395,7 +1396,7 @@ emit_notifications (gpointer user_data)
                                             proxy->priv->pending_notifies);
         }
         
-        proxy->priv->notify_idle_id = 0;
+        proxy->priv->notify_idle_src = NULL;
 
 	return FALSE;
 }
@@ -1535,9 +1536,23 @@ server_handler (SoupServer        *soup_server,
 	 */
         proxy->priv->pending_notifies =
                 g_list_append (proxy->priv->pending_notifies, doc);
-        if (!proxy->priv->notify_idle_id)
-                proxy->priv->notify_idle_id =
-                        g_idle_add (emit_notifications, proxy);
+        if (!proxy->priv->notify_idle_src) {
+	        GUPnPContext *context;
+	        GMainContext *main_context;
+
+	        context = gupnp_service_info_get_context
+                        (GUPNP_SERVICE_INFO (proxy));
+	        main_context = gssdp_client_get_main_context
+                        (GSSDP_CLIENT (context));
+
+	        proxy->priv->notify_idle_src = g_idle_source_new();
+	        g_source_set_callback (proxy->priv->notify_idle_src,
+				       emit_notifications,
+                                       proxy, NULL);
+	        g_source_attach (proxy->priv->notify_idle_src, main_context);
+
+                g_source_unref (proxy->priv->notify_idle_src);
+	}
         
         /* Everything went OK */
         soup_message_set_status (msg, SOUP_STATUS_OK);
@@ -1574,7 +1589,7 @@ subscription_expire (gpointer user_data)
         proxy = GUPNP_SERVICE_PROXY (user_data);
 
         /* Reset timeout ID */
-        proxy->priv->subscription_timeout_id = 0;
+        proxy->priv->subscription_timeout_src = NULL;
 
         /* Send renewal message */
         context = gupnp_service_info_get_context (GUPNP_SERVICE_INFO (proxy));
@@ -1670,6 +1685,14 @@ subscribe_got_response (SoupSession       *session,
                 }
 
                 if (strncmp (hdr, "Second-", strlen ("Second-")) == 0) {
+                        GUPnPContext *context;
+                        GMainContext *main_context;
+
+                        context = gupnp_service_info_get_context
+                                (GUPNP_SERVICE_INFO (proxy));
+                        main_context = gssdp_client_get_main_context
+                                (GSSDP_CLIENT (context));
+
                         /* We have a finite timeout */
                         timeout = atoi (hdr + strlen ("Second-"));
 
@@ -1686,10 +1709,16 @@ subscribe_got_response (SoupSession       *session,
                         }
 
                         /* Add actual timeout */
-                        proxy->priv->subscription_timeout_id =
-                                g_timeout_add_seconds (timeout,
-                                                       subscription_expire,
-                                                       proxy);
+                        proxy->priv->subscription_timeout_src =
+			        g_timeout_source_new_seconds (timeout);
+			g_source_set_callback
+                                (proxy->priv->subscription_timeout_src,
+                                 subscription_expire,
+                                 proxy, NULL);
+			g_source_attach (proxy->priv->subscription_timeout_src,
+					 main_context);
+
+                        g_source_unref (proxy->priv->subscription_timeout_src);
                 }
         } else {
                 GUPnPContext *context;
@@ -1858,9 +1887,9 @@ unsubscribe (GUPnPServiceProxy *proxy)
         proxy->priv->seq = 0;
 
         /* Remove subscription timeout */
-        if (proxy->priv->subscription_timeout_id) {
-                g_source_remove (proxy->priv->subscription_timeout_id);
-                proxy->priv->subscription_timeout_id = 0;
+        if (proxy->priv->subscription_timeout_src) {
+                g_source_destroy (proxy->priv->subscription_timeout_src);
+                proxy->priv->subscription_timeout_src = NULL;
         }
 
         /* Remove server handler */

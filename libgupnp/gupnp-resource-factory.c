@@ -134,7 +134,7 @@ gupnp_resource_factory_create_device_proxy
                                  const SoupURI        *url_base)
 {
         GUPnPDeviceProxy *proxy;
-        const char       *upnp_type;
+        char             *upnp_type;
         GType             proxy_type = GUPNP_TYPE_DEVICE_PROXY;
 
         g_return_val_if_fail (GUPNP_IS_RESOURCE_FACTORY (factory), NULL);
@@ -153,6 +153,8 @@ gupnp_resource_factory_create_device_proxy
                                              upnp_type);
                 if (value)
                         proxy_type = GPOINTER_TO_INT (value);
+
+                g_free (upnp_type);
         }
 
         proxy = g_object_new (proxy_type,
@@ -253,7 +255,7 @@ gupnp_resource_factory_create_device
                                  const SoupURI        *url_base)
 {
         GUPnPDevice *device;
-        const char  *upnp_type;
+        char        *upnp_type;
         GType        device_type = GUPNP_TYPE_DEVICE;
 
         g_return_val_if_fail (GUPNP_IS_RESOURCE_FACTORY (factory), NULL);
@@ -271,6 +273,8 @@ gupnp_resource_factory_create_device
                                              upnp_type);
                 if (value)
                         device_type = GPOINTER_TO_INT (value);
+
+	        g_free (upnp_type);
         }
 
         device = g_object_new (device_type,
@@ -312,7 +316,7 @@ gupnp_resource_factory_create_service
                                  const SoupURI        *url_base)
 {
         GUPnPService *service;
-        const char   *upnp_type;
+        char         *upnp_type;
         GType         service_type = GUPNP_TYPE_SERVICE;
 
         g_return_val_if_fail (GUPNP_IS_RESOURCE_FACTORY (factory), NULL);
@@ -331,6 +335,8 @@ gupnp_resource_factory_create_service
                                              upnp_type);
                 if (value)
                         service_type = GPOINTER_TO_INT (value);
+
+		g_free (upnp_type);
         }
 
         service = g_object_new (service_type,

@@ -469,6 +469,8 @@ gupnp_root_device_constructor (GType                  type,
                       "url-base", url_base,
                       NULL);
 
+	soup_uri_free (url_base);
+
         device->priv->own_description_doc = own_description_doc;
 
         /* Create resource group */

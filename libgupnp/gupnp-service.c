@@ -90,7 +90,7 @@ typedef struct {
 
         int           seq;
 
-        guint         timeout_id;
+        GSource      *timeout_src;
 
         GList        *pending_messages; /* Pending SoupMessages from this
                                            subscription */
@@ -130,8 +130,8 @@ subscription_data_free (SubscriptionData *data)
 
         g_free (data->sid);
 
-        if (data->timeout_id)
-                g_source_remove (data->timeout_id);
+        if (data->timeout_src)
+	        g_source_destroy (data->timeout_src);
 
         g_slice_free (SubscriptionData, data);
 }
@@ -891,9 +891,23 @@ subscribe (GUPnPService *service,
         /* Add timeout */
         timeout_seconds = parse_and_limit_timeout (timeout);
         if (timeout_seconds > 0) {
-                data->timeout_id = g_timeout_add_seconds (timeout_seconds,
-                                                          subscription_timeout,
-                                                          data);
+                GUPnPContext *context;
+                GMainContext *main_context;
+
+	        data->timeout_src =
+                        g_timeout_source_new_seconds (timeout_seconds);
+	        g_source_set_callback (data->timeout_src,
+                                       subscription_timeout,
+                                       data,
+                                       NULL);
+
+                context = gupnp_service_info_get_context
+                        (GUPNP_SERVICE_INFO (service));
+                main_context = gssdp_client_get_main_context
+                        (GSSDP_CLIENT (context));
+	        g_source_attach (data->timeout_src, main_context);
+
+                g_source_unref (data->timeout_src);
         }
 
         /* Add to hash */
@@ -956,17 +970,30 @@ resubscribe (GUPnPService *service,
         }
 
         /* Update timeout */
-        if (data->timeout_id) {
-                g_source_remove (data->timeout_id);
-                data->timeout_id = 0;
+        if (data->timeout_src) {
+                g_source_destroy (data->timeout_src);
+                data->timeout_src = NULL;
         }
 
         timeout_seconds = parse_and_limit_timeout (timeout);
         if (timeout_seconds > 0) {
-                data->timeout_id = g_timeout_add_seconds (timeout_seconds,
-                                                          subscription_timeout,
-                                                          data);
-        }
+                GUPnPContext *context;
+                GMainContext *main_context;
+
+	        data->timeout_src = g_timeout_source_new_seconds
+                        (timeout_seconds);
+	        g_source_set_callback(data->timeout_src,
+				      subscription_timeout,
+				      data, NULL);
+
+                context = gupnp_service_info_get_context
+                        (GUPNP_SERVICE_INFO (service));
+                main_context = gssdp_client_get_main_context
+                        (GSSDP_CLIENT (context));
+	        g_source_attach (data->timeout_src, main_context);
+
+                g_source_unref (data->timeout_src);
+	}
 
         /* Respond */
         subscription_response (service, msg, sid, timeout_seconds);
