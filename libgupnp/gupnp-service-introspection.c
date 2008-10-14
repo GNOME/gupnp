@@ -870,6 +870,8 @@ gupnp_service_introspection_get_state_variable
                                 introspection->priv->variables,
                                 (gpointer) variable_name,
                                 (GCompareFunc) state_variable_search_func);
+        if (variable_node == NULL)
+                return NULL;
 
         return (GUPnPServiceStateVariableInfo *) variable_node->data;
 }
@@ -904,6 +906,8 @@ gupnp_service_introspection_get_action
                                 introspection->priv->actions,
                                 (gpointer) action_name,
                                 (GCompareFunc) action_search_func);
+        if (action_node == NULL)
+                return NULL;
 
         return (GUPnPServiceActionInfo *) action_node->data;
 }

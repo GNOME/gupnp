@@ -1,3 +1,9 @@
+2008-10-14  Zeeshan Ali (Khattak)  <zeeshanak@gnome.org>
+
+       * libgupnp/gupnp-service-introspection.c:
+
+       Add some missing checks for NULL.
+
 2008-09-27  Jorn Baayen  <jorn@openedhand.com>
 
 	* doc/gupnp-sections.txt:
