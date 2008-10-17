@@ -2,6 +2,18 @@
 
 	* tools/gupnp-binding-tool:
 
+	Add serverside binding generation.
+
+	* doc/client-tutorial.xml
+	* doc/server-tutorial.xml
+	* doc/gupnp-binding-tool.xml
+
+	Update documentation for new binding generation.
+
+2008-10-17  Jussi Kukkonen <jku@linux.intel.com>
+
+	* tools/gupnp-binding-tool:
+
 	gupnp-binding-tool improvements
 	 - add support for all upnp types
 	 - add "--prefix" option

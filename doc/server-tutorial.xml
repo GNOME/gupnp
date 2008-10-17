@@ -253,16 +253,75 @@ query_status_cb (GUPnPService *service, char *variable, GValue *value, gpointer 
 &hellip;
 g_signal_connect (service, "query-variable::Status", G_CALLBACK (query_status_cb), NULL);</programlisting>
     <para>
-      For services which have many actions and variables there is a convenience
-      method gupnp_service_signals_autoconnect() which will automatically
-      connect specially named handlers to signals.  See the documentation for
-      full details on how it works.
-    </para>
-    <para>
       The service is now fully implemented.  To complete it, enter a GLib main
       loop and wait for a client to connect.  The complete source code for this
       example is available as <filename>examples/light-server.c</filename> in
       the GUPnP sources.
     </para>
+    <para>
+      For services which have many actions and variables there is a convenience
+      method gupnp_service_signals_autoconnect() which will automatically
+      connect specially named handlers to signals.  See the documentation for
+      full details on how it works.
+    </para>
+  </simplesect>
+  <simplesect>
+    <title>Generating Service-specific Wrappers</title>
+    <para>
+      Using service-specific wrappers can simplify the implementation of a service.
+      Wrappers can be generated with <xref linkend="gupnp-binding-tool"/>
+      using the option <literal>--mode server</literal>. 
+    </para>
+    <para>
+      In the following examples the wrapper has been created with <literal>--mode server --prefix switch</literal>.
+    </para>
+    <programlisting>static gboolean status;
+
+static void
+get_status_cb (GUPnPService *service,
+               GUPnPServiceAction *action,
+               gpointer user_data)
+{
+  switch_get_status_action_set (action, status);
+  
+  gupnp_service_action_return (action);
+}
+
+static void
+set_target_cb (GUPnPService *service,
+               GUPnPServiceAction *action,
+               gpointer user_data)
+{
+  switch_set_target_action_get (action, &amp;status);
+  switch_status_variable_notify (service, status);
+  
+  gupnp_service_action_return (action);
+}
+
+&hellip;
+
+switch_get_status_action_connect (service, G_CALLBACK(get_status_cb), NULL);
+switch_set_target_action_connect (service, G_CALLBACK(set_target_cb), NULL);</programlisting>
+    <para>
+      Note how many possible problem situations that were run-time errors are 
+      actually compile-time errors when wrappers are used: Action names, 
+      argument names and argument types are easier to get correct (and available
+      in editor autocompletion).
+    </para>
+    <para>
+      State variable query handlers are implemented in a similar manner, but 
+      they are even simpler as the return value of the handler is the state 
+      variable value.
+    </para>
+    <programlisting>static gboolean
+query_status_cb (GUPnPService *service, 
+                 gpointer user_data)
+{
+  return status;
+}
+
+&hellip;
+
+switch_status_query_connect (service, query_status_cb, NULL);</programlisting>
   </simplesect>
 </chapter>

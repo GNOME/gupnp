@@ -11,12 +11,14 @@
   
   <refnamediv>
     <refname>gupnp-binding-tool</refname>
-    <refpurpose>create C convenience wrappers for calling UPnP actions</refpurpose>
+    <refpurpose>creates C convenience wrappers for UPnP services</refpurpose>
   </refnamediv>
 
   <refsynopsisdiv>
     <cmdsynopsis>
       <command>gupnp-binding-tool</command>
+      <arg choice="opt">--prefix <arg choice="req">PREFIX</arg></arg>
+      <arg choice="opt">--mode <arg choice="req">client|server</arg></arg>
       <arg choice="req">SCPD file</arg>
     </cmdsynopsis>
   </refsynopsisdiv>
@@ -25,16 +27,23 @@
     <title>Description</title>
     <para>
       <command>gupnp-binding-tool</command> takes a <glossterm
-      linkend="scpd">SCPD file</glossterm> and generates C functions which call
-      the action using GUPnP.
+      linkend="scpd">SCPD file</glossterm> and generates convenience C functions
+      which call the actual GUPnP functions. The client-side bindings can be seen
+      as a service-specific version of the GUPnPServiceProxy API and the 
+      service-side bindings are the same for GUPnPService.
     </para>
     <para>
-      These generated function are less verbose than direct calls to
-      <function>gupnp_service_proxy_send_call()</function> because they have the
-      correct argument types.
+      These generated functions are less verbose and also safer as function call
+      parameters are correctly typed. Action, variable and query names are easier
+      to get correct with bindings (or at least the errors will be compile-time
+      errors instead of run-time), and are also available in editor 
+      autocompletion.
     </para>
+  </refsect1>
+  <refsect1>
+    <title>Client side bindings</title>
     <para>
-      For example, this action:
+      As an example, this action:
     </para>
     <programlisting><![CDATA[<action>
   <name>DeletePortMapping</name>
@@ -57,40 +66,111 @@
   </argumentList>
 </action>]]></programlisting>
     <para>
-      Will generate the following prototype:
+      Will generate the following synchronous client-side (control point) 
+      function:
     </para>
     <programlisting>static inline gboolean
-DeletePortMapping (GUPnPServiceProxy *proxy,
-                   char * in_NewRemoteHost,
-                   unsigned int in_NewExternalPort,
-                   char * in_NewProtocol,
-                   GError **error);</programlisting>
+igd_delete_port_mapping (GUPnPServiceProxy *proxy,
+                         const gchar *in_new_remote_host,
+                         const guint in_new_external_port,
+                         const gchar *in_new_protocol,
+                         GError **error);
+</programlisting>
     <para>
       As can be seen, the arguments have the correct types and are prefixed with
-      the argument direction.
+      the argument direction. 
     </para>
     <para>
       <command>gupnp-binding-tool</command> generates both synchronous and
-      asynchronous wrappers.  The <function>DeletePortMapping</function> example
+      asynchronous wrappers.  The <function>igd_delete_port_mapping</function> example
       above is the synchronous form, the asynchronous form is as follows:
     </para>
-    <programlisting>typedef void (*DeletePortMapping_reply) (GUPnPServiceProxy *proxy,
-                                         GError *error,
-                                         gpointer userdata);
+    <programlisting>typedef void (*igd_delete_port_mapping_reply) (GUPnPServiceProxy *proxy,
+                                               GError *error,
+                                               gpointer userdata);
 
 static inline GUPnPServiceProxyAction *
-DeletePortMapping_async (GUPnPServiceProxy *proxy,
-                         char * in_NewRemoteHost,
-                         unsigned int in_NewExternalPort,
-                         char * in_NewProtocol,
-                         DeletePortMapping_reply callback,
-                         gpointer userdata);</programlisting>
+igd_delete_port_mapping_async (GUPnPServiceProxy *proxy,
+                               const gchar *in_new_remote_host,
+                               const guint in_new_external_port,
+                               const gchar *in_new_protocol,
+                               igd_delete_port_mapping_reply callback,
+                               gpointer userdata);</programlisting>
     <para>
       The asynchronous form (implemented using
       <function>gupnp_service_proxy_begin_action()</function> and
       <function>gupnp_service_proxy_end_action()</function>) will return without
       blocking and later invoke the callback from the main loop when the reply
       is received.
+    </para>
+    <para>
+      The tool also creates bindings for state variable notifications. This state 
+      variable definition:
+    </para>
+    <programlisting><![CDATA[<stateVariable sendEvents="yes">
+  <name>ExternalIPAddress</name>
+  <dataType>string</dataType>
+</stateVariable>]]></programlisting>
+    <para>
+      will create this client binding that can be used to get notifications on 
+      "ExternalIPAddress" changes:
+    </para>
+    <programlisting>typedef void
+(*igd_external_ip_address_changed_callback) (GUPnPServiceProxy *proxy,
+                                             const gchar *external_ip_address,
+                                             gpointer userdata);
+
+static inline gboolean
+igd_external_ip_address_add_notify (GUPnPServiceProxy *proxy,
+                                    igd_external_ip_address_changed_callback callback,
+                                    gpointer userdata);</programlisting>
+    
+    <para>
+      All of the examples were produced with <filename>gupnp-binding-tool 
+      --prefix igd --mode client WANIPConnection.xml</filename>.
+    </para>
+  </refsect1>
+  <refsect1>
+    <title>Server side bindings</title>
+    <para>
+      The corresponding server bindings for the same UPnP action 
+      (DeletePortMapping) look like this:
+    </para>
+    <programlisting>void
+igd_delete_port_mapping_action_get (GUPnPServiceAction *action,
+                                    gchar **in_new_remote_host,
+                                    guint *in_new_external_port,
+                                    gchar **in_new_protocol);
+
+gulong
+igd_delete_port_mapping_action_connect (GUPnPService *service,
+                                        GCallback callback,
+                                        gpointer userdata);</programlisting>
+    <para>
+      The generated *_action_connect() function can be used to connect the action
+      handler. The *_action_get() and *_action_set() functions can then 
+      be used inside the action handler to get/set action variables. If notified
+      variables are modified, the *_variable_notify() should be used to send 
+      the notifications (see below).  
+    </para>
+    <programlisting>typedef gchar *(*igd_external_ip_address_query_callback) (GUPnPService *service,
+                                                          gpointer userdata);
+
+gulong
+igd_external_ip_address_query_connect (GUPnPService *service,
+                                       igd_external_ip_address_query_callback callback,
+                                       gpointer userdata);
+void
+igd_external_ip_address_variable_notify (GUPnPService *service,
+                                         const gchar *external_ip_address);</programlisting>
+    <para>
+      The *_query_connect() function can be used to connect the service-specific 
+      query handler. The return value of the handler is the returned state 
+      variable value.
+    </para>
+    <para>
+      All of the examples were produced with <filename>gupnp-binding-tool 
+      --prefix igd --mode server WANIPConnection.xml</filename>.
     </para>
   </refsect1>
 </refentry>
