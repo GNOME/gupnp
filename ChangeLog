@@ -1,3 +1,15 @@
+2008-10-17  Jussi Kukkonen  <jku@linux.intel.com>
+
+	* tools/gupnp-binding-tool:
+
+	gupnp-binding-tool improvements
+	 - add support for all upnp types
+	 - add "--prefix" option
+	 - prettify binding tool output
+	 - make var and function names lower_case, not CamelCase
+	 - generate state variable notification bindings
+	This change makes gupnp-binding-tool output incompatible with old one
+
 2008-10-14  Zeeshan Ali (Khattak)  <zeeshanak@gnome.org>
 
        * libgupnp/gupnp-service-introspection.c:
