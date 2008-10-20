@@ -1,3 +1,9 @@
+2008-10-20  Jussi Kukkonen  <jku@linux.intel.com>
+
+	* tools/gupnp-binding-tool:
+
+	Don't include specific glib/gupnp headers, use gupnp.h.
+
 2008-10-17  Jussi Kukkonen  <jku@linux.intel.com>
 
 	* tools/gupnp-binding-tool:
