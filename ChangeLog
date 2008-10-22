@@ -1,3 +1,10 @@
+2008-10-22  Jussi Kukkonen  <jku@linux.intel.com>
+
+	* tools/gupnp-binding-tool:
+
+	Use inline functions. 
+	Fix generated code indent, remove trailing whitespace.
+
 2008-10-20  Jussi Kukkonen  <jku@linux.intel.com>
 
 	* tools/gupnp-binding-tool:

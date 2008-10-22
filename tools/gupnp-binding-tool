@@ -18,6 +18,10 @@
 
 # TODO:
 # - finish code cleanup
+# - currently allowedValueList is not used: could use it to turn 
+#   current char* value to an enum
+# - could warn if values outside allowedValueRange are used in *_action_set() 
+# - add option to generate skeleton source code that uses the bindings? 
 
 import sys, os.path, re, xml.etree.ElementTree as ET
 from optparse import OptionParser
@@ -183,11 +187,11 @@ def printClientSyncActionBinding(a):
     print "{"
 
     print "  return gupnp_service_proxy_send_action"
-    print "    (proxy, \"%s\", error, " % a.name
+    print "    (proxy, \"%s\", error," % a.name
     
     for arg in a.in_args:
         print "     \"%s\", %s, in_%s," % (arg.name, arg.related_var.gtype, arg.c_name)
-    print "     NULL, "
+    print "     NULL,"
     
     for arg in a.out_args:
         print "     \"%s\", %s, out_%s," % (arg.name, arg.related_var.gtype, arg.c_name)
@@ -374,7 +378,7 @@ def printServerActionBinding(a):
     # getter and setter func for GUPnPServiceAction
     indent = (13 + len (a.c_prefixed_name)) * " "
     if len (a.in_args) > 0:
-        print "void"
+        print "static inline void"
         print "%s_action_get (GUPnPServiceAction *action," % (a.c_prefixed_name)
         for arg in a.in_args[:-1]:
             print "%s%s*in_%s," % (indent, arg.related_var.ctype, arg.c_name)
@@ -387,10 +391,10 @@ def printServerActionBinding(a):
         print "}"
         print
     if len (a.out_args) > 0:
-        print "void"
+        print "static inline void"
         print "%s_action_set (GUPnPServiceAction *action," % (a.c_prefixed_name)
         for arg in a.out_args[:-1]:
-            print "const %s%sout_%s," % (indent, arg.related_var.ctype, arg.c_name)
+            print "%sconst %sout_%s," % (indent, arg.related_var.ctype, arg.c_name)
         print "%sconst %sout_%s)" % (indent, a.out_args[-1].related_var.ctype, a.out_args[-1].c_name)
         print "{"
         print "  gupnp_service_action_set (action,"
@@ -401,7 +405,7 @@ def printServerActionBinding(a):
         print
     
     indent = (17 + len (a.c_prefixed_name)) * " "
-    print "gulong"
+    print "static inline gulong"
     print "%s_action_connect (GUPnPService *service," % a.c_prefixed_name
     print "%sGCallback callback," % indent 
     print "%sgpointer userdata)" % indent
