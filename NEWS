@@ -1,3 +1,12 @@
+0.12.3
+======
+
+- Greatly improved client-side bindings [Jussi Kukkonen]
+- Server-side bindings [JK]
+- Don't use NULL return values from g_get_application_name [Ross Burton]
+- Make gupnp_context_get_session public [Jorn Baayen]
+- Use the specified GMainContext for timeouts [Olivier Crete, Jorn Baayen]
+
 0.12.2
 ======
 

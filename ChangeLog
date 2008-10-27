@@ -1,5 +1,11 @@
 2008-10-27  Ross Burton  <ross@linux.intel.com>
 
+	* configure.ac:
+	* NEWS:
+	Version 0.12.3.
+
+2008-10-27  Ross Burton  <ross@linux.intel.com>
+
 	* Makefile.am:
 	Enable gtk-doc in distcheck.
 
