@@ -1,4 +1,4 @@
-../gsSUBDIRS = libgupnp tools examples tests doc
+SUBDIRS = libgupnp tools examples tests doc
 
 pkgconfig_DATA= gupnp-1.0.pc
 pkgconfigdir = $(libdir)/pkgconfig
