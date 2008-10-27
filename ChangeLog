@@ -1,5 +1,10 @@
 2008-10-27  Ross Burton  <ross@linux.intel.com>
 
+	* Makefile.am:
+	Enable gtk-doc in distcheck.
+
+2008-10-27  Ross Burton  <ross@linux.intel.com>
+
 	* libgupnp/http-headers.c:
 	Don't use NULL return values from g_get_application_name() (#1176).
 
