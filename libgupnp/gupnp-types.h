@@ -1,8 +1,8 @@
 /*
- * Copyright (C) 2007 Zeeshan Ali <zeenix@gstreamer.net>
+ * Copyright (C) 2007 Zeeshan Ali (Khattak) <zeeshanak@gnome.org>
  * Copyright (C) 2006, 2007 OpenedHand Ltd.
  *
- * Author: Zeeshan Ali <zeenix@gstreamer.net>
+ * Author: Zeeshan Ali (Khattak) <zeeshanak@gnome.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public

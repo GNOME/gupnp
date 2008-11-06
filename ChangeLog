@@ -1,3 +1,17 @@
+2008-11-06  Zeeshan Ali (Khattak)  <zeeshanak@gnome.org>
+
+	* AUTHORS:
+	* libgupnp/gupnp-resource-factory-private.h:
+	* libgupnp/gupnp-resource-factory.c:
+	* libgupnp/gupnp-resource-factory.h:
+	* libgupnp/gupnp-service-introspection.c:
+	* libgupnp/gupnp-service-introspection.h:
+	* libgupnp/gupnp-types-private.h:
+	* libgupnp/gupnp-types.c:
+	* libgupnp/gupnp-types.h:
+	* tests/test-introspection.c:
+	Replace my non-working "@gstreamer.net" email with "@gnome.org" one.
+
 2008-10-27  Ross Burton  <ross@linux.intel.com>
 
 	* configure.ac:
