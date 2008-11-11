@@ -1,0 +1,16 @@
+
+Releasing a GUPnP component:
+1. Ensure version in configure.ac is correct, update NEWS
+2. make distcheck
+3. Commit, create svn tag <COMPONENT-NAME>-<MAJOR>_<MINOR>[_<BUILD>]
+4. Bump version number to a 'post-release' version
+5. If you do not have actual release privileges, inform
+   someone who does (mailing list is fine).
+
+With release privileges:
+6. Upload documentation via WebDAV (if needed):
+   https://svn.o-hand.com/sources/gupnp-docs/
+7. update tarball and website NEWS via SVN:
+   https://svn.o-hand.com/repos/gupnp-web
+
+8. Send announcement to mailing list on behalf of the releaser

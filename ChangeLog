@@ -1,3 +1,9 @@
+2008-11-11  Jussi Kukkonen  <jku@linux.intel.com>
+
+	* README.release:
+
+	Add release instructions for GUPnP components
+
 2008-11-06  Zeeshan Ali (Khattak)  <zeeshanak@gnome.org>
 
 	* AUTHORS:
