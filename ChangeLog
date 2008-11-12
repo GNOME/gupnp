@@ -1,3 +1,10 @@
+2008-11-12  Jussi Kukkonen  <jku@linux.intel.com>
+
+	* doc/glossary.xml:
+	* doc/overview.xml:
+
+	Add DIDL-Lite and SSDP to glossary, mention upnp and dlna specs. 
+
 2008-11-11  Jussi Kukkonen  <jku@linux.intel.com>
 
 	* README.release:

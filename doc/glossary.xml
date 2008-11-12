@@ -60,6 +60,26 @@
   </glossdef>
   </glossentry>
 
+  <glossentry>
+    <glossterm>DIDL-Lite</glossterm>
+    <glosssee otherterm="didllite"/>
+  </glossentry>
+
+  <glossentry id="didllite"><glossterm>Digital Item Declaration Language - Lite</glossterm>
+  <acronym>DIDL-Lite</acronym>
+  <glossdef>
+    <para>
+      An XML schema used to represent digital content metadata. Defined by
+      the UPnP Forum.
+    </para>
+  </glossdef>
+  </glossentry>
+
+  <glossentry>
+    <glossterm>SCPD</glossterm>
+    <glosssee otherterm="scpd"/>
+  </glossentry>
+
   <glossentry id="service"><glossterm>Service</glossterm>
   <glossdef>
     <para>
@@ -79,11 +99,6 @@
   </glossdef>
   </glossentry>
 
-  <glossentry>
-    <glossterm>SCPD</glossterm>
-    <glosssee otherterm="scpd"/>
-  </glossentry>
-
   <glossentry id="scpd">
     <glossterm>Service Control Protocol Document</glossterm>
     <acronym>SCPD</acronym>
@@ -98,7 +113,28 @@
       <glossseealso otherterm="state-variable"/>
     </glossdef>
   </glossentry>
+
+  <glossentry id="ssdp">
+    <glossterm>Simple Service Discovery Protocol</glossterm>
+    <acronym>SSDP</acronym>
+    <glossdef>
+      <para>
+        UPnP device discovery protocol. Specifies how <glossterm>Devices</glossterm> 
+        advertise their <glossterm>Services</glossterm> in the network and also how 
+        <glossterm>Control Points</glossterm> search for
+        services and devices respond.
+      </para>
+      <glossseealso otherterm="device"/>
+      <glossseealso otherterm="controlpoint"/>
+      <glossseealso otherterm="service"/>
+    </glossdef>
+  </glossentry>
   
+  <glossentry>
+    <glossterm>SSDP</glossterm>
+    <glosssee otherterm="ssdp"/>
+  </glossentry>
+
   <glossentry id="state-variable"><glossterm>State Variable</glossterm>
   <glossdef>
     <para>

@@ -22,4 +22,13 @@
     linkend="service">Service</glossterm>, and <glossterm
     linkend="controlpoint">Control Point</glossterm> in the glossary.
   </para>
+  <para>
+    The canonical reference for UPnP is <citetitle>UPnP Device 
+    Architecture</citetitle> by  
+    <ulink url="http://www.upnp.org">UPnP Forum</ulink>. GUPnP also 
+    follows the <citetitle>DLNA Networked Device Interoperability 
+    Guidelines</citetitle> by <ulink url="">Digital Living Network alliance</ulink>
+    (to the extent that the guidelines are applicable to a UPnP protocol 
+    implementation).
+  </para>
 </chapter>
