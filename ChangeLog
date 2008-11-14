@@ -1,5 +1,10 @@
 2008-11-14  Ross Burton  <ross@linux.intel.com>
 
+	* libgupnp/gupnp-service-proxy.c:
+	Set the Content Type header correctly (#1257, Zeeshan Ali Khattak)
+
+2008-11-14  Ross Burton  <ross@linux.intel.com>
+
 	* libgupnp/gupnp-service.c:
 	* libgupnp/gupnp-service-proxy.c:
 	* tests/test-proxy.c:
