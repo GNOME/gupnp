@@ -340,8 +340,8 @@ gupnp_service_proxy_class_init (GUPnPServiceProxyClass *klass)
  * @proxy: A #GUPnPServiceProxy
  * @action: An action
  * @error: The location where to store any error, or %NULL
- * @Varargs: tuples of in parameter name, in paramater type, and in parameter
- * value, followed by %NULL, and then tuples of out paramater name,
+ * @Varargs: tuples of in parameter name, in parameter type, and in parameter
+ * value, followed by %NULL, and then tuples of out parameter name,
  * out parameter type, and out parameter value location, terminated with %NULL
  *
  * Sends action @action with parameters @Varargs to the service exposed by
@@ -382,8 +382,8 @@ stop_main_loop (GUPnPServiceProxy       *proxy,
  * @proxy: A #GUPnPServiceProxy
  * @action: An action
  * @error: The location where to store any error, or %NULL
- * @var_args: va_list of tuples of in parameter name, in paramater type, and in
- * parameter value, followed by %NULL, and then tuples of out paramater name,
+ * @var_args: va_list of tuples of in parameter name, in parameter type, and in
+ * parameter value, followed by %NULL, and then tuples of out parameter name,
  * out parameter type, and out parameter value location
  *
  * See gupnp_service_proxy_send_action(); this version takes a va_list for
@@ -496,7 +496,7 @@ gupnp_service_proxy_send_action_hash (GUPnPServiceProxy *proxy,
  * @callback: The callback to call when sending the action has succeeded
  * or failed
  * @user_data: User data for @callback
- * @Varargs: tuples of in parameter name, in paramater type, and in parameter
+ * @Varargs: tuples of in parameter name, in parameter type, and in parameter
  * value, terminated with %NULL
  *
  * Sends action @action with parameters @Varargs to the service exposed by
@@ -718,7 +718,7 @@ write_in_parameter (const char *arg_name,
  * @callback: The callback to call when sending the action has succeeded
  * or failed
  * @user_data: User data for @callback
- * @var_args: A va_list of tuples of in parameter name, in paramater type, and
+ * @var_args: A va_list of tuples of in parameter name, in parameter type, and
  * in parameter value
  *
  * See gupnp_service_proxy_begin_action(); this version takes a va_list for
@@ -844,7 +844,7 @@ gupnp_service_proxy_begin_action_hash
  * @proxy: A #GUPnPServiceProxy
  * @action: A #GUPnPServiceProxyAction handle
  * @error: The location where to store any error, or %NULL
- * @Varargs: tuples of out parameter name, out paramater type, and out parameter
+ * @Varargs: tuples of out parameter name, out parameter type, and out parameter
  * value location, terminated with %NULL. The out parameter values should be
  * freed after use
  *
@@ -1011,7 +1011,7 @@ read_out_parameter (const char *arg_name,
 {
         xmlNode *param;
 
-        /* Try to find a matching paramater in the response*/
+        /* Try to find a matching parameter in the response*/
         param = xml_util_get_element (params,
                                       arg_name,
                                       NULL);
@@ -1030,7 +1030,7 @@ read_out_parameter (const char *arg_name,
  * @proxy: A #GUPnPServiceProxy
  * @action: A #GUPnPServiceProxyAction handle
  * @error: The location where to store any error, or %NULL
- * @var_args: A va_list of tuples of out parameter name, out paramater type,
+ * @var_args: A va_list of tuples of out parameter name, out parameter type,
  * and out parameter value location. The out parameter values should be
  * freed after use
  *
