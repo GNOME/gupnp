@@ -1,5 +1,10 @@
 2008-11-14  Ross Burton  <ross@linux.intel.com>
 
+	* libgupnp/gupnp-context.c:
+	Handle fscanf failing in get_default_host_ip (thanks Sven Neumann).
+
+2008-11-14  Ross Burton  <ross@linux.intel.com>
+
 	* libgupnp/gupnp-service-proxy.c:
 	Fix typos (thanks Sven Neumann)
 

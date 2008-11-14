@@ -189,8 +189,11 @@ get_default_host_ip (void)
         fp = fopen ("/proc/net/route", "r");
         
         /* Skip the header */
-        fscanf (fp, "%*[^\n]\n");
-        
+        if (fscanf (fp, "%*[^\n]\n") == EOF) {
+               fclose (fp);
+               return NULL;
+	}
+
         while ((ret = fscanf (fp,
                               "%31s %lx %*x %*X %*d %*d %*d %*x %*d %*d %*d",
                               dev, &dest)) != EOF) {
