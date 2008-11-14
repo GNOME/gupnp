@@ -99,7 +99,7 @@ main (int argc, char **argv)
   /* Create the UPnP context */
   context = gupnp_context_new (NULL, NULL, 0, &error);
   if (error) {
-    g_error (error->message);
+    g_error ("%s", error->message);
   }
 
   /* Create the control point, searching for SwitchPower services */

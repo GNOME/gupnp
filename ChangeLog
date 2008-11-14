@@ -1,5 +1,17 @@
 2008-11-14  Ross Burton  <ross@linux.intel.com>
 
+	* libgupnp/gupnp-service.c:
+	* libgupnp/gupnp-service-proxy.c:
+	* tests/test-proxy.c:
+	* tests/test-server.c:
+	* tests/test-browsing.c:
+	* tests/test-introspection.c:
+	* examples/light-client.c:
+	* examples/light-server.c:
+	Don't pass arbitrary strings to printf() for security  (thanks Sven Neumann)
+
+2008-11-14  Ross Burton  <ross@linux.intel.com>
+
 	* libgupnp/gupnp-context.c:
 	Handle fscanf failing in get_default_host_ip (thanks Sven Neumann).
 

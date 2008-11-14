@@ -1727,7 +1727,7 @@ subscribe_got_response (SoupSession       *session,
                 /* Subscription failed. */
                 error = g_error_new (GUPNP_EVENTING_ERROR,
                                      GUPNP_EVENTING_ERROR_SUBSCRIPTION_FAILED,
-                                     msg->reason_phrase);
+                                     "%s", msg->reason_phrase);
 
  ERROR:
                 proxy->priv->subscribed = FALSE;
