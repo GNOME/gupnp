@@ -1,3 +1,10 @@
+0.12.4
+======
+
+- Set Content Type header correctly in soap messages [Zeeshan Ali]
+- Don't pass arbitrary strings to printf() for security [Sven Neumann]
+- Handle fscanf failing in get_default_host_ip() [Sven Neumann]
+
 0.12.3
 ======
 

@@ -1,3 +1,9 @@
+2008-11-17  Jussi Kukkonen  <jku@linux.intel.com>
+
+	* configure.ac:
+	* NEWS:
+	Version 0.12.4.
+
 2008-11-14  Ross Burton  <ross@linux.intel.com>
 
 	* libgupnp/gupnp-service-proxy.c:
