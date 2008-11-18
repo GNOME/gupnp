@@ -10,6 +10,7 @@
  */
 
 #include <libgupnp/gupnp.h>
+#include <stdlib.h>
 
 static GMainLoop *main_loop;
 
@@ -82,7 +83,7 @@ main (int argc, char **argv)
   /* Check and parse command line arguments */
   if (argc != 2) {
     usage ();
-    return 1;
+    return EXIT_FAILURE;
   }
   
   if (g_str_equal (argv[1], "on")) {
@@ -93,17 +94,22 @@ main (int argc, char **argv)
     mode = TOGGLE;
   } else {
     usage ();
-    return 1;
+    return EXIT_FAILURE;
   }
 
   /* Create the UPnP context */
   context = gupnp_context_new (NULL, NULL, 0, &error);
   if (error) {
-    g_error ("%s", error->message);
+    g_printerr ("Error creating the GUPnP context: %s\n",
+		error->message);
+    g_error_free (error);
+
+    return EXIT_FAILURE;
   }
 
   /* Create the control point, searching for SwitchPower services */
-  cp = gupnp_control_point_new (context, "urn:schemas-upnp-org:service:SwitchPower:1");
+  cp = gupnp_control_point_new (context,
+				"urn:schemas-upnp-org:service:SwitchPower:1");
   
   /* Connect to the service-found callback */
   g_signal_connect (cp,

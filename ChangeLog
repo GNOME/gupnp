@@ -1,3 +1,13 @@
+2008-11-18  Ross Burton  <ross@linux.intel.com>
+
+	* tests/test-proxy.c:
+	* tests/test-server.c:
+	* tests/test-browsing.c:
+	* tests/test-introspection.c:
+	* examples/light-client.c:
+	* examples/light-server.c:
+	Don't user g_error but g_printerr (Sven Neumann).
+
 2008-11-17  Jussi Kukkonen  <jku@linux.intel.com>
 
 	* configure.ac:

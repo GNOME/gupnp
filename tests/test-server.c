@@ -21,7 +21,7 @@
 
 #include <libgupnp/gupnp-root-device.h>
 #include <libgupnp/gupnp-service.h>
-#include <stdio.h>
+#include <stdlib.h>
 #include <locale.h>
 #include <string.h>
 #include <signal.h>
@@ -112,9 +112,9 @@ main (int argc, char **argv)
         struct sigaction sig_action;
 
         if (argc < 2) {
-                fprintf (stderr, "Usage: %s DESCRIPTION_FILE\n", argv[0]);
+                g_printerr ("Usage: %s DESCRIPTION_FILE\n", argv[0]);
 
-                return 1;
+                return EXIT_FAILURE;
         }
 
         g_thread_init (NULL);
@@ -124,10 +124,11 @@ main (int argc, char **argv)
         error = NULL;
         context = gupnp_context_new (NULL, NULL, 0, &error);
         if (error) {
-                g_error ("%s", error->message);
+                g_printerr ("Error creating the GUPnP context: %s\n",
+			    error->message);
                 g_error_free (error);
 
-                return 1;
+                return EXIT_FAILURE;
         }
 
         g_print ("Running on port %d\n", gupnp_context_get_port (context));
@@ -183,5 +184,5 @@ main (int argc, char **argv)
         g_object_unref (dev);
         g_object_unref (context);
 
-        return 0;
+        return EXIT_SUCCESS;
 }

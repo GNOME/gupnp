@@ -10,6 +10,7 @@
  */
 
 #include <libgupnp/gupnp.h>
+#include <stdlib.h>
 
 static gboolean status;
 
@@ -103,7 +104,11 @@ main (int argc, char **argv)
   /* Create the UPnP context */
   context = gupnp_context_new (NULL, NULL, 0, &error);
   if (error) {
-    g_error ("%s", error->message);
+    g_printerr ("Error creating the GUPnP context: %s\n",
+		error->message);
+    g_error_free (error);
+
+    return EXIT_FAILURE;
   }
   
   /* Host the device and service description files */
@@ -117,8 +122,11 @@ main (int argc, char **argv)
   /* Get the switch service from the root device */
   service = gupnp_device_info_get_service
     (GUPNP_DEVICE_INFO (dev), "urn:schemas-upnp-org:service:SwitchPower:1");
-  if (!service)
-    g_error ("Cannot get SwitchPower1 service");
+  if (!service) {
+    g_printerr ("Cannot get SwitchPower1 service\n");
+
+    return EXIT_FAILURE;
+  }
   
   /* Autoconnect the action and state variable handlers.  This connects
      query_target_cb and query_status_cb to the Target and Status state
@@ -126,8 +134,12 @@ main (int argc, char **argv)
      get_status_cb to SetTarget, GetTarget and GetStatus actions
      respectively. */
   gupnp_service_signals_autoconnect (GUPNP_SERVICE (service), NULL, &error);
-  if (error)
-    g_error ("Failed to autoconnect signals: %s", error->message);
+  if (error) {
+    g_printerr ("Failed to autoconnect signals: %s\n", error->message);
+    g_error_free (error);
+
+    return EXIT_FAILURE;
+  }
   
   /* Run the main loop */
   main_loop = g_main_loop_new (NULL, FALSE);

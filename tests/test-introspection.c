@@ -23,6 +23,7 @@
 
 #include <libgupnp/gupnp-control-point.h>
 #include <libgupnp/gupnp-service-introspection.h>
+#include <stdlib.h>
 #include <string.h>
 #include <signal.h>
 
@@ -244,20 +245,25 @@ main (int argc, char **argv)
                                 &argc,
                                 &argv,
                                 &error);
-        if (error)
-                g_error ("error while parsing commandline arguments: %s",
-                         error->message);
+        if (error) {
+                g_printerr ("Error parsing the commandline arguments: %s\n",
+			    error->message);
+                g_error_free (error);
 
+                return EXIT_FAILURE;
+        }
+		
         g_thread_init (NULL);
         g_type_init ();
 
         error = NULL;
         context = gupnp_context_new (NULL, NULL, 0, &error);
         if (error) {
-                g_error ("%s", error->message);
+                g_printerr ("Error creating the GUPnP context: %s\n",
+			    error->message);
                 g_error_free (error);
 
-                return 1;
+                return EXIT_FAILURE;
         }
 
         /* We're interested in everything */
@@ -287,5 +293,5 @@ main (int argc, char **argv)
         g_object_unref (cp);
         g_object_unref (context);
 
-        return 0;
+        return EXIT_SUCCESS;
 }
