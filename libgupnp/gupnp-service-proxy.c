@@ -890,7 +890,7 @@ check_action_response (GUPnPServiceProxy       *proxy,
         case SOUP_STATUS_INTERNAL_SERVER_ERROR:
                 break;
         default:
-                set_server_error (error, action->msg);
+                _gupnp_error_set_server_error (error, action->msg);
 
                 return NULL;
         }
@@ -906,7 +906,7 @@ check_action_response (GUPnPServiceProxy       *proxy,
                                      GUPNP_SERVER_ERROR_INVALID_RESPONSE,
                                      "Could not parse SOAP response");
                 } else {
-                        set_error_literal
+                        g_set_error_literal
                                     (error,
                                      GUPNP_SERVER_ERROR,
                                      GUPNP_SERVER_ERROR_INTERNAL_SERVER_ERROR,
@@ -987,10 +987,10 @@ check_action_response (GUPnPServiceProxy       *proxy,
                 if (desc == NULL)
                         desc = g_strdup (action->msg->reason_phrase);
 
-                set_error_literal (error,
-                                   GUPNP_CONTROL_ERROR,
-                                   code,
-                                   desc);
+                g_set_error_literal (error,
+                                     GUPNP_CONTROL_ERROR,
+                                     code,
+                                     desc);
 
                 g_free (desc);
 

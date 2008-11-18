@@ -81,24 +81,6 @@ gupnp_control_error_quark (void)
         return quark;
 }
 
-/* Missing g_set_error_literal() */
-void
-set_error_literal (GError    **error,
-                   GQuark      error_quark,
-                   int         code,
-                   const char *message)
-{
-        if (error == NULL)
-                return;
-
-        if (*error == NULL) {
-                *error = g_error_new_literal (error_quark,
-                                              code,
-                                              message);
-        } else
-                g_warning ("Error already set.");
-}
-
 /* Soup status code => GUPnPServerError */
 static int
 code_from_status_code (int status_code)
@@ -117,18 +99,18 @@ code_from_status_code (int status_code)
 
 /* Set status of @msg to @error */
 void
-set_server_error (GError     **error,
-                  SoupMessage *msg)
+_gupnp_error_set_server_error (GError     **error,
+                               SoupMessage *msg)
 {
-        set_error_literal (error,
-                           GUPNP_SERVER_ERROR,
-                           code_from_status_code (msg->status_code),
-                           msg->reason_phrase);
+        g_set_error_literal (error,
+                             GUPNP_SERVER_ERROR,
+                             code_from_status_code (msg->status_code),
+                             msg->reason_phrase);
 }
 
 /* Create a #GError with status of @msg */
 GError *
-new_server_error (SoupMessage *msg)
+_gupnp_error_new_server_error (SoupMessage *msg)
 {
         return g_error_new_literal (GUPNP_SERVER_ERROR,
                                     code_from_status_code (msg->status_code),

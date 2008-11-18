@@ -584,7 +584,7 @@ gupnp_service_info_get_introspection (GUPnPServiceInfo *info,
 
         status = soup_session_send_message (session, msg);
         if (!SOUP_STATUS_IS_SUCCESSFUL (status)) {
-                set_server_error (error, msg);
+                _gupnp_error_set_server_error (error, msg);
 
                 g_object_unref (msg);
 
@@ -647,7 +647,7 @@ got_scpd_url (SoupSession    *session,
                                          "Could not parse SCPD");
                 }
         } else
-                error = new_server_error (msg);
+                error = _gupnp_error_new_server_error (msg);
 
         data->info->priv->pending_gets =
                 g_list_remove (data->info->priv->pending_gets, data);

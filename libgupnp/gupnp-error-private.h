@@ -26,18 +26,12 @@
 
 G_BEGIN_DECLS
 
-void
-set_error_literal (GError     **error,
-                   GQuark       error_quark,
-                   int          code,
-                   const char  *message);
+G_GNUC_INTERNAL void
+_gupnp_error_set_server_error (GError     **error,
+                               SoupMessage *msg);
 
-void
-set_server_error  (GError     **error,
-                   SoupMessage *msg);
-
-GError *
-new_server_error  (SoupMessage *msg);
+G_GNUC_INTERNAL GError *
+_gupnp_error_new_server_error (SoupMessage *msg);
 
 G_END_DECLS
 

@@ -12,7 +12,8 @@ AC_PROG_LIBTOOL
 AC_FUNC_MMAP
 AC_SYS_LARGEFILE
 
-PKG_CHECK_MODULES(LIBGUPNP, gobject-2.0 >= 2.9.1 \
+PKG_CHECK_MODULES(LIBGUPNP, glib-2.0 >= 2.18 \
+                            gobject-2.0 >= 2.18 \
                             gmodule-2.0 \
                             gssdp-1.0 >= 0.6 \
                             libsoup-2.4 >= 2.4.1 \

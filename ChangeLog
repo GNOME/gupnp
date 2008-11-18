@@ -1,5 +1,27 @@
 2008-11-18  Jorn Baayen  <jorn.baayen@collabora.co.uk>
 
+	* AUTHORS:
+
+	New e-mail address.
+
+	* configure.ac:
+
+	Depend on glib 2.18.
+
+	* libgupnp/gupnp-error-private.h:
+	* libgupnp/gupnp-error.c (_gupnp_error_set_server_error),
+	(_gupnp_error_new_server_error):
+	* libgupnp/gupnp-service-info.c
+	(gupnp_service_info_get_introspection), (got_scpd_url):
+	* libgupnp/gupnp-service-proxy.c (check_action_response):
+
+	Use g_set_error_literal(). (instead of our own home-cooked
+	set_error_literal())
+
+	Mark private error functions as G_GNUC_INTERNAL.
+
+2008-11-18  Jorn Baayen  <jorn.baayen@collabora.co.uk>
+
 	* libgupnp/gupnp-service-proxy.c (subscribe_got_response):
 	* libgupnp/gupnp-service.c (notify_got_response),
 	(notify_subscriber):
