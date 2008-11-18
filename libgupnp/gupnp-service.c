@@ -1534,9 +1534,10 @@ notify_got_response (SoupSession *session,
                         /* Emit 'notify-failed' signal */
                         GError *error;
 
-                        error = g_error_new (GUPNP_EVENTING_ERROR,
-                                             GUPNP_EVENTING_ERROR_NOTIFY_FAILED,
-                                             "%s", msg->reason_phrase);
+                        error = g_error_new_literal
+                                        (GUPNP_EVENTING_ERROR,
+                                         GUPNP_EVENTING_ERROR_NOTIFY_FAILED,
+                                         msg->reason_phrase);
 
                         g_signal_emit (data->service,
                                        signals[NOTIFY_FAILED],
@@ -1603,7 +1604,7 @@ notify_subscriber (gpointer key,
 
         /* Add body */
         soup_message_set_request (msg,
-                                  "text/xml",
+                                  "text/xml; charset=utf-8",
                                   SOUP_MEMORY_TAKE,
                                   g_strdup (property_set),
                                   strlen (property_set));

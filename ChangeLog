@@ -1,3 +1,14 @@
+2008-11-18  Jorn Baayen  <jorn.baayen@collabora.co.uk>
+
+	* libgupnp/gupnp-service-proxy.c (subscribe_got_response):
+	* libgupnp/gupnp-service.c (notify_got_response),
+	(notify_subscriber):
+
+	Use g_error_new_literal() instead of passing literal error
+	messages through "%s". 
+
+	Specify character set (UTF-8) in NOTIFY messages.
+
 2008-11-18  Ross Burton  <ross@linux.intel.com>
 
 	* tests/test-proxy.c:
