@@ -1,3 +1,9 @@
+2008-11-24  Ross Burton  <ross@linux.intel.com>
+
+	* libgupnp/gupnp-resource-factory.c:
+	 Use the correct value to key_equal_func argument of
+	 g_hash_table_new_full (thanks Zeeshan Ali)
+
 2008-11-18  Jorn Baayen  <jorn.baayen@collabora.co.uk>
 
 	* AUTHORS:

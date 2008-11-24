@@ -58,12 +58,12 @@ gupnp_resource_factory_init (GUPnPResourceFactory *factory)
 
         factory->priv->resource_type_hash =
                         g_hash_table_new_full (g_str_hash,
-                                               g_int_equal,
+                                               g_str_equal,
                                                g_free,
                                                NULL);
         factory->priv->proxy_type_hash =
                         g_hash_table_new_full (g_str_hash,
-                                               g_int_equal,
+                                               g_str_equal,
                                                g_free,
                                                NULL);
 }
