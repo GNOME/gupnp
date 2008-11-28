@@ -432,8 +432,8 @@ got_description_url (SoupSession           *session,
                 xmlDoc *xml_doc;
 
                 /* Parse response */
-                xml_doc = xmlParseMemory (msg->response_body->data,
-                                          msg->response_body->length);
+                xml_doc = xmlRecoverMemory (msg->response_body->data,
+                                            msg->response_body->length);
                 if (xml_doc) {
                         doc = xml_doc_wrapper_new (xml_doc);
 

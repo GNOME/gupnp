@@ -896,8 +896,8 @@ check_action_response (GUPnPServiceProxy       *proxy,
         }
 
         /* Parse response */
-        response = xmlParseMemory (action->msg->response_body->data,
-                                   action->msg->response_body->length);
+        response = xmlRecoverMemory (action->msg->response_body->data,
+                                     action->msg->response_body->length);
 
 	if (!response) {
                 if (action->msg->status_code == SOUP_STATUS_OK) {
@@ -1506,8 +1506,8 @@ server_handler (SoupServer        *soup_server,
                 proxy->priv->seq = 1;
 
         /* Parse the actual XML message content */
-        doc = xmlParseMemory (msg->request_body->data,
-                              msg->request_body->length);
+        doc = xmlRecoverMemory (msg->request_body->data,
+                                msg->request_body->length);
         if (doc == NULL) {
                 /* Failed */
                 g_warning ("Failed to parse NOTIFY message body");

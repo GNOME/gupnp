@@ -591,8 +591,8 @@ gupnp_service_info_get_introspection (GUPnPServiceInfo *info,
                 return NULL;
         }
 
-        scpd = xmlParseMemory (msg->response_body->data,
-                               msg->response_body->length);
+        scpd = xmlRecoverMemory (msg->response_body->data,
+                                 msg->response_body->length);
 
         g_object_unref (msg);
 
@@ -632,8 +632,8 @@ got_scpd_url (SoupSession    *session,
         if (SOUP_STATUS_IS_SUCCESSFUL (msg->status_code)) {
                 xmlDoc *scpd;
 
-                scpd = xmlParseMemory (msg->response_body->data,
-                                       msg->response_body->length);
+                scpd = xmlRecoverMemory (msg->response_body->data,
+                                         msg->response_body->length);
                 if (scpd) {
                         introspection = gupnp_service_introspection_new (scpd);
 

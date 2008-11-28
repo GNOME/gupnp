@@ -1,3 +1,17 @@
+2008-11-28  Jorn Baayen  <jorn.baayen@collabora.co.uk>
+
+	* libgupnp/gupnp-control-point.c (got_description_url):
+	* libgupnp/gupnp-root-device.c (download_and_parse):
+	* libgupnp/gupnp-service-info.c
+	(gupnp_service_info_get_introspection), (got_scpd_url):
+	* libgupnp/gupnp-service-proxy.c (check_action_response),
+	(server_handler):
+	* libgupnp/gupnp-service.c (control_server_handler):
+
+	Use xmlRecoverMemory instead of xmlParseMemory when parsing xml.
+	Hopefully we now manage better with the masses of über-broken xml
+	out there. (Thanks Jussi for the suggestion)
+
 2008-11-24  Ross Burton  <ross@linux.intel.com>
 
 	* libgupnp/gupnp-resource-factory.c:

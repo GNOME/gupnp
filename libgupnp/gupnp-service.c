@@ -704,8 +704,8 @@ control_server_handler (SoupServer        *server,
         *end = '\0';
 
         /* Parse action_node */
-        doc = xmlParseMemory (msg->request_body->data,
-                              msg->request_body->length);
+        doc = xmlRecoverMemory (msg->request_body->data,
+                                msg->request_body->length);
         action_node = xml_util_get_element ((xmlNode *) doc,
                                             "Envelope",
                                             "Body",

@@ -312,8 +312,8 @@ download_and_parse (GUPnPContext *context,
                 return NULL;
         }
 
-        description_doc = xmlParseMemory (msg->response_body->data,
-                                          msg->response_body->length); 
+        description_doc = xmlRecoverMemory (msg->response_body->data,
+                                            msg->response_body->length); 
 
         g_object_unref (msg);
 
