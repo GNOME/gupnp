@@ -62,8 +62,13 @@ gupnp_device_get_device (GUPnPDeviceInfo *info,
 
         device = GUPNP_DEVICE (info);
 
-        root_device = device->priv->root_device ?
-                      GUPNP_DEVICE (device->priv->root_device) : device;
+        root_device = GUPNP_IS_ROOT_DEVICE (device) ? device :
+                      GUPNP_DEVICE (device->priv->root_device);
+        if (root_device == NULL) {
+                g_warning ("Root device not found.");
+
+                return NULL;
+        }
 
         factory = gupnp_device_info_get_resource_factory (info);
         context = gupnp_device_info_get_context (info);
@@ -95,8 +100,13 @@ gupnp_device_get_service (GUPnPDeviceInfo *info,
 
         device = GUPNP_DEVICE (info);
 
-        root_device = device->priv->root_device ?
-                      GUPNP_DEVICE (device->priv->root_device) : device;
+        root_device = GUPNP_IS_ROOT_DEVICE (device) ? device :
+                      GUPNP_DEVICE (device->priv->root_device);
+        if (root_device == NULL) {
+                g_warning ("Root device not found.");
+
+                return NULL;
+        }
 
         factory = gupnp_device_info_get_resource_factory (info);
         context = gupnp_device_info_get_context (info);
@@ -130,8 +140,11 @@ gupnp_device_set_property (GObject      *object,
                 device->priv->root_device = g_value_get_object (value);
 
                 /* This can be NULL in which case *this* is the root device */
-                if (device->priv->root_device)
-                        g_object_ref (device->priv->root_device);
+                if (device->priv->root_device) {
+                        g_object_add_weak_pointer
+                                (G_OBJECT (device->priv->root_device),
+                                 (gpointer *) &device->priv->root_device);
+                }
 
                 break;
         default:
@@ -169,7 +182,10 @@ gupnp_device_dispose (GObject *object)
         device = GUPNP_DEVICE (object);
 
         if (device->priv->root_device) {
-                g_object_unref (device->priv->root_device);
+                g_object_remove_weak_pointer
+                        (G_OBJECT (device->priv->root_device),
+                         (gpointer *) &device->priv->root_device);
+
                 device->priv->root_device = NULL;
         }
 

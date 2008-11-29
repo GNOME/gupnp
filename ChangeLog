@@ -1,3 +1,14 @@
+2008-11-29  Jorn Baayen  <jorn.baayen@collabora.co.uk>
+
+	* libgupnp/gupnp-device.c (gupnp_device_get_device),
+	(gupnp_device_get_service), (gupnp_device_set_property),
+	(gupnp_device_dispose):
+	* libgupnp/gupnp-service.c (gupnp_service_set_property),
+	(gupnp_service_dispose):
+
+	Reference the root device weakly to avoid reference loops when
+	subclassing RootDevice. Based on patch from Zeeshan Ali.
+
 2008-11-28  Jorn Baayen  <jorn.baayen@collabora.co.uk>
 
 	* libgupnp/gupnp-control-point.c (got_description_url):

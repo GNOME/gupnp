@@ -1212,8 +1212,10 @@ gupnp_service_set_property (GObject      *object,
 
         switch (property_id) {
         case PROP_ROOT_DEVICE:
-                service->priv->root_device =
-                        g_object_ref (g_value_get_object (value));
+                service->priv->root_device = g_value_get_object (value);
+                g_object_add_weak_pointer
+                        (G_OBJECT (service->priv->root_device),
+                         (gpointer *) &service->priv->root_device);
 
                 service->priv->notify_available_id =
                         g_signal_connect_object (service->priv->root_device,
@@ -1267,7 +1269,10 @@ gupnp_service_dispose (GObject *object)
                                  service->priv->notify_available_id);
                 }
 
-                g_object_unref (service->priv->root_device);
+                g_object_remove_weak_pointer
+                        (G_OBJECT (service->priv->root_device),
+                         (gpointer *) &service->priv->root_device);
+
                 service->priv->root_device = NULL;
         }
 
