@@ -1,3 +1,11 @@
+2008-12-08  Ross Burton  <ross@linux.intel.com>
+
+	* libgupnp/gupnp-device-info.c:
+	Don't look for closest icon if there are no icons. Fixes the crash
+	in case of empty iconList nodes in device descriptions. (thanks
+	Zeeshan Ali)
+
+
 2008-11-29  Jorn Baayen  <jorn.baayen@collabora.co.uk>
 
 	* libgupnp/gupnp-device.c (gupnp_device_get_device),

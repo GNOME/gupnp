@@ -791,6 +791,9 @@ gupnp_device_info_get_icon_url (GUPnPDeviceInfo *info,
                 }
         }
 
+        if (icons == NULL)
+                return NULL;
+
         /* Find closest match */
         closest = NULL;
         for (l = icons; l; l = l->next) {
