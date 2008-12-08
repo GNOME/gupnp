@@ -5,7 +5,6 @@
 	in case of empty iconList nodes in device descriptions. (thanks
 	Zeeshan Ali)
 
-
 2008-11-29  Jorn Baayen  <jorn.baayen@collabora.co.uk>
 
 	* libgupnp/gupnp-device.c (gupnp_device_get_device),
