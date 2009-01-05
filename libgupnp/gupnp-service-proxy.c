@@ -1698,7 +1698,7 @@ subscribe_got_response (SoupSession       *session,
 
                         /* We want to resubscribe before the subscription
                          * expires. */
-                        timeout -= GENA_TIMEOUT_DELTA;
+                        timeout = g_random_int_range (1, timeout / 2);
 
                         if (timeout < 0) {
                                 g_warning ("Invalid time-out specified. "

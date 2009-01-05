@@ -1,3 +1,12 @@
+2009-01-05  Ross Burton  <ross@linux.intel.com>
+
+	* libgupnp/gena-protocol.h:
+	* libgupnp/gupnp-service-proxy.c:
+	Don't assume subscription timeout is > 30s.
+
+	Instead choose a random timeout value that is between 1 and half
+	the timeout value given by service (thanks Zeeshan Ali)
+
 2008-12-08  Ross Burton  <ross@linux.intel.com>
 
 	* libgupnp/gupnp-device-info.c:
