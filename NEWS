@@ -1,3 +1,15 @@
+0.12.5
+======
+
+- Improved error handling. [Sven Neumann, Jorn Baayen]
+- Specify character set (UTF-8) in NOTIFY messages. [Jorn Baayen]
+- Don't export internal functions. [Jorn Baayen]
+- Fix some crasher bugs. [Zeeshan Ali]
+- More lenient handling of xml from external sources. [Jorn Baayen,
+  Jussi Kukkonen]
+- Fix possible reference cycles. [Zeeshan Ali, Jorn Baayen]
+- Better handling of event subscription timeouts. [Zeeshan Ali]
+
 0.12.4
 ======
 
