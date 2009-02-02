@@ -184,6 +184,40 @@ get_default_host_ip (void)
         unsigned long dest;
         gboolean found = FALSE;
         
+#if defined(__FreeBSD__)
+	if ((fp = popen ("netstat -r -f inet -n -W", "r"))) {
+		char buffer[BUFSIZ];
+
+		char destination[32];
+
+		int i;
+		/* Skip the 4 header lines */
+		for (i=0;i<4;i++) {
+			if (!(fgets(buffer, BUFSIZ, fp)))
+				return NULL; /* Can't read */
+
+			if (buffer[strlen(buffer)-1] != '\n') {
+				g_warning("Can't read netstat output!");
+				return NULL;
+			}
+		}
+
+		while (fgets(buffer, BUFSIZ, fp)) {
+			if (buffer[strlen(buffer)-1] != '\n') {
+				g_warning("Can't read netstat output!");
+				return NULL;
+			}
+
+			if (sscanf(buffer, "%s %*s %*s %*d %*d %*d %s %*d", destination, dev) == 2) {
+				if (strcmp("default", destination) == 0) {
+					found = TRUE;
+					break;
+				}
+			}
+		}
+		pclose(fp);
+	}
+#else
         /* TODO: error checking */
 
         fp = fopen ("/proc/net/route", "r");
@@ -206,6 +240,7 @@ get_default_host_ip (void)
         }
         
         fclose (fp);
+#endif
 
         return get_host_ip (found ? dev : NULL);
 }
