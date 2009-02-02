@@ -10,3 +10,6 @@ light_client_SOURCES = light-client.c
 light_client_LDFLAGS = $(GTHREAD_LIBS)
 
 MAINTAINERCLEANFILES = Makefile.in
+
+EXTRA_DIST = BinaryLight1.xml \
+	     SwitchPower1.xml
