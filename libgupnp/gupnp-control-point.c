@@ -641,13 +641,6 @@ gupnp_control_point_resource_available (GSSDPResourceBrowser *resource_browser,
         if (!parse_usn (usn, &udn, &service_type))
                 return;
 
-        {
-          const GList *iter;
-
-          for (iter = locations; iter; iter = iter->next)
-            g_printerr ("location: %s\n", (const gchar *) iter->data);
-        }
-
         load_description (control_point,
                           locations->data,
                           udn,
