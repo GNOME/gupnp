@@ -219,6 +219,8 @@ process_service_list (xmlNode           *element,
                       const char        *description_url,
                       SoupURI           *url_base)
 {
+        g_object_ref (control_point);
+
         for (element = element->children; element; element = element->next) {
                 xmlChar *prop;
                 gboolean match;
@@ -266,6 +268,8 @@ process_service_list (xmlNode           *element,
                                0,
                                proxy);
         }
+
+        g_object_unref (control_point);
 }
 
 /* Recursively search @element for matching devices */
@@ -278,6 +282,8 @@ process_device_list (xmlNode           *element,
                      const char        *description_url,
                      SoupURI           *url_base)
 {
+        g_object_ref (control_point);
+
         for (element = element->children; element; element = element->next) {
                 xmlNode *children;
                 xmlChar *prop;
@@ -358,6 +364,8 @@ process_device_list (xmlNode           *element,
                                        proxy);
                 }
         }
+
+        g_object_unref (control_point);
 }
 
 /*
@@ -632,6 +640,13 @@ gupnp_control_point_resource_available (GSSDPResourceBrowser *resource_browser,
         /* Parse USN */
         if (!parse_usn (usn, &udn, &service_type))
                 return;
+
+        {
+          const GList *iter;
+
+          for (iter = locations; iter; iter = iter->next)
+            g_printerr ("location: %s\n", (const gchar *) iter->data);
+        }
 
         load_description (control_point,
                           locations->data,
