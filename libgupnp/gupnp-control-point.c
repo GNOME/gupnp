@@ -250,14 +250,14 @@ process_service_list (xmlNode           *element,
 
                 /* Create proxy */
                 proxy = gupnp_resource_factory_create_service_proxy
-                                                 (control_point->priv->factory,
-                                                  context,
-                                                  doc,
-                                                  element,
-                                                  udn,
-                                                  service_type,
-                                                  description_url,
-                                                  url_base);
+                                (gupnp_control_point_get_resource_factory (control_point),
+                                 context,
+                                 doc,
+                                 element,
+                                 udn,
+                                 service_type,
+                                 description_url,
+                                 url_base);
 
                 control_point->priv->services =
                         g_list_prepend (control_point->priv->services,
@@ -345,7 +345,7 @@ process_device_list (xmlNode           *element,
                         GUPnPDeviceProxy *proxy;
 
                         proxy = gupnp_resource_factory_create_device_proxy
-                                        (control_point->priv->factory,
+                                        (gupnp_control_point_get_resource_factory (control_point),
                                          context,
                                          doc,
                                          element,
@@ -774,7 +774,8 @@ gupnp_control_point_get_property (GObject    *object,
 
         switch (property_id) {
         case PROP_RESOURCE_FACTORY:
-                g_value_set_object (value, control_point->priv->factory);
+                g_value_set_object (value,
+                                    gupnp_control_point_get_resource_factory (control_point));
                 break;
         default:
                 G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -924,13 +925,13 @@ GUPnPControlPoint *
 gupnp_control_point_new (GUPnPContext *context,
                          const char   *target)
 {
-        GUPnPResourceFactory *factory;
+        g_return_val_if_fail (GUPNP_IS_CONTEXT (context), NULL);
+        g_return_val_if_fail (target, NULL);
 
-        factory = gupnp_resource_factory_get_default ();
-
-        return gupnp_control_point_new_full (context,
-                                             factory,
-                                             target);
+        return g_object_new (GUPNP_TYPE_CONTROL_POINT,
+                             "client", context,
+                             "target", target,
+                             NULL);
 }
 
 /**
@@ -954,7 +955,8 @@ gupnp_control_point_new_full (GUPnPContext         *context,
                               const char           *target)
 {
         g_return_val_if_fail (GUPNP_IS_CONTEXT (context), NULL);
-        g_return_val_if_fail (GUPNP_IS_RESOURCE_FACTORY (factory), NULL);
+        g_return_val_if_fail (factory == NULL ||
+                              GUPNP_IS_RESOURCE_FACTORY (factory), NULL);
         g_return_val_if_fail (target, NULL);
 
         return g_object_new (GUPNP_TYPE_CONTROL_POINT,
@@ -1032,5 +1034,8 @@ gupnp_control_point_get_resource_factory (GUPnPControlPoint *control_point)
 {
         g_return_val_if_fail (GUPNP_IS_CONTROL_POINT (control_point), NULL);
 
-        return control_point->priv->factory;
+        if (control_point->priv->factory)
+                  return control_point->priv->factory;
+
+        return gupnp_resource_factory_get_default ();
 }
