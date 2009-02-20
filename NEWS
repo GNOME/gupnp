@@ -1,3 +1,14 @@
+0.12.6
+======
+
+- Port to FreeBSD. [Romain Tartière]
+- Ship the XML files needed for example app. [Romain Tartière]
+- Keep a reference on the control-point during signal emission. [Sven Neumann]
+- Allow passing NULL to ControlPoint constructor, for default resource factory.
+  [Sven Neumann]
+- Remove debug output that accidentally went in with the last commit.
+  [Sven Neumann]
+
 0.12.5
 ======
 
