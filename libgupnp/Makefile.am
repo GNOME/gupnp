@@ -37,6 +37,9 @@ libgupnp_1_0_la_SOURCES = http-headers.c			\
 			  gupnp-context.c			\
 			  gupnp-context-private.h		\
 		     	  gupnp-context-manager.c		\
+		     	  gupnp-context-manager-private.h	\
+		     	  gupnp-unix-context-manager.c		\
+		     	  gupnp-unix-context-manager.h		\
 			  gupnp-control-point.c			\
 			  gupnp-device.c			\
 			  gupnp-device-info.c			\
