@@ -20,6 +20,7 @@
  */
 
 #include "gupnp-context.h"
+#include "gupnp-context-manager.h"
 #include "gupnp-control-point.h"
 #include "gupnp-error.h"
 #include "gupnp-device.h"

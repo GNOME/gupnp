@@ -179,6 +179,24 @@ GUPnPContextPrivate
 </SECTION>
 
 <SECTION>
+<FILE>gupnp-context-manager</FILE>
+<TITLE>GUPnPContextManager</TITLE>
+GUPnPContextManager
+gupnp_context_manager_new
+<SUBSECTION Standard>
+GUPnPContextManagerClass
+GUPNP_CONTEXT_MANAGER
+GUPNP_IS_CONTEXT_MANAGER
+GUPNP_TYPE_CONTEXT_MANAGER
+gupnp_context_manager_get_type
+GUPNP_CONTEXT_MANAGER_CLASS
+GUPNP_IS_CONTEXT_MANAGER_CLASS
+GUPNP_CONTEXT_MANAGER_GET_CLASS
+<SUBSECTION Private>
+GUPnPContextManagerPrivate
+</SECTION>
+
+<SECTION>
 <FILE>gupnp-device</FILE>
 <TITLE>GUPnPDevice</TITLE>
 GUPnPDevice

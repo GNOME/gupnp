@@ -9,7 +9,9 @@
     <copyright>
       <year>2007</year>
       <year>2008</year>
+      <year>2009</year>
       <holder>OpenedHand Ltd</holder>
+      <holder>Nokia Corporation</holder>
     </copyright>
 
     <legalnotice>
@@ -72,6 +74,7 @@
       <title>Utility Functions</title>
       
       <xi:include href="xml/gupnp-context.xml"/>
+      <xi:include href="xml/gupnp-context-manager.xml"/>
       <xi:include href="xml/gupnp-resource-factory.xml"/>
       <xi:include href="xml/gupnp-error.xml"/>
       <xi:include href="xml/gupnp-types.xml"/>

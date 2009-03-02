@@ -1,6 +1,7 @@
 #include <libgupnp/gupnp.h>
 
 gupnp_context_get_type
+gupnp_context_manager_get_type
 gupnp_control_point_get_type
 gupnp_device_get_type
 gupnp_device_info_get_type

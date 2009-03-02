@@ -1,12 +1,13 @@
 LTVERSION = 2:0:0
 
-AM_CFLAGS = $(LIBGUPNP_CFLAGS) -I$(top_srcdir)
+AM_CFLAGS = $(LIBGUPNP_CFLAGS) $(DBUS_GLIB_CFLAGS) -I$(top_srcdir)
 
 libgupnpincdir = $(includedir)/gupnp-1.0/libgupnp
 
 lib_LTLIBRARIES = libgupnp-1.0.la
 
 libgupnpinc_HEADERS = gupnp-context.h			\
+		      gupnp-context-manager.h		\
 		      gupnp-control-point.h		\
 		      gupnp-device.h			\
 		      gupnp-device-info.h		\
@@ -35,6 +36,7 @@ libgupnp_1_0_la_SOURCES = http-headers.c			\
 			  http-headers.h			\
 			  gupnp-context.c			\
 			  gupnp-context-private.h		\
+		     	  gupnp-context-manager.c		\
 			  gupnp-control-point.c			\
 			  gupnp-device.c			\
 			  gupnp-device-info.c			\
@@ -59,7 +61,7 @@ libgupnp_1_0_la_SOURCES = http-headers.c			\
 			  gena-protocol.h			\
 			  $(BUILT_SOURCES)
 
-libgupnp_1_0_la_LIBADD = $(LIBGUPNP_LIBS)
+libgupnp_1_0_la_LIBADD = $(LIBGUPNP_LIBS) $(DBUS_GLIB_LIBS)
 
 EXTRA_DIST = gupnp-marshal.list
 
