@@ -396,8 +396,8 @@ gupnp_network_manager_init (GUPnPNetworkManager *manager)
 static void
 gupnp_network_manager_constructed (GObject *object)
 {
-	GUPnPNetworkManager *manager;
-	GUPnPNetworkManagerPrivate *priv;
+        GUPnPNetworkManager *manager;
+        GUPnPNetworkManagerPrivate *priv;
         GObjectClass *object_class;
         GError *error;
 
