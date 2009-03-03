@@ -385,30 +385,35 @@ get_devices_cb (DBusGProxy     *proxy,
 }
 
 static void
-gupnp_network_manager_init (GUPnPNetworkManager *manager)
+schedule_loopback_context_creation (GUPnPNetworkManager *manager)
 {
-        manager->priv =
-                G_TYPE_INSTANCE_GET_PRIVATE (manager,
-                                             GUPNP_TYPE_NETWORK_MANAGER,
-                                             GUPnPNetworkManagerPrivate);
+        GMainContext *main_context;
+        GSource *source;
+
+        g_object_get (manager,
+                      "main-context", &main_context,
+                      NULL);
+
+        /* Create contexts in mainloop so that is happens after user has hooked
+         * to the "context-available" signal.
+         */
+        source = g_idle_source_new ();
+        g_source_attach (source, main_context);
+        g_source_set_callback (source,
+                               create_loopback_context,
+                               manager,
+                               NULL);
 }
 
 static void
-gupnp_network_manager_constructed (GObject *object)
+init_network_manager (GUPnPNetworkManager *manager)
 {
-        GUPnPNetworkManager *manager;
         GUPnPNetworkManagerPrivate *priv;
-        GObjectClass *object_class;
-        GMainContext *main_context;
-        GSource *source;
         GError *error;
+        error = NULL;
 
-        manager = GUPNP_NETWORK_MANAGER (object);
         priv = manager->priv;
 
-        priv->nm_devices = NULL;
-
-        error = NULL;
         priv->connection = dbus_g_bus_get (DBUS_BUS_SYSTEM, &error);
         if (priv->connection == NULL) {
                 g_warning ("Failed to connect to System Bus: %s\n",
@@ -447,20 +452,32 @@ gupnp_network_manager_constructed (GObject *object)
                                  manager,
                                  NULL,
                                  G_TYPE_INVALID);
+}
 
-        g_object_get (manager,
-                      "main-context", &main_context,
-                      NULL);
+static void
+gupnp_network_manager_init (GUPnPNetworkManager *manager)
+{
+        manager->priv =
+                G_TYPE_INSTANCE_GET_PRIVATE (manager,
+                                             GUPNP_TYPE_NETWORK_MANAGER,
+                                             GUPnPNetworkManagerPrivate);
+}
 
-        /* Create contexts in mainloop so that is happens after user has hooked
-         * to the "context-available" signal.
-         */
-        source = g_idle_source_new ();
-        g_source_attach (source, main_context);
-        g_source_set_callback (source,
-                               create_loopback_context,
-                               manager,
-                               NULL);
+static void
+gupnp_network_manager_constructed (GObject *object)
+{
+        GUPnPNetworkManager *manager;
+        GUPnPNetworkManagerPrivate *priv;
+        GObjectClass *object_class;
+
+        manager = GUPNP_NETWORK_MANAGER (object);
+        priv = manager->priv;
+
+        priv->nm_devices = NULL;
+
+        init_network_manager (manager);
+
+        schedule_loopback_context_creation (manager);
 
         /* Call super */
         object_class = G_OBJECT_CLASS (gupnp_network_manager_parent_class);

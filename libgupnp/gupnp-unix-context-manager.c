@@ -127,25 +127,10 @@ create_contexts (gpointer data)
 }
 
 static void
-gupnp_unix_context_manager_init (GUPnPUnixContextManager *manager)
+schedule_contexts_creation (GUPnPUnixContextManager *manager)
 {
-}
-
-static GObject *
-gupnp_unix_context_manager_constructor (GType                  type,
-                                        guint                  n_props,
-                                        GObjectConstructParam *props)
-{
-        GObject *object;
-        GObjectClass *parent_class;
-        GUPnPUnixContextManager *manager;
         GMainContext *main_context;
         GSource *source;
-
-	parent_class = G_OBJECT_CLASS (gupnp_unix_context_manager_parent_class);
-	object = parent_class->constructor (type, n_props, props);
-
-        manager = GUPNP_UNIX_CONTEXT_MANAGER (object);
 
         g_object_get (manager,
                       "main-context", &main_context,
@@ -160,6 +145,28 @@ gupnp_unix_context_manager_constructor (GType                  type,
                                create_contexts,
                                manager,
                                NULL);
+}
+
+static void
+gupnp_unix_context_manager_init (GUPnPUnixContextManager *manager)
+{
+}
+
+static GObject *
+gupnp_unix_context_manager_constructor (GType                  type,
+                                        guint                  n_props,
+                                        GObjectConstructParam *props)
+{
+        GObject *object;
+        GObjectClass *parent_class;
+        GUPnPUnixContextManager *manager;
+
+	parent_class = G_OBJECT_CLASS (gupnp_unix_context_manager_parent_class);
+	object = parent_class->constructor (type, n_props, props);
+
+        manager = GUPNP_UNIX_CONTEXT_MANAGER (object);
+
+        schedule_contexts_creation (manager);
 
 	return object;
 }
