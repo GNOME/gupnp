@@ -398,6 +398,7 @@ gupnp_network_manager_constructed (GObject *object)
 {
 	GUPnPNetworkManager *manager;
 	GUPnPNetworkManagerPrivate *priv;
+        GObjectClass *object_class;
         GError *error;
 
         manager = GUPNP_NETWORK_MANAGER (object);
@@ -449,6 +450,12 @@ gupnp_network_manager_constructed (GObject *object)
          * to the "context-available" signal.
          */
         g_idle_add (create_loopback_context, manager);
+
+        /* Call super */
+        object_class = G_OBJECT_CLASS (gupnp_network_manager_parent_class);
+        if (object_class->constructed != NULL) {
+                object_class->constructed (object);
+        }
 }
 
 static void
