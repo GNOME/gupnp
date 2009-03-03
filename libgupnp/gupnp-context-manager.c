@@ -292,7 +292,10 @@ gupnp_context_manager_class_init (GUPnPContextManagerClass *klass)
         /**
          * GUPnPContextManager:context-manager
          *
-         * The actual GUPnPContextManager implementation used.
+         * The actual GUPnPContextManager implementation used. This is an
+         * internal property and therefore Application developer should just
+         * ignore it.
+         *
          **/
         g_object_class_install_property
                 (object_class,
