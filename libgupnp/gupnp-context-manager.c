@@ -141,26 +141,6 @@ gupnp_context_manager_init (GUPnPContextManager *manager)
                                              GUPnPContextManagerPrivate);
 }
 
-static GObject *
-gupnp_context_manager_constructor (GType                  type,
-                                   guint                  n_props,
-                                   GObjectConstructParam *props)
-{
-	GObject *object;
-	GObjectClass *parent_class;
-	GUPnPContextManager *manager;
-	GUPnPContextManagerPrivate *priv;
-
-	parent_class = G_OBJECT_CLASS (gupnp_context_manager_parent_class);
-	object = parent_class->constructor (type, n_props, props);
-
-        manager = GUPNP_CONTEXT_MANAGER (object);
-
-        priv = manager->priv;
-
-	return object;
-}
-
 static void
 gupnp_context_manager_set_property (GObject      *object,
                                     guint         property_id,
@@ -265,7 +245,6 @@ gupnp_context_manager_class_init (GUPnPContextManagerClass *klass)
 
         object_class = G_OBJECT_CLASS (klass);
 
-        object_class->constructor  = gupnp_context_manager_constructor;
         object_class->set_property = gupnp_context_manager_set_property;
         object_class->get_property = gupnp_context_manager_get_property;
         object_class->dispose      = gupnp_context_manager_dispose;
