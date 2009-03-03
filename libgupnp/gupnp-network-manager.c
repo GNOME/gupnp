@@ -161,6 +161,8 @@ create_context_for_device (NMDevice *nm_device,
 {
         GError *error = NULL;
         gchar *ip4_str;
+        GMainContext *main_context;
+        guint port;
 
         ip4_str = g_strdup_printf ("%u.%u.%u.%u",
                                    ip4_address[0],
@@ -168,7 +170,15 @@ create_context_for_device (NMDevice *nm_device,
                                    ip4_address[2],
                                    ip4_address[3]);
 
-        nm_device->context = gupnp_context_new (NULL, ip4_str, 0, &error);
+        g_object_get (nm_device->manager,
+                      "main-context", &main_context,
+                      "port", &port,
+                      NULL);
+
+        nm_device->context = gupnp_context_new (main_context,
+                                                ip4_str,
+                                                port,
+                                                &error);
         if (error) {
                 g_warning ("Error creating GUPnP context: %s\n",
 			   error->message);
