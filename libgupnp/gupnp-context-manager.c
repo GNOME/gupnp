@@ -41,7 +41,6 @@
 
 #include "gupnp-context-manager.h"
 #include "gupnp-context-manager-private.h"
-#include "gupnp-unix-context-manager.h"
 #include "gupnp-context.h"
 #include "gupnp-marshal.h"
 
@@ -380,8 +379,19 @@ gupnp_context_manager_new (GMainContext *main_context,
 {
         GUPnPContextManager *manager;
         GUPnPContextManager *impl;
+        GType impl_type;
 
-        impl = g_object_new (GUPNP_TYPE_UNIX_CONTEXT_MANAGER,
+#ifdef USE_NETWORK_MANAGER
+#include "gupnp-network-manager.h"
+
+        impl_type = GUPNP_TYPE_NETWORK_MANAGER;
+#else
+#include "gupnp-unix-context-manager.h"
+
+        impl_type = GUPNP_TYPE_UNIX_CONTEXT_MANAGER;
+#endif
+
+        impl = g_object_new (impl_type,
                              "main-context", main_context,
                              "port", port,
                              NULL);

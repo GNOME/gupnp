@@ -22,6 +22,20 @@ PKG_CHECK_MODULES(LIBGUPNP, glib-2.0 >= 2.18 \
 
 PKG_CHECK_MODULES(GTHREAD, gthread-2.0)
 
+AC_ARG_WITH([context_manager],
+            AS_HELP_STRING([--context-manager=@<:@network-manager/unix@:>@],
+                           [Context Manager backend to use]),,
+            [with_context_manager="network-manager"])
+
+AC_MSG_CHECKING([Context Manager backend to use])
+AC_MSG_RESULT([${with_context_manager}])
+if test "x$with_context_manager" = "xnetwork-manager"; then
+        PKG_CHECK_MODULES(DBUS_GLIB, dbus-glib-1 >= 0.76)
+fi
+
+AM_CONDITIONAL([USE_NETWORK_MANAGER],
+               [test "x$with_context_manager" = "xnetwork-manager"])
+
 # glib-genmarshal
 GLIB_GENMARSHAL=`pkg-config --variable=glib_genmarshal glib-2.0`
 AC_SUBST(GLIB_GENMARSHAL)

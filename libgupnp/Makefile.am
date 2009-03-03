@@ -1,6 +1,19 @@
 LTVERSION = 2:0:0
 
-AM_CFLAGS = $(LIBGUPNP_CFLAGS) $(DBUS_GLIB_CFLAGS) -I$(top_srcdir)
+if USE_NETWORK_MANAGER
+CONTEXT_MANAGER_IMPL = gupnp-network-manager.c  \
+		       gupnp-network-manager.h
+CONTEXT_MANAGER_CFLAGS = -DUSE_NETWORK_MANAGER
+else
+CONTEXT_MANAGER_IMPL = gupnp-unix-context-manager.c  \
+		       gupnp-unix-context-manager.h
+CONTEXT_MANAGER_CFLAGS =
+endif
+
+AM_CFLAGS = $(LIBGUPNP_CFLAGS) \
+	    $(DBUS_GLIB_CFLAGS) \
+	    -I$(top_srcdir) \
+	    $(CONTEXT_MANAGER_CFLAGS)
 
 libgupnpincdir = $(includedir)/gupnp-1.0/libgupnp
 
@@ -38,8 +51,7 @@ libgupnp_1_0_la_SOURCES = http-headers.c			\
 			  gupnp-context-private.h		\
 		     	  gupnp-context-manager.c		\
 		     	  gupnp-context-manager-private.h	\
-		     	  gupnp-unix-context-manager.c		\
-		     	  gupnp-unix-context-manager.h		\
+		     	  $(CONTEXT_MANAGER_IMPL) 		\
 			  gupnp-control-point.c			\
 			  gupnp-device.c			\
 			  gupnp-device-info.c			\
@@ -66,7 +78,11 @@ libgupnp_1_0_la_SOURCES = http-headers.c			\
 
 libgupnp_1_0_la_LIBADD = $(LIBGUPNP_LIBS) $(DBUS_GLIB_LIBS)
 
-EXTRA_DIST = gupnp-marshal.list
+EXTRA_DIST = gupnp-marshal.list 	   \
+	     gupnp-network-manager.c   	   \
+	     gupnp-network-manager.h       \
+	     gupnp-unix-context-manager.c  \
+	     gupnp-unix-context-manager.h
 
 CLEANFILES = $(BUILT_SOURCES)
 DISTCLEANFILES = $(BUILT_SOURCES)
