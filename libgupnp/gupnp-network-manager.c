@@ -399,6 +399,8 @@ gupnp_network_manager_constructed (GObject *object)
         GUPnPNetworkManager *manager;
         GUPnPNetworkManagerPrivate *priv;
         GObjectClass *object_class;
+        GMainContext *main_context;
+        GSource *source;
         GError *error;
 
         manager = GUPNP_NETWORK_MANAGER (object);
@@ -446,10 +448,19 @@ gupnp_network_manager_constructed (GObject *object)
                                  NULL,
                                  G_TYPE_INVALID);
 
+        g_object_get (manager,
+                      "main-context", &main_context,
+                      NULL);
+
         /* Create contexts in mainloop so that is happens after user has hooked
          * to the "context-available" signal.
          */
-        g_idle_add (create_loopback_context, manager);
+        source = g_idle_source_new ();
+        g_source_attach (source, main_context);
+        g_source_set_callback (source,
+                               create_loopback_context,
+                               manager,
+                               NULL);
 
         /* Call super */
         object_class = G_OBJECT_CLASS (gupnp_network_manager_parent_class);

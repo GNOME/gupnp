@@ -139,16 +139,27 @@ gupnp_unix_context_manager_constructor (GType                  type,
 	GObject *object;
 	GObjectClass *parent_class;
 	GUPnPUnixContextManager *manager;
+        GMainContext *main_context;
+        GSource *source;
 
 	parent_class = G_OBJECT_CLASS (gupnp_unix_context_manager_parent_class);
 	object = parent_class->constructor (type, n_props, props);
 
         manager = GUPNP_UNIX_CONTEXT_MANAGER (object);
 
+        g_object_get (manager,
+                      "main-context", &main_context,
+                      NULL);
+
         /* Create contexts in mainloop so that is happens after user has hooked
          * to the "context-available" signal.
          */
-        g_idle_add (create_contexts, manager);
+        source = g_idle_source_new ();
+        g_source_attach (source, main_context);
+        g_source_set_callback (source,
+                               create_contexts,
+                               manager,
+                               NULL);
 
 	return object;
 }
