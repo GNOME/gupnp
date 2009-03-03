@@ -136,9 +136,9 @@ gupnp_unix_context_manager_constructor (GType                  type,
                                         guint                  n_props,
                                         GObjectConstructParam *props)
 {
-	GObject *object;
-	GObjectClass *parent_class;
-	GUPnPUnixContextManager *manager;
+        GObject *object;
+        GObjectClass *parent_class;
+        GUPnPUnixContextManager *manager;
         GMainContext *main_context;
         GSource *source;
 
