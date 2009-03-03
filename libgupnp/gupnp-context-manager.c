@@ -313,6 +313,8 @@ gupnp_context_manager_class_init (GUPnPContextManagerClass *klass)
 
         /**
          * GUPnPContextManager::context-available
+         * @context_manager: The #GUPnPContextManager that received the signal
+         * @context: The now available #GUPnPContext
          *
          * Signals the availability of new #GUPnPContext.
          *
@@ -330,6 +332,8 @@ gupnp_context_manager_class_init (GUPnPContextManagerClass *klass)
 
         /**
          * GUPnPContextManager::context-unavailable
+         * @context_manager: The #GUPnPContextManager that received the signal
+         * @context: The now unavailable #GUPnPContext
          *
          * Signals the unavailability of a #GUPnPContext.
          *
