@@ -40,7 +40,6 @@
 #include <glib/gstdio.h>
 
 #include "gupnp-context-manager.h"
-#include "gupnp-context-manager-private.h"
 #include "gupnp-context.h"
 #include "gupnp-marshal.h"
 
@@ -70,39 +69,6 @@ enum {
 };
 
 static guint signals[SIGNAL_LAST];
-
-void
-gupnp_context_manager_create_and_signal_context (GUPnPContextManager *manager,
-                                                 const char          *host_ip)
-{
-        GUPnPContext *context;
-        GError *error;
-
-        if (host_ip == NULL)
-                return;
-
-        error = NULL;
-        context = gupnp_context_new (manager->priv->main_context,
-                                     host_ip,
-                                     manager->priv->port,
-                                     &error);
-        if (error != NULL) {
-                g_warning ("Failed to create context for host/IP '%s': %s\n",
-                           host_ip,
-                           error->message);
-
-                g_error_free (error);
-
-                return;
-        }
-
-        g_signal_emit (manager,
-                       signals[CONTEXT_AVAILABLE],
-                       0,
-                       context);
-
-        g_object_unref (context);
-}
 
 static void
 on_context_available (GUPnPContextManager *impl,

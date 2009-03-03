@@ -34,7 +34,6 @@
 #include <stdio.h>
 #include <dbus/dbus-glib.h>
 
-#include "gupnp-context-manager-private.h"
 #include "gupnp-network-manager.h"
 #include "gupnp-context.h"
 #include "gupnp-marshal.h"

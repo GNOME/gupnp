@@ -45,7 +45,6 @@
 #include <libsoup/soup-address.h>
 #include <glib/gstdio.h>
 
-#include "gupnp-context-manager-private.h"
 #include "gupnp-unix-context-manager.h"
 #include "gupnp-context.h"
 
@@ -89,13 +88,53 @@ get_host_ip_from_iface (struct ifaddrs *ifa)
         return g_strdup (host_ip);
 }
 
+void
+create_and_signal_context (GUPnPUnixContextManager *manager,
+                           const char              *host_ip)
+{
+        GUPnPContext *context;
+        GMainContext *main_context;
+        guint port;
+
+        GError *error;
+
+        if (host_ip == NULL)
+                return;
+
+        g_object_get (manager,
+                      "main-context", &main_context,
+                      "port", &port,
+                      NULL);
+
+        error = NULL;
+        context = gupnp_context_new (main_context,
+                                     host_ip,
+                                     port,
+                                     &error);
+        if (error != NULL) {
+                g_warning ("Failed to create context for host/IP '%s': %s\n",
+                           host_ip,
+                           error->message);
+
+                g_error_free (error);
+
+                return;
+        }
+
+        g_signal_emit_by_name (manager,
+                               "context-available",
+                               context);
+
+        g_object_unref (context);
+}
+
 /*
  * Create a context for all network interfaces that are up.
  */
 static gboolean
 create_contexts (gpointer data)
 {
-        GUPnPContextManager *manager = (GUPnPContextManager *) data;
+        GUPnPUnixContextManager *manager = (GUPnPUnixContextManager *) data;
         struct ifaddrs *ifa_list, *ifa;
         char *ret;
 
@@ -114,8 +153,7 @@ create_contexts (gpointer data)
                 host_ip = get_host_ip_from_iface (ifa);
 
                 if (host_ip != NULL) {
-                        gupnp_context_manager_create_and_signal_context (
-                                                manager, host_ip);
+                        create_and_signal_context (manager, host_ip);
 
                         g_free (host_ip);
                 }
