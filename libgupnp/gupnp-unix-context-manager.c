@@ -190,23 +190,21 @@ gupnp_unix_context_manager_init (GUPnPUnixContextManager *manager)
 {
 }
 
-static GObject *
-gupnp_unix_context_manager_constructor (GType                  type,
-                                        guint                  n_props,
-                                        GObjectConstructParam *props)
+static void
+gupnp_unix_context_manager_constructed (GObject *object)
 {
-        GObject *object;
         GObjectClass *parent_class;
         GUPnPUnixContextManager *manager;
-
-	parent_class = G_OBJECT_CLASS (gupnp_unix_context_manager_parent_class);
-	object = parent_class->constructor (type, n_props, props);
 
         manager = GUPNP_UNIX_CONTEXT_MANAGER (object);
 
         schedule_contexts_creation (manager);
 
-	return object;
+        /* Chain-up */
+        parent_class = G_OBJECT_CLASS (gupnp_unix_context_manager_parent_class);
+        if (parent_class->constructed != NULL) {
+                parent_class->constructed (object);
+        }
 }
 
 static void
@@ -229,7 +227,7 @@ gupnp_unix_context_manager_class_init (GUPnPUnixContextManagerClass *klass)
 
         object_class = G_OBJECT_CLASS (klass);
 
-        object_class->constructor  = gupnp_unix_context_manager_constructor;
+        object_class->constructed  = gupnp_unix_context_manager_constructed;
         object_class->dispose      = gupnp_unix_context_manager_dispose;
 }
 
