@@ -323,7 +323,7 @@ gupnp_context_manager_class_init (GUPnPContextManagerClass *klass)
                               G_SIGNAL_RUN_LAST,
                               0,
                               NULL, NULL,
-                              gupnp_marshal_VOID__OBJECT,
+                              g_cclosure_marshal_VOID__OBJECT,
                               G_TYPE_NONE,
                               1,
                               G_TYPE_OBJECT);
@@ -340,7 +340,7 @@ gupnp_context_manager_class_init (GUPnPContextManagerClass *klass)
                               G_SIGNAL_RUN_LAST,
                               0,
                               NULL, NULL,
-                              gupnp_marshal_VOID__OBJECT,
+                              g_cclosure_marshal_VOID__OBJECT,
                               G_TYPE_NONE,
                               1,
                               G_TYPE_OBJECT);
