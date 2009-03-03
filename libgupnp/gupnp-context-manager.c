@@ -326,7 +326,7 @@ gupnp_context_manager_class_init (GUPnPContextManagerClass *klass)
                               g_cclosure_marshal_VOID__OBJECT,
                               G_TYPE_NONE,
                               1,
-                              G_TYPE_OBJECT);
+                              GUPNP_TYPE_CONTEXT);
 
         /**
          * GUPnPContextManager::context-unavailable
@@ -343,7 +343,7 @@ gupnp_context_manager_class_init (GUPnPContextManagerClass *klass)
                               g_cclosure_marshal_VOID__OBJECT,
                               G_TYPE_NONE,
                               1,
-                              G_TYPE_OBJECT);
+                              GUPNP_TYPE_CONTEXT);
 }
 
 /**
