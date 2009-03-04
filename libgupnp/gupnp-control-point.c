@@ -385,6 +385,14 @@ description_loaded (GUPnPControlPoint *control_point,
         element = xml_util_get_element ((xmlNode *) doc->doc,
                                         "root",
                                         NULL);
+        if (element == NULL) {
+                g_warning ("No 'root' element found in description document"
+                           " '%s'. Ignoring device '%s'\n",
+                           description_url,
+                           udn);
+
+                return;
+        }
 
         if (element == NULL)
                 return;
