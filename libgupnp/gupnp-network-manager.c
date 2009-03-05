@@ -125,6 +125,8 @@ nm_device_free (NMDevice *nm_device)
         g_slice_free (NMDevice, nm_device);
 }
 
+#define LOOPBACK_IP "127.0.0.1"
+
 static gboolean
 create_loopback_context (gpointer data)
 {
@@ -139,7 +141,7 @@ create_loopback_context (gpointer data)
                       "port", &port,
                       NULL);
 
-        context = gupnp_context_new (main_context, "localhost", port, &error);
+        context = gupnp_context_new (main_context, LOOPBACK_IP, port, &error);
         if (error) {
                 g_warning ("Error creating GUPnP context: %s\n",
 			   error->message);
