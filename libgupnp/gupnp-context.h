@@ -82,8 +82,12 @@ gupnp_context_new                      (GMainContext *main_context,
                                         guint         port,
                                         GError      **error);
 
+#ifndef GUPNP_DISABLE_DEPRECATED
+
 const char *
 gupnp_context_get_host_ip              (GUPnPContext *context);
+
+#endif /* GUPNP_DISABLE_DEPRECATED */
 
 guint
 gupnp_context_get_port                 (GUPnPContext *context);
