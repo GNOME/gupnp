@@ -42,9 +42,6 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <arpa/inet.h>
-#include <net/if.h>
-#include <ifaddrs.h>
 #include <libsoup/soup-address.h>
 #include <glib/gstdio.h>
 
@@ -72,14 +69,11 @@ struct _GUPnPContextPrivate {
 
 enum {
         PROP_0,
-        PROP_HOST_IP,
         PROP_PORT,
         PROP_SERVER,
         PROP_SESSION,
         PROP_SUBSCRIPTION_TIMEOUT
 };
-
-#define LOOPBACK_IP "127.0.0.1"
 
 typedef struct {
         char *local_path;
@@ -100,149 +94,6 @@ make_server_id (void)
                                 sysinfo.sysname,
                                 sysinfo.release,
                                 VERSION);
-}
-
-/*
- * Get the host IP for the specified interface, or the first up and non-loopback
- * interface if no name is specified.
- */
-static char *
-get_host_ip (const char *name)
-{
-        struct ifaddrs *ifa_list, *ifa;
-        char *ret;
-
-        ret = NULL;
-
-        if (getifaddrs (&ifa_list) != 0) {
-                g_error ("Failed to retrieve list of network interfaces:\n%s\n",
-                         strerror (errno));
-
-                return NULL;
-        }
-
-        for (ifa = ifa_list; ifa != NULL; ifa = ifa->ifa_next) {
-                char ip[INET6_ADDRSTRLEN];
-                const char *p;
-                struct sockaddr_in *s4;
-                struct sockaddr_in6 *s6;
-
-                if (ifa->ifa_addr == NULL)
-                        continue;
-
-                if ((ifa->ifa_flags & IFF_LOOPBACK) ||
-                    !(ifa->ifa_flags & IFF_UP))
-                        continue;
-
-                /* If a name was specified, check it */
-                if (name && strcmp (name, ifa->ifa_name) != 0)
-                        continue;
-                
-                p = NULL;
-
-                switch (ifa->ifa_addr->sa_family) {
-                case AF_INET:
-                        s4 = (struct sockaddr_in *) ifa->ifa_addr;
-                        p = inet_ntop (AF_INET,
-                                       &s4->sin_addr, ip, sizeof (ip));
-                        break;
-                case AF_INET6:
-                        s6 = (struct sockaddr_in6 *) ifa->ifa_addr;
-                        p = inet_ntop (AF_INET6,
-                                       &s6->sin6_addr, ip, sizeof (ip));
-                        break;
-                default:
-                        continue; /* Unknown: ignore */
-                }
-
-                if (p != NULL) {
-                        ret = g_strdup (p);
-                        break;
-                }
-        }
-
-        freeifaddrs (ifa_list);
-
-        if (!ret) {
-                /* Didn't find anything. Let's take the loopback IP. */
-                ret = g_strdup (LOOPBACK_IP);
-        }
-
-        return ret;
-}
-
-/*
- * Get the host IP of the interface used for the default route.  On any error,
- * the first up and non-loopback interface is used.
- */
-static char *
-get_default_host_ip (void)
-{
-        FILE *fp;
-        int ret;
-        char dev[32];
-        unsigned long dest;
-        gboolean found = FALSE;
-        
-#if defined(__FreeBSD__)
-	if ((fp = popen ("netstat -r -f inet -n -W", "r"))) {
-		char buffer[BUFSIZ];
-
-		char destination[32];
-
-		int i;
-		/* Skip the 4 header lines */
-		for (i=0;i<4;i++) {
-			if (!(fgets(buffer, BUFSIZ, fp)))
-				return NULL; /* Can't read */
-
-			if (buffer[strlen(buffer)-1] != '\n') {
-				g_warning("Can't read netstat output!");
-				return NULL;
-			}
-		}
-
-		while (fgets(buffer, BUFSIZ, fp)) {
-			if (buffer[strlen(buffer)-1] != '\n') {
-				g_warning("Can't read netstat output!");
-				return NULL;
-			}
-
-			if (sscanf(buffer, "%s %*s %*s %*d %*d %*d %s %*d", destination, dev) == 2) {
-				if (strcmp("default", destination) == 0) {
-					found = TRUE;
-					break;
-				}
-			}
-		}
-		pclose(fp);
-	}
-#else
-        /* TODO: error checking */
-
-        fp = fopen ("/proc/net/route", "r");
-        
-        /* Skip the header */
-        if (fscanf (fp, "%*[^\n]\n") == EOF) {
-               fclose (fp);
-               return NULL;
-	}
-
-        while ((ret = fscanf (fp,
-                              "%31s %lx %*x %*X %*d %*d %*d %*x %*d %*d %*d",
-                              dev, &dest)) != EOF) {
-                /* If we got a device name and destination, and the destination
-                   is 0, then we have the default route */
-                if (ret == 2 && dest == 0) {
-                        found = TRUE;
-                        break;
-                }
-        }
-        
-        fclose (fp);
-#endif
-
-        return get_host_ip (found ? dev : NULL);
 }
 
 static void
@@ -299,9 +150,6 @@ gupnp_context_set_property (GObject      *object,
         context = GUPNP_CONTEXT (object);
 
         switch (property_id) {
-        case PROP_HOST_IP:
-                context->priv->host_ip = g_value_dup_string (value);
-                break;
         case PROP_PORT:
                 context->priv->port = g_value_get_uint (value);
                 break;
@@ -325,10 +173,6 @@ gupnp_context_get_property (GObject    *object,
         context = GUPNP_CONTEXT (object);
 
         switch (property_id) {
-        case PROP_HOST_IP:
-                g_value_set_string (value,
-                                    gupnp_context_get_host_ip (context));
-                break;
         case PROP_PORT:
                 g_value_set_uint (value,
                                   gupnp_context_get_port (context));
@@ -383,8 +227,6 @@ gupnp_context_finalize (GObject *object)
 
         context = GUPNP_CONTEXT (object);
 
-        g_free (context->priv->host_ip);
-
         g_free (context->priv->server_url);
 
         /* Call super */
@@ -406,24 +248,6 @@ gupnp_context_class_init (GUPnPContextClass *klass)
         object_class->finalize     = gupnp_context_finalize;
 
         g_type_class_add_private (klass, sizeof (GUPnPContextPrivate));
-
-        /**
-         * GUPnPContext:host-ip
-         *
-         * The local host's IP address. Set to NULL to autodetect.
-         **/
-        g_object_class_install_property
-                (object_class,
-                 PROP_HOST_IP,
-                 g_param_spec_string ("host-ip",
-                                      "Host IP",
-                                      "The local host's IP address",
-                                      NULL,
-                                      G_PARAM_READWRITE |
-                                      G_PARAM_CONSTRUCT_ONLY |
-                                      G_PARAM_STATIC_NAME |
-                                      G_PARAM_STATIC_NICK |
-                                      G_PARAM_STATIC_BLURB));
 
         /**
          * GUPnPContext:port
@@ -571,15 +395,15 @@ make_server_url (GUPnPContext *context)
         SoupServer *server;
         guint port;
 
-        if (context->priv->host_ip == NULL)
-                context->priv->host_ip = get_default_host_ip ();
-
         /* What port are we running on? */
         server = gupnp_context_get_server (context);
         port = soup_server_get_port (server);
 
         /* Put it all together */
-        return g_strdup_printf ("http://%s:%u", context->priv->host_ip, port);
+        return g_strdup_printf
+                        ("http://%s:%u",
+                         gssdp_client_get_host_ip (GSSDP_CLIENT (context)),
+                         port);
 }
 
 const char *
@@ -624,16 +448,15 @@ gupnp_context_new (GMainContext *main_context,
  * Get the IP address we advertise ourselves as using.
  *
  * Return value: The IP address. This string should not be freed.
+ *
+ * Deprecated:0.12.7: The "host-ip" property has moved to the base class
+ * #GSSDPClient so newer applications should use
+ * #gssdp_client_get_host_ip instead.
  **/
 const char *
 gupnp_context_get_host_ip (GUPnPContext *context)
 {
-        g_return_val_if_fail (GUPNP_IS_CONTEXT (context), NULL);
-
-        if (context->priv->host_ip == NULL)
-                context->priv->host_ip = get_default_host_ip ();
-
-        return context->priv->host_ip;
+        return gssdp_client_get_host_ip (GSSDP_CLIENT (context));
 }
 
 /**
