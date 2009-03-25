@@ -184,6 +184,8 @@ gupnp_device_info_dispose (GObject *object)
                 g_object_unref (info->priv->doc);
                 info->priv->doc = NULL;
         }
+
+        G_OBJECT_CLASS (gupnp_device_info_parent_class)->dispose (object);
 }
 
 static void
@@ -198,6 +200,8 @@ gupnp_device_info_finalize (GObject *object)
         g_free (info->priv->device_type);
 
         soup_uri_free (info->priv->url_base);
+
+        G_OBJECT_CLASS (gupnp_device_info_parent_class)->finalize (object);
 }
 
 static void
