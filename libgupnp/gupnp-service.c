@@ -49,6 +49,8 @@ G_DEFINE_TYPE (GUPnPService,
 struct _GUPnPServicePrivate {
         GUPnPRootDevice *root_device;
 
+        SoupSession     *session;
+
         guint            notify_available_id;
 
         GHashTable      *subscriptions;
@@ -96,15 +98,41 @@ typedef struct {
                                            subscription */
 } SubscriptionData;
 
+static SoupSession *
+gupnp_service_get_session (GUPnPService *service)
+{
+        if (! service->priv->session) {
+                GUPnPContext *context =
+                  gupnp_service_info_get_context (GUPNP_SERVICE_INFO (service));
+
+                /* Create a dedicated session for this service to
+                 * ensure that notifications are sent in the proper
+                 * order. The session from GUPnPContext may use
+                 * multiple connections.
+                 */
+                service->priv->session = soup_session_async_new_with_options
+                  (SOUP_SESSION_IDLE_TIMEOUT, 60,
+                   SOUP_SESSION_ASYNC_CONTEXT,
+                   gssdp_client_get_main_context (GSSDP_CLIENT (context)),
+                   SOUP_SESSION_MAX_CONNS_PER_HOST, 1,
+                   NULL);
+
+                if (g_getenv ("GUPNP_DEBUG")) {
+                        SoupLogger *logger;
+                        logger = soup_logger_new (SOUP_LOGGER_LOG_BODY, -1);
+                        soup_logger_attach (logger, service->priv->session);
+                }
+        }
+
+        return service->priv->session;
+}
+
 static void
 subscription_data_free (SubscriptionData *data)
 {
-        GUPnPContext *context;
         SoupSession *session;
 
-        context = gupnp_service_info_get_context
-                        (GUPNP_SERVICE_INFO (data->service));
-        session = gupnp_context_get_session (context);
+        session = gupnp_service_get_session (data->service);
 
         /* Cancel pending messages */
         while (data->pending_messages) {
@@ -559,19 +587,19 @@ gupnp_service_action_return_error (GUPnPServiceAction *action,
 }
 
 static void
-gupnp_service_init (GUPnPService *device)
+gupnp_service_init (GUPnPService *service)
 {
-        device->priv = G_TYPE_INSTANCE_GET_PRIVATE (device,
-                                                    GUPNP_TYPE_SERVICE,
-                                                    GUPnPServicePrivate);
+        service->priv = G_TYPE_INSTANCE_GET_PRIVATE (service,
+                                                     GUPNP_TYPE_SERVICE,
+                                                     GUPnPServicePrivate);
 
-        device->priv->subscriptions =
+        service->priv->subscriptions =
                 g_hash_table_new_full (g_str_hash,
                                        g_str_equal,
                                        NULL,
                                        (GDestroyNotify) subscription_data_free);
 
-        device->priv->notify_queue = g_queue_new ();
+        service->priv->notify_queue = g_queue_new ();
 }
 
 /* Generate a new action response node for @action_name */
@@ -1310,6 +1338,11 @@ gupnp_service_finalize (GObject *object)
 
         g_queue_free (service->priv->notify_queue);
 
+        if (service->priv->session) {
+                g_object_unref (service->priv->session);
+                service->priv->session = NULL;
+        }
+
         /* Call super */
         object_class = G_OBJECT_CLASS (gupnp_service_parent_class);
         object_class->finalize (object);
@@ -1516,7 +1549,6 @@ notify_got_response (SoupSession *session,
                 /* Other failure: Try next callback or signal failure. */
                 if (data->callbacks->next) {
                         SoupURI *uri;
-                        GUPnPContext *context;
                         SoupSession *session;
 
                         /* Call next callback */
@@ -1530,9 +1562,7 @@ notify_got_response (SoupSession *session,
                         data->pending_messages = 
                                 g_list_prepend (data->pending_messages, msg);
 
-                        context = gupnp_service_info_get_context
-                                        (GUPNP_SERVICE_INFO (data->service));
-                        session = gupnp_context_get_session (context);
+                        session = gupnp_service_get_session (data->service);
 
                         soup_session_requeue_message (session, msg);
                 } else {
@@ -1568,7 +1598,6 @@ notify_subscriber (gpointer key,
         const char *property_set;
         char *tmp;
         SoupMessage *msg;
-        GUPnPContext *context;
         SoupSession *session;
 
         data = value;
@@ -1617,9 +1646,7 @@ notify_subscriber (gpointer key,
         /* Queue */
         data->pending_messages = g_list_prepend (data->pending_messages, msg);
 
-        context = gupnp_service_info_get_context
-                        (GUPNP_SERVICE_INFO (data->service));
-        session = gupnp_context_get_session (context);
+        session = gupnp_service_get_session (data->service);
 
         soup_session_queue_message (session,
                                     msg,
