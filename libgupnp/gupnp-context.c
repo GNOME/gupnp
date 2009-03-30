@@ -98,7 +98,7 @@ make_server_id (void)
 
         return g_strdup_printf ("%s/%s UPnP/1.0 GUPnP/%s",
                                 sysinfo.sysname,
-                                sysinfo.version,
+                                sysinfo.release,
                                 VERSION);
 }
 
