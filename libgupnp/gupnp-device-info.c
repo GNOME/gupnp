@@ -811,12 +811,14 @@ gupnp_device_info_get_icon_url (GUPnPDeviceInfo *info,
         }
 
         if (!closest) {
-                icon = l->data;
+                for (l = icons; l; l = l->next) {
+                        icon = l->data;
 
-                /* No icons with positive weight, look at ones with
-                 * negative weight */
-                if (!closest || icon->weight > closest->weight)
-                        closest = icon;
+                        /* No icons with positive weight, look at ones with
+                         * negative weight */
+                        if (!closest || icon->weight > closest->weight)
+                                closest = icon;
+                }
         }
 
         /* Fill in return values */
