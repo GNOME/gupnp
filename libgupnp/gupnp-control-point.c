@@ -156,20 +156,6 @@ gupnp_control_point_dispose (GObject *object)
                 control_point->priv->factory = NULL;
         }
 
-        while (control_point->priv->devices) {
-                g_object_unref (control_point->priv->devices->data);
-                control_point->priv->devices =
-                        g_list_delete_link (control_point->priv->devices,
-                                            control_point->priv->devices);
-        }
-
-        while (control_point->priv->services) {
-                g_object_unref (control_point->priv->services->data);
-                control_point->priv->services =
-                        g_list_delete_link (control_point->priv->services,
-                                            control_point->priv->services);
-        }
-
         /* Cancel any pending description file GETs */
         while (control_point->priv->pending_gets) {
                 GetDescriptionURLData *data;
