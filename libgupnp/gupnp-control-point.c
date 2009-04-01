@@ -143,9 +143,13 @@ static void
 gupnp_control_point_dispose (GObject *object)
 {
         GUPnPControlPoint *control_point;
+        GSSDPResourceBrowser *browser;
         GObjectClass *object_class;
 
         control_point = GUPNP_CONTROL_POINT (object);
+        browser = GSSDP_RESOURCE_BROWSER (control_point);
+
+        gssdp_resource_browser_set_active (browser, FALSE);
 
         if (control_point->priv->factory) {
                 g_object_unref (control_point->priv->factory);
