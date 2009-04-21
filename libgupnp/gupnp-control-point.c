@@ -578,17 +578,21 @@ parse_usn (const char *usn,
 
         } else if (count == 2) {
                 char **second_bits;
+                guint n_second_bits;
 
                 second_bits = g_strsplit (bits[1], ":", -1);
+                n_second_bits = g_strv_length (second_bits);
 
-                if (!strcmp (second_bits[0], "upnp") &&
+                if (n_second_bits >= 2 &&
+                    !strcmp (second_bits[0], "upnp") &&
                     !strcmp (second_bits[1], "rootdevice")) {
                         /* uuid:device-UUID::upnp:rootdevice */
 
                         *udn = bits[0];
 
                         ret = TRUE;
-                } else if (!strcmp (second_bits[0], "urn")) {
+                } else if (n_second_bits >= 3 &&
+                           !strcmp (second_bits[0], "urn")) {
                         /* uuid:device-UIID::urn:domain-name:service/device:
                          * type:v */
 
