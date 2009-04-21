@@ -567,7 +567,7 @@ parse_usn (const char *usn,
         bits = g_strsplit (usn, "::", -1);
 
         /* Count elements */
-        for (count = 0; bits[count]; count++);
+        count = g_strv_length (bits);
 
         if (count == 1) {
                 /* uuid:device-UUID */
