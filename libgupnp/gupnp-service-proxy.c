@@ -1645,7 +1645,7 @@ subscribe_got_response (SoupSession       *session,
                                          GUPNP_EVENTING_ERROR_SUBSCRIPTION_LOST,
                                          "No SID in SUBSCRIBE response");
 
-                        goto ERROR;
+                        goto hdr_err;
                 }
 
                 proxy->priv->sid = g_strdup (hdr);
@@ -1705,7 +1705,7 @@ subscribe_got_response (SoupSession       *session,
                                  GUPNP_EVENTING_ERROR_SUBSCRIPTION_FAILED,
                                  msg->reason_phrase);
 
- ERROR:
+hdr_err:
                 proxy->priv->subscribed = FALSE;
 
                 g_object_notify (G_OBJECT (proxy), "subscribed");
