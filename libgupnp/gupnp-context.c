@@ -923,8 +923,10 @@ host_path_handler (SoupServer        *server,
                 g_free (length);
 
         } else {
-                g_assert_not_reached ();
+                soup_message_set_status (msg,
+                                         SOUP_STATUS_METHOD_NOT_ALLOWED);
 
+                goto DONE;
         }
 
         /* Set Content-Type */

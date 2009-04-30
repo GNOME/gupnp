@@ -1602,7 +1602,7 @@ subscription_expire (gpointer user_data)
 
         g_free (sub_url);
 
-        g_assert (msg != NULL);
+        g_return_val_if_fail (msg != NULL, FALSE);
 
         /* Add headers */
         soup_message_headers_append (msg->request_headers,
@@ -1868,17 +1868,17 @@ unsubscribe (GUPnPServiceProxy *proxy)
 
         g_free (sub_url);
 
-        g_assert (msg != NULL);
+        if (msg != NULL) {
+                /* Add headers */
+                soup_message_headers_append (msg->request_headers,
+                                             "SID",
+                                             proxy->priv->sid);
 
-        /* Add headers */
-        soup_message_headers_append (msg->request_headers,
-                                     "SID",
-                                     proxy->priv->sid);
+                /* And queue it */
+                session = gupnp_context_get_session (context);
 
-        /* And queue it */
-        session = gupnp_context_get_session (context);
-
-        soup_session_queue_message (session, msg, NULL, NULL);
+                soup_session_queue_message (session, msg, NULL, NULL);
+        }
 
         /* Reset SID */
         g_free (proxy->priv->sid);
