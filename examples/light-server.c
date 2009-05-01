@@ -11,6 +11,7 @@
 
 #include <libgupnp/gupnp.h>
 #include <stdlib.h>
+#include <gmodule.h>
 
 static gboolean status;
 
@@ -19,7 +20,7 @@ static gboolean status;
  */
 
 /* SetTarget */
-void
+G_MODULE_EXPORT void
 set_target_cb (GUPnPService *service, GUPnPServiceAction *action, gpointer user_data)
 {
   gboolean target;
@@ -45,7 +46,7 @@ set_target_cb (GUPnPService *service, GUPnPServiceAction *action, gpointer user_
 }
 
 /* GetTarget */
-void
+G_MODULE_EXPORT void
 get_target_cb (GUPnPService *service, GUPnPServiceAction *action, gpointer user_data)
 {
   gupnp_service_action_set (action,
@@ -55,7 +56,7 @@ get_target_cb (GUPnPService *service, GUPnPServiceAction *action, gpointer user_
 }
 
 /* GetStatus */
-void
+G_MODULE_EXPORT void
 get_status_cb (GUPnPService *service, GUPnPServiceAction *action, gpointer user_data)
 {
   gupnp_service_action_set (action,
@@ -69,7 +70,7 @@ get_status_cb (GUPnPService *service, GUPnPServiceAction *action, gpointer user_
  */
 
 /* Target */
-void
+G_MODULE_EXPORT void
 query_target_cb (GUPnPService *service, char *variable, GValue *value, gpointer user_data)
 {
   g_value_init (value, G_TYPE_BOOLEAN);
@@ -77,7 +78,7 @@ query_target_cb (GUPnPService *service, char *variable, GValue *value, gpointer 
 }
 
 /* Status */
-void
+G_MODULE_EXPORT void
 query_status_cb (GUPnPService *service, char *variable, GValue *value, gpointer user_data)
 {
   g_value_init (value, G_TYPE_BOOLEAN);
