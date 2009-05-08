@@ -823,6 +823,8 @@ gupnp_device_info_get_icon_url (GUPnPDeviceInfo *info,
 
         /* Fill in return values */
         if (closest) {
+                icon = closest;
+
                 if (mime_type) {
                         if (icon->mime_type) {
                                 *mime_type = g_strdup
