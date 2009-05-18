@@ -734,6 +734,12 @@ control_server_handler (SoupServer        *server,
         /* Parse action_node */
         doc = xmlRecoverMemory (msg->request_body->data,
                                 msg->request_body->length);
+        if (doc == NULL) {
+                soup_message_set_status (msg, SOUP_STATUS_BAD_REQUEST);
+
+                return;
+        }
+
         action_node = xml_util_get_element ((xmlNode *) doc,
                                             "Envelope",
                                             "Body",
