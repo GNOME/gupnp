@@ -1064,16 +1064,8 @@ subscription_server_handler (SoupServer        *server,
 {
         GUPnPService *service;
         const char *callback, *nt, *timeout, *sid;
-        goffset length;
 
         service = GUPNP_SERVICE (user_data);
-
-        length = soup_message_headers_get_content_length (msg->request_headers);
-        if (length == 0) {
-                soup_message_set_status (msg, SOUP_STATUS_BAD_REQUEST);
-
-                return;
-        }
 
         callback = soup_message_headers_get (msg->request_headers, "Callback");
         nt       = soup_message_headers_get (msg->request_headers, "NT");
