@@ -604,11 +604,10 @@ gupnp_service_init (GUPnPService *service)
 
 /* Generate a new action response node for @action_name */
 static GString *
-new_action_response_str (GUPnPService *service,
-                         const char   *action_name)
+new_action_response_str (const char   *action_name,
+                         const char   *service_type)
 {
         GString *str;
-        const char *type;
 
         str = xml_util_new_string ();
 
@@ -616,11 +615,8 @@ new_action_response_str (GUPnPService *service,
         g_string_append (str, action_name);
         g_string_append (str, "Response xmlns:u=");
 
-        type = gupnp_service_info_get_service_type
-                                        (GUPNP_SERVICE_INFO (service));
-        if (type != NULL) {
-                g_string_append_c (str, '"');
-                g_string_append (str, type);
+        if (service_type != NULL) {
+                g_string_append (str, service_type);
                 g_string_append_c (str, '"');
         } else {
                 g_warning ("No serviceType defined. Control may not work "
@@ -701,7 +697,8 @@ control_server_handler (SoupServer        *server,
         GUPnPContext *context;
         xmlDoc *doc;
         xmlNode *action_node;
-        const char *soap_action, *action_name;
+        const char *soap_action;
+        char *action_name;
         char *end;
         GUPnPServiceAction *action;
         goffset length;
@@ -733,6 +730,8 @@ control_server_handler (SoupServer        *server,
                 return;
         }
 
+        /* This memory is libsoup-owned so we can do this */
+        *action_name = '\0';
         action_name += 1;
 
         /* This memory is libsoup-owned so we can do this */
@@ -766,7 +765,8 @@ control_server_handler (SoupServer        *server,
         action->msg          = g_object_ref (msg);
         action->doc          = doc;
         action->node         = action_node;
-        action->response_str = new_action_response_str (service, action_name);
+        action->response_str = new_action_response_str (action_name,
+                                                        soap_action);
         action->context      = g_object_ref (context);
 
         /* Tell soup server that response is not ready yet */
