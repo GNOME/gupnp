@@ -1,3 +1,31 @@
+0.12.8
+======
+
+Changes since 0.12.7
+
+- Don't crash if device descriptions don't contain a root element.
+- Fix pkg-config paths.
+- Avoid using asserts.
+- Use the closest match instead of using the icon that was last checked.
+- Expect xmlRecoverMemory to fail.
+- Reject action messages with zero content length.
+- Change version in action answer.
+
+Bug fixes in this release:
+
+- bug#1570: gupnp doesn't set the pkgconfig lib dir correctly in 64 bit env.
+- bug#1574: Avoid using asserts.
+- bug#1592: gupnp_device_info_get_icon_url() does not return the closest match.
+- bug#1604: Crash on action without any content.
+
+All contributors to this release:
+
+Ross Burton <ross@linux.intel.com>
+Zeeshan Ali (Khattak) <zeeshanak@gnome.org>
+Steven Dorigotti <steven.dorigotti@tvblob.com>
+Sven Neumann <s.neumann@raumfeld.com>
+Jens Georg <mail@jensge.org>
+
 0.12.7
 ======
 
