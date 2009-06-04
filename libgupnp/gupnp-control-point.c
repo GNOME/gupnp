@@ -472,7 +472,9 @@ got_description_url (SoupSession           *session,
                 } else
                         g_warning ("Failed to parse %s", data->description_url);
         } else
-                g_warning ("Failed to GET %s", data->description_url);
+                g_warning ("Failed to GET %s: %s",
+                           data->description_url,
+                           msg->reason_phrase);
 
         get_description_url_data_free (data);
 }
