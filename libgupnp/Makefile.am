@@ -1,4 +1,4 @@
-LTVERSION = 2:0:0
+LTVERSION = 3:0:0
 
 if USE_NETWORK_MANAGER
 CONTEXT_MANAGER_IMPL = gupnp-network-manager.c  \
