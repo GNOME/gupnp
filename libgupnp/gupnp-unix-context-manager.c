@@ -90,7 +90,8 @@ get_host_ip_from_iface (struct ifaddrs *ifa)
 
 void
 create_and_signal_context (GUPnPUnixContextManager *manager,
-                           const char              *host_ip)
+                           const char              *host_ip,
+                           const char              *interface)
 {
         GUPnPContext *context;
         GMainContext *main_context;
@@ -112,6 +113,7 @@ create_and_signal_context (GUPnPUnixContextManager *manager,
                                 "host-ip", host_ip,
                                 "port", port,
                                 "error", &error,
+                                "name", interface,
                                 NULL);
         if (error != NULL) {
                 g_warning ("Failed to create context for host/IP '%s': %s\n",
@@ -155,7 +157,9 @@ create_contexts (gpointer data)
                 host_ip = get_host_ip_from_iface (ifa);
 
                 if (host_ip != NULL) {
-                        create_and_signal_context (manager, host_ip);
+                        create_and_signal_context (manager,
+                                                   host_ip,
+                                                   ifa->ifa_name);
 
                         g_free (host_ip);
                 }

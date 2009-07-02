@@ -72,6 +72,8 @@ typedef struct
 
         DBusGProxy *device_proxy;
         DBusGProxy *prop_proxy;
+
+        guint8 ip4_address[4];
 } NMDevice;
 
 struct _GUPnPNetworkManagerPrivate {
@@ -146,6 +148,7 @@ create_loopback_context (gpointer data)
                                 "host-ip", LOOPBACK_IP,
                                 "port", port,
                                 "error", &error,
+                                "name", "lo",
                                 NULL);
         if (error) {
                 g_warning ("Error creating GUPnP context: %s\n",
@@ -163,8 +166,7 @@ create_loopback_context (gpointer data)
 }
 
 static void
-create_context_for_device (NMDevice *nm_device,
-                           guint8   *ip4_address)
+create_context_for_device (NMDevice *nm_device, const char *iface)
 {
         GError *error = NULL;
         gchar *ip4_str;
@@ -172,10 +174,10 @@ create_context_for_device (NMDevice *nm_device,
         guint port;
 
         ip4_str = g_strdup_printf ("%u.%u.%u.%u",
-                                   ip4_address[0],
-                                   ip4_address[1],
-                                   ip4_address[2],
-                                   ip4_address[3]);
+                                   nm_device->ip4_address[0],
+                                   nm_device->ip4_address[1],
+                                   nm_device->ip4_address[2],
+                                   nm_device->ip4_address[3]);
 
         g_object_get (nm_device->manager,
                       "main-context", &main_context,
@@ -187,6 +189,7 @@ create_context_for_device (NMDevice *nm_device,
                                            "host-ip", ip4_str,
                                            "port", port,
                                            "error", &error,
+                                           "name", iface,
                                            NULL);
         if (error) {
                 g_warning ("Error creating GUPnP context: %s\n",
@@ -205,13 +208,12 @@ context_error:
 }
 
 static void
-get_device_ip4_address_cb (DBusGProxy     *proxy,
-                           DBusGProxyCall *call,
-                           void           *user_data)
+get_device_interface_cb (DBusGProxy     *proxy,
+                         DBusGProxyCall *call,
+                         void           *user_data)
 {
         GValue value = {0,};
         GError *error = NULL;
-        guint8 ip4_address[4];
         NMDevice *nm_device = (NMDevice *) user_data;
 
         if (!dbus_g_proxy_end_call (nm_device->prop_proxy,
@@ -226,9 +228,40 @@ get_device_ip4_address_cb (DBusGProxy     *proxy,
                 return;
         }
 
-        *((guint *) ip4_address) = g_value_get_uint (&value);
+        create_context_for_device (nm_device, g_value_get_string (&value));
+}
 
-        create_context_for_device (nm_device, ip4_address);
+static void
+get_device_ip4_address_cb (DBusGProxy     *proxy,
+                           DBusGProxyCall *call,
+                           void           *user_data)
+{
+        GValue value = {0,};
+        GError *error = NULL;
+        NMDevice *nm_device = (NMDevice *) user_data;
+
+        if (!dbus_g_proxy_end_call (nm_device->prop_proxy,
+                                    call,
+                                    &error,
+                                    G_TYPE_VALUE, &value,
+                                    G_TYPE_INVALID)) {
+                g_warning ("Error reading property from object: %s\n",
+                           error->message);
+
+                g_error_free (error);
+                return;
+        }
+
+        *((guint *) nm_device->ip4_address) = g_value_get_uint (&value);
+
+        dbus_g_proxy_begin_call (nm_device->prop_proxy,
+                                 "Get",
+                                 get_device_interface_cb,
+                                 nm_device,
+                                 NULL,
+                                 G_TYPE_STRING, DEVICE_INTERFACE,
+                                 G_TYPE_STRING, "Interface",
+                                 G_TYPE_INVALID);
 }
 
 static void
