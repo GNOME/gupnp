@@ -141,7 +141,12 @@ create_loopback_context (gpointer data)
                       "port", &port,
                       NULL);
 
-        context = gupnp_context_new (main_context, LOOPBACK_IP, port, &error);
+        context = g_object_new (GUPNP_TYPE_CONTEXT,
+                                "main-context", main_context,
+                                "host-ip", LOOPBACK_IP,
+                                "port", port,
+                                "error", &error,
+                                NULL);
         if (error) {
                 g_warning ("Error creating GUPnP context: %s\n",
 			   error->message);
@@ -177,10 +182,12 @@ create_context_for_device (NMDevice *nm_device,
                       "port", &port,
                       NULL);
 
-        nm_device->context = gupnp_context_new (main_context,
-                                                ip4_str,
-                                                port,
-                                                &error);
+        nm_device->context = g_object_new (GUPNP_TYPE_CONTEXT,
+                                           "main-context", main_context,
+                                           "host-ip", ip4_str,
+                                           "port", port,
+                                           "error", &error,
+                                           NULL);
         if (error) {
                 g_warning ("Error creating GUPnP context: %s\n",
 			   error->message);

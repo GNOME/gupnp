@@ -107,10 +107,12 @@ create_and_signal_context (GUPnPUnixContextManager *manager,
                       NULL);
 
         error = NULL;
-        context = gupnp_context_new (main_context,
-                                     host_ip,
-                                     port,
-                                     &error);
+        context = g_object_new (GUPNP_TYPE_CONTEXT,
+                                "main-context", main_context,
+                                "host-ip", host_ip,
+                                "port", port,
+                                "error", &error,
+                                NULL);
         if (error != NULL) {
                 g_warning ("Failed to create context for host/IP '%s': %s\n",
                            host_ip,
