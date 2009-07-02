@@ -87,85 +87,89 @@ typedef struct {
         void (* _gupnp_reserved4) (void);
 } GUPnPDeviceInfoClass;
 
+
 GUPnPContext *
-gupnp_device_info_get_context           (GUPnPDeviceInfo *info);
+gupnp_device_info_get_context            (GUPnPDeviceInfo *info);
 
 const char *
-gupnp_device_info_get_location          (GUPnPDeviceInfo *info);
+gupnp_device_info_get_location           (GUPnPDeviceInfo *info);
 
 const SoupURI *
-gupnp_device_info_get_url_base          (GUPnPDeviceInfo *info);
+gupnp_device_info_get_url_base           (GUPnPDeviceInfo *info);
 
 const char *
-gupnp_device_info_get_udn               (GUPnPDeviceInfo *info);
+gupnp_device_info_get_udn                (GUPnPDeviceInfo *info);
 
 const char *
-gupnp_device_info_get_device_type       (GUPnPDeviceInfo *info);
+gupnp_device_info_get_device_type        (GUPnPDeviceInfo *info);
 
 char *
-gupnp_device_info_get_friendly_name     (GUPnPDeviceInfo *info);
+gupnp_device_info_get_friendly_name      (GUPnPDeviceInfo *info);
 
 char *
-gupnp_device_info_get_manufacturer      (GUPnPDeviceInfo *info);
+gupnp_device_info_get_manufacturer       (GUPnPDeviceInfo *info);
 
 char *
-gupnp_device_info_get_manufacturer_url  (GUPnPDeviceInfo *info);
+gupnp_device_info_get_manufacturer_url   (GUPnPDeviceInfo *info);
 
 char *
-gupnp_device_info_get_model_description (GUPnPDeviceInfo *info);
+gupnp_device_info_get_model_description  (GUPnPDeviceInfo *info);
 
 char *
-gupnp_device_info_get_model_name        (GUPnPDeviceInfo *info);
+gupnp_device_info_get_model_name         (GUPnPDeviceInfo *info);
 
 char *
-gupnp_device_info_get_model_number      (GUPnPDeviceInfo *info);
+gupnp_device_info_get_model_number       (GUPnPDeviceInfo *info);
 
 char *
-gupnp_device_info_get_model_url         (GUPnPDeviceInfo *info);
+gupnp_device_info_get_model_url          (GUPnPDeviceInfo *info);
 
 char *
-gupnp_device_info_get_serial_number     (GUPnPDeviceInfo *info);
+gupnp_device_info_get_serial_number      (GUPnPDeviceInfo *info);
 
 char *
-gupnp_device_info_get_upc               (GUPnPDeviceInfo *info);
+gupnp_device_info_get_upc                (GUPnPDeviceInfo *info);
 
 char *
-gupnp_device_info_get_icon_url          (GUPnPDeviceInfo *info,
-                                         const char      *requested_mime_type,
-                                         int              requested_depth,
-                                         int              requested_width,
-                                         int              requested_height,
-                                         gboolean         prefer_bigger,
-                                         char           **mime_type,
-                                         int             *depth,
-                                         int             *width,
-                                         int             *height);
+gupnp_device_info_get_icon_url           (GUPnPDeviceInfo *info,
+                                          const char      *requested_mime_type,
+                                          int              requested_depth,
+                                          int              requested_width,
+                                          int              requested_height,
+                                          gboolean         prefer_bigger,
+                                          char           **mime_type,
+                                          int             *depth,
+                                          int             *width,
+                                          int             *height);
 
 char *
-gupnp_device_info_get_presentation_url  (GUPnPDeviceInfo *info);
+gupnp_device_info_get_presentation_url   (GUPnPDeviceInfo *info);
 
 GList *
-gupnp_device_info_list_devices          (GUPnPDeviceInfo *info);
+gupnp_device_info_list_dlna_capabilities (GUPnPDeviceInfo *info);
 
 GList *
-gupnp_device_info_list_device_types     (GUPnPDeviceInfo *info);
+gupnp_device_info_list_devices           (GUPnPDeviceInfo *info);
+
+GList *
+gupnp_device_info_list_device_types      (GUPnPDeviceInfo *info);
 
 GUPnPDeviceInfo *
-gupnp_device_info_get_device            (GUPnPDeviceInfo *info,
-                                         const char      *type);
+gupnp_device_info_get_device             (GUPnPDeviceInfo *info,
+                                          const char      *type);
 
 GList *
-gupnp_device_info_list_services         (GUPnPDeviceInfo *info);
+gupnp_device_info_list_services          (GUPnPDeviceInfo *info);
 
 GList *
-gupnp_device_info_list_service_types    (GUPnPDeviceInfo *info);
+gupnp_device_info_list_service_types     (GUPnPDeviceInfo *info);
 
 GUPnPServiceInfo *
-gupnp_device_info_get_service           (GUPnPDeviceInfo *info,
-                                         const char      *type);
+gupnp_device_info_get_service            (GUPnPDeviceInfo *info,
+                                          const char      *type);
 
 GUPnPResourceFactory *
-gupnp_device_info_get_resource_factory  (GUPnPDeviceInfo *device_info);
+gupnp_device_info_get_resource_factory   (GUPnPDeviceInfo *device_info);
 
 G_END_DECLS
 

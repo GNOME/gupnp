@@ -928,6 +928,61 @@ resource_type_match (const char *query,
 }
 
 /**
+ * gupnp_device_info_list_dlna_capabilities
+ * @info: A #GUPnPDeviceInfo
+ *
+ * Get a #GList of strings that represent the device capabilities as
+ * announced in the device description file using the
+ * &lt;dlna:X_DLNACAP&gt; element.
+ *
+ * Return value: a #GList of newly allocated strings or %NULL if
+ *               the device description doesn't contain the
+ *               &lt;dlna:X_DLNACAP&gt; element.
+ **/
+GList *
+gupnp_device_info_list_dlna_capabilities (GUPnPDeviceInfo *info)
+{
+        xmlChar *caps;
+
+        g_return_val_if_fail (GUPNP_IS_DEVICE_INFO (info), NULL);
+
+        caps = xml_util_get_child_element_content (info->priv->element,
+                                                   "X_DLNACAP");
+
+        if (caps) {
+                GList         *list  = NULL;
+                const xmlChar *start = caps;
+
+                while (*start) {
+                        const xmlChar *end = start;
+
+                        while (*end && *end != ',')
+                                end++;
+
+                        if (end > start) {
+                                gchar *value;
+
+                                value = g_strndup ((const gchar *) start,
+                                                   end - start);
+
+                                list = g_list_prepend (list, value);
+                        }
+
+                        if (*end)
+                                start = end + 1;
+                        else
+                                break;
+                }
+
+                xmlFree (caps);
+
+                return g_list_reverse (list);
+        }
+
+        return NULL;
+}
+
+/**
  * gupnp_device_info_list_devices
  * @info: A #GUPnPDeviceInfo
  *
