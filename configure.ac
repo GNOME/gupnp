@@ -23,8 +23,9 @@ PKG_CHECK_MODULES(LIBGUPNP, glib-2.0 >= 2.18 \
 PKG_CHECK_MODULES(GTHREAD, gthread-2.0)
 
 AC_ARG_WITH([context_manager],
-            AS_HELP_STRING([--context-manager=@<:@network-manager/unix@:>@],
-                           [Context Manager backend to use]),,
+            AS_HELP_STRING(
+                        [--with-context-manager=@<:@network-manager/unix@:>@],
+                        [Context Manager backend to use]),,
             [with_context_manager="network-manager"])
 
 AC_MSG_CHECKING([Context Manager backend to use])
