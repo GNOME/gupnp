@@ -59,7 +59,6 @@ G_DEFINE_TYPE (GUPnPContext,
                GSSDP_TYPE_CLIENT);
 
 struct _GUPnPContextPrivate {
-        char        *host_ip;
         guint        port;
 
         guint        subscription_timeout;
