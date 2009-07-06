@@ -983,6 +983,28 @@ gupnp_device_info_list_dlna_capabilities (GUPnPDeviceInfo *info)
 }
 
 /**
+ * gupnp_device_info_get_description_value
+ * @info:    A #GUPnPDeviceInfo
+ * @element: Name of the description element to retrieve
+ *
+ * This function provides generic access to the contents of arbitrary
+ * elements in the device description file.
+ *
+ * Return value: a newly allocated string or %NULL if the device
+ *               description doesn't contain the given @element
+ **/
+char *
+gupnp_device_info_get_description_value (GUPnPDeviceInfo *info,
+                                         const char      *element)
+{
+        g_return_val_if_fail (GUPNP_IS_DEVICE_INFO (info), NULL);
+        g_return_val_if_fail (element != NULL, NULL);
+
+        return xml_util_get_child_element_content_glib (info->priv->element,
+                                                        element);
+}
+
+/**
  * gupnp_device_info_list_devices
  * @info: A #GUPnPDeviceInfo
  *

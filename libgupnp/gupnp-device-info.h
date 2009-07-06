@@ -148,6 +148,9 @@ gupnp_device_info_get_presentation_url   (GUPnPDeviceInfo *info);
 GList *
 gupnp_device_info_list_dlna_capabilities (GUPnPDeviceInfo *info);
 
+char *
+gupnp_device_info_get_description_value  (GUPnPDeviceInfo *info,
+                                          const char      *element);
 GList *
 gupnp_device_info_list_devices           (GUPnPDeviceInfo *info);
 
