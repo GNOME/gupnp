@@ -91,6 +91,9 @@ on_context_unavailable (GUPnPContextManager *impl,
 {
         GUPnPContextManager *manager = GUPNP_CONTEXT_MANAGER (user_data);
 
+        /* Make sure we don't send anything on now unavailable network */
+        g_object_set (context, "active", FALSE, NULL);
+
         /* Just proxy the signal */
         g_signal_emit (manager,
                        signals[CONTEXT_UNAVAILABLE],
