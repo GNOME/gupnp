@@ -199,6 +199,53 @@ gupnp_control_point_finalize (GObject *object)
         object_class->finalize (object);
 }
 
+static GList *
+find_service_node (GUPnPControlPoint *control_point,
+                   const char        *udn,
+                   const char        *service_type)
+{
+        GList *l;
+
+        l = control_point->priv->services;
+
+        while (l) {
+                GUPnPServiceInfo *info;
+
+                info = GUPNP_SERVICE_INFO (l->data);
+
+                if ((strcmp (gupnp_service_info_get_udn (info), udn) == 0) ||
+                    (strcmp (gupnp_service_info_get_service_type (info),
+                             service_type) == 0))
+                        break;
+
+                l = l->next;
+        }
+
+        return l;
+}
+
+static GList *
+find_device_node (GUPnPControlPoint *control_point,
+                  const char        *udn)
+{
+        GList *l;
+
+        l = control_point->priv->devices;
+
+        while (l) {
+                GUPnPDeviceInfo *info;
+
+                info = GUPNP_DEVICE_INFO (l->data);
+
+                if (strcmp (udn, gupnp_device_info_get_udn (info)) == 0)
+                        break;
+
+                l = l->next;
+        }
+
+        return l;
+}
+
 static void
 create_and_report_service_proxy (GUPnPControlPoint *control_point,
                                  XmlDocWrapper     *doc,
@@ -706,26 +753,13 @@ gupnp_control_point_resource_unavailable
 
         /* Find proxy */
         if (service_type) {
-                l = control_point->priv->services;
+                l = find_service_node (control_point, udn, service_type);
 
-                while (l) {
-                        GUPnPServiceInfo *info;
+                if (l) {
                         GUPnPServiceProxy *proxy;
 
-                        info = GUPNP_SERVICE_INFO (l->data);
-
-                        if ((strcmp (udn,
-                                     gupnp_service_info_get_udn (info)) != 0) ||
-                            (strcmp (service_type,
-                                     gupnp_service_info_get_service_type (info))
-                                     != 0)) {
-                                l = l->next;
-
-                                continue;
-                        }
-
                         /* Remove proxy */
-                        proxy = GUPNP_SERVICE_PROXY (info);
+                        proxy = GUPNP_SERVICE_PROXY (l->data);
 
                         cur_l = l;
                         l = l->next;
@@ -742,23 +776,13 @@ gupnp_control_point_resource_unavailable
                         g_object_unref (proxy);
                 }
         } else {
-                l = control_point->priv->devices;
+                l = find_device_node (control_point, udn);
 
-                while (l) {
-                        GUPnPDeviceInfo *info;
+                if (l) {
                         GUPnPDeviceProxy *proxy;
 
-                        info = GUPNP_DEVICE_INFO (l->data);
-
-                        if (strcmp (udn,
-                                    gupnp_device_info_get_udn (info)) != 0) {
-                                l = l->next;
-
-                                continue;
-                        }
-
                         /* Remove proxy */
-                        proxy = GUPNP_DEVICE_PROXY (info);
+                        proxy = GUPNP_DEVICE_PROXY (l->data);
 
                         cur_l = l;
                         l = l->next;
