@@ -259,6 +259,10 @@ create_and_report_service_proxy (GUPnPControlPoint *control_point,
         GUPnPResourceFactory *factory;
         GUPnPContext *context;
 
+        if (find_service_node (control_point, udn, service_type) != NULL)
+                /* We already have a proxy for this service */
+                return;
+
         factory = gupnp_control_point_get_resource_factory (control_point);
         context = gupnp_control_point_get_context (control_point);
 
@@ -293,6 +297,10 @@ create_and_report_device_proxy (GUPnPControlPoint *control_point,
         GUPnPDeviceProxy *proxy;
         GUPnPResourceFactory *factory;
         GUPnPContext *context;
+
+        if (find_device_node (control_point, udn) != NULL)
+                /* We already have a proxy for this device */
+                return;
 
         factory = gupnp_control_point_get_resource_factory (control_point);
         context = gupnp_control_point_get_context (control_point);
