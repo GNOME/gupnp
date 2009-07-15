@@ -199,6 +199,75 @@ gupnp_control_point_finalize (GObject *object)
         object_class->finalize (object);
 }
 
+static void
+create_and_report_service_proxy (GUPnPControlPoint *control_point,
+                                 XmlDocWrapper     *doc,
+                                 xmlNode           *element,
+                                 const char        *udn,
+                                 const char        *service_type,
+                                 const char        *description_url,
+                                 SoupURI           *url_base)
+{
+        GUPnPServiceProxy *proxy;
+        GUPnPResourceFactory *factory;
+        GUPnPContext *context;
+
+        factory = gupnp_control_point_get_resource_factory (control_point);
+        context = gupnp_control_point_get_context (control_point);
+
+        /* Create proxy */
+        proxy = gupnp_resource_factory_create_service_proxy (factory,
+                                                             context,
+                                                             doc,
+                                                             element,
+                                                             udn,
+                                                             service_type,
+                                                             description_url,
+                                                             url_base);
+
+        control_point->priv->services =
+                                g_list_prepend (control_point->priv->services,
+                                                proxy);
+
+        g_signal_emit (control_point,
+                       signals[SERVICE_PROXY_AVAILABLE],
+                       0,
+                       proxy);
+}
+
+static void
+create_and_report_device_proxy (GUPnPControlPoint *control_point,
+                                XmlDocWrapper     *doc,
+                                xmlNode           *element,
+                                const char        *udn,
+                                const char        *description_url,
+                                SoupURI           *url_base)
+{
+        GUPnPDeviceProxy *proxy;
+        GUPnPResourceFactory *factory;
+        GUPnPContext *context;
+
+        factory = gupnp_control_point_get_resource_factory (control_point);
+        context = gupnp_control_point_get_context (control_point);
+
+        proxy = gupnp_resource_factory_create_device_proxy (factory,
+                                                            context,
+                                                            doc,
+                                                            element,
+                                                            udn,
+                                                            description_url,
+                                                            url_base);
+
+        control_point->priv->devices = g_list_prepend
+                                                (control_point->priv->devices,
+                                                 proxy);
+
+        g_signal_emit (control_point,
+                       signals[DEVICE_PROXY_AVAILABLE],
+                       0,
+                       proxy);
+}
+
 /* Search @element for matching services */
 static void
 process_service_list (xmlNode           *element,
@@ -214,8 +283,6 @@ process_service_list (xmlNode           *element,
         for (element = element->children; element; element = element->next) {
                 xmlChar *prop;
                 gboolean match;
-                GUPnPContext *context;
-                GUPnPServiceProxy *proxy;
 
                 if (strcmp ((char *) element->name, "service") != 0)
                         continue;
@@ -235,28 +302,13 @@ process_service_list (xmlNode           *element,
 
                 /* Match */
 
-                /* Get context */
-                context = gupnp_control_point_get_context (control_point);
-
-                /* Create proxy */
-                proxy = gupnp_resource_factory_create_service_proxy
-                                (gupnp_control_point_get_resource_factory (control_point),
-                                 context,
-                                 doc,
-                                 element,
-                                 udn,
-                                 service_type,
-                                 description_url,
-                                 url_base);
-
-                control_point->priv->services =
-                        g_list_prepend (control_point->priv->services,
-                                        proxy);
-
-                g_signal_emit (control_point,
-                               signals[SERVICE_PROXY_AVAILABLE],
-                               0,
-                               proxy);
+                create_and_report_service_proxy (control_point,
+                                                 doc,
+                                                 element,
+                                                 udn,
+                                                 service_type,
+                                                 description_url,
+                                                 url_base);
         }
 
         g_object_unref (control_point);
@@ -278,7 +330,6 @@ process_device_list (xmlNode           *element,
                 xmlNode *children;
                 xmlChar *prop;
                 gboolean match;
-                GUPnPContext *context;
 
                 if (strcmp ((char *) element->name, "device") != 0)
                         continue;
@@ -312,9 +363,6 @@ process_device_list (xmlNode           *element,
 
                 /* Match */
 
-                /* Get context */
-                context = gupnp_control_point_get_context (control_point);
-
                 if (service_type) {
                         /* Dive into serviceList */
                         children = xml_util_get_element (element,
@@ -330,29 +378,13 @@ process_device_list (xmlNode           *element,
                                                       description_url,
                                                       url_base);
                         }
-                } else {
-                        /* Create device proxy */
-                        GUPnPDeviceProxy *proxy;
-
-                        proxy = gupnp_resource_factory_create_device_proxy
-                                        (gupnp_control_point_get_resource_factory (control_point),
-                                         context,
-                                         doc,
-                                         element,
-                                         udn,
-                                         description_url,
-                                         url_base);
-
-                        control_point->priv->devices =
-                                g_list_prepend
-                                        (control_point->priv->devices,
-                                         proxy);
-
-                        g_signal_emit (control_point,
-                                       signals[DEVICE_PROXY_AVAILABLE],
-                                       0,
-                                       proxy);
-                }
+                } else
+                        create_and_report_device_proxy (control_point,
+                                                        doc,
+                                                        element,
+                                                        udn,
+                                                        description_url,
+                                                        url_base);
         }
 
         g_object_unref (control_point);
