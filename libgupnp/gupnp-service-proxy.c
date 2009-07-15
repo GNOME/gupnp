@@ -1446,7 +1446,8 @@ server_handler (SoupServer        *soup_server,
 
         hdr = soup_message_headers_get (msg->request_headers, "SID");
         if (hdr == NULL ||
-            (proxy->priv->sid && (strcmp (hdr, proxy->priv->sid) != 0))) {
+            (proxy->priv->sid == NULL ||
+             strcmp (hdr, proxy->priv->sid) != 0)) {
                 /* No SID or not ours */
                 soup_message_set_status (msg, SOUP_STATUS_PRECONDITION_FAILED);
 
