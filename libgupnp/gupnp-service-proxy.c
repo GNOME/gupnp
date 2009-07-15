@@ -1855,10 +1855,14 @@ unsubscribe (GUPnPServiceProxy *proxy)
         SoupServer *server;
         char *sub_url;
 
+        context = gupnp_service_info_get_context (GUPNP_SERVICE_INFO (proxy));
+
+        /* Remove server handler */
+        server = gupnp_context_get_server (context);
+        soup_server_remove_handler (server, proxy->priv->path);
+
         if (proxy->priv->sid == NULL)
                 return; /* No SID: nothing to unsubscribe */
-
-        context = gupnp_service_info_get_context (GUPNP_SERVICE_INFO (proxy));
 
         /* Create unsubscription message */
         sub_url = gupnp_service_info_get_event_subscription_url
@@ -1892,10 +1896,6 @@ unsubscribe (GUPnPServiceProxy *proxy)
                 g_source_destroy (proxy->priv->subscription_timeout_src);
                 proxy->priv->subscription_timeout_src = NULL;
         }
-
-        /* Remove server handler */
-        server = gupnp_context_get_server (context);
-        soup_server_remove_handler (server, proxy->priv->path);
 }
 
 /**
