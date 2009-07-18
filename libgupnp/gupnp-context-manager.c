@@ -121,11 +121,11 @@ on_context_unavailable (GUPnPContextManager *impl,
                 if (context == obj_context) {
                         GList *next = l->next;
 
+                        g_object_unref (l->data);
+
                         manager->priv->objects =
                                 g_list_delete_link (manager->priv->objects, l);
                         l = next;
-
-                        g_object_unref (l->data);
                 } else {
                         l = l->next;
                 }
