@@ -39,8 +39,7 @@
 #include <libsoup/soup-address.h>
 #include <glib/gstdio.h>
 
-#include "gupnp-context-manager.h"
-#include "gupnp-context.h"
+#include "gupnp.h"
 #include "gupnp-marshal.h"
 
 G_DEFINE_TYPE (GUPnPContextManager,
@@ -53,6 +52,8 @@ struct _GUPnPContextManagerPrivate {
         guint              port;
 
         GUPnPContextManager *impl;
+
+        GList *objects; /* control points and root devices */
 };
 
 enum {
@@ -89,10 +90,46 @@ on_context_unavailable (GUPnPContextManager *impl,
                         GUPnPContext        *context,
                         gpointer            *user_data)
 {
-        GUPnPContextManager *manager = GUPNP_CONTEXT_MANAGER (user_data);
+        GUPnPContextManager *manager;
+        GList *l;
+
+        manager = GUPNP_CONTEXT_MANAGER (user_data);
 
         /* Make sure we don't send anything on now unavailable network */
         g_object_set (context, "active", FALSE, NULL);
+
+        /* Unref all associated objects */
+        l = manager->priv->objects;
+
+        while (l) {
+                GUPnPContext *obj_context = NULL;
+
+                if (GUPNP_IS_CONTROL_POINT (l->data)) {
+                        GUPnPControlPoint *cp;
+
+                        cp = GUPNP_CONTROL_POINT (l->data);
+                        obj_context = gupnp_control_point_get_context (cp);
+                } else if (GUPNP_IS_ROOT_DEVICE (l->data)) {
+                        GUPnPDeviceInfo *info;
+
+                        info = GUPNP_DEVICE_INFO (l->data);
+                        obj_context = gupnp_device_info_get_context (info);
+                } else {
+                        g_assert_not_reached ();
+                }
+
+                if (context == obj_context) {
+                        GList *next = l->next;
+
+                        manager->priv->objects =
+                                g_list_delete_link (manager->priv->objects, l);
+                        l = next;
+
+                        g_object_unref (l->data);
+                } else {
+                        l = l->next;
+                }
+        }
 
         /* Just proxy the signal */
         g_signal_emit (manager,
@@ -359,5 +396,53 @@ gupnp_context_manager_new (GMainContext *main_context,
         g_object_unref (impl);
 
         return manager;
+}
+
+/**
+ * gupnp_context_manager_manage_control_point
+ * @manager: A #GUPnPContextManager
+ * @control_point: The #GUPnPControlPoint to be taken care of.
+ *
+ * By calling this function, you are asking @manager to keep a reference to
+ * @control_point until it's associated #GUPnPContext is no longer available.
+ * You usually want to call this function from
+ * #GUPnPContextManager::context-available handler after you create a
+ * #GUPnPControlPoint object for the newly available context.
+ *
+ * Return value: None.
+ **/
+void
+gupnp_context_manager_manage_control_point (GUPnPContextManager *manager,
+                                            GUPnPControlPoint   *control_point)
+{
+        g_return_if_fail (GUPNP_IS_CONTEXT_MANAGER (manager));
+        g_return_if_fail (GUPNP_IS_CONTROL_POINT (control_point));
+
+        manager->priv->objects = g_list_append (manager->priv->objects,
+                                                g_object_ref (control_point));
+}
+
+/**
+ * gupnp_context_manager_manage_root_device
+ * @manager: A #GUPnPContextManager
+ * @root_device: The #GUPnPRootDevice to be taken care of.
+ *
+ * By calling this function, you are asking @manager to keep a reference to
+ * @root_device when it's associated #GUPnPContext is no longer available. You
+ * usually want to call this function from
+ * #GUPnPContextManager::context-available handler after you create a
+ * #GUPnPRootDevice object for the newly available context.
+ *
+ * Return value: None.
+ **/
+void
+gupnp_context_manager_manage_root_device (GUPnPContextManager *manager,
+                                          GUPnPRootDevice     *root_device)
+{
+        g_return_if_fail (GUPNP_IS_CONTEXT_MANAGER (manager));
+        g_return_if_fail (GUPNP_IS_ROOT_DEVICE (root_device));
+
+        manager->priv->objects = g_list_append (manager->priv->objects,
+                                                g_object_ref (root_device));
 }
 

@@ -25,6 +25,7 @@
 #define __GUPNP_CONTEXT_MANAGER_H__
 
 #include <glib.h>
+#include "gupnp.h"
 
 G_BEGIN_DECLS
 
@@ -79,6 +80,16 @@ typedef struct {
 GUPnPContextManager *
 gupnp_context_manager_new              (GMainContext *main_context,
                                         guint         port);
+
+void
+gupnp_context_manager_manage_control_point
+                                       (GUPnPContextManager     *manager,
+                                        GUPnPControlPoint       *control_point);
+
+void
+gupnp_context_manager_manage_root_device
+                                       (GUPnPContextManager     *manager,
+                                        GUPnPRootDevice         *root_device);
 
 G_END_DECLS
 
