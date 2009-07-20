@@ -100,6 +100,7 @@ create_contexts (gpointer data)
         GUPnPUnixContextManager *manager = (GUPnPUnixContextManager *) data;
         struct ifaddrs *ifa_list, *ifa;
         char *ret;
+        GList *processed;
 
         ret = NULL;
 
@@ -110,12 +111,22 @@ create_contexts (gpointer data)
                 return FALSE;
         }
 
+        processed = NULL;
+
         /* Create contexts for each up interface */
         for (ifa = ifa_list; ifa != NULL; ifa = ifa->ifa_next) {
+                if (g_list_find_custom (processed,
+                                        ifa->ifa_name,
+                                        (GCompareFunc) strcmp) != NULL)
+                        continue;
+
                 if (ifa->ifa_flags & IFF_UP)
                         create_and_signal_context (manager, ifa->ifa_name);
+
+                processed = g_list_append (processed, ifa->ifa_name);
         }
 
+        g_list_free (processed);
         freeifaddrs (ifa_list);
 
         return FALSE;
