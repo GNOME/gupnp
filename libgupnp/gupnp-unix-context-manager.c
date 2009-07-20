@@ -52,45 +52,8 @@ G_DEFINE_TYPE (GUPnPUnixContextManager,
                gupnp_unix_context_manager,
                GUPNP_TYPE_CONTEXT_MANAGER);
 
-/* FIXME: We currently don't deal with IPv6 because libsoup doesn't seem to
- * like it and we get the screen full of warnings and errors. Please fix that
- * and uncomment the IPv6 handling here.
- */
-static char *
-get_host_ip_from_iface (struct ifaddrs *ifa)
-{
-        char ip[INET6_ADDRSTRLEN];
-        const char *host_ip = NULL;
-        struct sockaddr_in *s4;
-        /*struct sockaddr_in6 *s6;*/
-
-        if (ifa->ifa_addr == NULL)
-                return NULL;
-
-        if (!(ifa->ifa_flags & IFF_UP))
-                return NULL;
-
-        switch (ifa->ifa_addr->sa_family) {
-                case AF_INET:
-                        s4 = (struct sockaddr_in *) ifa->ifa_addr;
-                        host_ip = inet_ntop (AF_INET,
-                                        &s4->sin_addr, ip, sizeof (ip));
-                        break;
-                /*case AF_INET6:
-                        s6 = (struct sockaddr_in6 *) ifa->ifa_addr;
-                        host_ip = inet_ntop (AF_INET6,
-                                        &s6->sin6_addr, ip, sizeof (ip));
-                        break;*/
-                default:
-                        break; /* Unknown: ignore */
-        }
-
-        return g_strdup (host_ip);
-}
-
 void
 create_and_signal_context (GUPnPUnixContextManager *manager,
-                           const char              *host_ip,
                            const char              *interface)
 {
         GUPnPContext *context;
@@ -98,9 +61,6 @@ create_and_signal_context (GUPnPUnixContextManager *manager,
         guint port;
 
         GError *error;
-
-        if (host_ip == NULL)
-                return;
 
         g_object_get (manager,
                       "main-context", &main_context,
@@ -110,14 +70,13 @@ create_and_signal_context (GUPnPUnixContextManager *manager,
         error = NULL;
         context = g_object_new (GUPNP_TYPE_CONTEXT,
                                 "main-context", main_context,
-                                "host-ip", host_ip,
+                                "interface", interface,
                                 "port", port,
                                 "error", &error,
-                                "name", interface,
                                 NULL);
         if (error != NULL) {
-                g_warning ("Failed to create context for host/IP '%s': %s\n",
-                           host_ip,
+                g_warning ("Failed to create context for interface '%s': %s\n",
+                           interface,
                            error->message);
 
                 g_error_free (error);
@@ -151,18 +110,10 @@ create_contexts (gpointer data)
                 return FALSE;
         }
 
+        /* Create contexts for each up interface */
         for (ifa = ifa_list; ifa != NULL; ifa = ifa->ifa_next) {
-                char *host_ip;
-
-                host_ip = get_host_ip_from_iface (ifa);
-
-                if (host_ip != NULL) {
-                        create_and_signal_context (manager,
-                                                   host_ip,
-                                                   ifa->ifa_name);
-
-                        g_free (host_ip);
-                }
+                if (ifa->ifa_flags & IFF_UP)
+                        create_and_signal_context (manager, ifa->ifa_name);
         }
 
         freeifaddrs (ifa_list);

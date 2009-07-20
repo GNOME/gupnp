@@ -67,14 +67,11 @@ struct _GUPnPContextPrivate {
 
         SoupServer  *server; /* Started on demand */
         char        *server_url;
-
-        char        *name;
 };
 
 enum {
         PROP_0,
         PROP_PORT,
-        PROP_NAME,
         PROP_SERVER,
         PROP_SESSION,
         PROP_SUBSCRIPTION_TIMEOUT
@@ -161,9 +158,6 @@ gupnp_context_set_property (GObject      *object,
         case PROP_SUBSCRIPTION_TIMEOUT:
                 context->priv->subscription_timeout = g_value_get_uint (value);
                 break;
-        case PROP_NAME:
-                context->priv->name = g_value_dup_string (value);
-                break;
         default:
                 G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
                 break;
@@ -197,10 +191,6 @@ gupnp_context_get_property (GObject    *object,
                 g_value_set_uint (value,
                                   gupnp_context_get_subscription_timeout
                                                                    (context));
-                break;
-        case PROP_NAME:
-                g_value_set_string (value,
-                                    gupnp_context_get_name (context));
                 break;
         default:
                 G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -240,7 +230,6 @@ gupnp_context_finalize (GObject *object)
         context = GUPNP_CONTEXT (object);
 
         g_free (context->priv->server_url);
-        g_free (context->priv->name);
 
         /* Call super */
         object_class = G_OBJECT_CLASS (gupnp_context_parent_class);
@@ -335,27 +324,6 @@ gupnp_context_class_init (GUPnPContextClass *klass)
                                     G_PARAM_STATIC_NAME |
                                     G_PARAM_STATIC_NICK |
                                     G_PARAM_STATIC_BLURB));
-
-        /**
-         * GUPnPContext:name
-         *
-         * The name of this context. If the context was created by a
-         * #GUPnPContextManager object, this will be the name of the network
-         * interface this context is created for.
-         **/
-        g_object_class_install_property
-                (object_class,
-                 PROP_NAME,
-                 g_param_spec_string
-                         ("name",
-                          "Name",
-                          "The name of this context.",
-                          NULL,
-                          G_PARAM_READWRITE |
-                          G_PARAM_CONSTRUCT_ONLY |
-                          G_PARAM_STATIC_NAME |
-                          G_PARAM_STATIC_NICK |
-                          G_PARAM_STATIC_BLURB));
 }
 
 /**
@@ -452,50 +420,27 @@ _gupnp_context_get_server_url (GUPnPContext *context)
 /**
  * gupnp_context_new
  * @main_context: A #GMainContext, or %NULL to use the default one
- * @host_ip: The local host's IP address, or %NULL to use the IP address
- * of the first non-loopback network interface.
+ * @interface: The network interface to use, or %NULL to auto-detect.
  * @port: Port to run on, or 0 if you don't care what port is used.
  * @error: A location to store a #GError, or %NULL
  *
- * Create a new #GUPnPContext with the specified @main_context, @host_ip and @port.
+ * Create a new #GUPnPContext with the specified @main_context, @interface and
+ * @port.
  *
  * Return value: A new #GUPnPContext object, or %NULL on an error
  **/
 GUPnPContext *
 gupnp_context_new (GMainContext *main_context,
-                   const char   *host_ip,
+                   const char   *interface,
                    guint         port,
                    GError      **error)
 {
         return g_object_new (GUPNP_TYPE_CONTEXT,
                              "main-context", main_context,
-                             "host-ip", host_ip,
+                             "interface", interface,
                              "port", port,
                              "error", error,
                              NULL);
-}
-
-/**
- * gupnp_context_get_name
- * @context: A #GUPnPContext
- *
- * Get the name of this context.
- *
- * Return value: The name of this context. This string should not be freed.
- **/
-const char *
-gupnp_context_get_name (GUPnPContext *context)
-{
-        g_return_val_if_fail (GUPNP_IS_CONTEXT (context), NULL);
-
-        if (context->priv->name == NULL) {
-                const char *ip;
-
-                ip = gssdp_client_get_host_ip (GSSDP_CLIENT (context));
-                context->priv->name = g_strdup (ip);
-        }
-
-        return context->priv->name;
 }
 
 /**

@@ -78,7 +78,7 @@ typedef struct {
 
 GUPnPContext *
 gupnp_context_new                      (GMainContext *main_context,
-                                        const char   *host_ip,
+                                        const char   *interface,
                                         guint         port,
                                         GError      **error);
 

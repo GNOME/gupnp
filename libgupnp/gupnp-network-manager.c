@@ -72,8 +72,6 @@ typedef struct
 
         DBusGProxy *device_proxy;
         DBusGProxy *prop_proxy;
-
-        guint8 ip4_address[4];
 } NMDevice;
 
 struct _GUPnPNetworkManagerPrivate {
@@ -127,7 +125,7 @@ nm_device_free (NMDevice *nm_device)
         g_slice_free (NMDevice, nm_device);
 }
 
-#define LOOPBACK_IP "127.0.0.1"
+#define LOOPBACK_IFACE "lo"
 
 static gboolean
 create_loopback_context (gpointer data)
@@ -145,10 +143,9 @@ create_loopback_context (gpointer data)
 
         context = g_object_new (GUPNP_TYPE_CONTEXT,
                                 "main-context", main_context,
-                                "host-ip", LOOPBACK_IP,
+                                "interface", LOOPBACK_IFACE,
                                 "port", port,
                                 "error", &error,
-                                "name", "lo",
                                 NULL);
         if (error) {
                 g_warning ("Error creating GUPnP context: %s\n",
@@ -169,15 +166,8 @@ static void
 create_context_for_device (NMDevice *nm_device, const char *iface)
 {
         GError *error = NULL;
-        gchar *ip4_str;
         GMainContext *main_context;
         guint port;
-
-        ip4_str = g_strdup_printf ("%u.%u.%u.%u",
-                                   nm_device->ip4_address[0],
-                                   nm_device->ip4_address[1],
-                                   nm_device->ip4_address[2],
-                                   nm_device->ip4_address[3]);
 
         g_object_get (nm_device->manager,
                       "main-context", &main_context,
@@ -186,25 +176,22 @@ create_context_for_device (NMDevice *nm_device, const char *iface)
 
         nm_device->context = g_object_new (GUPNP_TYPE_CONTEXT,
                                            "main-context", main_context,
-                                           "host-ip", ip4_str,
+                                           "interface", iface,
                                            "port", port,
                                            "error", &error,
-                                           "name", iface,
                                            NULL);
         if (error) {
                 g_warning ("Error creating GUPnP context: %s\n",
 			   error->message);
 
                 g_error_free (error);
-                goto context_error;
+
+                return;
         }
 
         g_signal_emit_by_name (nm_device->manager,
                                "context-available",
                                nm_device->context);
-
-context_error:
-        g_free (ip4_str);
 }
 
 static void
@@ -232,39 +219,6 @@ get_device_interface_cb (DBusGProxy     *proxy,
 }
 
 static void
-get_device_ip4_address_cb (DBusGProxy     *proxy,
-                           DBusGProxyCall *call,
-                           void           *user_data)
-{
-        GValue value = {0,};
-        GError *error = NULL;
-        NMDevice *nm_device = (NMDevice *) user_data;
-
-        if (!dbus_g_proxy_end_call (nm_device->prop_proxy,
-                                    call,
-                                    &error,
-                                    G_TYPE_VALUE, &value,
-                                    G_TYPE_INVALID)) {
-                g_warning ("Error reading property from object: %s\n",
-                           error->message);
-
-                g_error_free (error);
-                return;
-        }
-
-        *((guint *) nm_device->ip4_address) = g_value_get_uint (&value);
-
-        dbus_g_proxy_begin_call (nm_device->prop_proxy,
-                                 "Get",
-                                 get_device_interface_cb,
-                                 nm_device,
-                                 NULL,
-                                 G_TYPE_STRING, DEVICE_INTERFACE,
-                                 G_TYPE_STRING, "Interface",
-                                 G_TYPE_INVALID);
-}
-
-static void
 get_device_state_cb (DBusGProxy     *proxy,
                      DBusGProxyCall *call,
                      void           *user_data)
@@ -289,11 +243,11 @@ get_device_state_cb (DBusGProxy     *proxy,
         if (state == NM_DEVICE_STATE_ACTIVATED) {
                 dbus_g_proxy_begin_call (nm_device->prop_proxy,
                                          "Get",
-                                         get_device_ip4_address_cb,
+                                         get_device_interface_cb,
                                          nm_device,
                                          NULL,
                                          G_TYPE_STRING, DEVICE_INTERFACE,
-                                         G_TYPE_STRING, "Ip4Address",
+                                         G_TYPE_STRING, "Interface",
                                          G_TYPE_INVALID);
         }
 }
@@ -312,11 +266,11 @@ on_device_state_changed (DBusGProxy *proxy,
         if (new_state == NM_DEVICE_STATE_ACTIVATED) {
                 dbus_g_proxy_begin_call (nm_device->prop_proxy,
                                          "Get",
-                                         get_device_ip4_address_cb,
+                                         get_device_interface_cb,
                                          nm_device,
                                          NULL,
                                          G_TYPE_STRING, DEVICE_INTERFACE,
-                                         G_TYPE_STRING, "Ip4Address",
+                                         G_TYPE_STRING, "Interface",
                                          G_TYPE_INVALID);
         } else if (nm_device->context != NULL) {
                 /* For all other states we just destroy the context */
