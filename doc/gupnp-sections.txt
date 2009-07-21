@@ -187,6 +187,8 @@ GUPnPContextPrivate
 <TITLE>GUPnPContextManager</TITLE>
 GUPnPContextManager
 gupnp_context_manager_new
+gupnp_context_manager_manage_control_point
+gupnp_context_manager_manage_root_device
 <SUBSECTION Standard>
 GUPnPContextManagerClass
 GUPNP_CONTEXT_MANAGER

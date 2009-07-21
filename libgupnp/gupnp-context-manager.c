@@ -401,7 +401,7 @@ gupnp_context_manager_new (GMainContext *main_context,
 /**
  * gupnp_context_manager_manage_control_point
  * @manager: A #GUPnPContextManager
- * @control_point: The #GUPnPControlPoint to be taken care of.
+ * @control_point: The #GUPnPControlPoint to be taken care of
  *
  * By calling this function, you are asking @manager to keep a reference to
  * @control_point until it's associated #GUPnPContext is no longer available.
@@ -425,7 +425,7 @@ gupnp_context_manager_manage_control_point (GUPnPContextManager *manager,
 /**
  * gupnp_context_manager_manage_root_device
  * @manager: A #GUPnPContextManager
- * @root_device: The #GUPnPRootDevice to be taken care of.
+ * @root_device: The #GUPnPRootDevice to be taken care of
  *
  * By calling this function, you are asking @manager to keep a reference to
  * @root_device when it's associated #GUPnPContext is no longer available. You
