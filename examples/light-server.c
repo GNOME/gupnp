@@ -110,15 +110,11 @@ main (int argc, char **argv)
 
     return EXIT_FAILURE;
   }
-  
-  /* Host the device and service description files */
-  gupnp_context_host_path (context, "BinaryLight1.xml", "/BinaryLight1.xml");
-  gupnp_context_host_path (context, "SwitchPower1.xml", "/SwitchPower1.xml");
-  
+
   /* Create root device */
-  dev = gupnp_root_device_new (context, "/BinaryLight1.xml");
+  dev = gupnp_root_device_new (context, "BinaryLight1.xml", ".");
   gupnp_root_device_set_available (dev, TRUE);
-  
+
   /* Get the switch service from the root device */
   service = gupnp_device_info_get_service
     (GUPNP_DEVICE_INFO (dev), "urn:schemas-upnp-org:service:SwitchPower:1");

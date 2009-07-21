@@ -133,12 +133,8 @@ main (int argc, char **argv)
 
         g_print ("Running on port %d\n", gupnp_context_get_port (context));
 
-        /* Host current directory */
-        gupnp_context_host_path (context, ".", "");
-
         /* Create root device */
-        dev = gupnp_root_device_new (context,
-                                     "/description.xml");
+        dev = gupnp_root_device_new (context, "description.xml", ".");
 
         /* Implement Browse action on ContentDirectory if available */
         content_dir = gupnp_device_info_get_service

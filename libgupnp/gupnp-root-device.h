@@ -80,13 +80,15 @@ typedef struct {
 
 GUPnPRootDevice *
 gupnp_root_device_new             (GUPnPContext         *context,
-                                   const char           *relative_location);
+                                   const char           *description_path,
+                                   const char           *description_dir);
 
 GUPnPRootDevice *
 gupnp_root_device_new_full        (GUPnPContext         *context,
                                    GUPnPResourceFactory *factory,
                                    xmlDoc               *description_doc,
-                                   const char           *relative_location);
+                                   const char           *description_path,
+                                   const char           *description_dir);
 
 void
 gupnp_root_device_set_available   (GUPnPRootDevice      *root_device,
@@ -97,6 +99,14 @@ gupnp_root_device_get_available   (GUPnPRootDevice      *root_device);
 
 const char *
 gupnp_root_device_get_relative_location
+                                  (GUPnPRootDevice      *root_device);
+
+const char *
+gupnp_root_device_get_description_path
+                                  (GUPnPRootDevice      *root_device);
+
+const char *
+gupnp_root_device_get_description_dir
                                   (GUPnPRootDevice      *root_device);
 
 G_END_DECLS
