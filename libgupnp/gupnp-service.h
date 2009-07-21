@@ -136,6 +136,9 @@ gupnp_service_action_return_error (GUPnPServiceAction *action,
                                    guint               error_code,
                                    const char         *error_description);
 
+SoupMessage *
+gupnp_service_action_get_message  (GUPnPServiceAction *action);
+
 void
 gupnp_service_notify              (GUPnPService *service,
                                    ...) G_GNUC_NULL_TERMINATED;

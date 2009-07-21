@@ -112,6 +112,7 @@ gupnp_service_action_set_valist
 gupnp_service_action_set_value
 gupnp_service_action_return
 gupnp_service_action_return_error
+gupnp_service_action_get_message
 gupnp_service_notify
 gupnp_service_notify_valist
 gupnp_service_notify_value
