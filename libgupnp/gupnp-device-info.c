@@ -48,7 +48,7 @@ struct _GUPnPDeviceInfoPrivate {
 
         SoupURI *url_base;
 
-        XmlDocWrapper *doc;
+        GUPnPXMLDocWrapper *doc;
 
         xmlNode *element;
 };
@@ -340,7 +340,7 @@ gupnp_device_info_class_init (GUPnPDeviceInfoClass *klass)
                                       "Document",
                                       "The XML document related to this "
                                       "device",
-                                      TYPE_XML_DOC_WRAPPER,
+                                      GUPNP_TYPE_XML_DOC_WRAPPER,
                                       G_PARAM_WRITABLE |
                                       G_PARAM_CONSTRUCT_ONLY |
                                       G_PARAM_STATIC_NAME |
@@ -1317,7 +1317,7 @@ gupnp_device_info_get_service (GUPnPDeviceInfo *info,
 }
 
 /* Return associated xmlDoc wrapper */
-XmlDocWrapper *
+GUPnPXMLDocWrapper *
 _gupnp_device_info_get_document (GUPnPDeviceInfo *info)
 {
         return info->priv->doc;

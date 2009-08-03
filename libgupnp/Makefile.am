@@ -32,6 +32,7 @@ libgupnpinc_HEADERS = gupnp-context.h			\
 		      gupnp-service-info.h		\
 		      gupnp-service-proxy.h		\
 	              gupnp-service-introspection.h	\
+		      gupnp-xml-doc-wrapper.h	        \
 	              gupnp-types.h			\
 		      gupnp.h
 
@@ -66,6 +67,7 @@ libgupnp_1_0_la_SOURCES = http-headers.c			\
 			  gupnp-service-proxy.c			\
 	                  gupnp-service-introspection.c		\
 	                  gupnp-service-introspection-private.h	\
+		      	  gupnp-xml-doc-wrapper.c	        \
 	                  gupnp-types.c				\
 	                  gupnp-types-private.h			\
 			  gvalue-util.c				\

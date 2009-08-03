@@ -24,51 +24,6 @@
 #include "gvalue-util.h"
 #include "xml-util.h"
 
-G_DEFINE_TYPE (XmlDocWrapper,
-               xml_doc_wrapper,
-               G_TYPE_INITIALLY_UNOWNED);
-
-static void
-xml_doc_wrapper_init (XmlDocWrapper *wrapper)
-{
-        /* Empty */
-}
-
-static void
-xml_doc_wrapper_finalize (GObject *object)
-{
-        XmlDocWrapper *wrapper;
-
-        wrapper = XML_DOC_WRAPPER (object);
-
-        xmlFreeDoc (wrapper->doc);
-}
-
-static void
-xml_doc_wrapper_class_init (XmlDocWrapperClass *klass)
-{
-        GObjectClass *object_class;
-
-        object_class = G_OBJECT_CLASS (klass);
-
-        object_class->finalize = xml_doc_wrapper_finalize;
-}
-
-/* Takes ownership of @doc */
-XmlDocWrapper *
-xml_doc_wrapper_new (xmlDoc *doc)
-{
-        XmlDocWrapper *wrapper;
-
-        g_return_val_if_fail (doc != NULL, NULL);
-
-        wrapper = g_object_new (TYPE_XML_DOC_WRAPPER, NULL);
-
-        wrapper->doc = doc;
-
-        return wrapper;
-}
-
 /* libxml DOM interface helpers */
 xmlNode *
 xml_util_get_element (xmlNode *node,

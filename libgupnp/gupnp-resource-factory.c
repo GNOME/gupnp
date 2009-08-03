@@ -111,7 +111,7 @@ gupnp_resource_factory_get_default (void)
  * gupnp_resource_factory_create_device_proxy
  * @factory: A #GUPnPResourceFactory
  * @context: A #GUPnPContext
- * @doc: An #XmlDocWrapper
+ * @doc: An #GUPnPXMLDocWrapper
  * @element: The #xmlNode ponting to the right device element
  * @udn: The UDN of the device to create a proxy for
  * @location: The location of the device description file
@@ -127,7 +127,7 @@ GUPnPDeviceProxy *
 gupnp_resource_factory_create_device_proxy
                                 (GUPnPResourceFactory *factory,
                                  GUPnPContext         *context,
-                                 XmlDocWrapper        *doc,
+                                 GUPnPXMLDocWrapper   *doc,
                                  xmlNode              *element,
                                  const char           *udn,
                                  const char           *location,
@@ -139,7 +139,7 @@ gupnp_resource_factory_create_device_proxy
 
         g_return_val_if_fail (GUPNP_IS_RESOURCE_FACTORY (factory), NULL);
         g_return_val_if_fail (GUPNP_IS_CONTEXT (context), NULL);
-        g_return_val_if_fail (IS_XML_DOC_WRAPPER (doc), NULL);
+        g_return_val_if_fail (GUPNP_IS_XML_DOC_WRAPPER (doc), NULL);
         g_return_val_if_fail (element != NULL, NULL);
         g_return_val_if_fail (location != NULL, NULL);
         g_return_val_if_fail (url_base != NULL, NULL);
@@ -174,7 +174,7 @@ gupnp_resource_factory_create_device_proxy
  * gupnp_resource_factory_create_service_proxy
  * @factory: A #GUPnPResourceFactory
  * @context: A #GUPnPContext
- * @wrapper: An #XmlDocWrapper
+ * @wrapper: An #GUPnPXMLDocWrapper
  * @element: The #xmlNode ponting to the right service element
  * @location: The location of the service description file
  * @udn: The UDN of the device the service is contained in
@@ -189,20 +189,20 @@ gupnp_resource_factory_create_device_proxy
 GUPnPServiceProxy *
 gupnp_resource_factory_create_service_proxy
                                 (GUPnPResourceFactory *factory,
-                                 GUPnPContext           *context,
-                                 XmlDocWrapper          *wrapper,
-                                 xmlNode                *element,
-                                 const char             *udn,
-                                 const char             *service_type,
-                                 const char             *location,
-                                 const SoupURI          *url_base)
+                                 GUPnPContext         *context,
+                                 GUPnPXMLDocWrapper   *wrapper,
+                                 xmlNode              *element,
+                                 const char           *udn,
+                                 const char           *service_type,
+                                 const char           *location,
+                                 const SoupURI        *url_base)
 {
         GUPnPServiceProxy *proxy;
         GType              proxy_type = GUPNP_TYPE_SERVICE_PROXY;
 
         g_return_val_if_fail (GUPNP_IS_RESOURCE_FACTORY (factory), NULL);
         g_return_val_if_fail (GUPNP_IS_CONTEXT (context), NULL);
-        g_return_val_if_fail (IS_XML_DOC_WRAPPER (wrapper), NULL);
+        g_return_val_if_fail (GUPNP_IS_XML_DOC_WRAPPER (wrapper), NULL);
         g_return_val_if_fail (element != NULL, NULL);
         g_return_val_if_fail (location != NULL, NULL);
         g_return_val_if_fail (url_base != NULL, NULL);

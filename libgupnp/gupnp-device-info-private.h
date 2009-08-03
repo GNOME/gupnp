@@ -23,9 +23,9 @@
 #define __GUPNP_DEVICE_INFO_PRIVATE_H__
 
 #include "gupnp-device-info.h"
-#include "xml-util.h"
+#include "gupnp-xml-doc-wrapper.h"
 
-G_GNUC_INTERNAL XmlDocWrapper *
+G_GNUC_INTERNAL GUPnPXMLDocWrapper *
 _gupnp_device_info_get_document (GUPnPDeviceInfo *info);
 
 #endif /* __GUPNP_DEVICE_INFO_PRIVATE_H__ */

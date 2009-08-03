@@ -35,6 +35,7 @@
 #include "gupnp-context-private.h"
 #include "gupnp-error.h"
 #include "gupnp-error-private.h"
+#include "gupnp-xml-doc-wrapper.h"
 #include "http-headers.h"
 #include "xml-util.h"
 
@@ -51,7 +52,7 @@ struct _GUPnPServiceInfoPrivate {
 
         SoupURI *url_base;
 
-        XmlDocWrapper *doc;
+        GUPnPXMLDocWrapper *doc;
 
         xmlNode *element;
 
@@ -351,7 +352,7 @@ gupnp_service_info_class_init (GUPnPServiceInfoClass *klass)
                                       "Document",
                                       "The XML document related to this "
                                       "service",
-                                      TYPE_XML_DOC_WRAPPER,
+                                      GUPNP_TYPE_XML_DOC_WRAPPER,
                                       G_PARAM_WRITABLE |
                                       G_PARAM_CONSTRUCT_ONLY |
                                       G_PARAM_STATIC_NAME |
