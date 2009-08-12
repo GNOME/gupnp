@@ -738,6 +738,11 @@ control_server_handler (SoupServer        *server,
         /* Get action name */
         soap_action = soup_message_headers_get (msg->request_headers,
                                                 "SOAPAction");
+        if (!soap_action) {
+                soup_message_set_status (msg, SOUP_STATUS_PRECONDITION_FAILED);
+                return;
+        }
+
         action_name = strchr (soap_action, '#');
         if (!action_name) {
                 soup_message_set_status (msg, SOUP_STATUS_PRECONDITION_FAILED);
@@ -751,7 +756,8 @@ control_server_handler (SoupServer        *server,
 
         /* This memory is libsoup-owned so we can do this */
         end = strrchr (action_name, '"');
-        *end = '\0';
+        if (end)
+                *end = '\0';
 
         /* Parse action_node */
         doc = xmlRecoverMemory (msg->request_body->data,
