@@ -248,7 +248,7 @@ find_device_node (GUPnPControlPoint *control_point,
 
 static void
 create_and_report_service_proxy (GUPnPControlPoint  *control_point,
-                                 GUPnPXMLDocWrapper *doc,
+                                 GUPnPXMLDoc        *doc,
                                  xmlNode            *element,
                                  const char         *udn,
                                  const char         *service_type,
@@ -288,7 +288,7 @@ create_and_report_service_proxy (GUPnPControlPoint  *control_point,
 
 static void
 create_and_report_device_proxy (GUPnPControlPoint  *control_point,
-                                GUPnPXMLDocWrapper *doc,
+                                GUPnPXMLDoc        *doc,
                                 xmlNode            *element,
                                 const char         *udn,
                                 const char         *description_url,
@@ -325,13 +325,13 @@ create_and_report_device_proxy (GUPnPControlPoint  *control_point,
 
 /* Search @element for matching services */
 static void
-process_service_list (xmlNode            *element,
-                      GUPnPControlPoint  *control_point,
-                      GUPnPXMLDocWrapper *doc,
-                      const char         *udn,
-                      const char         *service_type,
-                      const char         *description_url,
-                      SoupURI            *url_base)
+process_service_list (xmlNode           *element,
+                      GUPnPControlPoint *control_point,
+                      GUPnPXMLDoc       *doc,
+                      const char        *udn,
+                      const char        *service_type,
+                      const char        *description_url,
+                      SoupURI           *url_base)
 {
         g_object_ref (control_point);
 
@@ -371,13 +371,13 @@ process_service_list (xmlNode            *element,
 
 /* Recursively search @element for matching devices */
 static void
-process_device_list (xmlNode            *element,
-                     GUPnPControlPoint  *control_point,
-                     GUPnPXMLDocWrapper *doc,
-                     const char         *udn,
-                     const char         *service_type,
-                     const char         *description_url,
-                     SoupURI            *url_base)
+process_device_list (xmlNode           *element,
+                     GUPnPControlPoint *control_point,
+                     GUPnPXMLDoc       *doc,
+                     const char        *udn,
+                     const char        *service_type,
+                     const char        *description_url,
+                     SoupURI           *url_base)
 {
         g_object_ref (control_point);
 
@@ -449,11 +449,11 @@ process_device_list (xmlNode            *element,
  * Called when the description document is loaded.
  */
 static void
-description_loaded (GUPnPControlPoint  *control_point,
-                    GUPnPXMLDocWrapper *doc,
-                    const char         *udn,
-                    const char         *service_type,
-                    const char         *description_url)
+description_loaded (GUPnPControlPoint *control_point,
+                    GUPnPXMLDoc       *doc,
+                    const char        *udn,
+                    const char        *service_type,
+                    const char        *description_url)
 {
         xmlNode *element;
         SoupURI *url_base;
@@ -501,7 +501,7 @@ got_description_url (SoupSession           *session,
                      SoupMessage           *msg,
                      GetDescriptionURLData *data)
 {
-        GUPnPXMLDocWrapper *doc;
+        GUPnPXMLDoc *doc;
 
         if (msg->status_code == SOUP_STATUS_CANCELLED)
                 return;
@@ -531,7 +531,7 @@ got_description_url (SoupSession           *session,
                 xml_doc = xmlRecoverMemory (msg->response_body->data,
                                             msg->response_body->length);
                 if (xml_doc) {
-                        doc = gupnp_xml_doc_wrapper_new (xml_doc);
+                        doc = gupnp_xml_doc_new (xml_doc);
 
                         description_loaded (data->control_point,
                                             doc,
@@ -578,7 +578,7 @@ load_description (GUPnPControlPoint *control_point,
                   const char        *udn,
                   const char        *service_type)
 {
-        GUPnPXMLDocWrapper *doc;
+        GUPnPXMLDoc *doc;
 
         doc = g_hash_table_lookup (control_point->priv->doc_cache,
                                    description_url);

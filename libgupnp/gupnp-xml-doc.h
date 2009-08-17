@@ -22,8 +22,8 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef __GUPNP_XML_DOC_WRAPPER_H__
-#define __GUPNP_XML_DOC_WRAPPER_H__
+#ifndef __GUPNP_XML_DOC_H__
+#define __GUPNP_XML_DOC_H__
 
 #include <libxml/tree.h>
 #include <glib-object.h>
@@ -31,29 +31,29 @@
 /* GObject wrapper for xmlDoc, so that we can use refcounting and
  * weak references. */
 GType
-gupnp_xml_doc_wrapper_get_type (void) G_GNUC_CONST;
+gupnp_xml_doc_get_type (void) G_GNUC_CONST;
 
-#define GUPNP_TYPE_XML_DOC_WRAPPER \
-                (gupnp_xml_doc_wrapper_get_type ())
-#define GUPNP_XML_DOC_WRAPPER(obj) \
+#define GUPNP_TYPE_XML_DOC \
+                (gupnp_xml_doc_get_type ())
+#define GUPNP_XML_DOC(obj) \
                 (G_TYPE_CHECK_INSTANCE_CAST ((obj), \
-                 GUPNP_TYPE_XML_DOC_WRAPPER, \
-                 GUPnPXMLDocWrapper))
-#define GUPNP_IS_XML_DOC_WRAPPER(obj) \
+                 GUPNP_TYPE_XML_DOC, \
+                 GUPnPXMLDoc))
+#define GUPNP_IS_XML_DOC(obj) \
                 (G_TYPE_CHECK_INSTANCE_TYPE ((obj), \
-                 GUPNP_TYPE_XML_DOC_WRAPPER))
+                 GUPNP_TYPE_XML_DOC))
 
 typedef struct {
         GInitiallyUnowned parent;
 
         xmlDoc *doc;
-} GUPnPXMLDocWrapper;
+} GUPnPXMLDoc;
 
 typedef struct {
         GInitiallyUnownedClass parent_class;
-} GUPnPXMLDocWrapperClass;
+} GUPnPXMLDocClass;
 
-GUPnPXMLDocWrapper *
-gupnp_xml_doc_wrapper_new (xmlDoc *doc);
+GUPnPXMLDoc *
+gupnp_xml_doc_new (xmlDoc *doc);
 
-#endif /* __GUPNP_XML_DOC_WRAPPER_H__ */
+#endif /* __GUPNP_XML_DOC_H__ */

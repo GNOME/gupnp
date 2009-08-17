@@ -30,7 +30,7 @@
 #include "gupnp-device-proxy.h"
 #include "gupnp-service-proxy.h"
 #include "gupnp-resource-factory.h"
-#include "gupnp-xml-doc-wrapper.h"
+#include "gupnp-xml-doc.h"
 
 G_BEGIN_DECLS
 
@@ -38,7 +38,7 @@ G_GNUC_INTERNAL GUPnPDeviceProxy *
 gupnp_resource_factory_create_device_proxy
                                       (GUPnPResourceFactory *factory,
                                        GUPnPContext         *context,
-                                       GUPnPXMLDocWrapper   *doc,
+                                       GUPnPXMLDoc          *doc,
                                        xmlNode              *element,
                                        const char           *udn,
                                        const char           *location,
@@ -48,7 +48,7 @@ G_GNUC_INTERNAL GUPnPServiceProxy *
 gupnp_resource_factory_create_service_proxy
                                       (GUPnPResourceFactory *factory,
                                        GUPnPContext         *context,
-                                       GUPnPXMLDocWrapper   *wrapper,
+                                       GUPnPXMLDoc          *doc,
                                        xmlNode              *element,
                                        const char           *udn,
                                        const char           *service_type,

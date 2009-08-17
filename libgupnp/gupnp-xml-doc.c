@@ -23,57 +23,57 @@
  */
 
 /**
- * SECTION:gupnp-xml-doc-wrapper
- * @short_description: GObject wrapper for xmlDoc.
+ * SECTION:gupnp-xml-doc-
+ * @short_description: GObject for xmlDoc.
  *
- * GObject wrapper for xmlDoc, so that we can use refcounting and weak
+ * GObject for xmlDoc, so that we can use refcounting and weak
  * references.
  */
 
 #include <string.h>
-#include "gupnp-xml-doc-wrapper.h"
+#include "gupnp-xml-doc.h"
 
-G_DEFINE_TYPE (GUPnPXMLDocWrapper,
-               gupnp_xml_doc_wrapper,
+G_DEFINE_TYPE (GUPnPXMLDoc,
+               gupnp_xml_doc,
                G_TYPE_INITIALLY_UNOWNED);
 
 static void
-gupnp_xml_doc_wrapper_init (GUPnPXMLDocWrapper *wrapper)
+gupnp_xml_doc_init (GUPnPXMLDoc *doc)
 {
         /* Empty */
 }
 
 static void
-gupnp_xml_doc_wrapper_finalize (GObject *object)
+gupnp_xml_doc_finalize (GObject *object)
 {
-        GUPnPXMLDocWrapper *wrapper;
+        GUPnPXMLDoc *doc;
 
-        wrapper = GUPNP_XML_DOC_WRAPPER (object);
+        doc = GUPNP_XML_DOC (object);
 
-        xmlFreeDoc (wrapper->doc);
+        xmlFreeDoc (doc->doc);
 }
 
 static void
-gupnp_xml_doc_wrapper_class_init (GUPnPXMLDocWrapperClass *klass)
+gupnp_xml_doc_class_init (GUPnPXMLDocClass *klass)
 {
         GObjectClass *object_class;
 
         object_class = G_OBJECT_CLASS (klass);
 
-        object_class->finalize = gupnp_xml_doc_wrapper_finalize;
+        object_class->finalize = gupnp_xml_doc_finalize;
 }
 
 /* Takes ownership of @doc */
-GUPnPXMLDocWrapper *
-gupnp_xml_doc_wrapper_new (xmlDoc *doc)
+GUPnPXMLDoc *
+gupnp_xml_doc_new (xmlDoc *xml_doc)
 {
-        GUPnPXMLDocWrapper *wrapper;
+        GUPnPXMLDoc *doc;
 
-        g_return_val_if_fail (doc != NULL, NULL);
+        g_return_val_if_fail (xml_doc != NULL, NULL);
 
-        wrapper = g_object_new (GUPNP_TYPE_XML_DOC_WRAPPER, NULL);
+        doc = g_object_new (GUPNP_TYPE_XML_DOC, NULL);
 
-        wrapper->doc = doc;
+        doc->doc = xml_doc;
 
-        return wrapper;
+        return doc;
 }
