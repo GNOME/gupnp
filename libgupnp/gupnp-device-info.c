@@ -888,7 +888,7 @@ resource_type_match (const char *query,
 
         /* Inspect last colon (if any!) on @base */
         colon = strrchr (base, ':');
-        if (G_UNLIKELY (*colon == 0))
+        if (G_UNLIKELY (colon == NULL))
                 return !strcmp (query, base); /* No colon */
 
         /* Length of type until last colon */
