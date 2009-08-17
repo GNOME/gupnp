@@ -552,7 +552,6 @@ got_description_url (SoupSession           *session,
                                            data->control_point);
 
                         /* If no proxy was created, make sure doc is freed. */
-                        g_object_ref_sink (doc);
                         g_object_unref (doc);
                 } else
                         g_warning ("Failed to parse %s", data->description_url);

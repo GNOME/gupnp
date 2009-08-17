@@ -125,10 +125,7 @@ gupnp_service_info_set_property (GObject      *object,
 
                 break;
         case PROP_DOCUMENT:
-                info->priv->doc = g_value_get_object (value);
-                if (info->priv->doc)
-                        g_object_ref_sink (info->priv->doc);
-
+                info->priv->doc = g_value_dup_object (value);
                 break;
         case PROP_ELEMENT:
                 info->priv->element = g_value_get_pointer (value);

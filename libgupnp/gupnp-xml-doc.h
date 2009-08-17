@@ -44,13 +44,13 @@ gupnp_xml_doc_get_type (void) G_GNUC_CONST;
                  GUPNP_TYPE_XML_DOC))
 
 typedef struct {
-        GInitiallyUnowned parent;
+        GObject parent;
 
         xmlDoc *doc;
 } GUPnPXMLDoc;
 
 typedef struct {
-        GInitiallyUnownedClass parent_class;
+        GObjectClass parent_class;
 } GUPnPXMLDocClass;
 
 GUPnPXMLDoc *

@@ -35,7 +35,7 @@
 
 G_DEFINE_TYPE (GUPnPXMLDoc,
                gupnp_xml_doc,
-               G_TYPE_INITIALLY_UNOWNED);
+               G_TYPE_OBJECT);
 
 static void
 gupnp_xml_doc_init (GUPnPXMLDoc *doc)

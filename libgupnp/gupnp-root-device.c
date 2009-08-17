@@ -118,7 +118,7 @@ gupnp_root_device_set_property (GObject      *object,
 
         switch (property_id) {
         case PROP_DESCRIPTION_DOC:
-                device->priv->description_doc = g_value_get_pointer (value);
+                device->priv->description_doc = g_value_dup_object (value);
                 break;
         case PROP_DESCRIPTION_PATH:
                 device->priv->description_path = g_value_dup_string (value);
