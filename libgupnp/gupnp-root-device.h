@@ -27,6 +27,7 @@
 #include "gupnp-context.h"
 #include "gupnp-device.h"
 #include "gupnp-resource-factory.h"
+#include "gupnp-xml-doc.h"
 
 G_BEGIN_DECLS
 
@@ -86,7 +87,7 @@ gupnp_root_device_new             (GUPnPContext         *context,
 GUPnPRootDevice *
 gupnp_root_device_new_full        (GUPnPContext         *context,
                                    GUPnPResourceFactory *factory,
-                                   xmlDoc               *description_doc,
+                                   GUPnPXMLDoc          *description_doc,
                                    const char           *description_path,
                                    const char           *description_dir);
 

@@ -40,8 +40,7 @@ G_DEFINE_TYPE (GUPnPRootDevice,
                GUPNP_TYPE_DEVICE);
 
 struct _GUPnPRootDevicePrivate {
-        xmlDoc *description_doc;
-        gboolean own_description_doc;
+        GUPnPXMLDoc *description_doc;
 
         GSSDPResourceGroup *group;
 
@@ -70,9 +69,6 @@ gupnp_root_device_finalize (GObject *object)
         g_free (device->priv->description_dir);
         g_free (device->priv->relative_location);
 
-        if (device->priv->own_description_doc)
-                xmlFreeDoc (device->priv->description_doc);
-
         /* Call super */
         object_class = G_OBJECT_CLASS (gupnp_root_device_parent_class);
         object_class->finalize (object);
@@ -91,6 +87,11 @@ gupnp_root_device_dispose (GObject *object)
                 device->priv->group = NULL;
         }
 
+        if (device->priv->description_doc) {
+                g_object_unref (device->priv->description_doc);
+                device->priv->description_doc = NULL;
+        }
+
         /* Call super */
         object_class = G_OBJECT_CLASS (gupnp_root_device_parent_class);
         object_class->dispose (object);
@@ -102,8 +103,6 @@ gupnp_root_device_init (GUPnPRootDevice *device)
         device->priv = G_TYPE_INSTANCE_GET_PRIVATE (device,
                                                     GUPNP_TYPE_ROOT_DEVICE,
                                                     GUPnPRootDevicePrivate);
-
-        device->priv->own_description_doc = FALSE;
 }
 
 static void
@@ -249,7 +248,7 @@ fill_resource_group (xmlNode            *element,
 }
 
 /* Load and parse @description_path as an XML document, synchronously. */
-static xmlDoc *
+static GUPnPXMLDoc *
 load_and_parse (const char *description_path)
 {
         xmlDoc *description_doc;
@@ -262,7 +261,7 @@ load_and_parse (const char *description_path)
                 return NULL;
         }
 
-        return description_doc;
+        return gupnp_xml_doc_new (description_doc);
 }
 
 static GObject *
@@ -275,16 +274,14 @@ gupnp_root_device_constructor (GType                  type,
         GUPnPRootDevice *device;
         GUPnPContext *context;
         const char *description_path, *description_dir, *udn;
-        gboolean own_description_doc;
         char *desc_path, *location, *usn, *relative_location;
         int i;
-        xmlDoc *description_doc;
+        GUPnPXMLDoc *description_doc;
         xmlNode *root_element, *element;
         SoupURI *url_base;
 
         object = NULL;
         location = NULL;
-        own_description_doc = FALSE;
 
         /* Get 'description-doc', 'context', 'description-dir' and
          * 'description-path' property values */
@@ -300,7 +297,7 @@ gupnp_root_device_constructor (GType                  type,
 
                 if (strcmp (par_name, "description-doc") == 0) {
                         description_doc =
-                                g_value_get_pointer (construct_params[i].value);
+                                g_value_get_object (construct_params[i].value);
 
                         continue;
                 } 
@@ -358,12 +355,10 @@ gupnp_root_device_constructor (GType                  type,
                 description_doc = load_and_parse (desc_path);
                 if (description_doc == NULL)
                         goto DONE;
-
-                own_description_doc = TRUE;
         }
 
         /* Find correct element */
-        root_element = xml_util_get_element ((xmlNode *) description_doc,
+        root_element = xml_util_get_element ((xmlNode *) description_doc->doc,
                                              "root",
                                              NULL);
         if (!root_element) {
@@ -395,8 +390,8 @@ gupnp_root_device_constructor (GType                  type,
                 }
 
                 if (strcmp (par_name, "description-doc") == 0) {
-                        g_value_set_pointer (construct_params[i].value,
-                                             description_doc);
+                        g_value_set_object (construct_params[i].value,
+                                            description_doc);
 
                         continue;
                 }
@@ -446,8 +441,6 @@ gupnp_root_device_constructor (GType                  type,
 
 	soup_uri_free (url_base);
 
-        device->priv->own_description_doc = own_description_doc;
-
         /* Create resource group */
         device->priv->group = gssdp_resource_group_new (GSSDP_CLIENT (context));
 
@@ -487,19 +480,20 @@ gupnp_root_device_class_init (GUPnPRootDeviceClass *klass)
         /**
          * GUPnPRootDevice:description-doc
          *
-         * Pointer to description document. Constructor property.
+         * Device description document. Constructor property.
          **/
         g_object_class_install_property
                 (object_class,
                  PROP_DESCRIPTION_DOC,
-                 g_param_spec_pointer ("description-doc",
-                                       "Description document",
-                                       "Pointer to description document",
-                                       G_PARAM_WRITABLE |
-                                       G_PARAM_CONSTRUCT_ONLY |
-                                       G_PARAM_STATIC_NAME |
-                                       G_PARAM_STATIC_NICK |
-                                       G_PARAM_STATIC_BLURB));
+                 g_param_spec_object ("description-doc",
+                                      "Description document",
+                                      "Device description document",
+                                      GUPNP_TYPE_XML_DOC,
+                                      G_PARAM_WRITABLE |
+                                      G_PARAM_CONSTRUCT_ONLY |
+                                      G_PARAM_STATIC_NAME |
+                                      G_PARAM_STATIC_NICK |
+                                      G_PARAM_STATIC_BLURB));
 
         /**
          * GUPnPRootDevice:description-path
@@ -589,7 +583,7 @@ gupnp_root_device_new (GUPnPContext *context,
  * gupnp_root_device_new_full
  * @context: A #GUPnPContext
  * @factory: A #GUPnPResourceFactory
- * @description_doc: Pointer to the device description document, or %NULL
+ * @description_doc: Device description document, or %NULL
  * @description_path: Path to device description document. This could either
  * be an absolute path or path relative to @description_dir.
  * @description_dir: Path to directory where description documents are provided.
@@ -603,7 +597,7 @@ gupnp_root_device_new (GUPnPContext *context,
 GUPnPRootDevice *
 gupnp_root_device_new_full (GUPnPContext         *context,
                             GUPnPResourceFactory *factory,
-                            xmlDoc               *description_doc,
+                            GUPnPXMLDoc          *description_doc,
                             const char           *description_path,
                             const char           *description_dir)
 {
