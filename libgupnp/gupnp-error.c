@@ -81,6 +81,24 @@ gupnp_control_error_quark (void)
         return quark;
 }
 
+/**
+ * GUPNP_XML_ERROR:
+ *
+ * The #GQuark uniquely used by GUPnP XML processing errors.
+ *
+ * Returns: a #GQuark uniquely used by GUPnP XML processing errors.
+ **/
+GQuark
+gupnp_xml_error_quark (void)
+{
+        static GQuark quark = 0;
+
+        if (!quark)
+                quark = g_quark_from_static_string ("gupnp-xml-error");
+
+        return quark;
+}
+
 /* Soup status code => GUPnPServerError */
 static int
 code_from_status_code (int status_code)
