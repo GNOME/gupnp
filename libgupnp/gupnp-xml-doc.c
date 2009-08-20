@@ -32,6 +32,7 @@
 
 #include <string.h>
 #include "gupnp-xml-doc.h"
+#include "gupnp-error.h"
 
 G_DEFINE_TYPE (GUPnPXMLDoc,
                gupnp_xml_doc,
@@ -76,4 +77,25 @@ gupnp_xml_doc_new (xmlDoc *xml_doc)
         doc->doc = xml_doc;
 
         return doc;
+}
+
+GUPnPXMLDoc *
+gupnp_xml_doc_new_from_path (const char *path,
+                             GError    **error)
+{
+        xmlDoc *doc;
+
+        g_return_val_if_fail (path != NULL, NULL);
+        doc = xmlRecoverFile (path);
+        if (doc == NULL) {
+                g_set_error (error,
+                             GUPNP_XML_ERROR,
+                             GUPNP_XML_ERROR_PARSE,
+                             "Failed to parse %s\n",
+                             path);
+
+                return NULL;
+        }
+
+        return gupnp_xml_doc_new (doc);
 }

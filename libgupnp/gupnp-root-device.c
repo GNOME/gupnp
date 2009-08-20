@@ -251,17 +251,19 @@ fill_resource_group (xmlNode            *element,
 static GUPnPXMLDoc *
 load_and_parse (const char *description_path)
 {
-        xmlDoc *description_doc;
+        GUPnPXMLDoc *description_doc;
+        GError *error = NULL;
 
-        description_doc = xmlRecoverFile (description_path);
-
+        /* We don't, so load and parse it */
+        description_doc = gupnp_xml_doc_new_from_path (description_path,
+                                                       &error);
         if (description_doc == NULL) {
-                g_warning ("Failed to parse %s\n", description_path);
+                g_critical ("Error loading description: %s\n", error->message);
 
-                return NULL;
+                g_error_free (error);
         }
 
-        return gupnp_xml_doc_new (description_doc);
+        return description_doc;
 }
 
 static GObject *
