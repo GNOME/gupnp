@@ -54,7 +54,7 @@ gupnp_xml_doc_get_type (void) G_GNUC_CONST;
 
 typedef struct {
         GObject parent;
-
+        /*< public >*/
         xmlDoc *doc;
 } GUPnPXMLDoc;
 
