@@ -366,8 +366,11 @@ GUPNP_EVENTING_ERROR
 GUPnPEventingError
 GUPNP_CONTROL_ERROR
 GUPnPControlError
+GUPNP_XML_ERROR
+GUPnPXMLError
 <SUBSECTION Private>
 gupnp_server_error_quark
 gupnp_eventing_error_quark
 gupnp_control_error_quark
+gupnp_xml_error_quark
 </SECTION>
