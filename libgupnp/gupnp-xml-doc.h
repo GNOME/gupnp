@@ -63,7 +63,7 @@ typedef struct {
 } GUPnPXMLDocClass;
 
 GUPnPXMLDoc *
-gupnp_xml_doc_new                       (xmlDoc         *doc);
+gupnp_xml_doc_new                       (xmlDoc         *xml_doc);
 
 GUPnPXMLDoc *
 gupnp_xml_doc_new_from_path             (const char     *path,
