@@ -593,10 +593,10 @@ gupnp_service_action_return_error (GUPnPServiceAction *action,
  * Get the #SoupMessage associated with @action. Mainly intended for
  * applications to be able to read HTTP headers received from clients.
  *
- * Return #SoupMessage associated with @action. Unref after using it.
+ * Return value: #SoupMessage associated with @action. Unref after using it.
  **/
 SoupMessage *
-gupnp_service_action_get_message  (GUPnPServiceAction *action)
+gupnp_service_action_get_message (GUPnPServiceAction *action)
 {
         return g_object_ref (action->msg);
 }

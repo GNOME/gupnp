@@ -408,8 +408,6 @@ gupnp_context_manager_new (GMainContext *main_context,
  * You usually want to call this function from
  * #GUPnPContextManager::context-available handler after you create a
  * #GUPnPControlPoint object for the newly available context.
- *
- * Return value: None.
  **/
 void
 gupnp_context_manager_manage_control_point (GUPnPContextManager *manager,
@@ -432,8 +430,6 @@ gupnp_context_manager_manage_control_point (GUPnPContextManager *manager,
  * usually want to call this function from
  * #GUPnPContextManager::context-available handler after you create a
  * #GUPnPRootDevice object for the newly available context.
- *
- * Return value: None.
  **/
 void
 gupnp_context_manager_manage_root_device (GUPnPContextManager *manager,
