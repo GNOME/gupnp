@@ -28,8 +28,6 @@
 #include <libxml/tree.h>
 #include <glib-object.h>
 
-/* GObject wrapper for xmlDoc, so that we can use refcounting and
- * weak references. */
 GType
 gupnp_xml_doc_get_type (void) G_GNUC_CONST;
 
@@ -39,9 +37,20 @@ gupnp_xml_doc_get_type (void) G_GNUC_CONST;
                 (G_TYPE_CHECK_INSTANCE_CAST ((obj), \
                  GUPNP_TYPE_XML_DOC, \
                  GUPnPXMLDoc))
+#define GUPNP_XML_DOC_CLASS(obj) \
+                (G_TYPE_CHECK_CLASS_CAST ((obj), \
+                 GUPNP_TYPE_XML_DOC, \
+                 GUPnPXMLDocClass))
 #define GUPNP_IS_XML_DOC(obj) \
                 (G_TYPE_CHECK_INSTANCE_TYPE ((obj), \
                  GUPNP_TYPE_XML_DOC))
+#define GUPNP_IS_XML_DOC_CLASS(obj) \
+                (G_TYPE_CHECK_CLASS_TYPE ((obj), \
+                 GUPNP_TYPE_XML_DOC))
+#define GUPNP_XML_DOC_GET_CLASS(obj) \
+                (G_TYPE_INSTANCE_GET_CLASS ((obj), \
+                 GUPNP_TYPE_XML_DOC, \
+                 GUPnPXMLDocClass))
 
 typedef struct {
         GObject parent;

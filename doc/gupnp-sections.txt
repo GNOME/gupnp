@@ -315,6 +315,23 @@ GUPnPResourceFactoryPrivate
 </SECTION>
 
 <SECTION>
+<FILE>gupnp-xml-doc</FILE>
+<TITLE>GUPnPXMLDoc</TITLE>
+GUPnPXMLDoc
+gupnp_xml_doc_new
+gupnp_xml_doc_new_from_path
+<SUBSECTION Standard>
+GUPnPXMLDocClass
+GUPNP_XML_DOC
+GUPNP_IS_XML_DOC
+GUPNP_TYPE_XML_DOC
+gupnp_xml_doc_get_type
+GUPNP_XML_DOC_CLASS
+GUPNP_IS_XML_DOC_CLASS
+GUPNP_XML_DOC_GET_CLASS
+</SECTION>
+
+<SECTION>
 <FILE>gupnp-types</FILE>
 <TITLE>Special UPnP types</TITLE>
 GUPNP_TYPE_BIN_BASE64

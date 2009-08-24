@@ -23,10 +23,10 @@
  */
 
 /**
- * SECTION:gupnp-xml-doc-
- * @short_description: GObject for xmlDoc.
+ * SECTION:gupnp-xml-doc
+ * @short_description: GObject wrapper for xmlDoc.
  *
- * GObject for xmlDoc, so that we can use refcounting and weak
+ * GObject wrapper for xmlDoc, so that we can use refcounting and weak
  * references.
  */
 
@@ -64,7 +64,14 @@ gupnp_xml_doc_class_init (GUPnPXMLDocClass *klass)
         object_class->finalize = gupnp_xml_doc_finalize;
 }
 
-/* Takes ownership of @doc */
+/**
+ * gupnp_xml_doc_new
+ * @xml_doc: Pointer to #xmlDoc to wrap under this object
+ *
+ * Create a new #GUPnPXMLDoc for @xml_doc.
+ *
+ * Return value: A new #GUPnPXMLDoc, or %NULL on an error
+ **/
 GUPnPXMLDoc *
 gupnp_xml_doc_new (xmlDoc *xml_doc)
 {
@@ -79,6 +86,15 @@ gupnp_xml_doc_new (xmlDoc *xml_doc)
         return doc;
 }
 
+/**
+ * gupnp_xml_doc_new_from_path
+ * @path: Path to xml document
+ * @error: Location to put the error into
+ *
+ * Create a new #GUPnPXMLDoc for the XML document at @path.
+ *
+ * Return value: A new #GUPnPXMLDoc, or %NULL on an error
+ **/
 GUPnPXMLDoc *
 gupnp_xml_doc_new_from_path (const char *path,
                              GError    **error)
