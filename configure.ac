@@ -26,7 +26,7 @@ AC_ARG_WITH([context_manager],
             AS_HELP_STRING(
                         [--with-context-manager=@<:@network-manager/unix@:>@],
                         [Context Manager backend to use]),,
-            [with_context_manager="network-manager"])
+            [with_context_manager="unix"])
 
 AC_MSG_CHECKING([Context Manager backend to use])
 AC_MSG_RESULT([${with_context_manager}])
