@@ -1,3 +1,63 @@
+0.13
+====
+
+Changes since 0.12.8:
+
+- Print reason when fail to fetch description doc
+- Support for dynamic/multiple networks through a new class, ContextManager.
+  This class creates/destroys new context as new network interfaces go up/down.
+  It also provides two convenient methods to take care of control point and
+  device reference managment for you. Currently we have two implementations of
+  context manager:
+  * unix: The static but guaranteed to work on Unix, implementation. This is the
+          default if none chosen at configure-time.
+  * network-manager: A NetworkManager based implementation.
+- Idle handlers should use the assigned GMainContext.
+- Gracefully handle 'no root element in description' scenerio.
+- "host-ip" property moved from GUPnPContext to parent GSSDPClient.
+- ControlPoint set itself inactive before getting disposed.
+- New function to retrieve the capabilities of a DLNA device as announced in
+  the device description.
+- New function to retrieve the content of arbitrary elements in the device
+  description.
+- Fixed a crash that happens when service-proxy goes down before subscribtion to
+  it completes.
+- Correct condition for SID being NULL.
+- Don't create redundant proxies.
+- Must not announce earlier versions of resources. This is strictly forbidden
+  according to the latest UPnP specs. Instead GSSDP now handles M-SEARCH
+  requests independent of version requested.
+- Free app developer from hosting of description documents.
+- New API to get SoupMessage associated with ServiceAction.
+- Handle the SOAPAction header being missing.
+- Fixed strrchr result checking.
+- Provide and use a wrapper class for xmlDoc objects, GUPnPXMLDoc that is a
+  first-class gobject.
+- New domains for XML errors.
+- Many other minor fixes.
+
+Bugs fixed:
+
+1626 - Print reason when fail to fetch description doc
+1769 - audit issues
+1760 - missing/invalid SOAPAction header crashes gupnp
+1705 - Provide a public API to get information about a GUPnPServiceAction's HTTP
+       request
+
+Dependencies changed:
+
+- gssdp >= 0.7
+
+All contributors:
+
+Zeeshan Ali (Khattak) <zeeshanak@gnome.org>
+Ross Burton <ross@linux.intel.com>
+Sven Neumann <s.neumann@raumfeld.com>
+Jens Georg <mail@jensge.org>
+Steven Dorigotti <steven.dorigotti@tvblob.com>
+
+WARNING: This release is API and ABI incompatible with previous releases.
+
 0.12.8
 ======
 
