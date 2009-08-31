@@ -216,6 +216,7 @@ get_device_interface_cb (DBusGProxy     *proxy,
         }
 
         create_context_for_device (nm_device, g_value_get_string (&value));
+        g_value_unset (&value);
 }
 
 static void
@@ -250,6 +251,8 @@ get_device_state_cb (DBusGProxy     *proxy,
                                          G_TYPE_STRING, "Interface",
                                          G_TYPE_INVALID);
         }
+
+        g_value_unset (&value);
 }
 
 static void
