@@ -424,7 +424,7 @@ init_network_manager (GUPnPNetworkManager *manager)
 
         priv->connection = dbus_g_bus_get (DBUS_BUS_SYSTEM, &error);
         if (priv->connection == NULL) {
-                g_warning ("Failed to connect to System Bus: %s\n",
+                g_warning ("Failed to connect to System Bus: %s",
                            error->message);
                 return;
         }
