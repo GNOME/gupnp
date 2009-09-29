@@ -5,8 +5,7 @@ CONTEXT_MANAGER_IMPL = gupnp-network-manager.c  \
 		       gupnp-network-manager.h
 CONTEXT_MANAGER_CFLAGS = -DUSE_NETWORK_MANAGER
 else
-CONTEXT_MANAGER_IMPL = gupnp-unix-context-manager.c  \
-		       gupnp-unix-context-manager.h
+CONTEXT_MANAGER_IMPL =
 CONTEXT_MANAGER_CFLAGS =
 endif
 
@@ -52,6 +51,8 @@ libgupnp_1_0_la_SOURCES = http-headers.c			\
 			  gupnp-context-private.h		\
 		     	  gupnp-context-manager.c		\
 		     	  $(CONTEXT_MANAGER_IMPL) 		\
+			  gupnp-unix-context-manager.c  	\
+			  gupnp-unix-context-manager.h		\
 			  gupnp-control-point.c			\
 			  gupnp-device.c			\
 			  gupnp-device-info.c			\

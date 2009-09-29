@@ -42,6 +42,8 @@
 #include "gupnp.h"
 #include "gupnp-marshal.h"
 
+#include "gupnp-unix-context-manager.h"
+
 G_DEFINE_TYPE (GUPnPContextManager,
                gupnp_context_manager,
                G_TYPE_OBJECT);
@@ -371,17 +373,17 @@ gupnp_context_manager_new (GMainContext *main_context,
 {
         GUPnPContextManager *manager;
         GUPnPContextManager *impl;
-        GType impl_type;
+        GType impl_type = G_TYPE_INVALID;
 
 #ifdef USE_NETWORK_MANAGER
 #include "gupnp-network-manager.h"
 
-        impl_type = GUPNP_TYPE_NETWORK_MANAGER;
-#else
-#include "gupnp-unix-context-manager.h"
-
-        impl_type = GUPNP_TYPE_UNIX_CONTEXT_MANAGER;
+        if (gupnp_network_manager_is_available ())
+                impl_type = GUPNP_TYPE_NETWORK_MANAGER;
 #endif
+
+        if (impl_type == G_TYPE_INVALID)
+                impl_type = GUPNP_TYPE_UNIX_CONTEXT_MANAGER;
 
         impl = g_object_new (impl_type,
                              "main-context", main_context,
