@@ -69,6 +69,9 @@ typedef struct {
         void (* _gupnp_reserved4) (void);
 } GUPnPNetworkManagerClass;
 
+gboolean
+gupnp_network_manager_is_available                      (void);
+
 G_END_DECLS
 
 #endif /* __GUPNP_NETWORK_MANAGER_H__ */

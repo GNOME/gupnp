@@ -538,3 +538,43 @@ gupnp_network_manager_class_init (GUPnPNetworkManagerClass *klass)
         g_type_class_add_private (klass, sizeof (GUPnPNetworkManagerPrivate));
 }
 
+gboolean
+gupnp_network_manager_is_available (void)
+{
+        DBusGConnection *connection;
+        DBusGProxy *dbus_proxy;
+        GError *error = NULL;
+        gboolean ret = FALSE;
+
+        connection = dbus_g_bus_get (DBUS_BUS_SYSTEM, &error);
+        if (connection == NULL) {
+                g_warning ("Failed to connect to System Bus: %s",
+                           error->message);
+                g_error_free (error);
+
+                return ret;
+        }
+
+        dbus_proxy = dbus_g_proxy_new_for_name (connection,
+                                                DBUS_SERVICE_DBUS,
+                                                DBUS_PATH_DBUS,
+                                                DBUS_INTERFACE_DBUS);
+
+
+        if (!dbus_g_proxy_call (dbus_proxy,
+                                "NameHasOwner",
+                                &error,
+                                G_TYPE_STRING, DBUS_SERVICE_NM,
+                                G_TYPE_INVALID,
+                                G_TYPE_BOOLEAN, &ret,
+                                G_TYPE_INVALID)) {
+                g_warning ("%s.NameHasOwner() failed: %s",
+                           DBUS_INTERFACE_DBUS,
+                           error->message);
+                g_error_free (error);
+        }
+
+        g_object_unref (dbus_proxy);
+
+        return ret;
+}
