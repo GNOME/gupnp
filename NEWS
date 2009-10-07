@@ -1,3 +1,16 @@
+0.13.1
+======
+
+Changes since 0.13:
+
+- Use unix context manager if NetworkManager service is not available.
+- Fix some minor leaks.
+
+All contributors:
+
+Zeeshan Ali (Khattak) <zeeshanak@gnome.org>
+Ross Burton <ross@linux.intel.com>
+
 0.13
 ====
 
