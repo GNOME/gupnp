@@ -141,9 +141,11 @@ gupnp_device_set_property (GObject      *object,
 
                 /* This can be NULL in which case *this* is the root device */
                 if (device->priv->root_device) {
+                        GUPnPRootDevice **dev = &(device->priv->root_device);
+
                         g_object_add_weak_pointer
                                 (G_OBJECT (device->priv->root_device),
-                                 (gpointer *) &device->priv->root_device);
+                                 (gpointer *) dev);
                 }
 
                 break;
@@ -182,9 +184,11 @@ gupnp_device_dispose (GObject *object)
         device = GUPNP_DEVICE (object);
 
         if (device->priv->root_device) {
+                GUPnPRootDevice **dev = &(device->priv->root_device);
+
                 g_object_remove_weak_pointer
                         (G_OBJECT (device->priv->root_device),
-                         (gpointer *) &device->priv->root_device);
+                         (gpointer *) dev);
 
                 device->priv->root_device = NULL;
         }
