@@ -33,6 +33,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <dbus/dbus-glib.h>
+#include <dbus/dbus-glib-lowlevel.h>
+#include <dbus/dbus.h>
 
 #include "gupnp-network-manager.h"
 #include "gupnp-context.h"
@@ -417,17 +419,26 @@ static void
 init_network_manager (GUPnPNetworkManager *manager)
 {
         GUPnPNetworkManagerPrivate *priv;
-        GError *error;
-        error = NULL;
+        DBusConnection *connection;
+        DBusError derror;
+        GMainContext *main_context;
 
         priv = manager->priv;
 
-        priv->connection = dbus_g_bus_get (DBUS_BUS_SYSTEM, &error);
-        if (priv->connection == NULL) {
+        g_object_get (manager, "main-context", &main_context, NULL);
+
+        dbus_error_init (&derror);
+        connection = dbus_bus_get_private (DBUS_BUS_SESSION, &derror);
+        if (connection == NULL) {
                 g_warning ("Failed to connect to System Bus: %s",
-                           error->message);
+                           derror.message);
                 return;
         }
+
+        dbus_connection_setup_with_g_main (connection, main_context);
+
+        priv->connection = dbus_connection_get_g_connection (connection);
+
 
         priv->manager_proxy = dbus_g_proxy_new_for_name (priv->connection,
                                                          DBUS_SERVICE_NM,
@@ -512,6 +523,10 @@ gupnp_network_manager_dispose (GObject *object)
                 g_list_free (priv->nm_devices);
                 priv->nm_devices = NULL;
         }
+
+        if (priv->connection)
+                dbus_g_connection_unref (priv->connection);
+        priv->connection = NULL;
 
         /* Call super */
         object_class = G_OBJECT_CLASS (gupnp_network_manager_parent_class);
