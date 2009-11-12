@@ -245,23 +245,12 @@ gupnp_service_proxy_dispose (GObject *object)
                                             proxy->priv->pending_messages);
         }
 
-       /* Unsubscribe again, in case a pending subscription response
-        * came while we were in unsubscribe(). This definitly happens
-        * sometimes since the pending messages are cancelled after
-        * unsubscribe.
-         */
-        if (proxy->priv->subscribed) {
-                unsubscribe (proxy);
-
-                proxy->priv->subscribed = FALSE;
-        }
-
         /* Cancel pending notifications */
         if (proxy->priv->notify_idle_src) {
                 g_source_destroy (proxy->priv->notify_idle_src);
                 proxy->priv->notify_idle_src = NULL;
         }
-
+        
         while (proxy->priv->pending_notifies) {
                 xmlFreeDoc (proxy->priv->pending_notifies->data);
                 proxy->priv->pending_notifies =
