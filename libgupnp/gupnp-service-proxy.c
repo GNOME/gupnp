@@ -1325,6 +1325,62 @@ gupnp_service_proxy_remove_notify (GUPnPServiceProxy              *proxy,
         return found;
 }
 
+static void emit_notification (GUPnPServiceProxy *proxy,
+                               xmlDoc            *doc)
+{
+        xmlNode *node;
+
+        node = xmlDocGetRootElement (doc);
+
+        /* Iterate over all provided properties */
+        for (node = node->children; node; node = node->next) {
+                xmlNode *var_node;
+
+                if (strcmp ((char *) node->name, "property") != 0)
+                        continue;
+
+                /* property */
+                for (var_node = node->children;
+                     var_node;
+                     var_node = var_node->next) {
+                        NotifyData *data;
+                        GValue value = {0, };
+                        GList *l;
+
+                        data = g_hash_table_lookup (proxy->priv->notify_hash,
+                                                    var_node->name);
+                        if (data == NULL)
+                                continue;
+
+                        /* Make a GValue of the desired type */
+                        g_value_init (&value, data->type);
+
+                        if (!gvalue_util_set_value_from_xml_node (&value,
+                                                                  var_node)) {
+                                g_value_unset (&value);
+
+                                continue;
+                        }
+
+                        /* Call callbacks */
+                        for (l = data->callbacks; l; l = l->next) {
+                                CallbackData *callback_data;
+
+                                callback_data = l->data;
+
+                                callback_data->callback
+                                        (proxy,
+                                         (const char *) var_node->name,
+                                         &value,
+                                         callback_data->user_data);
+                        }
+
+                        /* Cleanup */
+                        g_value_unset (&value);
+                }
+        }
+}
+
 /* Emit pending notifications. See comment below on why we do this. */
 static gboolean
 emit_notifications (gpointer user_data)
@@ -1335,59 +1391,11 @@ emit_notifications (gpointer user_data)
         
         while (proxy->priv->pending_notifies != NULL) {
                 xmlDoc *doc;
-                xmlNode *node;
 
                 doc = proxy->priv->pending_notifies->data;
-                node = xmlDocGetRootElement (doc);
-                
-                /* Iterate over all provided properties */
-                for (node = node->children; node; node = node->next) {
-                        xmlNode *var_node;
-                        
-                        if (strcmp ((char *) node->name, "property") != 0)
-                                continue;
-                        
-                        /* property */
-                        for (var_node = node->children; var_node;
-                             var_node = var_node->next) {
-                                NotifyData *data;
-                                GValue value = {0, };
-                                GList *l;
-                                
-                                data = g_hash_table_lookup
-                                        (proxy->priv->notify_hash,
-                                         var_node->name);
-                                if (data == NULL)
-                                        continue;
-                                
-                                /* Make a GValue of the desired type */
-                                g_value_init (&value, data->type);
-                                
-                                if (!gvalue_util_set_value_from_xml_node
-                                                        (&value, var_node)) {
-                                        g_value_unset (&value);
-                                        
-                                        continue;
-                                }
-                                
-                                /* Call callbacks */
-                                for (l = data->callbacks; l; l = l->next) {
-                                        CallbackData *callback_data;
-                                        
-                                        callback_data = l->data;
-                                        
-                                        callback_data->callback
-                                                (proxy,
-                                                 (const char *) var_node->name,
-                                                 &value,
-                                                 callback_data->user_data);
-                                }
-                                
-                                /* Cleanup */
-                                g_value_unset (&value);
-                        }
-                }
-                
+
+                emit_notification (proxy, doc);
+
                 /* Cleanup */
                 xmlFreeDoc (doc);
 
