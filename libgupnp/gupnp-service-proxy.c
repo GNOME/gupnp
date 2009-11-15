@@ -106,6 +106,12 @@ typedef struct {
         gpointer user_data;
 } CallbackData;
 
+typedef struct {
+        char *sid;
+
+        xmlDoc *doc;
+} EmitNotifyData;
+
 static void
 subscribe_got_response (SoupSession       *session,
                         SoupMessage       *msg,
@@ -133,6 +139,30 @@ notify_data_free (NotifyData *data)
         g_list_free (data->callbacks);
 
         g_slice_free (NotifyData, data);
+}
+
+/* Steals doc reference */
+static EmitNotifyData *
+emit_notify_data_new (const char *sid,
+                      xmlDoc     *doc)
+{
+        EmitNotifyData *data;
+
+        data = g_slice_new (EmitNotifyData);
+
+        data->sid = g_strdup (sid);
+        data->doc = doc;
+
+        return data;
+}
+
+static void
+emit_notify_data_free (EmitNotifyData *data)
+{
+        g_free (data->sid);
+        xmlFreeDoc (data->doc);
+
+        g_slice_free (EmitNotifyData, data);
 }
 
 static void
@@ -1386,20 +1416,24 @@ emit_notifications (gpointer user_data)
         g_assert (user_data);
         
         while (proxy->priv->pending_notifies != NULL) {
-                xmlDoc *doc;
+                EmitNotifyData *emit_notify_data;
 
-                doc = proxy->priv->pending_notifies->data;
+                emit_notify_data = proxy->priv->pending_notifies->data;
 
-                emit_notification (proxy, doc);
+                if (G_LIKELY (proxy->priv->sid != NULL &&
+                              strcmp (emit_notify_data->sid,
+                                      proxy->priv->sid) == 0))
+                        /* Our SID, entertain! */
+                        emit_notification (proxy, emit_notify_data->doc);
 
                 /* Cleanup */
-                xmlFreeDoc (doc);
+                emit_notify_data_free (emit_notify_data);
 
                 proxy->priv->pending_notifies =
                         g_list_delete_link (proxy->priv->pending_notifies,
                                             proxy->priv->pending_notifies);
         }
-        
+
         proxy->priv->notify_idle_src = NULL;
 
 	return FALSE;
@@ -1422,6 +1456,7 @@ server_handler (SoupServer        *soup_server,
         int seq;
         xmlDoc *doc;
         xmlNode *node;
+        EmitNotifyData *emit_notify_data;
 
         proxy = GUPNP_SERVICE_PROXY (user_data);
 
@@ -1443,16 +1478,6 @@ server_handler (SoupServer        *soup_server,
         hdr = soup_message_headers_get (msg->request_headers, "NTS");
         if (hdr == NULL || strcmp (hdr, "upnp:propchange") != 0) {
                 /* Proper NTS header lacking */
-                soup_message_set_status (msg, SOUP_STATUS_PRECONDITION_FAILED);
-
-                return;
-        }
-
-        hdr = soup_message_headers_get (msg->request_headers, "SID");
-        if (hdr == NULL ||
-            (proxy->priv->sid == NULL ||
-             strcmp (hdr, proxy->priv->sid) != 0)) {
-                /* No SID or not ours */
                 soup_message_set_status (msg, SOUP_STATUS_PRECONDITION_FAILED);
 
                 return;
@@ -1484,6 +1509,14 @@ server_handler (SoupServer        *soup_server,
         else
                 proxy->priv->seq = 1;
 
+        hdr = soup_message_headers_get (msg->request_headers, "SID");
+        if (hdr == NULL) {
+                /* No SID */
+                soup_message_set_status (msg, SOUP_STATUS_PRECONDITION_FAILED);
+
+                return;
+        }
+
         /* Parse the actual XML message content */
         doc = xmlRecoverMemory (msg->request_body->data,
                                 msg->request_body->length);
@@ -1513,8 +1546,10 @@ server_handler (SoupServer        *soup_server,
 	 * call the callbacks in an idle handler so that if the client calls the
 	 * device in the notify callback the server can actually respond.
 	 */
+        emit_notify_data = emit_notify_data_new (hdr, doc);
+
         proxy->priv->pending_notifies =
-                g_list_append (proxy->priv->pending_notifies, doc);
+                g_list_append (proxy->priv->pending_notifies, emit_notify_data);
         if (!proxy->priv->notify_idle_src) {
 	        GUPnPContext *context;
 	        GMainContext *main_context;
