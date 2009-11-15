@@ -1414,7 +1414,13 @@ emit_notifications (gpointer user_data)
         GUPnPServiceProxy *proxy = user_data;
 
         g_assert (user_data);
-        
+
+        if (proxy->priv->sid == NULL)
+                /* No SID */
+                if (G_LIKELY (proxy->priv->subscribed))
+                        /* subscription in progress, delay emision! */
+                        return TRUE;
+
         while (proxy->priv->pending_notifies != NULL) {
                 EmitNotifyData *emit_notify_data;
 
