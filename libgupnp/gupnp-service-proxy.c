@@ -1335,49 +1335,45 @@ static void emit_notification (GUPnPServiceProxy *proxy,
         /* Iterate over all provided properties */
         for (node = node->children; node; node = node->next) {
                 xmlNode *var_node;
+                NotifyData *data;
+                GValue value = {0, };
+                GList *l;
 
-                if (strcmp ((char *) node->name, "property") != 0)
+                /* variableName node */
+                var_node = node->children;
+
+                if (var_node == NULL ||
+                    strcmp ((char *) node->name, "property") != 0)
                         continue;
 
-                /* property */
-                for (var_node = node->children;
-                     var_node;
-                     var_node = var_node->next) {
-                        NotifyData *data;
-                        GValue value = {0, };
-                        GList *l;
+                data = g_hash_table_lookup (proxy->priv->notify_hash,
+                                            var_node->name);
+                if (data == NULL)
+                        continue;
 
-                        data = g_hash_table_lookup (proxy->priv->notify_hash,
-                                                    var_node->name);
-                        if (data == NULL)
-                                continue;
+                /* Make a GValue of the desired type */
+                g_value_init (&value, data->type);
 
-                        /* Make a GValue of the desired type */
-                        g_value_init (&value, data->type);
-
-                        if (!gvalue_util_set_value_from_xml_node (&value,
-                                                                  var_node)) {
-                                g_value_unset (&value);
-
-                                continue;
-                        }
-
-                        /* Call callbacks */
-                        for (l = data->callbacks; l; l = l->next) {
-                                CallbackData *callback_data;
-
-                                callback_data = l->data;
-
-                                callback_data->callback
-                                        (proxy,
-                                         (const char *) var_node->name,
-                                         &value,
-                                         callback_data->user_data);
-                        }
-
-                        /* Cleanup */
+                if (!gvalue_util_set_value_from_xml_node (&value, var_node)) {
                         g_value_unset (&value);
+
+                        continue;
                 }
+
+                /* Call callbacks */
+                for (l = data->callbacks; l; l = l->next) {
+                        CallbackData *callback_data;
+
+                        callback_data = l->data;
+
+                        callback_data->callback (proxy,
+                                                 (const char *) var_node->name,
+                                                 &value,
+                                                 callback_data->user_data);
+                }
+
+                /* Cleanup */
+                g_value_unset (&value);
         }
 }
 
