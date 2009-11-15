@@ -108,6 +108,7 @@ typedef struct {
 
 typedef struct {
         char *sid;
+        int seq;
 
         xmlDoc *doc;
 } EmitNotifyData;
@@ -144,6 +145,7 @@ notify_data_free (NotifyData *data)
 /* Steals doc reference */
 static EmitNotifyData *
 emit_notify_data_new (const char *sid,
+                      int         seq,
                       xmlDoc     *doc)
 {
         EmitNotifyData *data;
@@ -151,6 +153,7 @@ emit_notify_data_new (const char *sid,
         data = g_slice_new (EmitNotifyData);
 
         data->sid = g_strdup (sid);
+        data->seq = seq;
         data->doc = doc;
 
         return data;
@@ -1412,6 +1415,8 @@ static gboolean
 emit_notifications (gpointer user_data)
 {
         GUPnPServiceProxy *proxy = user_data;
+        GList *pending_notify;
+        gboolean resubscribe = FALSE;
 
         g_assert (user_data);
 
@@ -1421,19 +1426,36 @@ emit_notifications (gpointer user_data)
                         /* subscription in progress, delay emision! */
                         return TRUE;
 
-        while (proxy->priv->pending_notifies != NULL) {
+        for (pending_notify = proxy->priv->pending_notifies;
+             pending_notify != NULL;
+             pending_notify = pending_notify->next) {
                 EmitNotifyData *emit_notify_data;
 
-                emit_notify_data = proxy->priv->pending_notifies->data;
+                emit_notify_data = pending_notify->data;
+
+                if (emit_notify_data->seq > proxy->priv->seq) {
+                        /* Oops, we missed a notify. Resubscribe .. */
+                        resubscribe = TRUE;
+
+                        break;
+                }
+
+                /* Increment our own event sequence number */
+                if (proxy->priv->seq < G_MAXINT32)
+                        proxy->priv->seq++;
+                else
+                        proxy->priv->seq = 1;
 
                 if (G_LIKELY (proxy->priv->sid != NULL &&
                               strcmp (emit_notify_data->sid,
                                       proxy->priv->sid) == 0))
                         /* Our SID, entertain! */
                         emit_notification (proxy, emit_notify_data->doc);
+        }
 
-                /* Cleanup */
-                emit_notify_data_free (emit_notify_data);
+        /* Cleanup */
+        while (proxy->priv->pending_notifies != NULL) {
+                emit_notify_data_free (proxy->priv->pending_notifies->data);
 
                 proxy->priv->pending_notifies =
                         g_list_delete_link (proxy->priv->pending_notifies,
@@ -1441,6 +1463,11 @@ emit_notifications (gpointer user_data)
         }
 
         proxy->priv->notify_idle_src = NULL;
+
+        if (resubscribe) {
+                unsubscribe (proxy);
+                subscribe (proxy);
+        }
 
 	return FALSE;
 }
@@ -1498,22 +1525,6 @@ server_handler (SoupServer        *soup_server,
         }
 
         seq = atoi (hdr);
-        if (seq > proxy->priv->seq) {
-                /* Oops, we missed a notify. Resubscribe .. */
-                unsubscribe (proxy);
-                subscribe (proxy);
-
-                /* Message was OK otherwise */
-                soup_message_set_status (msg, SOUP_STATUS_OK);
-
-                return;
-        }
-
-        /* Increment our own event sequence number */
-        if (proxy->priv->seq < G_MAXINT32)
-                proxy->priv->seq++;
-        else
-                proxy->priv->seq = 1;
 
         hdr = soup_message_headers_get (msg->request_headers, "SID");
         if (hdr == NULL) {
@@ -1552,7 +1563,7 @@ server_handler (SoupServer        *soup_server,
 	 * call the callbacks in an idle handler so that if the client calls the
 	 * device in the notify callback the server can actually respond.
 	 */
-        emit_notify_data = emit_notify_data_new (hdr, doc);
+        emit_notify_data = emit_notify_data_new (hdr, seq, doc);
 
         proxy->priv->pending_notifies =
                 g_list_append (proxy->priv->pending_notifies, emit_notify_data);
