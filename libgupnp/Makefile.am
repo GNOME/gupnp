@@ -9,8 +9,15 @@ CONTEXT_MANAGER_IMPL =
 CONTEXT_MANAGER_CFLAGS =
 endif
 
+if USE_CONIC
+CONIC_CFLAGS = $(LIBCONIC_CFLAGS) -DUSE_CONIC
+else
+CONIC_CFLAGS =
+endif
+
 AM_CFLAGS = $(LIBGUPNP_CFLAGS) \
 	    $(DBUS_GLIB_CFLAGS) \
+	    $(CONIC_CFLAGS) \
 	    -I$(top_srcdir) \
 	    $(CONTEXT_MANAGER_CFLAGS)
 
@@ -78,7 +85,7 @@ libgupnp_1_0_la_SOURCES = http-headers.c			\
 			  gena-protocol.h			\
 			  $(BUILT_SOURCES)
 
-libgupnp_1_0_la_LIBADD = $(LIBGUPNP_LIBS) $(DBUS_GLIB_LIBS)
+libgupnp_1_0_la_LIBADD = $(LIBGUPNP_LIBS) $(DBUS_GLIB_LIBS) $(LIBCONIC_LIBS)
 
 EXTRA_DIST = gupnp-marshal.list 	   \
 	     gupnp-network-manager.c   	   \

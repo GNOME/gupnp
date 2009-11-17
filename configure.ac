@@ -30,12 +30,32 @@ AC_ARG_WITH([context_manager],
 
 AC_MSG_CHECKING([Context Manager backend to use])
 AC_MSG_RESULT([${with_context_manager}])
-if test "x$with_context_manager" = "xnetwork-manager"; then
-        PKG_CHECK_MODULES(DBUS_GLIB, dbus-glib-1 >= 0.76)
-fi
 
 AM_CONDITIONAL([USE_NETWORK_MANAGER],
                [test "x$with_context_manager" = "xnetwork-manager"])
+
+USE_CONIC=no
+if test "x$with_context_manager" = "xunix"; then
+        dnl Use libconic if it's available
+        PKG_CHECK_MODULES(LIBCONIC, conic >= 0.13,
+                          [ USE_CONIC=yes
+                            AC_SUBST(LIBCONIC_CFLAGS)
+                            AC_SUBST(LIBCONIC_LIBS)
+                          ],
+                          [ USE_CONIC=no
+                            AC_MSG_WARN([conic 0.13 or greater not found.])
+                          ])
+fi
+
+AM_CONDITIONAL(USE_CONIC, test x$USE_CONIC = xyes)
+AC_SUBST(USE_CONIC)
+
+# We need dbus-glib if either NetworkManager or libconic is used
+if test "x$with_context_manager" = "xnetwork-manager" -o \
+        "x$with_context_manager" = "xunix" -a \
+        "x$USE_CONIC" = "xyes"; then
+        PKG_CHECK_MODULES(DBUS_GLIB, dbus-glib-1 >= 0.76)
+fi
 
 # glib-genmarshal
 GLIB_GENMARSHAL=`pkg-config --variable=glib_genmarshal glib-2.0`
