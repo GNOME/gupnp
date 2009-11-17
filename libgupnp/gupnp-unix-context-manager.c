@@ -53,6 +53,7 @@ G_DEFINE_TYPE (GUPnPUnixContextManager,
                GUPNP_TYPE_CONTEXT_MANAGER);
 
 struct _GUPnPUnixContextManagerPrivate {
+        GList *contexts; /* List of GUPnPContext instances */
 };
 
 void
@@ -91,7 +92,8 @@ create_and_signal_context (GUPnPUnixContextManager *manager,
                                "context-available",
                                context);
 
-        g_object_unref (context);
+        manager->priv->contexts = g_list_append (manager->priv->contexts,
+                                                 context);
 }
 
 /*
@@ -157,6 +159,18 @@ schedule_contexts_creation (GUPnPUnixContextManager *manager)
 }
 
 static void
+destroy_contexts (GUPnPUnixContextManager *manager)
+{
+        while (manager->priv->contexts) {
+                g_object_unref (manager->priv->contexts->data);
+
+                manager->priv->contexts = g_list_delete_link
+                                        (manager->priv->contexts,
+                                         manager->priv->contexts);
+        }
+}
+
+static void
 gupnp_unix_context_manager_init (GUPnPUnixContextManager *manager)
 {
         manager->priv =
@@ -189,6 +203,8 @@ gupnp_unix_context_manager_dispose (GObject *object)
         GObjectClass *object_class;
 
         manager = GUPNP_UNIX_CONTEXT_MANAGER (object);
+
+        destroy_contexts (manager);
 
         /* Call super */
         object_class = G_OBJECT_CLASS (gupnp_unix_context_manager_parent_class);
