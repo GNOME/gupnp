@@ -52,8 +52,12 @@ gupnp_unix_context_manager_get_type (void) G_GNUC_CONST;
                  GUPNP_TYPE_UNIX_CONTEXT_MANAGER, \
                  GUPnPUnixContextManagerClass))
 
+typedef struct _GUPnPUnixContextManagerPrivate GUPnPUnixContextManagerPrivate;
+
 typedef struct {
         GUPnPContextManager parent;
+
+        GUPnPUnixContextManagerPrivate *priv;
 } GUPnPUnixContextManager;
 
 typedef struct {

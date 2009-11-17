@@ -52,6 +52,9 @@ G_DEFINE_TYPE (GUPnPUnixContextManager,
                gupnp_unix_context_manager,
                GUPNP_TYPE_CONTEXT_MANAGER);
 
+struct _GUPnPUnixContextManagerPrivate {
+};
+
 void
 create_and_signal_context (GUPnPUnixContextManager *manager,
                            const char              *interface)
@@ -156,6 +159,10 @@ schedule_contexts_creation (GUPnPUnixContextManager *manager)
 static void
 gupnp_unix_context_manager_init (GUPnPUnixContextManager *manager)
 {
+        manager->priv =
+                G_TYPE_INSTANCE_GET_PRIVATE (manager,
+                                             GUPNP_TYPE_UNIX_CONTEXT_MANAGER,
+                                             GUPnPUnixContextManagerPrivate);
 }
 
 static void
@@ -197,5 +204,8 @@ gupnp_unix_context_manager_class_init (GUPnPUnixContextManagerClass *klass)
 
         object_class->constructed  = gupnp_unix_context_manager_constructed;
         object_class->dispose      = gupnp_unix_context_manager_dispose;
+
+        g_type_class_add_private (klass,
+                                  sizeof (GUPnPUnixContextManagerPrivate));
 }
 
