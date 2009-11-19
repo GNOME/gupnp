@@ -156,7 +156,14 @@ static void
 destroy_contexts (GUPnPUnixContextManager *manager)
 {
         while (manager->priv->contexts) {
-                g_object_unref (manager->priv->contexts->data);
+                GUPnPContext *context;
+
+                context = GUPNP_CONTEXT (manager->priv->contexts->data);
+
+                g_signal_emit_by_name (manager,
+                                       "context-unavailable",
+                                       context);
+                g_object_unref (context);
 
                 manager->priv->contexts = g_list_delete_link
                                         (manager->priv->contexts,
