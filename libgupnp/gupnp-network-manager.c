@@ -80,6 +80,8 @@ struct _GUPnPNetworkManagerPrivate {
         DBusGConnection *connection;
         DBusGProxy *manager_proxy;
 
+        GSource *idle_context_creation_src;
+
         GList *nm_devices;
 };
 
@@ -137,6 +139,8 @@ create_loopback_context (gpointer data)
         GMainContext *main_context;
         guint port;
         GError *error = NULL;
+
+        manager->priv->idle_context_creation_src = NULL;
 
         g_object_get (manager,
                       "main-context", &main_context,
@@ -398,7 +402,6 @@ static void
 schedule_loopback_context_creation (GUPnPNetworkManager *manager)
 {
         GMainContext *main_context;
-        GSource *source;
 
         g_object_get (manager,
                       "main-context", &main_context,
@@ -407,12 +410,14 @@ schedule_loopback_context_creation (GUPnPNetworkManager *manager)
         /* Create contexts in mainloop so that is happens after user has hooked
          * to the "context-available" signal.
          */
-        source = g_idle_source_new ();
-        g_source_attach (source, main_context);
-        g_source_set_callback (source,
+        manager->priv->idle_context_creation_src = g_idle_source_new ();
+        g_source_attach (manager->priv->idle_context_creation_src,
+            main_context);
+        g_source_set_callback (manager->priv->idle_context_creation_src,
                                create_loopback_context,
                                manager,
                                NULL);
+        g_source_unref (manager->priv->idle_context_creation_src);
 }
 
 static void
@@ -512,6 +517,11 @@ gupnp_network_manager_dispose (GObject *object)
         GObjectClass *object_class;
 
         priv = GUPNP_NETWORK_MANAGER (object)->priv;
+
+        if (manager->priv->idle_context_creation_src) {
+                g_source_destroy (manager->priv->idle_context_creation_src);
+                manager->priv->idle_context_creation_src = NULL;
+        }
 
         if (priv->manager_proxy != NULL) {
                 g_object_unref (priv->manager_proxy);
