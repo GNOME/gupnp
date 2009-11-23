@@ -904,6 +904,49 @@ parse_and_limit_timeout (const char *timeout)
         return timeout_seconds;
 }
 
+static void
+send_initial_state (GUPnPService *service,
+                    SubscriptionData *data)
+{
+        GQueue *queue;
+        char *mem;
+        GList *l;
+
+        /* Send initial event message */
+        queue = g_queue_new ();
+
+        for (l = service->priv->state_variables; l; l = l->next) {
+                NotifyData *ndata;
+
+                ndata = g_slice_new0 (NotifyData);
+
+                g_signal_emit (service,
+                               signals[QUERY_VARIABLE],
+                               g_quark_from_string (l->data),
+                               l->data,
+                               &ndata->value);
+
+                if (!G_IS_VALUE (&ndata->value)) {
+                        g_slice_free (NotifyData, ndata);
+
+                        continue;
+                }
+
+                ndata->variable = g_strdup (l->data);
+
+                g_queue_push_tail (queue, ndata);
+        }
+
+        mem = create_property_set (queue);
+        notify_subscriber (data->sid, data, mem);
+
+        /* Cleanup */
+        g_queue_free (queue);
+
+        g_free (mem);
+}
+
+
 /* Subscription request */
 static void
 subscribe (GUPnPService *service,
@@ -914,9 +957,6 @@ subscribe (GUPnPService *service,
         SubscriptionData *data;
         char *start, *end, *uri;
         int timeout_seconds;
-        GQueue *queue;
-        char *mem;
-        GList *l;
 
         data = g_slice_new0 (SubscriptionData);
 
@@ -981,38 +1021,7 @@ subscribe (GUPnPService *service,
         /* Respond */
         subscription_response (service, msg, data->sid, timeout_seconds);
 
-        /* Send initial event message */
-        queue = g_queue_new ();
-
-        for (l = service->priv->state_variables; l; l = l->next) {
-                NotifyData *ndata;
-
-                ndata = g_slice_new0 (NotifyData);
-
-                g_signal_emit (service,
-                               signals[QUERY_VARIABLE],
-                               g_quark_from_string (l->data),
-                               l->data,
-                               &ndata->value);
-
-                if (!G_IS_VALUE (&ndata->value)) {
-                        g_slice_free (NotifyData, ndata);
-
-                        continue;
-                }
-
-                ndata->variable = g_strdup (l->data);
-
-                g_queue_push_tail (queue, ndata);
-        }
-
-        mem = create_property_set (queue);
-        notify_subscriber (data->sid, data, mem);
-
-        /* Cleanup */
-        g_queue_free (queue);
-
-        g_free (mem);
+        send_initial_state (service, data);
 }
 
 /* Resubscription request */
