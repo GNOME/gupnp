@@ -43,10 +43,10 @@ libgupnpinc_HEADERS = gupnp-context.h			\
 		      gupnp.h
 
 gupnp-marshal.c: gupnp-marshal.list
-	$(GLIB_GENMARSHAL) --prefix=gupnp_marshal $(srcdir)/gupnp-marshal.list --header --body > gupnp-marshal.c
+	$(AM_V_GEN)$(GLIB_GENMARSHAL) --prefix=gupnp_marshal $(srcdir)/gupnp-marshal.list --header --body > gupnp-marshal.c
 
 gupnp-marshal.h: gupnp-marshal.list
-	$(GLIB_GENMARSHAL) --prefix=gupnp_marshal $(srcdir)/gupnp-marshal.list --header > gupnp-marshal.h
+	$(AM_V_GEN)$(GLIB_GENMARSHAL) --prefix=gupnp_marshal $(srcdir)/gupnp-marshal.list --header > gupnp-marshal.h
 
 BUILT_SOURCES = gupnp-marshal.c gupnp-marshal.h
 
