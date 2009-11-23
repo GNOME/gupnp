@@ -1148,6 +1148,43 @@ subscription_server_handler (SoupServer        *server,
         }
 }
 
+void
+got_introspection (GUPnPServiceInfo *info,
+    GUPnPServiceIntrospection *introspection,
+    const GError *error,
+    gpointer user_data)
+{
+        GUPnPService *service = user_data;
+        const GList *state_variables, *l;
+
+        if (introspection) {
+                state_variables =
+                    gupnp_service_introspection_list_state_variables
+                    (introspection);
+
+                for (l = state_variables; l; l = l->next) {
+                        GUPnPServiceStateVariableInfo *variable;
+
+                        variable = l->data;
+
+                        if (!variable->send_events)
+                                continue;
+
+                        service->priv->state_variables =
+                            g_list_prepend (service->priv->state_variables,
+                                g_strdup (variable->name));
+                }
+
+                g_object_unref (introspection);
+        } else {
+                g_warning ("Failed to get SCPD: %s\n"
+                    "The initial event message will not be sent.",
+                    error ? error->message : "No error");
+        }
+
+        g_object_unref (service);
+}
+
 static GObject *
 gupnp_service_constructor (GType                  type,
                            guint                  n_construct_params,
@@ -1157,9 +1194,6 @@ gupnp_service_constructor (GType                  type,
         GObject *object;
         GUPnPService *service;
         GUPnPServiceInfo *info;
-        GError *error;
-        GUPnPServiceIntrospection *introspection;
-        const GList *state_variables, *l;
         GUPnPContext *context;
         SoupServer *server;
         SoupURI *uri;
@@ -1176,35 +1210,10 @@ gupnp_service_constructor (GType                  type,
         info    = GUPNP_SERVICE_INFO (object);
 
         /* Get introspection and save state variable names */
-        error = NULL;
 
-        introspection = gupnp_service_info_get_introspection (info, &error);
-        if (introspection) {
-                state_variables =
-                        gupnp_service_introspection_list_state_variables
-                                                                (introspection);
-
-                for (l = state_variables; l; l = l->next) {
-                        GUPnPServiceStateVariableInfo *variable;
-
-                        variable = l->data;
-
-                        if (!variable->send_events)
-                                continue;
-
-                        service->priv->state_variables =
-                                g_list_prepend (service->priv->state_variables,
-                                                g_strdup (variable->name));
-                }
-
-                g_object_unref (introspection);
-        } else {
-                g_warning ("Failed to get SCPD: %s\n"
-                           "The initial event message will not be sent.",
-                           error->message);
-
-                g_error_free (error);
-        }
+        gupnp_service_info_get_introspection_async (info, got_introspection,
+            object);
+        g_object_ref (object);
 
         /* Get server */
         context = gupnp_service_info_get_context (info);
