@@ -61,6 +61,9 @@ G_DEFINE_TYPE (GUPnPUnixContextManager,
 struct _GUPnPUnixContextManagerPrivate {
         GList *contexts; /* List of GUPnPContext instances */
 
+        GSource *idle_context_creation_src;
+
+
 #ifdef USE_CONIC /* MAEMO */
         ConIcConnection *conic;
         DBusConnection  *system_bus;
@@ -117,6 +120,8 @@ create_contexts (gpointer data)
         struct ifaddrs *ifa_list, *ifa;
         char *ret;
         GList *processed;
+
+        manager->priv->idle_context_creation_src = NULL;
 
         if (manager->priv->contexts != NULL) {
                return FALSE;
@@ -208,7 +213,8 @@ static void
 schedule_contexts_creation (GUPnPUnixContextManager *manager)
 {
         GMainContext *main_context;
-        GSource *source;
+
+        manager->priv->idle_context_creation_src = NULL;
 
         g_object_get (manager,
                       "main-context", &main_context,
@@ -217,12 +223,14 @@ schedule_contexts_creation (GUPnPUnixContextManager *manager)
         /* Create contexts in mainloop so that is happens after user has hooked
          * to the "context-available" signal.
          */
-        source = g_idle_source_new ();
-        g_source_attach (source, main_context);
-        g_source_set_callback (source,
+        manager->priv->idle_context_creation_src = g_idle_source_new ();
+        g_source_attach (manager->priv->idle_context_creation_src,
+            main_context);
+        g_source_set_callback (manager->priv->idle_context_creation_src,
                                create_contexts,
                                manager,
                                NULL);
+        g_source_unref (manager->priv->idle_context_creation_src);
 }
 #endif /* MAEMO */
 
@@ -291,6 +299,12 @@ gupnp_unix_context_manager_dispose (GObject *object)
                 manager->priv->system_bus = NULL;
         }
 #endif /* MAEMO */
+
+        if (manager->priv->idle_context_creation_src) {
+                g_source_destroy (manager->priv->idle_context_creation_src);
+                manager->priv->idle_context_creation_src = NULL;
+        }
+
 
         /* Call super */
         object_class = G_OBJECT_CLASS (gupnp_unix_context_manager_parent_class);
