@@ -543,6 +543,9 @@ gupnp_service_info_get_event_subscription_url (GUPnPServiceInfo *info)
  * description document (SCPD) provided by the service so it can not be created
  * if the service does not provide an SCPD.
  *
+ * Warning: You  should use gupnp_service_info_get_introspection_async()
+ * instead, this function re-enter the GMainloop before returning.
+ *
  * Return value: A new #GUPnPServiceIntrospection for this service or %NULL.
  * Unref after use.
  **/
