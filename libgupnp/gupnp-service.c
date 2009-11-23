@@ -98,6 +98,9 @@ typedef struct {
                                            subscription */
 } SubscriptionData;
 
+static void
+send_initial_state (SubscriptionData *data);
+
 static SoupSession *
 gupnp_service_get_session (GUPnPService *service)
 {
@@ -905,8 +908,7 @@ parse_and_limit_timeout (const char *timeout)
 }
 
 static void
-send_initial_state (GUPnPService *service,
-                    SubscriptionData *data)
+send_initial_state (SubscriptionData *data)
 {
         GQueue *queue;
         char *mem;
@@ -915,12 +917,12 @@ send_initial_state (GUPnPService *service,
         /* Send initial event message */
         queue = g_queue_new ();
 
-        for (l = service->priv->state_variables; l; l = l->next) {
+        for (l = data->service->priv->state_variables; l; l = l->next) {
                 NotifyData *ndata;
 
                 ndata = g_slice_new0 (NotifyData);
 
-                g_signal_emit (service,
+                g_signal_emit (data->service,
                                signals[QUERY_VARIABLE],
                                g_quark_from_string (l->data),
                                l->data,
@@ -1021,7 +1023,7 @@ subscribe (GUPnPService *service,
         /* Respond */
         subscription_response (service, msg, data->sid, timeout_seconds);
 
-        send_initial_state (service, data);
+        send_initial_state (data);
 }
 
 /* Resubscription request */
@@ -1165,6 +1167,8 @@ got_introspection (GUPnPServiceInfo *info,
 {
         GUPnPService *service = user_data;
         const GList *state_variables, *l;
+        GHashTableIter iter;
+        SubscriptionData *data;
 
         if (introspection) {
                 state_variables =
@@ -1190,6 +1194,11 @@ got_introspection (GUPnPServiceInfo *info,
                     "The initial event message will not be sent.",
                     error ? error->message : "No error");
         }
+
+        g_hash_table_iter_init (&iter, service->priv->subscriptions);
+
+        while (g_hash_table_iter_next (&iter, NULL, (gpointer*) &data))
+                send_initial_state (data);
 
         g_object_unref (service);
 }
