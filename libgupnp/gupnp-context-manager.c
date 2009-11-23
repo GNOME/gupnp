@@ -228,6 +228,10 @@ gupnp_context_manager_dispose (GObject *object)
                 manager->priv->impl = NULL;
         }
 
+        g_list_foreach (manager->priv->objects, (GFunc) g_object_unref, NULL);
+        g_list_free (manager->priv->objects);
+        manager->priv->objects = NULL;
+
         /* Call super */
         object_class = G_OBJECT_CLASS (gupnp_context_manager_parent_class);
         object_class->dispose (object);
