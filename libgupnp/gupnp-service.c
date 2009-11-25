@@ -893,7 +893,7 @@ parse_and_limit_timeout (const char *timeout)
 
         timeout_seconds = 0;
 
-        if (strncmp (timeout, "Second-", strlen ("Second-")) == 0) {
+        if (timeout && strncmp (timeout, "Second-", strlen ("Second-")) == 0) {
                 /* We have a finite timeout */
                 timeout_seconds = CLAMP (atoi (timeout + strlen ("Second-")),
                                          GENA_MIN_TIMEOUT,
