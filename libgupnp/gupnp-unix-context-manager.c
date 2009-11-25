@@ -140,6 +140,9 @@ create_contexts (gpointer data)
                                         (GCompareFunc) strcmp) != NULL)
                         continue;
 
+                if (ifa->ifa_flags & IFF_POINTOPOINT)
+                        continue;
+
                 if (ifa->ifa_flags & IFF_UP)
                         create_and_signal_context (manager, ifa->ifa_name);
 
