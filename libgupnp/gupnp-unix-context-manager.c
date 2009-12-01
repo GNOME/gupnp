@@ -44,6 +44,7 @@
 #include <ifaddrs.h>
 #include <libsoup/soup-address.h>
 #include <glib/gstdio.h>
+#include <libgssdp/gssdp-error.h>
 
 #include "gupnp-unix-context-manager.h"
 #include "gupnp-context.h"
@@ -93,9 +94,12 @@ create_and_signal_context (GUPnPUnixContextManager *manager,
                                 "error", &error,
                                 NULL);
         if (error != NULL) {
-                g_warning ("Failed to create context for interface '%s': %s\n",
-                           interface,
-                           error->message);
+                if (!(error->domain == GSSDP_ERROR &&
+                        error->code == GSSDP_ERROR_NO_IP_ADDRESS))
+                        g_warning (
+                            "Failed to create context for interface '%s': %s\n",
+                            interface,
+                            error->message);
 
                 g_error_free (error);
 
