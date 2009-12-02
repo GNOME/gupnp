@@ -513,10 +513,12 @@ gupnp_network_manager_constructed (GObject *object)
 static void
 gupnp_network_manager_dispose (GObject *object)
 {
+        GUPnPNetworkManager *manager;
         GUPnPNetworkManagerPrivate *priv;
         GObjectClass *object_class;
 
-        priv = GUPNP_NETWORK_MANAGER (object)->priv;
+        manager = GUPNP_NETWORK_MANAGER (object);
+        priv = manager->priv;
 
         if (manager->priv->idle_context_creation_src) {
                 g_source_destroy (manager->priv->idle_context_creation_src);
