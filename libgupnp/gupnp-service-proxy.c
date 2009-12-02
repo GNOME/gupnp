@@ -285,7 +285,7 @@ gupnp_service_proxy_dispose (GObject *object)
         }
         
         while (proxy->priv->pending_notifies) {
-                xmlFreeDoc (proxy->priv->pending_notifies->data);
+                emit_notify_data_free (proxy->priv->pending_notifies->data);
                 proxy->priv->pending_notifies =
                         g_list_delete_link (proxy->priv->pending_notifies,
                                             proxy->priv->pending_notifies);
