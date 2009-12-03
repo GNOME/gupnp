@@ -433,7 +433,7 @@ init_network_manager (GUPnPNetworkManager *manager)
         g_object_get (manager, "main-context", &main_context, NULL);
 
         dbus_error_init (&derror);
-        connection = dbus_bus_get_private (DBUS_BUS_SESSION, &derror);
+        connection = dbus_bus_get_private (DBUS_BUS_SYSTEM, &derror);
         if (connection == NULL) {
                 g_warning ("Failed to connect to System Bus: %s",
                            derror.message);
