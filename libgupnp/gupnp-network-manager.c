@@ -77,6 +77,7 @@ typedef struct
 } NMDevice;
 
 struct _GUPnPNetworkManagerPrivate {
+        DBusConnection *dbus_connection;
         DBusGConnection *connection;
         DBusGProxy *manager_proxy;
 
@@ -424,7 +425,6 @@ static void
 init_network_manager (GUPnPNetworkManager *manager)
 {
         GUPnPNetworkManagerPrivate *priv;
-        DBusConnection *connection;
         DBusError derror;
         GMainContext *main_context;
 
@@ -432,18 +432,20 @@ init_network_manager (GUPnPNetworkManager *manager)
 
         g_object_get (manager, "main-context", &main_context, NULL);
 
+        /* Do fake open to initialize types */
+        dbus_g_connection_open ("", NULL);
         dbus_error_init (&derror);
-        connection = dbus_bus_get_private (DBUS_BUS_SYSTEM, &derror);
-        if (connection == NULL) {
+        priv->dbus_connection = dbus_bus_get_private (DBUS_BUS_SYSTEM, &derror);
+        if (priv->dbus_connection == NULL) {
                 g_warning ("Failed to connect to System Bus: %s",
                            derror.message);
                 return;
         }
 
-        dbus_connection_setup_with_g_main (connection, main_context);
+        dbus_connection_setup_with_g_main (priv->dbus_connection, main_context);
 
-        priv->connection = dbus_connection_get_g_connection (connection);
-
+        priv->connection =
+            dbus_connection_get_g_connection (priv->dbus_connection);
 
         priv->manager_proxy = dbus_g_proxy_new_for_name (priv->connection,
                                                          DBUS_SERVICE_NM,
@@ -536,8 +538,10 @@ gupnp_network_manager_dispose (GObject *object)
                 priv->nm_devices = NULL;
         }
 
-        if (priv->connection)
-                dbus_g_connection_unref (priv->connection);
+        if (priv->connection)  {
+          dbus_connection_close (priv->dbus_connection);
+          dbus_g_connection_unref (priv->connection);
+        }
         priv->connection = NULL;
 
         /* Call super */
@@ -566,27 +570,32 @@ gupnp_network_manager_class_init (GUPnPNetworkManagerClass *klass)
 }
 
 gboolean
-gupnp_network_manager_is_available (void)
+gupnp_network_manager_is_available (GMainContext *main_context)
 {
-        DBusGConnection *connection;
+        DBusConnection *connection;
+        DBusError derror;
+        DBusGConnection *gconnection;
         DBusGProxy *dbus_proxy;
         GError *error = NULL;
         gboolean ret = FALSE;
 
-        connection = dbus_g_bus_get (DBUS_BUS_SYSTEM, &error);
+        /* Do fake open to initialize types */
+        dbus_g_connection_open ("", NULL);
+        dbus_error_init (&derror);
+        connection = dbus_bus_get_private (DBUS_BUS_SYSTEM, &derror);
         if (connection == NULL) {
                 g_warning ("Failed to connect to System Bus: %s",
-                           error->message);
-                g_error_free (error);
-
-                return ret;
+                           derror.message);
+                return FALSE;
         }
 
-        dbus_proxy = dbus_g_proxy_new_for_name (connection,
+        dbus_connection_setup_with_g_main (connection, main_context);
+        gconnection = dbus_connection_get_g_connection (connection);
+
+        dbus_proxy = dbus_g_proxy_new_for_name (gconnection,
                                                 DBUS_SERVICE_DBUS,
                                                 DBUS_PATH_DBUS,
                                                 DBUS_INTERFACE_DBUS);
-
 
         if (!dbus_g_proxy_call (dbus_proxy,
                                 "NameHasOwner",
@@ -602,6 +611,8 @@ gupnp_network_manager_is_available (void)
         }
 
         g_object_unref (dbus_proxy);
+        dbus_connection_close (connection);
+        dbus_g_connection_unref (gconnection);
 
         return ret;
 }

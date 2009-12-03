@@ -382,7 +382,7 @@ gupnp_context_manager_new (GMainContext *main_context,
 #ifdef USE_NETWORK_MANAGER
 #include "gupnp-network-manager.h"
 
-        if (gupnp_network_manager_is_available ())
+        if (gupnp_network_manager_is_available (main_context))
                 impl_type = GUPNP_TYPE_NETWORK_MANAGER;
 #endif
 
