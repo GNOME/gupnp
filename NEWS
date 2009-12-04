@@ -1,3 +1,41 @@
+0.13.2
+======
+
+Changes since 0.13.1:
+
+- Utilize libconic (Maemo5) if available.
+- Unix context manager must signal the unavailibility of all contexts when
+  disposed.
+- Enable silent build rules if they are available.
+- Fix race-conditions in client-side notification handling.
+- Unix context manager ignores point-to-point interfaces.
+- Context manager ignores interfaces without IP addresses.
+- Don't require timeouts to be specified in subscription requests.
+- Fix build against gcc 4.[1,2].
+- Make network manager thread-safe.
+- Remove idle source on dispose in context manager implementations.
+- Warn in docs that gupnp_service_info_get_introspection() is evil and why.
+- Service retrieves introspection data in truly async way.
+- Fix some leaks.
+- A bunch of code clean-ups.
+
+All contributors:
+
+Olivier Crête <olivier.crete@collabora.co.uk>
+Zeeshan Ali (Khattak) <zeeshanak@gnome.org>
+Ross Burton <ross@linux.intel.com>
+Jens Georg <mail@jensge.org>
+Cem Eliguzel <celiguzel@ubicom.com>
+
+Bugs fixed:
+
+1890 - Timeout parsing problem with SUBSCRIBE method
+1880 - subscription/notification handling is racy
+1906 - Tests failed with gupnp 0.13
+1849 - Compile error when using gcc 4.[1,2] and strict aliasing
+1494 - Ability to deal with multiple network interfaces
+1881 - networkmanager interaction should use its own dbus connection
+
 0.13.1
 ======
 
