@@ -234,7 +234,7 @@ finalize_action (GUPnPServiceAction *action)
         response_body = g_string_free (action->response_str, FALSE);
 
         soup_message_set_response (action->msg,
-                                   "text/xml",
+                                   "text/xml; charset=\"utf-8\"",
                                    SOUP_MEMORY_TAKE,
                                    response_body,
                                    strlen (response_body));
