@@ -182,26 +182,64 @@ notify_data_free (NotifyData *data)
 }
 
 struct _GUPnPServiceAction {
+        volatile gint ref_count;
+
         GUPnPContext *context;
 
         char         *name;
 
         SoupMessage  *msg;
 
-        xmlDoc       *doc;
+        GUPnPXMLDoc  *doc;
         xmlNode      *node;
 
         GString      *response_str;
 };
 
+GUPnPServiceAction *
+gupnp_service_action_ref (GUPnPServiceAction *action)
+{
+        g_return_val_if_fail (action, NULL);
+        g_return_val_if_fail (action->ref_count > 0, NULL);
+
+        g_atomic_int_inc (&action->ref_count);
+
+        return action;
+}
+
+void
+gupnp_service_action_unref (GUPnPServiceAction *action)
+{
+        g_return_if_fail (action);
+        g_return_if_fail (action->ref_count > 0);
+
+        if (g_atomic_int_dec_and_test (&action->ref_count)) {
+                g_free (action->name);
+                g_object_unref (action->msg);
+                g_object_unref (action->context);
+                g_object_unref (action->doc);
+
+                g_slice_free (GUPnPServiceAction, action);
+        }
+}
+
+/**
+ * gupnp_service_action_get_type:
+ *
+ * Get the gtype for GUPnPServiceActon
+ *
+ * Return value: The gtype of GUPnPServiceAction
+ **/
 GType
 gupnp_service_action_get_type (void)
 {
         static GType our_type = 0;
 
         if (our_type == 0)
-                our_type = g_pointer_type_register_static
-                                        ("GUPnPServiceAction");
+                our_type = g_boxed_type_register_static
+                        ("GUPnPServiceAction",
+                         (GBoxedCopyFunc) gupnp_service_action_ref,
+                         (GBoxedFreeFunc) gupnp_service_action_unref);
 
         return our_type;
 }
@@ -251,12 +289,7 @@ finalize_action (GUPnPServiceAction *action)
         soup_server_unpause_message (server, action->msg);
 
         /* Cleanup */
-        g_free (action->name);
-        g_object_unref (action->msg);
-        g_object_unref (action->context);
-        xmlFreeDoc (action->doc);
-
-        g_slice_free (GUPnPServiceAction, action);
+        gupnp_service_action_unref (action);
 }
 
 /**
@@ -787,9 +820,10 @@ control_server_handler (SoupServer        *server,
         /* Create action structure */
         action = g_slice_new (GUPnPServiceAction);
 
+        action->ref_count    = 1;
         action->name         = g_strdup (action_name);
         action->msg          = g_object_ref (msg);
-        action->doc          = doc;
+        action->doc          = gupnp_xml_doc_new(doc);
         action->node         = action_node;
         action->response_str = new_action_response_str (action_name,
                                                         soap_action);
