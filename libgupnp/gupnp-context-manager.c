@@ -224,6 +224,10 @@ gupnp_context_manager_dispose (GObject *object)
         manager = GUPNP_CONTEXT_MANAGER (object);
 
         if (manager->priv->impl != NULL) {
+                g_signal_handlers_disconnect_by_func (manager->priv->impl,
+                    on_context_available, manager);
+                g_signal_handlers_disconnect_by_func (manager->priv->impl,
+                    on_context_unavailable, manager);
                 g_object_unref (manager->priv->impl);
                 manager->priv->impl = NULL;
         }
