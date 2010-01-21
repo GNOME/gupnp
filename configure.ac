@@ -72,6 +72,8 @@ if test "x$enable_debug" = "xyes"; then
         CFLAGS="$CFLAGS -g -Wall -Werror"
 fi
 
+GOBJECT_INTROSPECTION_CHECK([0.6.4])
+
 # Gtk-doc
 GTK_DOC_CHECK([1.0])
 
