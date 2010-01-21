@@ -93,6 +93,43 @@ EXTRA_DIST = gupnp-marshal.list 	   \
 	     gupnp-unix-context-manager.c  \
 	     gupnp-unix-context-manager.h
 
-CLEANFILES = $(BUILT_SOURCES)
+
+if HAVE_INTROSPECTION
+
+GUPnP-1.0.gir: libgupnp-1.0.la $(INTROSPECTION_SCANNER)
+	$(AM_V_GEN) \
+	$(INTROSPECTION_SCANNER) -v \
+		--namespace=GUPnP --nsversion=1.0 \
+		--include=libxml2-2.0 \
+		--include=GObject-2.0 \
+		--include=Soup-2.4 \
+		--include=GSSDP-1.0 \
+		--library=$< \
+		--libtool="$(top_builddir)/libtool" \
+		--pkg libxml-2.0 \
+		--pkg gobject-2.0 \
+		--pkg gssdp-1.0 \
+		--pkg libsoup-2.4 \
+		--output $@ \
+		-I$(top_srcdir) \
+		$(libgupnpinc_HEADERS) \
+		$(libgupnp_1_0_la_SOURCES)
+
+girdir = $(datadir)/gir-1.0
+gir_DATA = GUPnP-1.0.gir
+
+typelibdir = $(libdir)/girepository-1.0/
+typelib_DATA = $(gir_DATA:.gir=.typelib)
+
+%.typelib: %.gir $(INTROSPECTION_COMPILER)
+	$(AM_V_GEN) \
+	$(INTROSPECTION_COMPILER) \
+		--includedir=$(srcdir) \
+		--includedir=. \
+		$(INTROSPECTION_COMPILER_OPTS) $< -o $(@F)
+
+endif
+
+CLEANFILES = $(BUILT_SOURCES) $(gir_DATA) $(typelib_DATA)
 DISTCLEANFILES = $(BUILT_SOURCES)
 MAINTAINERCLEANFILES = Makefile.in $(BUILT_SOURCES)
