@@ -713,10 +713,9 @@ host_path_handler (SoupServer        *server,
                         goto DONE;
                 }
 
-                if (have_range && (length < 0                   ||
-                                   offset < 0                   ||
-                                   length > st.st_size - offset ||
-                                   offset >= st.st_size)) {
+                if (have_range && (length > st.st_size - offset ||
+                                   st.st_size < 0 ||
+                                   (off_t) offset >= st.st_size)) {
                         soup_message_set_status
                                 (msg,
                                  SOUP_STATUS_REQUESTED_RANGE_NOT_SATISFIABLE);
@@ -791,7 +790,7 @@ host_path_handler (SoupServer        *server,
         }
 }
 
-HostPathData *
+static HostPathData *
 host_path_data_new (const char *local_path,
                     const char *server_path)
 {
@@ -805,7 +804,7 @@ host_path_data_new (const char *local_path,
         return path_data;
 }
 
-void
+static void
 host_path_data_free (HostPathData *path_data)
 {
         g_free (path_data->local_path);

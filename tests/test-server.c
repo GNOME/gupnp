@@ -34,53 +34,6 @@ interrupt_signal_handler (int signum)
         g_main_loop_quit (main_loop);
 }
 
-void
-browse_cb (GUPnPService       *service,
-           GUPnPServiceAction *action,
-           gpointer            user_data)
-{
-        GList *locales;
-        char *filter;
-
-        g_print ("The \"Browse\" action was invoked.\n");
-
-        g_print ("\tLocales: ");
-        locales = gupnp_service_action_get_locales (action);
-        while (locales) {
-                g_print ("%s", (char *) locales->data);
-                g_free (locales->data);
-                locales = g_list_delete_link (locales, locales);
-                if (locales)
-                        g_print (", ");
-        }
-        g_print ("\n");
-
-        gupnp_service_action_get (action,
-                                  "Filter", G_TYPE_STRING, &filter,
-                                  NULL);
-        g_print ("\tFilter:  %s\n", filter);
-        g_free (filter);
-
-        gupnp_service_action_set (action,
-                                  "Result", G_TYPE_STRING, "Hello world",
-                                  "NumberReturned", G_TYPE_INT, 0,
-                                  "TotalMatches", G_TYPE_INT, 0,
-                                  "UpdateID", G_TYPE_INT, 31415927,
-                                  NULL);
-
-        gupnp_service_action_return (action);
-}
-
-void
-query_system_update_id_cb (GUPnPService *service,
-                           const char   *variable_name,
-                           GValue       *value,
-                           gpointer      user_data)
-{
-        g_value_init (value, G_TYPE_UINT);
-        g_value_set_uint (value, 31415927);
-}
-
 static void
 notify_failed_cb (GUPnPService *service,
                   const GList  *callback_urls,

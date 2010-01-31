@@ -31,6 +31,7 @@
 #include <string.h>
 
 #include "gupnp-types.h"
+#include "gupnp-types-private.h"
 
 static void
 gupnp_string_type_to_string (const GValue *src_value,

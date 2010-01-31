@@ -71,7 +71,7 @@ struct _GUPnPUnixContextManagerPrivate {
 #endif /* MAEMO */
 };
 
-void
+static void
 create_and_signal_context (GUPnPUnixContextManager *manager,
                            const char              *interface)
 {

@@ -57,7 +57,7 @@ service_proxy_available_cb (GUPnPControlPoint *cp,
                             GUPnPServiceProxy *proxy)
 {
         const char *location;
-        char *result = NULL;;
+        char *result = NULL;
         guint count, total;
         GError *error = NULL;
 
@@ -72,7 +72,7 @@ service_proxy_available_cb (GUPnPControlPoint *cp,
                                         "SystemUpdateID",
                                         G_TYPE_UINT,
                                         notify_cb,
-                                        "Test");
+                                        (gpointer) "Test");
 
         /* Subscribe */
         g_signal_connect (proxy,

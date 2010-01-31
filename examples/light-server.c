@@ -15,6 +15,20 @@
 
 static gboolean status;
 
+G_MODULE_EXPORT void set_target_cb (GUPnPService *service,
+                                    GUPnPServiceAction *action,
+                                    gpointer user_data);
+G_MODULE_EXPORT void get_target_cb (GUPnPService *service,
+                                    GUPnPServiceAction *action,
+                                    gpointer user_data);
+G_MODULE_EXPORT void get_status_cb (GUPnPService *service,
+                                    GUPnPServiceAction *action,
+                                    gpointer user_data);
+G_MODULE_EXPORT void query_target_cb (GUPnPService *service, char *variable,
+                                      GValue *value, gpointer user_data);
+G_MODULE_EXPORT void query_status_cb (GUPnPService *service, char *variable,
+                                      GValue *value, gpointer user_data);
+
 /*
  * Action handlers
  */

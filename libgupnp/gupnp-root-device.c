@@ -277,7 +277,7 @@ gupnp_root_device_constructor (GType                  type,
         GUPnPContext *context;
         const char *description_path, *description_dir, *udn;
         char *desc_path, *location, *usn, *relative_location;
-        int i;
+        unsigned int i;
         GUPnPXMLDoc *description_doc;
         xmlNode *root_element, *element;
         SoupURI *url_base;

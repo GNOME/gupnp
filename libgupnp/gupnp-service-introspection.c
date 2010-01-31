@@ -270,9 +270,9 @@ set_string_value_limits (xmlNodePtr   limit_node,
 }
 
 static void
-set_value_limit_by_name (xmlNodePtr limit_node,
-                         GValue    *limit,
-                         char      *limit_name)
+set_value_limit_by_name (xmlNodePtr  limit_node,
+                         GValue     *limit,
+                         const char *limit_name)
 {
         xmlChar *limit_str;
 

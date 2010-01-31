@@ -1159,7 +1159,7 @@ subscription_server_handler (SoupServer        *server,
         }
 }
 
-void
+static void
 got_introspection (GUPnPServiceInfo *info,
     GUPnPServiceIntrospection *introspection,
     const GError *error,
@@ -1301,9 +1301,11 @@ gupnp_service_set_property (GObject      *object,
         service = GUPNP_SERVICE (object);
 
         switch (property_id) {
-        case PROP_ROOT_DEVICE:
+        case PROP_ROOT_DEVICE: {
+                GUPnPRootDevice **dev;
+
                 service->priv->root_device = g_value_get_object (value);
-                GUPnPRootDevice **dev = &(service->priv->root_device);
+                dev = &(service->priv->root_device);
 
                 g_object_add_weak_pointer
                         (G_OBJECT (service->priv->root_device),
@@ -1318,6 +1320,7 @@ gupnp_service_set_property (GObject      *object,
                                                  0);
 
                 break;
+        }
         default:
                 G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
                 break;
@@ -1615,7 +1618,7 @@ notify_got_response (SoupSession *session,
                 /* Other failure: Try next callback or signal failure. */
                 if (data->callbacks->next) {
                         SoupURI *uri;
-                        SoupSession *session;
+                        SoupSession *service_session;
 
                         /* Call next callback */
                         data->callbacks = data->callbacks->next;
@@ -1628,9 +1631,9 @@ notify_got_response (SoupSession *session,
                         data->pending_messages = 
                                 g_list_prepend (data->pending_messages, msg);
 
-                        session = gupnp_service_get_session (data->service);
+                        service_session = gupnp_service_get_session (data->service);
 
-                        soup_session_requeue_message (session, msg);
+                        soup_session_requeue_message (service_session, msg);
                 } else {
                         /* Emit 'notify-failed' signal */
                         GError *error;
@@ -1785,13 +1788,13 @@ gupnp_service_notify_value (GUPnPService *service,
                             const char   *variable,
                             const GValue *value)
 {
+        NotifyData *data;
+
         g_return_if_fail (GUPNP_IS_SERVICE (service));
         g_return_if_fail (variable != NULL);
         g_return_if_fail (G_IS_VALUE (value));
 
         /* Queue */
-        NotifyData *data;
-
         data = g_slice_new0 (NotifyData);
 
         data->variable = g_strdup (variable);
@@ -1845,7 +1848,7 @@ static char *
 strip_camel_case (char *camel_str)
 {
         char *stripped;
-        int i, j;
+        unsigned int i, j;
 
         /* Keep enough space for underscores */
         stripped = g_malloc (strlen (camel_str) * 2);
