@@ -371,12 +371,19 @@ gupnp_context_get_server (GUPnPContext *context)
         g_return_val_if_fail (GUPNP_IS_CONTEXT (context), NULL);
 
         if (context->priv->server == NULL) {
+                const char *iface =  gssdp_client_get_interface (GSSDP_CLIENT (context));
+                SoupAddress *addr = soup_address_new (iface, context->priv->port);
+                soup_address_resolve_sync (addr, NULL);
+
                 context->priv->server = soup_server_new
                         (SOUP_SERVER_PORT,
                          context->priv->port,
                          SOUP_SERVER_ASYNC_CONTEXT,
                          gssdp_client_get_main_context (GSSDP_CLIENT (context)),
+                         SOUP_SERVER_INTERFACE,
+                         addr,
                          NULL);
+                g_object_unref (addr);
 
                 soup_server_add_handler (context->priv->server, NULL,
                                          default_server_handler, context,
