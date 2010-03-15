@@ -437,7 +437,7 @@ init_network_manager (GUPnPNetworkManager *manager)
         dbus_error_init (&derror);
         priv->dbus_connection = dbus_bus_get_private (DBUS_BUS_SYSTEM, &derror);
         if (priv->dbus_connection == NULL) {
-                g_warning ("Failed to connect to System Bus: %s",
+                g_message ("Failed to connect to System Bus: %s",
                            derror.message);
                 return;
         }
@@ -584,7 +584,7 @@ gupnp_network_manager_is_available (GMainContext *main_context)
         dbus_error_init (&derror);
         connection = dbus_bus_get_private (DBUS_BUS_SYSTEM, &derror);
         if (connection == NULL) {
-                g_warning ("Failed to connect to System Bus: %s",
+                g_message ("Failed to connect to System Bus: %s",
                            derror.message);
                 return FALSE;
         }
