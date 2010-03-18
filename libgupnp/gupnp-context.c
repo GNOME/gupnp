@@ -371,8 +371,8 @@ gupnp_context_get_server (GUPnPContext *context)
         g_return_val_if_fail (GUPNP_IS_CONTEXT (context), NULL);
 
         if (context->priv->server == NULL) {
-                const char *iface =  gssdp_client_get_interface (GSSDP_CLIENT (context));
-                SoupAddress *addr = soup_address_new (iface, context->priv->port);
+                const char *ip =  gssdp_client_get_host_ip (GSSDP_CLIENT (context));
+                SoupAddress *addr = soup_address_new (ip, context->priv->port);
                 soup_address_resolve_sync (addr, NULL);
 
                 context->priv->server = soup_server_new
