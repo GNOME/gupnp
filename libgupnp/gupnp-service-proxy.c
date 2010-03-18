@@ -1762,6 +1762,13 @@ subscribe_got_response (SoupSession       *session,
                                  msg->reason_phrase);
 
 hdr_err:
+                /* Remove listener */
+                context = gupnp_service_info_get_context
+                                        (GUPNP_SERVICE_INFO (proxy));
+
+                server = gupnp_context_get_server (context);
+                soup_server_remove_handler (server, proxy->priv->path);
+
                 proxy->priv->subscribed = FALSE;
 
                 g_object_notify (G_OBJECT (proxy), "subscribed");
@@ -1773,13 +1780,6 @@ hdr_err:
                                error);
 
                 g_error_free (error);
-
-                /* Remove listener */
-                context = gupnp_service_info_get_context
-                                        (GUPNP_SERVICE_INFO (proxy));
-
-                server = gupnp_context_get_server (context);
-                soup_server_remove_handler (server, proxy->priv->path);
         }
 }
 
