@@ -283,31 +283,6 @@ http_request_get_accept_locales (SoupMessage *message)
         return locales;
 }
 
-static char *user_agent = NULL;
-
-static void
-free_user_agent (void)
-{
-        g_free (user_agent);
-}
-
-/* Sets the User-Agent header on @message */
-void
-http_request_set_user_agent (SoupMessage *message)
-{
-        if (G_UNLIKELY (user_agent == NULL)) {
-                user_agent = g_strdup_printf
-                                ("%s GUPnP/" VERSION " DLNADOC/1.50",
-                                 g_get_application_name () ?: "");
-
-                g_atexit (free_user_agent);
-        }
-
-        soup_message_headers_append (message->request_headers,
-				     "User-Agent",
-                                     user_agent);
-}
-
 /* Set Accept-Language header according to @locale. */
 void
 http_response_set_content_locale (SoupMessage *msg,

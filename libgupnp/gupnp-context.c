@@ -120,6 +120,7 @@ gupnp_context_constructor (GType                  type,
 {
 	GObject *object;
 	GUPnPContext *context;
+        char *user_agent;
 
 	object = G_OBJECT_CLASS (gupnp_context_parent_class)->constructor
                 (type, n_props, props);
@@ -131,6 +132,14 @@ gupnp_context_constructor (GType                  type,
                  SOUP_SESSION_ASYNC_CONTEXT,
                  gssdp_client_get_main_context (GSSDP_CLIENT (context)),
                  NULL);
+
+        user_agent = g_strdup_printf ("%s GUPnP/" VERSION " DLNADOC/1.50",
+                                      g_get_application_name ()? : "");
+        g_object_set (context->priv->session,
+                      SOUP_SESSION_USER_AGENT,
+                      user_agent,
+                      NULL);
+        g_free (user_agent);
 
 	if (g_getenv ("GUPNP_DEBUG")) {
 		SoupLogger *logger;

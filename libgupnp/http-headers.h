@@ -39,9 +39,6 @@ G_GNUC_INTERNAL GList *
 http_request_get_accept_locales  (SoupMessage  *message);
 
 G_GNUC_INTERNAL void
-http_request_set_user_agent      (SoupMessage  *message);
-
-G_GNUC_INTERNAL void
 http_response_set_content_locale (SoupMessage  *message,
                                   const char   *locale);
 
