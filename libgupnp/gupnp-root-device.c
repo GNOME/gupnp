@@ -416,9 +416,7 @@ gupnp_root_device_constructor (GType                  type,
                                        NULL);
 
         /* Host the description file and dir */
-        gupnp_context_host_path (context,
-                                 desc_path,
-                                 relative_location);
+        gupnp_context_host_path (context, desc_path, relative_location);
         gupnp_context_host_path (context, device->priv->description_dir, "");
 
         /* Generate full location */
