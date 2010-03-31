@@ -110,6 +110,12 @@ gupnp_context_host_path                (GUPnPContext *context,
                                         const char   *local_path,
                                         const char   *server_path);
 
+gboolean
+gupnp_context_host_path_for_agent      (GUPnPContext *context,
+                                        const char   *local_path,
+                                        const char   *server_path,
+                                        GRegex       *user_agent);
+
 void
 gupnp_context_unhost_path              (GUPnPContext *context,
                                         const char   *server_path);

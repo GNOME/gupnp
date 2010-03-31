@@ -169,6 +169,7 @@ gupnp_context_get_session
 gupnp_context_set_subscription_timeout
 gupnp_context_get_subscription_timeout
 gupnp_context_host_path
+gupnp_context_host_path_for_agent
 gupnp_context_unhost_path
 <SUBSECTION Standard>
 GUPnPContextClass
