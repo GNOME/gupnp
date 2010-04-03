@@ -755,13 +755,13 @@ gupnp_service_introspection_new (xmlDoc *scpd)
 }
 
 /**
- * gupnp_service_introspection_list_action_names
+ * gupnp_service_introspection_list_action_names:
  * @introspection: A #GUPnPServiceIntrospection
  *
  * Returns a GList of names of all the actions in this service.
  *
- * Return value: A GList of names of all the actions or %NULL. Do not modify
- * or free it or its contents.
+ * Return value: (transfer none) (element-type utf8) : A GList of names of all
+ * the actions or %NULL. Do not modify or free it or its contents.
  **/
 const GList *
 gupnp_service_introspection_list_action_names
@@ -780,15 +780,15 @@ gupnp_service_introspection_list_action_names
 }
 
 /**
- * gupnp_service_introspection_list_actions
+ * gupnp_service_introspection_list_actions:
  * @introspection: A #GUPnPServiceIntrospection
  *
  * Returns a #GList of all the actions (of type #GUPnPServiceActionInfo) in
  * this service.
  *
- * Return value: A #GList of all the actions or %NULL. Do not modify or free it
- * or its contents.
- *
+ * Return value: (element-type GUPnP.ServiceActionInfo*) (transfer none): A
+ * #GList of all the actions or %NULL. Do not modify or free it or its
+ * contents.
  **/
 const GList *
 gupnp_service_introspection_list_actions
@@ -798,14 +798,15 @@ gupnp_service_introspection_list_actions
 }
 
 /**
- * gupnp_service_introspection_list_state_variables
+ * gupnp_service_introspection_list_state_variables:
  * @introspection: A #GUPnPServiceIntrospection
  *
  * Returns a GList of all the state variables (of type
  * #GUPnPServiceStateVariableInfo) in this service.
  *
- * Return value: A #GList of all the state variables or %NULL. Do not modify or
- * free it or its contents.
+ * Return value: (element-type GUPnP.ServiceStateVariableInfo) (transfer none):
+ * A #GList of all the state variables or %NULL. Do not modify or free it or
+ * its contents.
  *
  **/
 const GList *
@@ -816,13 +817,13 @@ gupnp_service_introspection_list_state_variables
 }
 
 /**
- * gupnp_service_introspection_list_state_variable_names
+ * gupnp_service_introspection_list_state_variable_names:
  * @introspection: A #GUPnPServiceIntrospection
  *
  * Returns a #GList of names of all the state variables in this service.
  *
- * Return value: A #GList of names of all the state variables or %NULL. Do not
- * modify or free it or its contents.
+ * Return value: (element-type utf8) (transfer none): A #GList of names of all
+ * the state variables or %NULL. Do not modify or free it or its contents.
  **/
 const GList *
 gupnp_service_introspection_list_state_variable_names
@@ -884,13 +885,14 @@ action_search_func (GUPnPServiceActionInfo *action,
 }
 
 /**
- * gupnp_service_introspection_get_action
+ * gupnp_service_introspection_get_action:
  * @introspection: A #GUPnPServiceIntrospection
  * @action_name: The name of the action to retreive
  *
  * Returns the action by the name @action_name in this service.
  *
- * Return value: the action or %NULL. Do not modify or free it.
+ * Return value: (transfer none): the action or %NULL. Do not modify or free
+ * it.
  **/
 const GUPnPServiceActionInfo *
 gupnp_service_introspection_get_action

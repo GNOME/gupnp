@@ -464,13 +464,14 @@ gupnp_service_proxy_send_action_valist (GUPnPServiceProxy *proxy,
 }
 
 /**
- * gupnp_service_proxy_send_action_hash
+ * gupnp_service_proxy_send_action_hash:
  * @proxy: A #GUPnPServiceProxy
  * @action: An action
  * @error: The location where to store any error, or %NULL
- * @in_hash: A #GHashTable of in parameter name and #GValue pairs
- * @out_hash: A #GHashTable of out parameter name and initialized
- * #GValue pairs
+ * @in_hash: (element-type utf8 GValue) (transfer none): A #GHashTable of in
+ * parameter name and #GValue pairs
+ * @out_hash: (inout) (element-type utf8 GValue) (transfer full): A #GHashTable
+ * of out parameter name and initialized #GValue pairs
  *
  * See gupnp_service_proxy_send_action(); this version takes a pair of
  * #GHashTable<!-- -->s for runtime determined parameter lists.
@@ -537,8 +538,8 @@ gupnp_service_proxy_send_action_hash (GUPnPServiceProxy *proxy,
  * gupnp_service_proxy_end_action() to check for errors, to retrieve return
  * values, and to free the #GUPnPServiceProxyAction.
  *
- * Return value: A #GUPnPServiceProxyAction handle. This will
- * be freed when calling gupnp_service_proxy_cancel_action() or
+ * Return value: A #GUPnPServiceProxyAction handle. This will be freed when
+ * gupnp_service_proxy_cancel_action() or
  * gupnp_service_proxy_end_action_valist().
  **/
 GUPnPServiceProxyAction *
@@ -835,7 +836,7 @@ gupnp_service_proxy_begin_action_valist
  * See gupnp_service_proxy_begin_action(); this version takes a #GHashTable
  * for runtime generated parameter lists.
  *
- * Return value: A #GUPnPServiceProxyAction handle. This will
+ * Return value: (transfer none): A #GUPnPServiceProxyAction handle. This will
  * be freed when calling gupnp_service_proxy_cancel_action() or
  * gupnp_service_proxy_end_action_hash().
  **/
@@ -1139,14 +1140,15 @@ gupnp_service_proxy_end_action_valist (GUPnPServiceProxy       *proxy,
 }
 
 /**
- * gupnp_service_proxy_end_action_hash
+ * gupnp_service_proxy_end_action_hash:
  * @proxy: A #GUPnPServiceProxy
  * @action: A #GUPnPServiceProxyAction handle
  * @error: The location where to store any error, or %NULL
- * @hash: A #GHashTable of out parameter name and initialised #GValue pairs
+ * @hash: (element-type utf8 GValue) (inout) (transfer none): A #GHashTable of
+ * out parameter name and initialised #GValue pairs
  *
- * See gupnp_service_proxy_end_action(); this version takes a #GHashTable
- * for runtime generated parameter lists.
+ * See gupnp_service_proxy_end_action(); this version takes a #GHashTable for
+ * runtime generated parameter lists.
  *
  * Return value: %TRUE on success.
  **/

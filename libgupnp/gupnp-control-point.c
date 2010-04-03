@@ -1057,13 +1057,14 @@ gupnp_control_point_get_context (GUPnPControlPoint *control_point)
 }
 
 /**
- * gupnp_control_point_list_device_proxies
+ * gupnp_control_point_list_device_proxies:
  * @control_point: A #GUPnPControlPoint
  *
  * Get the #GList of discovered #GUPnPDeviceProxy objects. Do not free the list
  * nor its elements.
  *
- * Return value: a #GList of #GUPnPDeviceProxy objects.
+ * Return value: (element-type GUPnP.DeviceProxy) (transfer none):  a #GList of
+ * #GUPnPDeviceProxy objects.
  **/
 const GList *
 gupnp_control_point_list_device_proxies (GUPnPControlPoint *control_point)
@@ -1074,13 +1075,14 @@ gupnp_control_point_list_device_proxies (GUPnPControlPoint *control_point)
 }
 
 /**
- * gupnp_control_point_list_service_proxies
+ * gupnp_control_point_list_service_proxies:
  * @control_point: A #GUPnPControlPoint
  *
- * Get the #GList of discovered #GUPnPServiceProxy objects. Do not free the list
- * nor its elements.
+ * Get the #GList of discovered #GUPnPServiceProxy objects. Do not free the
+ * list nor its elements.
  *
- * Return value: a #GList of #GUPnPServiceProxy objects.
+ * Return value: (element-type: GUPnP.ServiceProxy) (transfer none): a #GList
+ * of #GUPnPServiceProxy objects.
  **/
 const GList *
 gupnp_control_point_list_service_proxies (GUPnPControlPoint *control_point)

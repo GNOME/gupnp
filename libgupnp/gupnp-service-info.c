@@ -547,8 +547,8 @@ gupnp_service_info_get_event_subscription_url (GUPnPServiceInfo *info)
  * Warning: You  should use gupnp_service_info_get_introspection_async()
  * instead, this function re-enter the GMainloop before returning.
  *
- * Return value: A new #GUPnPServiceIntrospection for this service or %NULL.
- * Unref after use.
+ * Return value: (transfer full):  A new #GUPnPServiceIntrospection for this
+ * service or %NULL. Unref after use.
  **/
 GUPnPServiceIntrospection *
 gupnp_service_info_get_introspection (GUPnPServiceInfo *info,

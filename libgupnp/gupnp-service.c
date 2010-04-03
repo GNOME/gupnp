@@ -276,13 +276,14 @@ gupnp_service_action_get_name (GUPnPServiceAction *action)
 }
 
 /**
- * gupnp_service_action_get_locales
+ * gupnp_service_action_get_locales:
  * @action: A #GUPnPServiceAction
  *
  * Get an ordered (preferred first) #GList of locales preferred by
  * the client. Free list and elements after use.
  *
- * Return value: A #GList of #char* locale names.
+ * Return value: (element-type utf8) (transfer full): A #GList of #char*
+ * locale names.
  **/
 GList *
 gupnp_service_action_get_locales (GUPnPServiceAction *action)
@@ -596,7 +597,8 @@ gupnp_service_action_return_error (GUPnPServiceAction *action,
  * Get the #SoupMessage associated with @action. Mainly intended for
  * applications to be able to read HTTP headers received from clients.
  *
- * Return value: #SoupMessage associated with @action. Unref after using it.
+ * Return value: (transfer full): #SoupMessage associated with @action. Unref
+ * after using it.
  **/
 SoupMessage *
 gupnp_service_action_get_message (GUPnPServiceAction *action)
