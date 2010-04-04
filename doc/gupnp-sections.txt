@@ -110,6 +110,7 @@ gupnp_service_action_get_locales
 gupnp_service_action_get
 gupnp_service_action_get_valist
 gupnp_service_action_get_value
+gupnp_service_action_get_gvalue
 gupnp_service_action_set
 gupnp_service_action_set_valist
 gupnp_service_action_set_value

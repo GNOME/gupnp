@@ -122,6 +122,11 @@ gupnp_service_action_get_value    (GUPnPServiceAction *action,
                                    const char         *argument,
                                    GValue             *value);
 
+GValue *
+gupnp_service_action_get_gvalue   (GUPnPServiceAction *action,
+                                   const char         *argument,
+                                   GType               type);
+
 void
 gupnp_service_action_set          (GUPnPServiceAction *action,
                                    ...) G_GNUC_NULL_TERMINATED;
