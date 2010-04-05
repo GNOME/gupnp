@@ -524,6 +524,78 @@ gupnp_service_proxy_send_action_hash (GUPnPServiceProxy *proxy,
 }
 
 /**
+ * gupnp_service_proxy_send_action_list:
+ * @proxy: (transfer none) : A #GUPnPServiceProxy
+ * @action: An action
+ * @error: The location where to store any error, or %NULL
+ * @in_names: (element-type utf8) (transfer none): #GList of 'in' parameter
+ * names (as strings)
+ * @in_values: (element-type GValue) (transfer none): #GList of values (as
+ * #GValue) that line up with @in_names
+ * @out_names: (element-type utf8) (transfer none): #GList of 'out' parameter
+ * names (as strings)
+ * @out_types: (element-type GType) (transfer none): #GList of types (as #GType)
+ * that line up with @out_names
+ * @out_values: (element-type GValue) (transfer full) (out): #GList of values
+ * (as #GValue) that line up with @out_names and @out_types.
+ *
+ * The synchronous variant of #gupnp_service_proxy_begin_action_list and
+ * #gupnp_service_proxy_end_action_list.
+ *
+ * Return value: %TRUE if sending the action was succesful.
+ **/
+gboolean
+gupnp_service_proxy_send_action_list (GUPnPServiceProxy *proxy,
+                                      const char        *action,
+                                      GError           **error,
+                                      GList             *in_names,
+                                      GList             *in_values,
+                                      GList             *out_names,
+                                      GList             *out_types,
+                                      GList            **out_values)
+{
+        GUPnPContext *context;
+        GMainContext *main_context;
+        GMainLoop *main_loop;
+        GUPnPServiceProxyAction *handle;
+
+        g_return_val_if_fail (GUPNP_IS_SERVICE_PROXY (proxy), FALSE);
+        g_return_val_if_fail (action, FALSE);
+
+        context = gupnp_service_info_get_context (GUPNP_SERVICE_INFO (proxy));
+        main_context = gssdp_client_get_main_context (GSSDP_CLIENT (context));
+        main_loop = g_main_loop_new (main_context, TRUE);
+
+        handle = gupnp_service_proxy_begin_action_list (proxy,
+                                                        action,
+                                                        in_names,
+                                                        in_values,
+                                                        stop_main_loop,
+                                                        main_loop);
+        if (!handle) {
+                g_main_loop_unref (main_loop);
+
+                return FALSE;
+        }
+
+        /* Loop till we get a reply (or time out) */
+        if (g_main_loop_is_running (main_loop))
+                g_main_loop_run (main_loop);
+
+        g_main_loop_unref (main_loop);
+
+        if (!gupnp_service_proxy_end_action_list (proxy,
+                                                  handle,
+                                                  error,
+                                                  out_names,
+                                                  out_types,
+                                                  out_values))
+                return FALSE;
+
+        return TRUE;
+}
+
+/**
  * gupnp_service_proxy_begin_action
  * @proxy: A #GUPnPServiceProxy
  * @action: An action
@@ -820,6 +892,73 @@ gupnp_service_proxy_begin_action_valist
 
         /* Save the current position in the va_list for send_action_valist() */
         G_VA_COPY (ret->var_args, var_args);
+
+        return ret;
+}
+
+/**
+ * gupnp_service_proxy_begin_action_list:
+ * @proxy: (transfer none): A #GUPnPServiceProxy
+ * @action: An action
+ * @in_names: (element-type utf8) (transfer none): #GList of 'in' parameter
+ * names (as strings)
+ * @in_values: (element-type GValue) (transfer none): #GList of values (as
+ * #GValue) that line up with @in_names
+ * @callback: The callback to call when sending the action has succeeded or
+ * failed
+ * @user_data: User data for @callback
+ *
+ * A variant of #gupnp_service_proxy_begin_action that takes lists of
+ * in-parameter names, types and values.
+ *
+ * Return value: (transfer none): A #GUPnPServiceProxyAction handle. This will
+ * be freed when calling #gupnp_service_proxy_cancel_action or
+ * #gupnp_service_proxy_end_action_list.
+ **/
+GUPnPServiceProxyAction *
+gupnp_service_proxy_begin_action_list
+                                   (GUPnPServiceProxy               *proxy,
+                                    const char                      *action,
+                                    GList                           *in_names,
+                                    GList                           *in_values,
+                                    GUPnPServiceProxyActionCallback  callback,
+                                    gpointer                         user_data)
+{
+        GUPnPServiceProxyAction *ret;
+        GList *names;
+        GList *values;
+
+        g_return_val_if_fail (GUPNP_IS_SERVICE_PROXY (proxy), NULL);
+        g_return_val_if_fail (action, NULL);
+        g_return_val_if_fail (callback, NULL);
+        g_return_val_if_fail (g_list_length (in_names) ==
+                              g_list_length (in_values),
+                              NULL);
+
+        /* Create message */
+        ret = begin_action_msg (proxy, action, callback, user_data);
+
+        if (ret->error) {
+                callback (proxy, ret, user_data);
+
+                return ret;
+        }
+
+        /* Arguments */
+        values = in_values;
+
+        for (names = in_names; names; names=names->next) {
+                GValue* val = values->data;
+
+                write_in_parameter (names->data,
+                                    val,
+                                    ret->msg_str);
+
+                values = values->next;
+        }
+
+        /* Finish and send off */
+        finish_action_msg (ret, action);
 
         return ret;
 }
@@ -1130,6 +1269,89 @@ gupnp_service_proxy_end_action_valist (GUPnPServiceProxy       *proxy,
 
                 arg_name = va_arg (var_args, const char *);
         }
+
+        /* Cleanup */
+        gupnp_service_proxy_action_free (action);
+
+        xmlFreeDoc (response);
+
+        return TRUE;
+}
+
+/**
+ * gupnp_service_proxy_end_action_list:
+ * @proxy: A #GUPnPServiceProxy
+ * @action: A #GUPnPServiceProxyAction handle
+ * @error: The location where to store any error, or %NULL
+ * @out_names: (element-type utf8) (transfer none): #GList of 'out' parameter
+ * names (as strings)
+ * @out_types: (element-type GType) (transfer none): #GList of types (as #GType)
+ * that line up with @out_names
+ * @out_values: (element-type GValue) (transfer full) (out): #GList of values
+ * (as #GValue) that line up with @out_names and @out_types.
+ *
+ * A variant of #gupnp_service_proxy_end_action that takes lists of
+ * out-parameter names, types and place-holders for values. The returned list
+ * in @out_values must be freed using #g_list_free and each element in it using
+ * #g_value_unset and #g_slice_free.
+ *
+ * Return value : %TRUE on success.
+ **/
+gboolean
+gupnp_service_proxy_end_action_list (GUPnPServiceProxy       *proxy,
+                                     GUPnPServiceProxyAction *action,
+                                     GError                 **error,
+                                     GList                   *out_names,
+                                     GList                   *out_types,
+                                     GList                  **out_values)
+{
+        xmlDoc *response;
+        xmlNode *params;
+        GList *names;
+        GList *types;
+        GList *out_values_list;
+
+        out_values_list = NULL;
+
+        g_return_val_if_fail (GUPNP_IS_SERVICE_PROXY (proxy), FALSE);
+        g_return_val_if_fail (action, FALSE);
+
+        /* Check for saved error from begin_action() */
+        if (action->error) {
+                if (error)
+                        *error = action->error;
+                else
+                        g_error_free (action->error);
+
+                gupnp_service_proxy_action_free (action);
+
+                return FALSE;
+        }
+
+        /* Check response for errors and do initial parsing */
+        response = check_action_response (proxy, action, &params, error);
+        if (response == NULL) {
+                gupnp_service_proxy_action_free (action);
+
+                return FALSE;
+        }
+
+        /* Read arguments */
+        types = out_types;
+        for (names = out_names; names; names=names->next) {
+                GValue *val;
+
+                val = g_slice_new0 (GValue);
+                g_value_init (val, (GType) types->data);
+
+                read_out_parameter (names->data, val, params);
+
+                out_values_list = g_list_append (out_values_list, val);
+
+                types = types->next;
+        }
+
+        *out_values = out_values_list;
 
         /* Cleanup */
         gupnp_service_proxy_action_free (action);

@@ -136,6 +136,18 @@ gupnp_service_proxy_send_action_hash
                                     GHashTable                     *in_hash,
                                     GHashTable                     *out_hash);
 
+
+gboolean
+gupnp_service_proxy_send_action_list (GUPnPServiceProxy *proxy,
+                                      const char        *action,
+                                      GError           **error,
+                                      GList             *in_names,
+                                      GList             *in_values,
+                                      GList             *out_names,
+                                      GList             *out_types,
+                                      GList            **out_values);
+
+
 GUPnPServiceProxyAction *
 gupnp_service_proxy_begin_action   (GUPnPServiceProxy              *proxy,
                                     const char                     *action,
@@ -150,6 +162,15 @@ gupnp_service_proxy_begin_action_valist
                                     GUPnPServiceProxyActionCallback callback,
                                     gpointer                        user_data,
                                     va_list                         var_args);
+
+GUPnPServiceProxyAction *
+gupnp_service_proxy_begin_action_list
+                                   (GUPnPServiceProxy              *proxy,
+                                    const char                     *action,
+                                    GList                          *in_names,
+                                    GList                          *in_values,
+                                    GUPnPServiceProxyActionCallback callback,
+                                    gpointer                        user_data);
 
 GUPnPServiceProxyAction *
 gupnp_service_proxy_begin_action_hash
@@ -171,6 +192,15 @@ gupnp_service_proxy_end_action_valist
                                     GUPnPServiceProxyAction        *action,
                                     GError                        **error,
                                     va_list                         var_args);
+
+gboolean
+gupnp_service_proxy_end_action_list
+                                  (GUPnPServiceProxy       *proxy,
+                                   GUPnPServiceProxyAction *action,
+                                   GError                  **error,
+                                   GList                   *out_names,
+                                   GList                   *out_types,
+                                   GList                  **out_values);
 
 gboolean
 gupnp_service_proxy_end_action_hash
