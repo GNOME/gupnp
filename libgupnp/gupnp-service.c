@@ -1321,7 +1321,7 @@ got_introspection (GUPnPServiceInfo *info,
         GUPnPService *service = user_data;
         const GList *state_variables, *l;
         GHashTableIter iter;
-        SubscriptionData *data;
+        gpointer data;
 
         if (introspection) {
                 state_variables =
@@ -1350,8 +1350,8 @@ got_introspection (GUPnPServiceInfo *info,
 
         g_hash_table_iter_init (&iter, service->priv->subscriptions);
 
-        while (g_hash_table_iter_next (&iter, NULL, (gpointer*) &data))
-                send_initial_state (data);
+        while (g_hash_table_iter_next (&iter, NULL, &data))
+                send_initial_state ((SubscriptionData *) data);
 
         g_object_unref (service);
 }
