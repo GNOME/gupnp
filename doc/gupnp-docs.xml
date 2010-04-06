@@ -108,6 +108,7 @@
   </part>
 
   <xi:include href="glossary.xml"/>
+  <xi:include href="xml/annotation-glossary.xml"/>
 
   <index/>
 
