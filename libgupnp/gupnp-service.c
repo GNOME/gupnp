@@ -1313,20 +1313,22 @@ subscription_server_handler (SoupServer        *server,
 }
 
 static void
-got_introspection (GUPnPServiceInfo *info,
-    GUPnPServiceIntrospection *introspection,
-    const GError *error,
-    gpointer user_data)
+got_introspection (GUPnPServiceInfo          *info,
+                   GUPnPServiceIntrospection *introspection,
+                   const GError              *error,
+                   gpointer                   user_data)
 {
         GUPnPService *service = user_data;
         const GList *state_variables, *l;
         GHashTableIter iter;
         gpointer data;
 
+        service = GUPNP_SERVICE (user_data);
+
         if (introspection) {
                 state_variables =
-                    gupnp_service_introspection_list_state_variables
-                    (introspection);
+                        gupnp_service_introspection_list_state_variables
+                                (introspection);
 
                 for (l = state_variables; l; l = l->next) {
                         GUPnPServiceStateVariableInfo *variable;
@@ -1337,16 +1339,15 @@ got_introspection (GUPnPServiceInfo *info,
                                 continue;
 
                         service->priv->state_variables =
-                            g_list_prepend (service->priv->state_variables,
-                                g_strdup (variable->name));
+                                g_list_prepend (service->priv->state_variables,
+                                                g_strdup (variable->name));
                 }
 
                 g_object_unref (introspection);
-        } else {
+        } else
                 g_warning ("Failed to get SCPD: %s\n"
-                    "The initial event message will not be sent.",
-                    error ? error->message : "No error");
-        }
+                           "The initial event message will not be sent.",
+                           error ? error->message : "No error");
 
         g_hash_table_iter_init (&iter, service->priv->subscriptions);
 
@@ -1381,9 +1382,9 @@ gupnp_service_constructor (GType                  type,
         info    = GUPNP_SERVICE_INFO (object);
 
         /* Get introspection and save state variable names */
-
-        gupnp_service_info_get_introspection_async (info, got_introspection,
-            object);
+        gupnp_service_info_get_introspection_async (info,
+                                                    got_introspection,
+                                                    object);
         g_object_ref (object);
 
         /* Get server */
