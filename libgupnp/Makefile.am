@@ -113,7 +113,21 @@ GUPnP-1.0.gir: libgupnp-1.0.la $(INTROSPECTION_SCANNER)
 		--output $@ \
 		-I$(top_srcdir) \
 		$(libgupnpinc_HEADERS) \
-		$(libgupnp_1_0_la_SOURCES)
+		gupnp-context.c \
+		gupnp-context-manager.c	\
+		gupnp-control-point.c \
+		gupnp-device.c \
+		gupnp-device-info.c \
+		gupnp-device-proxy.c \
+		gupnp-error.c \
+		gupnp-resource-factory.c \
+		gupnp-root-device.c \
+		gupnp-service.c	\
+		gupnp-service-info.c \
+		gupnp-service-proxy.c \
+		gupnp-service-introspection.c \
+		gupnp-xml-doc.c	\
+		gupnp-types.c
 
 girdir = $(datadir)/gir-1.0
 gir_DATA = GUPnP-1.0.gir
