@@ -1,3 +1,51 @@
+0.13.3
+======
+
+Changes since 0.13.2:
+
+- Include the Content-Type header in the HTTP messages. This satisfies DLNA
+  CTT test cases 7.2.5.9 and 7.2.29.1.
+- Use g_message instead of g_warning if we can't connect to DBus.
+- Make the HTTP server listen on the context's interface only.
+- Fix some potential crashes in GUPnPServiceProxy and GUPnPContextManager code.
+- Fix build issues in jhbuild environment.
+- Fix some gcc warnings.
+- Add new API to host path for specific user-agent(s).
+- Add gobject-introspection support:
+  - Provide gobject-introspection GIR and typelib.
+  - Add needed annotations to doc comments.
+  - Add GList variants of action-related functions to satisfy PyGI.
+- A few non-functional improvments.
+
+Dependency related changes:
+
+- gssdp >= 0.7.1
+
+Bugs fixed in this release:
+
+2054 - Xbox hacks
+1965 - gcc warning fixes
+2039 - GUPnP is hard to use with jhbuild
+1948 - Signal handler are not disconnected when ContextManager is disposed
+2030 - gupnp context listens on 0.0.0.0 instead of the context's ip
+1924 - Content-Type header must contain charset="utf-8" in all HTTP transactions
+2006 - Implement 3 new functions for language bindings (begin_action_list,
+       end_action_list, gupnp_service_action_get_value_type)
+1919 - Add GObject Introspection Annotations and Makefile
+1979 - g_warning make gupnp-igd test fails
+1906 - Tests failed with gupnp 0.13
+
+All contributors:
+
+Zeeshan Ali (Khattak) <zeeshanak@gnome.org>
+Zach Goldberg <zgold@corvette.(none)>
+Ross Burton <ross@linux.intel.com>
+Olivier Crête <olivier.crete@collabora.co.uk>
+Neil Roberts <neil@linux.intel.com>
+Sven Neumann <s.neumann@raumfeld.com>
+Jens Georg <mail@jensge.org>
+Yakup Akbay <yakbay@ubicom.com>
+
 0.13.2
 ======
 
