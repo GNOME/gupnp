@@ -112,22 +112,22 @@ GUPnP-1.0.gir: libgupnp-1.0.la $(INTROSPECTION_SCANNER)
 		--pkg libsoup-2.4 \
 		--output $@ \
 		-I$(top_srcdir) \
-		$(libgupnpinc_HEADERS) \
-		gupnp-context.c \
-		gupnp-context-manager.c	\
-		gupnp-control-point.c \
-		gupnp-device.c \
-		gupnp-device-info.c \
-		gupnp-device-proxy.c \
-		gupnp-error.c \
-		gupnp-resource-factory.c \
-		gupnp-root-device.c \
-		gupnp-service.c	\
-		gupnp-service-info.c \
-		gupnp-service-proxy.c \
-		gupnp-service-introspection.c \
-		gupnp-xml-doc.c	\
-		gupnp-types.c
+		$(addprefix $(top_srcdir)/libgupnp/, $(libgupnpinc_HEADERS)) \
+		$(top_srcdir)/libgupnp/gupnp-context.c \
+		$(top_srcdir)/libgupnp/gupnp-context-manager.c	\
+		$(top_srcdir)/libgupnp/gupnp-control-point.c \
+		$(top_srcdir)/libgupnp/gupnp-device.c \
+		$(top_srcdir)/libgupnp/gupnp-device-info.c \
+		$(top_srcdir)/libgupnp/gupnp-device-proxy.c \
+		$(top_srcdir)/libgupnp/gupnp-error.c \
+		$(top_srcdir)/libgupnp/gupnp-resource-factory.c \
+		$(top_srcdir)/libgupnp/gupnp-root-device.c \
+		$(top_srcdir)/libgupnp/gupnp-service.c	\
+		$(top_srcdir)/libgupnp/gupnp-service-info.c \
+		$(top_srcdir)/libgupnp/gupnp-service-proxy.c \
+		$(top_srcdir)/libgupnp/gupnp-service-introspection.c \
+		$(top_srcdir)/libgupnp/gupnp-xml-doc.c	\
+		$(top_srcdir)/libgupnp/gupnp-types.c
 
 girdir = $(datadir)/gir-1.0
 gir_DATA = GUPnP-1.0.gir
