@@ -65,7 +65,7 @@ gupnp_xml_doc_class_init (GUPnPXMLDocClass *klass)
 }
 
 /**
- * gupnp_xml_doc_new
+ * gupnp_xml_doc_new:
  * @xml_doc: Pointer to #xmlDoc to wrap under this object
  *
  * Create a new #GUPnPXMLDoc for @xml_doc.
@@ -87,7 +87,7 @@ gupnp_xml_doc_new (xmlDoc *xml_doc)
 }
 
 /**
- * gupnp_xml_doc_new_from_path
+ * gupnp_xml_doc_new_from_path:
  * @path: Path to xml document
  * @error: Location to put the error into
  *

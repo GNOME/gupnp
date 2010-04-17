@@ -78,7 +78,7 @@ construct_introspection_info (GUPnPServiceIntrospection *introspection,
                               xmlDoc                    *scpd);
 
 /**
- * gupnp_service_state_variable_info_free
+ * gupnp_service_state_variable_info_free:
  * @argument: A #GUPnPServiceStateVariableInfo
  *
  * Frees a #GUPnPServiceStateVariableInfo.
@@ -136,7 +136,7 @@ gupnp_service_introspection_set_property (GObject      *object,
 
 
 /**
- * gupnp_service_action_arg_info_free
+ * gupnp_service_action_arg_info_free:
  * @argument: A #GUPnPServiceActionArgInfo
  *
  * Frees a #GUPnPServiceActionArgInfo.
@@ -152,7 +152,7 @@ gupnp_service_action_arg_info_free (GUPnPServiceActionArgInfo *argument)
 }
 
 /**
- * gupnp_service_action_info_free
+ * gupnp_service_action_info_free:
  * @argument: A #GUPnPServiceActionInfo
  *
  * Frees a #GUPnPServiceActionInfo.
@@ -215,7 +215,7 @@ gupnp_service_introspection_class_init (GUPnPServiceIntrospectionClass *klass)
                                   sizeof (GUPnPServiceIntrospectionPrivate));
 
         /**
-         * GUPnPServiceIntrospection:scpd
+         * GUPnPServiceIntrospection:scpd:
          *
          * The scpd of the device description file.
          **/
@@ -726,7 +726,7 @@ collect_variable_names (gpointer data,
 }
 
 /**
- * gupnp_service_introspection_new
+ * gupnp_service_introspection_new:
  * @scpd: Pointer to the SCPD of the service to create a introspection for
  *
  * Create a new #GUPnPServiceIntrospection for the service created from the
@@ -849,7 +849,7 @@ state_variable_search_func (GUPnPServiceStateVariableInfo *variable,
 }
 
 /**
- * gupnp_service_introspection_get_state_variable
+ * gupnp_service_introspection_get_state_variable:
  * @introspection: A #GUPnPServiceIntrospection
  * @variable_name: The name of the variable to retreive
  *

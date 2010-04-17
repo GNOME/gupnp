@@ -478,7 +478,7 @@ gupnp_root_device_class_init (GUPnPRootDeviceClass *klass)
         g_type_class_add_private (klass, sizeof (GUPnPRootDevicePrivate));
 
         /**
-         * GUPnPRootDevice:description-doc
+         * GUPnPRootDevice:description-doc:
          *
          * Device description document. Constructor property.
          **/
@@ -496,7 +496,7 @@ gupnp_root_device_class_init (GUPnPRootDeviceClass *klass)
                                       G_PARAM_STATIC_BLURB));
 
         /**
-         * GUPnPRootDevice:description-path
+         * GUPnPRootDevice:description-path:
          *
          * The path to device description document. This could either be an
          * absolute path or path relative to GUPnPRootDevice:description-dir.
@@ -515,7 +515,7 @@ gupnp_root_device_class_init (GUPnPRootDeviceClass *klass)
                                       G_PARAM_STATIC_BLURB));
 
         /**
-         * GUPnPRootDevice:description-dir
+         * GUPnPRootDevice:description-dir:
          *
          * The path to directory where description documents are provided.
          **/
@@ -534,7 +534,7 @@ gupnp_root_device_class_init (GUPnPRootDeviceClass *klass)
                                       G_PARAM_STATIC_BLURB));
 
         /**
-         * GUPnPRootDevice:available
+         * GUPnPRootDevice:available:
          *
          * TRUE if this device is available.
          **/
@@ -580,7 +580,7 @@ gupnp_root_device_new (GUPnPContext *context,
 }
 
 /**
- * gupnp_root_device_new_full
+ * gupnp_root_device_new_full:
  * @context: A #GUPnPContext
  * @factory: A #GUPnPResourceFactory
  * @description_doc: Device description document, or %NULL
@@ -615,7 +615,7 @@ gupnp_root_device_new_full (GUPnPContext         *context,
 }
 
 /**
- * gupnp_root_device_set_available
+ * gupnp_root_device_set_available:
  * @root_device: A #GUPnPRootDevice
  * @available: %TRUE if @root_device should be available
  *
@@ -635,7 +635,7 @@ gupnp_root_device_set_available (GUPnPRootDevice *root_device,
 }
 
 /**
- * gupnp_root_device_get_available
+ * gupnp_root_device_get_available:
  * @root_device: A #GUPnPRootDevice
  *
  * Get whether or not @root_device is available (announcing its presence).
@@ -651,7 +651,7 @@ gupnp_root_device_get_available (GUPnPRootDevice *root_device)
 }
 
 /**
- * gupnp_root_device_get_relative_location
+ * gupnp_root_device_get_relative_location:
  * @root_device: A #GUPnPRootDevice
  *
  * Get the relative location of @root_device.
@@ -667,7 +667,7 @@ gupnp_root_device_get_relative_location (GUPnPRootDevice *root_device)
 }
 
 /**
- * gupnp_root_device_get_description_path
+ * gupnp_root_device_get_description_path:
  * @root_device: A #GUPnPRootDevice
  *
  * Get the path to the device description document of @root_device.
@@ -683,7 +683,7 @@ gupnp_root_device_get_description_path (GUPnPRootDevice *root_device)
 }
 
 /**
- * gupnp_root_device_get_description_dir
+ * gupnp_root_device_get_description_dir:
  * @root_device: A #GUPnPRootDevice
  *
  * Get the path to the directory containing description documents related to

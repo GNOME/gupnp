@@ -328,7 +328,7 @@ gupnp_service_proxy_class_init (GUPnPServiceProxyClass *klass)
         g_type_class_add_private (klass, sizeof (GUPnPServiceProxyPrivate));
 
         /**
-         * GUPnPServiceProxy:subscribed
+         * GUPnPServiceProxy:subscribed:
          *
          * Whether we are subscribed to this service.
          **/
@@ -346,7 +346,7 @@ gupnp_service_proxy_class_init (GUPnPServiceProxyClass *klass)
                                        G_PARAM_STATIC_BLURB));
 
         /**
-         * GUPnPServiceProxy::subscription-lost
+         * GUPnPServiceProxy::subscription-lost:
          * @proxy: The #GUPnPServiceProxy that received the signal
          * @error: A pointer to a #GError describing why the subscription has
          * been lost
@@ -369,7 +369,7 @@ gupnp_service_proxy_class_init (GUPnPServiceProxyClass *klass)
 }
 
 /**
- * gupnp_service_proxy_send_action
+ * gupnp_service_proxy_send_action:
  * @proxy: A #GUPnPServiceProxy
  * @action: An action
  * @error: The location where to store any error, or %NULL
@@ -411,7 +411,7 @@ stop_main_loop (GUPnPServiceProxy       *proxy,
 }
 
 /**
- * gupnp_service_proxy_send_action_valist
+ * gupnp_service_proxy_send_action_valist:
  * @proxy: A #GUPnPServiceProxy
  * @action: An action
  * @error: The location where to store any error, or %NULL
@@ -1012,7 +1012,7 @@ gupnp_service_proxy_begin_action_hash
 }
 
 /**
- * gupnp_service_proxy_end_action
+ * gupnp_service_proxy_end_action:
  * @proxy: A #GUPnPServiceProxy
  * @action: A #GUPnPServiceProxyAction handle
  * @error: The location where to store any error, or %NULL
@@ -1198,7 +1198,7 @@ read_out_parameter (const char *arg_name,
 }
 
 /**
- * gupnp_service_proxy_end_action_valist
+ * gupnp_service_proxy_end_action_valist:
  * @proxy: A #GUPnPServiceProxy
  * @action: A #GUPnPServiceProxyAction handle
  * @error: The location where to store any error, or %NULL
@@ -1418,7 +1418,7 @@ gupnp_service_proxy_end_action_hash (GUPnPServiceProxy       *proxy,
 }
 
 /**
- * gupnp_service_proxy_cancel_action
+ * gupnp_service_proxy_cancel_action:
  * @proxy: A #GUPnPServiceProxy
  * @action: A #GUPnPServiceProxyAction handle
  *
@@ -1515,7 +1515,7 @@ gupnp_service_proxy_add_notify (GUPnPServiceProxy              *proxy,
 }
 
 /**
- * gupnp_service_proxy_remove_notify
+ * gupnp_service_proxy_remove_notify:
  * @proxy: A #GUPnPServiceProxy
  * @variable: The variable to add notification for
  * @callback: The callback to call when @variable changes
@@ -2153,7 +2153,7 @@ unsubscribe (GUPnPServiceProxy *proxy)
 }
 
 /**
- * gupnp_service_proxy_set_subscribed
+ * gupnp_service_proxy_set_subscribed:
  * @proxy: A #GUPnPServiceProxy
  * @subscribed: %TRUE to subscribe to this service
  *
@@ -2184,7 +2184,7 @@ gupnp_service_proxy_set_subscribed (GUPnPServiceProxy *proxy,
 }
 
 /**
- * gupnp_service_proxy_get_subscribed
+ * gupnp_service_proxy_get_subscribed:
  * @proxy: A #GUPnPServiceProxy
  *
  * Returns if we are subscribed to this service.

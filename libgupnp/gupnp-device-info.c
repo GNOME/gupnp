@@ -216,7 +216,7 @@ gupnp_device_info_class_init (GUPnPDeviceInfoClass *klass)
         g_type_class_add_private (klass, sizeof (GUPnPDeviceInfoPrivate));
 
         /**
-         * GUPnPDeviceInfo:resource-factory
+         * GUPnPDeviceInfo:resource-factory:
          *
          * The resource factory to use. Set to NULL for default factory.
          **/
@@ -234,7 +234,7 @@ gupnp_device_info_class_init (GUPnPDeviceInfoClass *klass)
                                       G_PARAM_STATIC_BLURB));
 
         /**
-         * GUPnPDeviceInfo:context
+         * GUPnPDeviceInfo:context:
          *
          * The #GUPnPContext to use.
          **/
@@ -252,7 +252,7 @@ gupnp_device_info_class_init (GUPnPDeviceInfoClass *klass)
                                       G_PARAM_STATIC_BLURB));
 
         /**
-         * GUPnPDeviceInfo:location
+         * GUPnPDeviceInfo:location:
          *
          * The location of the device description file.
          **/
@@ -271,7 +271,7 @@ gupnp_device_info_class_init (GUPnPDeviceInfoClass *klass)
                                       G_PARAM_STATIC_BLURB));
 
         /**
-         * GUPnPDeviceInfo:udn
+         * GUPnPDeviceInfo:udn:
          *
          * The UDN of this device.
          **/
@@ -289,7 +289,7 @@ gupnp_device_info_class_init (GUPnPDeviceInfoClass *klass)
                                       G_PARAM_STATIC_BLURB));
 
         /**
-         * GUPnPDeviceInfo:device-type
+         * GUPnPDeviceInfo:device-type:
          *
          * The device type.
          **/
@@ -307,7 +307,7 @@ gupnp_device_info_class_init (GUPnPDeviceInfoClass *klass)
                                       G_PARAM_STATIC_BLURB));
 
         /**
-         * GUPnPDeviceInfo:url-base
+         * GUPnPDeviceInfo:url-base:
          *
          * The URL base (#SoupURI).
          **/
@@ -324,7 +324,7 @@ gupnp_device_info_class_init (GUPnPDeviceInfoClass *klass)
                                        G_PARAM_STATIC_BLURB));
 
         /**
-         * GUPnPDeviceInfo:document
+         * GUPnPDeviceInfo:document:
          *
          * Private property.
          *
@@ -345,7 +345,7 @@ gupnp_device_info_class_init (GUPnPDeviceInfoClass *klass)
                                       G_PARAM_STATIC_BLURB));
 
         /**
-         * GUPnPDeviceInfo:element
+         * GUPnPDeviceInfo:element:
          *
          * Private property.
          *
@@ -366,7 +366,7 @@ gupnp_device_info_class_init (GUPnPDeviceInfoClass *klass)
 }
 
 /**
- * gupnp_device_info_get_resource_factory
+ * gupnp_device_info_get_resource_factory:
  * @device_info: A #GUPnPDeviceInfo
  *
  * Get the #GUPnPResourceFactory used by the @device_info.
@@ -382,7 +382,7 @@ gupnp_device_info_get_resource_factory (GUPnPDeviceInfo *info)
 }
 
 /**
- * gupnp_device_info_get_context
+ * gupnp_device_info_get_context:
  * @info: A #GUPnPDeviceInfo
  *
  * Get the associated #GUPnPContext.
@@ -398,7 +398,7 @@ gupnp_device_info_get_context (GUPnPDeviceInfo *info)
 }
 
 /**
- * gupnp_device_info_get_location
+ * gupnp_device_info_get_location:
  * @info: A #GUPnPDeviceInfo
  *
  * Get the location of the device description file.
@@ -414,7 +414,7 @@ gupnp_device_info_get_location (GUPnPDeviceInfo *info)
 }
 
 /**
- * gupnp_device_info_get_url_base
+ * gupnp_device_info_get_url_base:
  * @info: A #GUPnPDeviceInfo
  *
  * Get the URL base of this device.
@@ -430,7 +430,7 @@ gupnp_device_info_get_url_base (GUPnPDeviceInfo *info)
 }
 
 /**
- * gupnp_device_info_get_udn
+ * gupnp_device_info_get_udn:
  * @info: A #GUPnPDeviceInfo
  *
  * Get the Unique Device Name of the device.
@@ -452,7 +452,7 @@ gupnp_device_info_get_udn (GUPnPDeviceInfo *info)
 }
 
 /**
- * gupnp_device_info_get_device_type
+ * gupnp_device_info_get_device_type:
  * @info: A #GUPnPDeviceInfo
  *
  * Get the UPnP device type.
@@ -474,7 +474,7 @@ gupnp_device_info_get_device_type (GUPnPDeviceInfo *info)
 }
 
 /**
- * gupnp_device_info_get_friendly_name
+ * gupnp_device_info_get_friendly_name:
  * @info: A #GUPnPDeviceInfo
  *
  * Get the friendly name of the device.
@@ -491,7 +491,7 @@ gupnp_device_info_get_friendly_name (GUPnPDeviceInfo *info)
 }
 
 /**
- * gupnp_device_info_get_manufacturer
+ * gupnp_device_info_get_manufacturer:
  * @info: A #GUPnPDeviceInfo
  *
  * Get the manufacturer of the device.
@@ -508,7 +508,7 @@ gupnp_device_info_get_manufacturer (GUPnPDeviceInfo *info)
 }
 
 /**
- * gupnp_device_info_get_manufacturer_url
+ * gupnp_device_info_get_manufacturer_url:
  * @info: A #GUPnPDeviceInfo
  *
  * Get a URL pointing to the manufacturer's website.
@@ -526,7 +526,7 @@ gupnp_device_info_get_manufacturer_url (GUPnPDeviceInfo *info)
 }
 
 /**
- * gupnp_device_info_get_model_description
+ * gupnp_device_info_get_model_description:
  * @info: A #GUPnPDeviceInfo
  *
  * Get the description of the device model.
@@ -543,7 +543,7 @@ gupnp_device_info_get_model_description (GUPnPDeviceInfo *info)
 }
 
 /**
- * gupnp_device_info_get_model_name
+ * gupnp_device_info_get_model_name:
  * @info: A #GUPnPDeviceInfo
  *
  * Get the model name of the device.
@@ -560,7 +560,7 @@ gupnp_device_info_get_model_name (GUPnPDeviceInfo *info)
 }
 
 /**
- * gupnp_device_info_get_model_number
+ * gupnp_device_info_get_model_number:
  * @info: A #GUPnPDeviceInfo
  *
  * Get the model number of the device.
@@ -577,7 +577,7 @@ gupnp_device_info_get_model_number (GUPnPDeviceInfo *info)
 }
 
 /**
- * gupnp_device_info_get_model_url
+ * gupnp_device_info_get_model_url:
  * @info: A #GUPnPDeviceInfo
  *
  * Get a URL pointing to the device model's website.
@@ -595,7 +595,7 @@ gupnp_device_info_get_model_url (GUPnPDeviceInfo *info)
 }
 
 /**
- * gupnp_device_info_get_serial_number
+ * gupnp_device_info_get_serial_number:
  * @info: A #GUPnPDeviceInfo
  *
  * Get the serial number of the device.
@@ -612,7 +612,7 @@ gupnp_device_info_get_serial_number (GUPnPDeviceInfo *info)
 }
 
 /**
- * gupnp_device_info_get_upc
+ * gupnp_device_info_get_upc:
  * @info: A #GUPnPDeviceInfo
  *
  * Get the Universal Product Code of the device.
@@ -629,7 +629,7 @@ gupnp_device_info_get_upc (GUPnPDeviceInfo *info)
 }
 
 /**
- * gupnp_device_info_get_presentation_url
+ * gupnp_device_info_get_presentation_url:
  * @info: A #GUPnPDeviceInfo
  *
  * Get a URL pointing to the device's presentation page, for web-based
@@ -930,7 +930,7 @@ resource_type_match (const char *query,
 }
 
 /**
- * gupnp_device_info_list_dlna_capabilities
+ * gupnp_device_info_list_dlna_capabilities:
  * @info: A #GUPnPDeviceInfo
  *
  * Get a #GList of strings that represent the device capabilities as announced 
@@ -984,7 +984,7 @@ gupnp_device_info_list_dlna_capabilities (GUPnPDeviceInfo *info)
 }
 
 /**
- * gupnp_device_info_get_description_value
+ * gupnp_device_info_get_description_value:
  * @info:    A #GUPnPDeviceInfo
  * @element: Name of the description element to retrieve
  *
@@ -1097,7 +1097,7 @@ gupnp_device_info_list_device_types (GUPnPDeviceInfo *info)
 }
 
 /**
- * gupnp_device_info_get_device
+ * gupnp_device_info_get_device:
  * @info: A #GUPnPDeviceInfo
  * @type: The type of the device to be retrieved.
  *
@@ -1251,7 +1251,7 @@ gupnp_device_info_list_service_types (GUPnPDeviceInfo *info)
 }
 
 /**
- * gupnp_device_info_get_service
+ * gupnp_device_info_get_service:
  * @info: A #GUPnPDeviceInfo
  * @type: The type of the service to be retrieved.
  *

@@ -293,7 +293,7 @@ finalize_action (GUPnPServiceAction *action)
 }
 
 /**
- * gupnp_service_action_get_name
+ * gupnp_service_action_get_name:
  * @action: A #GUPnPServiceAction
  *
  * Get the name of @action.
@@ -327,7 +327,7 @@ gupnp_service_action_get_locales (GUPnPServiceAction *action)
 }
 
 /**
- * gupnp_service_action_get
+ * gupnp_service_action_get:
  * @action: A #GUPnPServiceAction
  * @Varargs: tuples of argument name, argument type, and argument value
  * location, terminated with %NULL.
@@ -348,7 +348,7 @@ gupnp_service_action_get (GUPnPServiceAction *action,
 }
 
 /**
- * gupnp_service_action_get_valist
+ * gupnp_service_action_get_valist:
  * @action: A #GUPnPServiceAction
  * @var_args: va_list of tuples of argument name, argument type, and argument
  * value location.
@@ -500,7 +500,7 @@ gupnp_service_action_get_gvalue (GUPnPServiceAction *action,
 }
 
 /**
- * gupnp_service_action_set
+ * gupnp_service_action_set:
  * @action: A #GUPnPServiceAction
  * @Varargs: tuples of return value name, return value type, and
  * actual return value, terminated with %NULL.
@@ -521,7 +521,7 @@ gupnp_service_action_set (GUPnPServiceAction *action,
 }
 
 /**
- * gupnp_service_action_set_valist
+ * gupnp_service_action_set_valist:
  * @action: A #GUPnPServiceAction
  * @var_args: va_list of tuples of return value name, return value type, and
  * actual return value.
@@ -611,7 +611,7 @@ gupnp_service_action_set_values (GUPnPServiceAction *action,
 }
 
 /**
- * gupnp_service_action_set_value
+ * gupnp_service_action_set_value:
  * @action: A #GUPnPServiceAction
  * @argument: The name of the return value to retrieve
  * @value: The #GValue to store the return value
@@ -642,7 +642,7 @@ gupnp_service_action_set_value (GUPnPServiceAction *action,
 }
 
 /**
- * gupnp_service_action_return
+ * gupnp_service_action_return:
  * @action: A #GUPnPServiceAction
  *
  * Return succesfully.
@@ -658,7 +658,7 @@ gupnp_service_action_return (GUPnPServiceAction *action)
 }
 
 /**
- * gupnp_service_action_return_error
+ * gupnp_service_action_return_error:
  * @action: A #GUPnPServiceAction
  * @error_code: The error code
  * @error_description: The error description, or %NULL if @error_code is
@@ -741,7 +741,7 @@ gupnp_service_action_return_error (GUPnPServiceAction *action,
 }
 
 /**
- * gupnp_service_action_get_message
+ * gupnp_service_action_get_message:
  * @action: A #GUPnPServiceAction
  *
  * Get the #SoupMessage associated with @action. Mainly intended for
@@ -1590,7 +1590,7 @@ gupnp_service_class_init (GUPnPServiceClass *klass)
         g_type_class_add_private (klass, sizeof (GUPnPServicePrivate));
 
         /**
-         * GUPnPService:root-device
+         * GUPnPService:root-device:
          *
          * The containing #GUPnPRootDevice.
          **/
@@ -1608,7 +1608,7 @@ gupnp_service_class_init (GUPnPServiceClass *klass)
                                       G_PARAM_STATIC_BLURB));
 
         /**
-         * GUPnPService::action-invoked
+         * GUPnPService::action-invoked:
          * @service: The #GUPnPService that received the signal
          * @action: The invoked #GUPnPAction
          *
@@ -1630,7 +1630,7 @@ gupnp_service_class_init (GUPnPServiceClass *klass)
                               GUPNP_TYPE_SERVICE_ACTION);
 
         /**
-         * GUPnPService::query-variable
+         * GUPnPService::query-variable:
          * @service: The #GUPnPService that received the signal
          * @variable: The variable that is being queried
          * @value: The location of the #GValue of the variable
@@ -1654,7 +1654,7 @@ gupnp_service_class_init (GUPnPServiceClass *klass)
                                                 is an outward argument! */);
 
         /**
-         * GUPnPService::notify-failed
+         * GUPnPService::notify-failed:
          * @service: The #GUPnPService that received the signal
          * @callback_url: The callback URL
          * @reason: A pointer to a #GError describing why the notify failed
@@ -1677,7 +1677,7 @@ gupnp_service_class_init (GUPnPServiceClass *klass)
 }
 
 /**
- * gupnp_service_notify
+ * gupnp_service_notify:
  * @service: A #GUPnPService
  * @Varargs: Tuples of variable name, variable type, and variable value,
  * terminated with %NULL.
@@ -1699,7 +1699,7 @@ gupnp_service_notify (GUPnPService *service,
 }
 
 /**
- * gupnp_service_notify_valist
+ * gupnp_service_notify_valist:
  * @service: A #GUPnPService
  * @var_args: A va_list of tuples of variable name, variable type, and variable
  * value, terminated with %NULL.
@@ -1930,7 +1930,7 @@ flush_notifications (GUPnPService *service)
 }
 
 /**
- * gupnp_service_notify_value
+ * gupnp_service_notify_value:
  * @service: A #GUPnPService
  * @variable: The name of the variable to notify
  * @value: The value of the variable
@@ -1964,7 +1964,7 @@ gupnp_service_notify_value (GUPnPService *service,
 }
 
 /**
- * gupnp_service_freeze_notify
+ * gupnp_service_freeze_notify:
  * @service: A #GUPnPService
  *
  * Causes new notifications to be queued up until gupnp_service_thaw_notify()
@@ -1979,7 +1979,7 @@ gupnp_service_freeze_notify (GUPnPService *service)
 }
 
 /**
- * gupnp_service_thaw_notify
+ * gupnp_service_thaw_notify:
  * @service: A #GUPnPService
  *
  * Sends out any pending notifications, and stops queuing of new ones.
@@ -2116,7 +2116,7 @@ connect_names_to_signal_handlers (GUPnPService *service,
 }
 
 /**
- * gupnp_service_signals_autoconnect
+ * gupnp_service_signals_autoconnect:
  * @service: A #GUPnPService
  * @user_data: the data to pass to each of the callbacks
  * @error: return location for a #GError, or %NULL

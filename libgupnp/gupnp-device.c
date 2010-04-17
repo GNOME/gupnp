@@ -226,7 +226,7 @@ gupnp_device_class_init (GUPnPDeviceClass *klass)
         g_type_class_add_private (klass, sizeof (GUPnPDevicePrivate));
 
         /**
-         * GUPnPDevice:root-device
+         * GUPnPDevice:root-device:
          *
          * The containing #GUPnPRootDevice, or NULL if this is the root
          * device.

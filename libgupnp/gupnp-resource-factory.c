@@ -75,7 +75,7 @@ gupnp_resource_factory_class_init (GUPnPResourceFactoryClass *klass)
 }
 
 /**
- * gupnp_resource_factory_new
+ * gupnp_resource_factory_new:
  *
  * Create a new #GUPnPResourceFactory object.
  *
@@ -88,7 +88,7 @@ gupnp_resource_factory_new (void)
 }
 
 /**
- * gupnp_resource_factory_get_default
+ * gupnp_resource_factory_get_default:
  *
  * Get the default singleton #GUPnPResourceFactory object.
  *
@@ -108,7 +108,7 @@ gupnp_resource_factory_get_default (void)
 }
 
 /**
- * gupnp_resource_factory_create_device_proxy
+ * gupnp_resource_factory_create_device_proxy:
  * @factory: A #GUPnPResourceFactory
  * @context: A #GUPnPContext
  * @doc: A #GUPnPXMLDoc
@@ -171,7 +171,7 @@ gupnp_resource_factory_create_device_proxy
 }
 
 /**
- * gupnp_resource_factory_create_service_proxy
+ * gupnp_resource_factory_create_service_proxy:
  * @factory: A #GUPnPResourceFactory
  * @context: A #GUPnPContext
  * @doc: A #GUPnPXMLDoc
@@ -230,7 +230,7 @@ gupnp_resource_factory_create_service_proxy
 }
 
 /**
- * gupnp_resource_factory_create_device
+ * gupnp_resource_factory_create_device:
  * @factory: A #GUPnPResourceFactory
  * @context: A #GUPnPContext
  * @root_device: The #GUPnPRootDevice
@@ -291,7 +291,7 @@ gupnp_resource_factory_create_device
 }
 
 /**
- * gupnp_resource_factory_create_service
+ * gupnp_resource_factory_create_service:
  * @factory: A #GUPnPResourceFactory
  * @context: A #GUPnPContext
  * @root_device: The #GUPnPRootDevice
@@ -352,7 +352,7 @@ gupnp_resource_factory_create_service
 }
 
 /**
- * gupnp_resource_factory_register_resource_type
+ * gupnp_resource_factory_register_resource_type:
  * @factory: A #GUPnPResourceFactory.
  * @upnp_type: The UPnP type name of the resource.
  * @type: The requested GType assignment for the resource.
@@ -375,7 +375,7 @@ gupnp_resource_factory_register_resource_type (GUPnPResourceFactory *factory,
 }
 
 /**
- * gupnp_resource_factory_unregister_resource_type
+ * gupnp_resource_factory_unregister_resource_type:
  * @factory: A #GUPnPResourceFactory.
  * @upnp_type: The UPnP type name of the resource.
  *
@@ -394,7 +394,7 @@ gupnp_resource_factory_unregister_resource_type
 }
 
 /**
- * gupnp_resource_factory_register_resource_proxy_type
+ * gupnp_resource_factory_register_resource_proxy_type:
  * @factory: A #GUPnPResourceFactory.
  * @upnp_type: The UPnP type name of the resource.
  * @type: The requested GType assignment for the resource proxy.
@@ -418,7 +418,7 @@ gupnp_resource_factory_register_resource_proxy_type
 }
 
 /**
- * gupnp_resource_factory_unregister_resource_proxy_type
+ * gupnp_resource_factory_unregister_resource_proxy_type:
  * @factory: A #GUPnPResourceFactory.
  * @upnp_type: The UPnP type name of the resource.
  *

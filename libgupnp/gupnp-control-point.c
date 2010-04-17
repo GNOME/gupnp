@@ -875,7 +875,7 @@ gupnp_control_point_class_init (GUPnPControlPointClass *klass)
         g_type_class_add_private (klass, sizeof (GUPnPControlPointPrivate));
 
         /**
-         * GUPnPControlPoint:resource-factory
+         * GUPnPControlPoint:resource-factory:
          *
          * The resource factory to use. Set to NULL for default factory.
          **/
@@ -893,7 +893,7 @@ gupnp_control_point_class_init (GUPnPControlPointClass *klass)
                                       G_PARAM_STATIC_BLURB));
 
         /**
-         * GUPnPControlPoint::device-proxy-available
+         * GUPnPControlPoint::device-proxy-available:
          * @control_point: The #GUPnPControlPoint that received the signal
          * @proxy: The now available #GUPnPDeviceProxy
          *
@@ -914,7 +914,7 @@ gupnp_control_point_class_init (GUPnPControlPointClass *klass)
                               GUPNP_TYPE_DEVICE_PROXY);
 
         /**
-         * GUPnPControlPoint::device-proxy-unavailable
+         * GUPnPControlPoint::device-proxy-unavailable:
          * @control_point: The #GUPnPControlPoint that received the signal
          * @proxy: The now unavailable #GUPnPDeviceProxy
          *
@@ -935,7 +935,7 @@ gupnp_control_point_class_init (GUPnPControlPointClass *klass)
                               GUPNP_TYPE_DEVICE_PROXY);
 
         /**
-         * GUPnPControlPoint::service-proxy-available
+         * GUPnPControlPoint::service-proxy-available:
          * @control_point: The #GUPnPControlPoint that received the signal
          * @proxy: The now available #GUPnPServiceProxy
          *
@@ -956,7 +956,7 @@ gupnp_control_point_class_init (GUPnPControlPointClass *klass)
                               GUPNP_TYPE_SERVICE_PROXY);
 
         /**
-         * GUPnPControlPoint::service-proxy-unavailable
+         * GUPnPControlPoint::service-proxy-unavailable:
          * @control_point: The #GUPnPControlPoint that received the signal
          * @proxy: The now unavailable #GUPnPServiceProxy
          *
@@ -978,7 +978,7 @@ gupnp_control_point_class_init (GUPnPControlPointClass *klass)
 }
 
 /**
- * gupnp_control_point_new
+ * gupnp_control_point_new:
  * @context: A #GUPnPContext
  * @target: The search target
  *
@@ -1004,7 +1004,7 @@ gupnp_control_point_new (GUPnPContext *context,
 }
 
 /**
- * gupnp_control_point_new_full
+ * gupnp_control_point_new_full:
  * @context: A #GUPnPContext
  * @factory: A #GUPnPResourceFactory
  * @target: The search target
@@ -1036,7 +1036,7 @@ gupnp_control_point_new_full (GUPnPContext         *context,
 }
 
 /**
- * gupnp_control_point_get_context
+ * gupnp_control_point_get_context:
  * @control_point: A #GUPnPControlPoint
  *
  * Get the #GUPnPControlPoint associated with @control_point.
@@ -1093,7 +1093,7 @@ gupnp_control_point_list_service_proxies (GUPnPControlPoint *control_point)
 }
 
 /**
- * gupnp_control_point_get_resource_factory
+ * gupnp_control_point_get_resource_factory:
  * @control_point: A #GUPnPControlPoint
  *
  * Get the #GUPnPResourceFactory used by the @control_point.

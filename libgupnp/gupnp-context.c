@@ -279,7 +279,7 @@ gupnp_context_class_init (GUPnPContextClass *klass)
         g_type_class_add_private (klass, sizeof (GUPnPContextPrivate));
 
         /**
-         * GUPnPContext:port
+         * GUPnPContext:port:
          *
          * The port to run on. Set to 0 if you don't care what port to run on.
          **/
@@ -297,7 +297,7 @@ gupnp_context_class_init (GUPnPContextClass *klass)
                                     G_PARAM_STATIC_BLURB));
 
         /**
-         * GUPnPContext:server
+         * GUPnPContext:server:
          *
          * The #SoupServer HTTP server used by GUPnP.
          **/
@@ -314,7 +314,7 @@ gupnp_context_class_init (GUPnPContextClass *klass)
                                       G_PARAM_STATIC_BLURB));
 
         /**
-         * GUPnPContext:session
+         * GUPnPContext:session:
          *
          * The #SoupSession object used by GUPnP.
          **/
@@ -331,7 +331,7 @@ gupnp_context_class_init (GUPnPContextClass *klass)
                                       G_PARAM_STATIC_BLURB));
 
         /**
-         * GUPnPContext:subscription-timeout
+         * GUPnPContext:subscription-timeout:
          *
          * The preferred subscription timeout: the number of seconds after
          * which subscriptions are renewed. Set to '0' if subscriptions 
@@ -354,7 +354,7 @@ gupnp_context_class_init (GUPnPContextClass *klass)
 }
 
 /**
- * gupnp_context_get_session
+ * gupnp_context_get_session:
  * @context: A #GUPnPContext
  *
  * Get the #SoupSession object that GUPnP is using.
@@ -385,7 +385,7 @@ default_server_handler (SoupServer        *server,
 }
 
 /**
- * gupnp_context_get_server
+ * gupnp_context_get_server:
  * @context: A #GUPnPContext
  *
  * Get the #SoupServer HTTP server that GUPnP is using.
@@ -454,7 +454,7 @@ _gupnp_context_get_server_url (GUPnPContext *context)
 }
 
 /**
- * gupnp_context_new
+ * gupnp_context_new:
  * @main_context: A #GMainContext, or %NULL to use the default one
  * @interface: The network interface to use, or %NULL to auto-detect.
  * @port: Port to run on, or 0 if you don't care what port is used.
@@ -480,7 +480,7 @@ gupnp_context_new (GMainContext *main_context,
 }
 
 /**
- * gupnp_context_get_host_ip
+ * gupnp_context_get_host_ip:
  * @context: A #GUPnPContext
  *
  * Get the IP address we advertise ourselves as using.
@@ -498,7 +498,7 @@ gupnp_context_get_host_ip (GUPnPContext *context)
 }
 
 /**
- * gupnp_context_get_port
+ * gupnp_context_get_port:
  * @context: A #GUPnPContext
  *
  * Get the port that the SOAP server is running on.
@@ -517,7 +517,7 @@ gupnp_context_get_port (GUPnPContext *context)
 }
 
 /**
- * gupnp_context_set_subscription_timeout
+ * gupnp_context_set_subscription_timeout:
  * @context: A #GUPnPContext
  * @timeout: Event subscription timeout in seconds
  *
@@ -537,7 +537,7 @@ gupnp_context_set_subscription_timeout (GUPnPContext *context,
 }
 
 /**
- * gupnp_context_get_subscription_timeout
+ * gupnp_context_get_subscription_timeout:
  * @context: A #GUPnPContext
  *
  * Get the event subscription timeout (in seconds), or 0 meaning there is no
@@ -909,7 +909,7 @@ host_path_data_free (HostPathData *path_data)
 }
 
 /**
- * gupnp_context_host_path
+ * gupnp_context_host_path:
  * @context: A #GUPnPContext
  * @local_path: Path to the local file or folder to be hosted
  * @server_path: Web server path where @local_path should be hosted
@@ -954,7 +954,7 @@ path_compare_func (HostPathData *path_data,
 }
 
 /**
- * gupnp_context_host_path_for_agent
+ * gupnp_context_host_path_for_agent:
  * @context: A #GUPnPContext
  * @local_path: Path to the local file or folder to be hosted
  * @server_path: Web server path already being hosted
@@ -997,7 +997,7 @@ gupnp_context_host_path_for_agent (GUPnPContext *context,
 }
 
 /**
- * gupnp_context_unhost_path
+ * gupnp_context_unhost_path:
  * @context: A #GUPnPContext
  * @server_path: Web server path where the file or folder is hosted
  *

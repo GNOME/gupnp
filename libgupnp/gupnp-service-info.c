@@ -247,7 +247,7 @@ gupnp_service_info_class_init (GUPnPServiceInfoClass *klass)
         g_type_class_add_private (klass, sizeof (GUPnPServiceInfoPrivate));
 
         /**
-         * GUPnPServiceInfo:context
+         * GUPnPServiceInfo:context:
          *
          * The #GUPnPContext to use.
          **/
@@ -265,7 +265,7 @@ gupnp_service_info_class_init (GUPnPServiceInfoClass *klass)
                                       G_PARAM_STATIC_BLURB));
 
         /**
-         * GUPnPServiceInfo:location
+         * GUPnPServiceInfo:location:
          *
          * The location of the device description file.
          **/
@@ -284,7 +284,7 @@ gupnp_service_info_class_init (GUPnPServiceInfoClass *klass)
                                       G_PARAM_STATIC_BLURB));
 
         /**
-         * GUPnPServiceInfo:udn
+         * GUPnPServiceInfo:udn:
          *
          * The UDN of the containing device.
          **/
@@ -320,7 +320,7 @@ gupnp_service_info_class_init (GUPnPServiceInfoClass *klass)
                                       G_PARAM_STATIC_BLURB));
 
         /**
-         * GUPnPServiceInfo:url-base
+         * GUPnPServiceInfo:url-base:
          *
          * The URL base (#SoupURI).
          **/
@@ -337,7 +337,7 @@ gupnp_service_info_class_init (GUPnPServiceInfoClass *klass)
                                        G_PARAM_STATIC_BLURB));
 
         /**
-         * GUPnPServiceInfo:document
+         * GUPnPServiceInfo:document:
          *
          * Private property.
          *
@@ -358,7 +358,7 @@ gupnp_service_info_class_init (GUPnPServiceInfoClass *klass)
                                       G_PARAM_STATIC_BLURB));
 
         /**
-         * GUPnPServiceInfo:element
+         * GUPnPServiceInfo:element:
          *
          * Private property.
          *
@@ -379,7 +379,7 @@ gupnp_service_info_class_init (GUPnPServiceInfoClass *klass)
 }
 
 /**
- * gupnp_service_info_get_context
+ * gupnp_service_info_get_context:
  * @info: A #GUPnPServiceInfo
  *
  * Get the #GUPnPContext associated with @info.
@@ -395,7 +395,7 @@ gupnp_service_info_get_context (GUPnPServiceInfo *info)
 }
 
 /**
- * gupnp_service_info_get_location
+ * gupnp_service_info_get_location:
  * @info: A #GUPnPServiceInfo
  *
  * Get the location of the device description file.
@@ -411,7 +411,7 @@ gupnp_service_info_get_location (GUPnPServiceInfo *info)
 }
 
 /**
- * gupnp_service_info_get_url_base
+ * gupnp_service_info_get_url_base:
  * @info: A #GUPnPServiceInfo
  *
  * Get the URL base of this service.
@@ -427,7 +427,7 @@ gupnp_service_info_get_url_base (GUPnPServiceInfo *info)
 }
 
 /**
- * gupnp_service_info_get_udn
+ * gupnp_service_info_get_udn:
  * @info: A #GUPnPServiceInfo
  *
  * Get the Unique Device Name of the containing device.
@@ -443,7 +443,7 @@ gupnp_service_info_get_udn (GUPnPServiceInfo *info)
 }
 
 /**
- * gupnp_service_info_get_service_type
+ * gupnp_service_info_get_service_type:
  * @info: A #GUPnPServiceInfo
  *
  * Get the UPnP service type, or %NULL.
@@ -465,7 +465,7 @@ gupnp_service_info_get_service_type (GUPnPServiceInfo *info)
 }
 
 /**
- * gupnp_service_info_get_id
+ * gupnp_service_info_get_id:
  * @info: A #GUPnPServiceInfo
  *
  * Get the ID of this service, or %NULL if there is no ID.
@@ -482,7 +482,7 @@ gupnp_service_info_get_id (GUPnPServiceInfo *info)
 }
 
 /**
- * gupnp_service_info_get_scpd_url
+ * gupnp_service_info_get_scpd_url:
  * @info: A #GUPnPServiceInfo
  *
  * Get the SCPD URL for this service, or %NULL if there is no SCPD.
@@ -500,7 +500,7 @@ gupnp_service_info_get_scpd_url (GUPnPServiceInfo *info)
 }
 
 /**
- * gupnp_service_info_get_control_url
+ * gupnp_service_info_get_control_url:
  * @info: A #GUPnPServiceInfo
  *
  * Get the control URL for this service, or %NULL..
@@ -518,7 +518,7 @@ gupnp_service_info_get_control_url (GUPnPServiceInfo *info)
 }
 
 /**
- * gupnp_service_info_get_event_subscription_url
+ * gupnp_service_info_get_event_subscription_url:
  * @info: A #GUPnPServiceInfo
  *
  * Get the event subscription URL for this service, or %NULL.
@@ -536,7 +536,7 @@ gupnp_service_info_get_event_subscription_url (GUPnPServiceInfo *info)
 }
 
 /**
- * gupnp_service_info_get_introspection
+ * gupnp_service_info_get_introspection:
  * @info: A #GUPnPServiceInfo
  * @error: return location for a #GError, or %NULL
  *

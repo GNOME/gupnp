@@ -269,7 +269,7 @@ gupnp_context_manager_class_init (GUPnPContextManagerClass *klass)
         g_type_class_add_private (klass, sizeof (GUPnPContextManagerPrivate));
 
         /**
-         * GSSDPClient:main-context
+         * GSSDPClient:main-context:
          *
          * The #GMainContext to pass to created #GUPnPContext objects. Set to
          * NULL to use the default.
@@ -287,7 +287,7 @@ gupnp_context_manager_class_init (GUPnPContextManagerClass *klass)
                           G_PARAM_STATIC_BLURB));
 
         /**
-         * GUPnPContextManager:port
+         * GUPnPContextManager:port:
          *
          * @port: Port to create contexts for, or 0 if you don't care what
          * port is used by #GUPnPContext objects created by this object.
@@ -306,7 +306,7 @@ gupnp_context_manager_class_init (GUPnPContextManagerClass *klass)
                                     G_PARAM_STATIC_BLURB));
 
         /**
-         * GUPnPContextManager:context-manager
+         * GUPnPContextManager:context-manager:
          *
          * The actual GUPnPContextManager implementation used. This is an
          * internal property and therefore Application developer should just
@@ -328,7 +328,7 @@ gupnp_context_manager_class_init (GUPnPContextManagerClass *klass)
                                       G_PARAM_STATIC_BLURB));
 
         /**
-         * GUPnPContextManager::context-available
+         * GUPnPContextManager::context-available:
          * @context_manager: The #GUPnPContextManager that received the signal
          * @context: The now available #GUPnPContext
          *
@@ -347,7 +347,7 @@ gupnp_context_manager_class_init (GUPnPContextManagerClass *klass)
                               GUPNP_TYPE_CONTEXT);
 
         /**
-         * GUPnPContextManager::context-unavailable
+         * GUPnPContextManager::context-unavailable:
          * @context_manager: The #GUPnPContextManager that received the signal
          * @context: The now unavailable #GUPnPContext
          *
@@ -367,7 +367,7 @@ gupnp_context_manager_class_init (GUPnPContextManagerClass *klass)
 }
 
 /**
- * gupnp_context_manager_new
+ * gupnp_context_manager_new:
  * @port: Port to create contexts for, or 0 if you don't care what port is used.
  * @main_context: GMainContext to pass to created GUPnPContext objects.
  *
@@ -409,7 +409,7 @@ gupnp_context_manager_new (GMainContext *main_context,
 }
 
 /**
- * gupnp_context_manager_manage_control_point
+ * gupnp_context_manager_manage_control_point:
  * @manager: A #GUPnPContextManager
  * @control_point: The #GUPnPControlPoint to be taken care of
  *
@@ -431,7 +431,7 @@ gupnp_context_manager_manage_control_point (GUPnPContextManager *manager,
 }
 
 /**
- * gupnp_context_manager_manage_root_device
+ * gupnp_context_manager_manage_root_device:
  * @manager: A #GUPnPContextManager
  * @root_device: The #GUPnPRootDevice to be taken care of
  *
