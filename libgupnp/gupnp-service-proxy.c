@@ -596,10 +596,10 @@ gupnp_service_proxy_send_action_list (GUPnPServiceProxy *proxy,
 }
 
 /**
- * gupnp_service_proxy_begin_action
+ * gupnp_service_proxy_begin_action:
  * @proxy: A #GUPnPServiceProxy
  * @action: An action
- * @callback: The callback to call when sending the action has succeeded
+ * @callback: (scope async): The callback to call when sending the action has succeeded
  * or failed
  * @user_data: User data for @callback
  * @Varargs: tuples of in parameter name, in parameter type, and in parameter
@@ -817,10 +817,10 @@ write_in_parameter (const char *arg_name,
 }
 
 /**
- * gupnp_service_proxy_begin_action_valist
+ * gupnp_service_proxy_begin_action_valist:
  * @proxy: A #GUPnPServiceProxy
  * @action: An action
- * @callback: The callback to call when sending the action has succeeded
+ * @callback: (scope async) : The callback to call when sending the action has succeeded
  * or failed
  * @user_data: User data for @callback
  * @var_args: A va_list of tuples of in parameter name, in parameter type, and
@@ -904,7 +904,7 @@ gupnp_service_proxy_begin_action_valist
  * names (as strings)
  * @in_values: (element-type GValue) (transfer none): #GList of values (as
  * #GValue) that line up with @in_names
- * @callback: The callback to call when sending the action has succeeded or
+ * @callback: (scope async) : The callback to call when sending the action has succeeded or
  * failed
  * @user_data: User data for @callback
  *
@@ -964,10 +964,10 @@ gupnp_service_proxy_begin_action_list
 }
 
 /**
- * gupnp_service_proxy_begin_action_hash
+ * gupnp_service_proxy_begin_action_hash:
  * @proxy: A #GUPnPServiceProxy
  * @action: An action
- * @callback: The callback to call when sending the action has succeeded
+ * @callback: (scope async): The callback to call when sending the action has succeeded
  * or failed
  * @user_data: User data for @callback
  * @hash: A #GHashTable of in parameter name and #GValue pairs
@@ -1451,11 +1451,11 @@ gupnp_service_proxy_cancel_action (GUPnPServiceProxy       *proxy,
 }
 
 /**
- * gupnp_service_proxy_add_notify
+ * gupnp_service_proxy_add_notify:
  * @proxy: A #GUPnPServiceProxy
  * @variable: The variable to add notification for
  * @type: The type of the variable
- * @callback: The callback to call when @variable changes
+ * @callback: (scope async): The callback to call when @variable changes
  * @user_data: User data for @callback
  *
  * Sets up @callback to be called whenever a change notification for

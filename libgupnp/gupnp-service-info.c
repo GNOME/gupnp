@@ -668,9 +668,9 @@ got_scpd_url (SoupSession    *session,
 }
 
 /**
- * gupnp_service_info_get_introspection_async
+ * gupnp_service_info_get_introspection_async:
  * @info: A #GUPnPServiceInfo
- * @callback: callback to be called when introspection object is ready.
+ * @callback: (scope async) : callback to be called when introspection object is ready.
  * @user_data: user_data to be passed to the callback.
  *
  * Note that introspection object is created from the information in service
