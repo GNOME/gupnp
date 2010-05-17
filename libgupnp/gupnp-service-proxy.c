@@ -1581,8 +1581,46 @@ gupnp_service_proxy_remove_notify (GUPnPServiceProxy              *proxy,
         return found;
 }
 
-static void emit_notification (GUPnPServiceProxy *proxy,
-                               xmlDoc            *doc)
+static void
+emit_notification (GUPnPServiceProxy *proxy,
+                   xmlNode           *var_node)
+{
+        NotifyData *data;
+        GValue value = {0, };
+        GList *l;
+
+        data = g_hash_table_lookup (proxy->priv->notify_hash, var_node->name);
+        if (data == NULL)
+                return;
+
+        /* Make a GValue of the desired type */
+        g_value_init (&value, data->type);
+
+        if (!gvalue_util_set_value_from_xml_node (&value, var_node)) {
+                g_value_unset (&value);
+
+                return;
+        }
+
+        /* Call callbacks */
+        for (l = data->callbacks; l; l = l->next) {
+                CallbackData *callback_data;
+
+                callback_data = l->data;
+
+                callback_data->callback (proxy,
+                                         (const char *) var_node->name,
+                                         &value,
+                                         callback_data->user_data);
+        }
+
+        /* Cleanup */
+        g_value_unset (&value);
+}
+
+static void
+emit_notifications_for_doc (GUPnPServiceProxy *proxy,
+                            xmlDoc            *doc)
 {
         xmlNode *node;
 
@@ -1591,45 +1629,13 @@ static void emit_notification (GUPnPServiceProxy *proxy,
         /* Iterate over all provided properties */
         for (node = node->children; node; node = node->next) {
                 xmlNode *var_node;
-                NotifyData *data;
-                GValue value = {0, };
-                GList *l;
 
                 /* variableName node */
                 var_node = node->children;
 
-                if (var_node == NULL ||
-                    strcmp ((char *) node->name, "property") != 0)
-                        continue;
-
-                data = g_hash_table_lookup (proxy->priv->notify_hash,
-                                            var_node->name);
-                if (data == NULL)
-                        continue;
-
-                /* Make a GValue of the desired type */
-                g_value_init (&value, data->type);
-
-                if (!gvalue_util_set_value_from_xml_node (&value, var_node)) {
-                        g_value_unset (&value);
-
-                        continue;
-                }
-
-                /* Call callbacks */
-                for (l = data->callbacks; l; l = l->next) {
-                        CallbackData *callback_data;
-
-                        callback_data = l->data;
-
-                        callback_data->callback (proxy,
-                                                 (const char *) var_node->name,
-                                                 &value,
-                                                 callback_data->user_data);
-                }
-
-                /* Cleanup */
-                g_value_unset (&value);
+                if (var_node != NULL &&
+                    strcmp ((char *) node->name, "property") == 0)
+                        emit_notification (proxy, var_node);
         }
 }
 
@@ -1673,7 +1679,8 @@ emit_notifications (gpointer user_data)
                               strcmp (emit_notify_data->sid,
                                       proxy->priv->sid) == 0))
                         /* Our SID, entertain! */
-                        emit_notification (proxy, emit_notify_data->doc);
+                        emit_notifications_for_doc (proxy,
+                                                    emit_notify_data->doc);
         }
 
         /* Cleanup */
