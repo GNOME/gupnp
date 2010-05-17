@@ -1890,22 +1890,21 @@ create_property_set (GQueue *queue)
         g_string_append (str,
                          "<?xml version=\"1.0\"?>"
                          "<e:propertyset xmlns:e="
-                                "\"urn:schemas-upnp-org:event-1-0\">"
-                         "<e:property>");
+                                "\"urn:schemas-upnp-org:event-1-0\">");
 
         /* Add variables */
         while ((data = g_queue_pop_head (queue))) {
+                xml_util_start_element (str, "e:property");
                 xml_util_start_element (str, data->variable);
                 gvalue_util_value_append_to_xml_string (&data->value, str);
                 xml_util_end_element (str, data->variable);
+                xml_util_end_element (str, "e:property");
 
                 /* Cleanup */
                 notify_data_free (data);
         }
 
-        g_string_append (str,
-                         "</e:property>"
-                         "</e:propertyset>");
+        g_string_append (str, "</e:propertyset>");
 
         /* Cleanup & return */
         return g_string_free (str, FALSE);
