@@ -1630,12 +1630,17 @@ emit_notifications_for_doc (GUPnPServiceProxy *proxy,
         for (node = node->children; node; node = node->next) {
                 xmlNode *var_node;
 
-                /* variableName node */
-                var_node = node->children;
-
-                if (var_node != NULL &&
-                    strcmp ((char *) node->name, "property") == 0)
-                        emit_notification (proxy, var_node);
+                /* Although according to the UPnP specs, there should be only
+                 * one variable node inside a 'property' node, we still need to
+                 * entertain the possibility of multiple variables inside it to
+                 * be compatible with implementations using older GUPnP.
+                 */
+                for (var_node = node->children;
+                     var_node;
+                     var_node = var_node->next) {
+                        if (strcmp ((char *) node->name, "property") == 0)
+                                emit_notification (proxy, var_node);
+                }
         }
 }
 
