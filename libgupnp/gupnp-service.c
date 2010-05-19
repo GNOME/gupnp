@@ -1625,7 +1625,7 @@ gupnp_service_class_init (GUPnPServiceClass *klass)
                                                action_invoked),
                               NULL,
                               NULL,
-                              g_cclosure_marshal_VOID__POINTER,
+                              g_cclosure_marshal_VOID__BOXED,
                               G_TYPE_NONE,
                               1,
                               GUPNP_TYPE_SERVICE_ACTION);
