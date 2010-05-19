@@ -867,7 +867,8 @@ gupnp_service_proxy_begin_action_valist
                 arg_type = va_arg (var_args, GType);
                 g_value_init (&value, arg_type);
 
-                G_VALUE_COLLECT (&value, var_args, 0, &collect_error);
+                G_VALUE_COLLECT (&value, var_args, G_VALUE_NOCOPY_CONTENTS,
+                                 &collect_error);
                 if (!collect_error) {
                         write_in_parameter (arg_name, &value, ret->msg_str);
 

@@ -547,7 +547,8 @@ gupnp_service_action_set_valist (GUPnPServiceAction *action,
                 arg_type = va_arg (var_args, GType);
                 g_value_init (&value, arg_type);
 
-                G_VALUE_COLLECT (&value, var_args, 0, &collect_error);
+                G_VALUE_COLLECT (&value, var_args, G_VALUE_NOCOPY_CONTENTS,
+                                 &collect_error);
                 if (!collect_error) {
                         gupnp_service_action_set_value (action,
                                                         arg_name, &value);
@@ -1725,7 +1726,8 @@ gupnp_service_notify_valist (GUPnPService *service,
                 var_type = va_arg (var_args, GType);
                 g_value_init (&value, var_type);
 
-                G_VALUE_COLLECT (&value, var_args, 0, &collect_error);
+                G_VALUE_COLLECT (&value, var_args, G_VALUE_NOCOPY_CONTENTS,
+                                 &collect_error);
                 if (!collect_error) {
                         gupnp_service_notify_value (service, var_name, &value);
 
