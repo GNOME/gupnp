@@ -42,6 +42,8 @@
 #include "xml-util.h"
 #include "gvalue-util.h"
 
+#define SUBSCRIPTION_TIMEOUT 300 /* DLNA (7.2.22.1) enforced */
+
 G_DEFINE_TYPE (GUPnPService,
                gupnp_service,
                GUPNP_TYPE_SERVICE_INFO);
@@ -1041,26 +1043,6 @@ subscription_timeout (gpointer user_data)
         return FALSE;
 }
 
-/* Parse timeout header and return its value in seconds, or 0
- * if infinite */
-static int
-parse_and_limit_timeout (const char *timeout)
-{
-        int timeout_seconds;
-
-        timeout_seconds = 0;
-
-        if (timeout && strncmp (timeout, "Second-", strlen ("Second-")) == 0) {
-                /* We have a finite timeout */
-                timeout_seconds = CLAMP (atoi (timeout + strlen ("Second-")),
-                                         GENA_MIN_TIMEOUT,
-                                         GENA_MAX_TIMEOUT);
-        } else
-                timeout_seconds = GENA_MAX_TIMEOUT;
-
-        return timeout_seconds;
-}
-
 static void
 send_initial_state (SubscriptionData *data)
 {
@@ -1107,12 +1089,12 @@ send_initial_state (SubscriptionData *data)
 static void
 subscribe (GUPnPService *service,
            SoupMessage  *msg,
-           const char   *callback,
-           const char   *timeout)
+           const char   *callback)
 {
         SubscriptionData *data;
         char *start, *end, *uri;
-        int timeout_seconds;
+        GUPnPContext *context;
+        GMainContext *main_context;
 
         data = g_slice_new0 (SubscriptionData);
 
@@ -1148,26 +1130,17 @@ subscribe (GUPnPService *service,
         data->sid     = generate_sid ();
 
         /* Add timeout */
-        timeout_seconds = parse_and_limit_timeout (timeout);
-        if (timeout_seconds > 0) {
-                GUPnPContext *context;
-                GMainContext *main_context;
+	data->timeout_src = g_timeout_source_new_seconds (SUBSCRIPTION_TIMEOUT);
+	g_source_set_callback (data->timeout_src,
+                               subscription_timeout,
+                               data,
+                               NULL);
 
-	        data->timeout_src =
-                        g_timeout_source_new_seconds (timeout_seconds);
-	        g_source_set_callback (data->timeout_src,
-                                       subscription_timeout,
-                                       data,
-                                       NULL);
+        context = gupnp_service_info_get_context (GUPNP_SERVICE_INFO (service));
+        main_context = gssdp_client_get_main_context (GSSDP_CLIENT (context));
+        g_source_attach (data->timeout_src, main_context);
 
-                context = gupnp_service_info_get_context
-                        (GUPNP_SERVICE_INFO (service));
-                main_context = gssdp_client_get_main_context
-                        (GSSDP_CLIENT (context));
-	        g_source_attach (data->timeout_src, main_context);
-
-                g_source_unref (data->timeout_src);
-        }
+        g_source_unref (data->timeout_src);
 
         /* Add to hash */
         g_hash_table_insert (service->priv->subscriptions,
@@ -1175,7 +1148,7 @@ subscribe (GUPnPService *service,
                              data);
 
         /* Respond */
-        subscription_response (service, msg, data->sid, timeout_seconds);
+        subscription_response (service, msg, data->sid, SUBSCRIPTION_TIMEOUT);
 
         send_initial_state (data);
 }
@@ -1184,11 +1157,11 @@ subscribe (GUPnPService *service,
 static void
 resubscribe (GUPnPService *service,
              SoupMessage  *msg,
-             const char   *sid,
-             const char   *timeout)
+             const char   *sid)
 {
         SubscriptionData *data;
-        int timeout_seconds;
+        GUPnPContext *context;
+        GMainContext *main_context;
 
         data = g_hash_table_lookup (service->priv->subscriptions, sid);
         if (!data) {
@@ -1203,28 +1176,20 @@ resubscribe (GUPnPService *service,
                 data->timeout_src = NULL;
         }
 
-        timeout_seconds = parse_and_limit_timeout (timeout);
-        if (timeout_seconds > 0) {
-                GUPnPContext *context;
-                GMainContext *main_context;
+        data->timeout_src = g_timeout_source_new_seconds (SUBSCRIPTION_TIMEOUT);
+        g_source_set_callback (data->timeout_src,
+                               subscription_timeout,
+                               data,
+                               NULL);
 
-	        data->timeout_src = g_timeout_source_new_seconds
-                        (timeout_seconds);
-	        g_source_set_callback(data->timeout_src,
-				      subscription_timeout,
-				      data, NULL);
+        context = gupnp_service_info_get_context (GUPNP_SERVICE_INFO (service));
+        main_context = gssdp_client_get_main_context (GSSDP_CLIENT (context));
+        g_source_attach (data->timeout_src, main_context);
 
-                context = gupnp_service_info_get_context
-                        (GUPNP_SERVICE_INFO (service));
-                main_context = gssdp_client_get_main_context
-                        (GSSDP_CLIENT (context));
-	        g_source_attach (data->timeout_src, main_context);
-
-                g_source_unref (data->timeout_src);
-	}
+        g_source_unref (data->timeout_src);
 
         /* Respond */
-        subscription_response (service, msg, sid, timeout_seconds);
+        subscription_response (service, msg, sid, SUBSCRIPTION_TIMEOUT);
 }
 
 /* Unsubscription request */
@@ -1249,13 +1214,12 @@ subscription_server_handler (SoupServer        *server,
                              gpointer           user_data)
 {
         GUPnPService *service;
-        const char *callback, *nt, *timeout, *sid;
+        const char *callback, *nt, *sid;
 
         service = GUPNP_SERVICE (user_data);
 
         callback = soup_message_headers_get (msg->request_headers, "Callback");
         nt       = soup_message_headers_get (msg->request_headers, "NT");
-        timeout  = soup_message_headers_get (msg->request_headers, "Timeout");
         sid      = soup_message_headers_get (msg->request_headers, "SID");
 
         /* Choose appropriate handler */
@@ -1270,7 +1234,7 @@ subscription_server_handler (SoupServer        *server,
                                         (msg, SOUP_STATUS_PRECONDITION_FAILED);
 
                         } else {
-                                subscribe (service, msg, callback, timeout);
+                                subscribe (service, msg, callback);
 
                         }
 
@@ -1280,7 +1244,7 @@ subscription_server_handler (SoupServer        *server,
                                         (msg, SOUP_STATUS_BAD_REQUEST);
 
                         } else {
-                                resubscribe (service, msg, sid, timeout);
+                                resubscribe (service, msg, sid);
 
                         }
 
