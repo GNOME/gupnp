@@ -1322,6 +1322,19 @@ got_introspection (GUPnPServiceInfo          *info,
         g_object_unref (service);
 }
 
+static char *
+path_from_url (const char *url)
+{
+        SoupURI *uri;
+        gchar   *path;
+
+        uri = soup_uri_new (url);
+        path = soup_uri_to_string (uri, TRUE);
+        soup_uri_free (uri);
+
+        return path;
+}
+
 static GObject *
 gupnp_service_constructor (GType                  type,
                            guint                  n_construct_params,
@@ -1333,8 +1346,8 @@ gupnp_service_constructor (GType                  type,
         GUPnPServiceInfo *info;
         GUPnPContext *context;
         SoupServer *server;
-        SoupURI *uri;
         char *url;
+        char *path;
 
         object_class = G_OBJECT_CLASS (gupnp_service_parent_class);
 
@@ -1358,26 +1371,18 @@ gupnp_service_constructor (GType                  type,
 
         /* Run listener on controlURL */
         url = gupnp_service_info_get_control_url (info);
-        uri = soup_uri_new (url);
-        g_free (url);
-
-        url = soup_uri_to_string (uri, TRUE);
-        soup_uri_free (uri);
-
-        soup_server_add_handler (server, url,
+        path = path_from_url (url);
+        soup_server_add_handler (server, path,
                                  control_server_handler, object, NULL);
+        g_free (path);
         g_free (url);
 
         /* Run listener on eventSubscriptionURL */
         url = gupnp_service_info_get_event_subscription_url (info);
-        uri = soup_uri_new (url);
-        g_free (url);
-
-        url = soup_uri_to_string (uri, TRUE);
-        soup_uri_free (uri);
-
-        soup_server_add_handler (server, url,
+        path = path_from_url (url);
+        soup_server_add_handler (server, path,
                                  subscription_server_handler, object, NULL);
+        g_free (path);
         g_free (url);
 
         return object;
