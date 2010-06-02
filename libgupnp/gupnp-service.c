@@ -1476,8 +1476,32 @@ gupnp_service_dispose (GObject *object)
 {
         GUPnPService *service;
         GObjectClass *object_class;
+        GUPnPServiceInfo *info;
+        GUPnPContext *context;
+        SoupServer *server;
+        char *url;
+        char *path;
 
         service = GUPNP_SERVICE (object);
+
+        /* Get server */
+        info = GUPNP_SERVICE_INFO (service);
+        context = gupnp_service_info_get_context (info);
+        server = gupnp_context_get_server (context);
+
+        /* Remove listener on controlURL */
+        url = gupnp_service_info_get_control_url (info);
+        path = path_from_url (url);
+        soup_server_remove_handler (server, path);
+        g_free (path);
+        g_free (url);
+
+        /* Remove listener on eventSubscriptionURL */
+        url = gupnp_service_info_get_event_subscription_url (info);
+        path = path_from_url (url);
+        soup_server_remove_handler (server, path);
+        g_free (path);
+        g_free (url);
 
         if (service->priv->root_device) {
                 GUPnPRootDevice **dev = &(service->priv->root_device);
