@@ -1,3 +1,31 @@
+0.13.4
+======
+
+Changes since 0.13.3:
+
+- GUPnPService should remove all handlers installed on the shared SoupServer
+  instance when it is disposed.
+- Fixate subscription timeout to be 300s as per DLNA requirement (7.2.22.1).
+- Correct type of action argument of GUPnPService::action-invoked.
+- Remove redundant copying of GValue content in a few places.
+- Handle multiple variables inside property node in event notifications to be
+  compatible with server-side implementations using older GUPnP
+- Fix syntax of event notifications with multiple properties.
+- Add/fix gobject-introspection annotations for various functions.
+- Some non-functional improvements.
+
+Bugs fixed in this release:
+
+2084 - Add scope annotations to various functions
+2131 - GUPnPServiceAction is a boxed, not a pointer
+2086 - Fix gtk-doc format on all functions in public GUPnP API
+
+All contributors:
+
+Sven Neumann <s.neumann@raumfeld.com>
+Zeeshan Ali (Khattak) <zeeshanak@gnome.org>
+Zach Goldberg <zgold@corvette.(none)>
+
 0.13.3
 ======
 
