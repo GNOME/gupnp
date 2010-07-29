@@ -41,7 +41,7 @@ xml_util_get_element (xmlNode *node,
                         break;
 
                 for (node = node->children; node; node = node->next)
-                        if (!strcmp (arg, (char *) node->name))
+                        if (!g_strcmp0 (arg, (char *) node->name))
                                 break;
 
                 if (!node)
