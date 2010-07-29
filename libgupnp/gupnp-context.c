@@ -359,8 +359,8 @@ gupnp_context_class_init (GUPnPContextClass *klass)
  *
  * Get the #SoupSession object that GUPnP is using.
  *
- * Return value: The #SoupSession used by GUPnP. Do not unref this when
- * finished.
+ * Return value: (transfer none): The #SoupSession used by GUPnP. Do not unref
+ * this when finished.
  **/
 SoupSession *
 gupnp_context_get_session (GUPnPContext *context)
