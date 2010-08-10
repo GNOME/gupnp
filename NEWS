@@ -1,3 +1,25 @@
+0.13.5
+======
+
+Changes since 0.13.4:
+
+- Chain up in GUPnPXMLDoc's finalize().
+- Correct transfer annotation for gupnp_context_get_session().
+- Prefer g_strcmp0() over strcmp().
+- Check for body length rather than Content-Length in SOAP requests so we
+  can satsify DLNA CTT test 7.2.5.7.
+- Explicitly link test apps to needed libraries.
+
+Bugs fixed in this release:
+
+2186 - Missing annotation for context_get_session
+
+All contributors:
+
+Sven Neumann <s.neumann@raumfeld.com>
+Zeeshan Ali (Khattak) <zeeshanak@gnome.org>
+Zach Goldberg <zgold@corvette.(none)>
+
 0.13.4
 ======
 
