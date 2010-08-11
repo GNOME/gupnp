@@ -128,7 +128,8 @@ http_request_get_range (SoupMessage *message,
         const char *header;
         char **v;
 
-        header = soup_message_headers_get (message->request_headers, "Range");
+        header = soup_message_headers_get_one (message->request_headers,
+                                               "Range");
         if (header == NULL) {
                 *have_range = FALSE;
 
@@ -231,8 +232,8 @@ http_request_get_accept_locales (SoupMessage *message)
         int i, j;
         GList *locales;
 
-        header = soup_message_headers_get (message->request_headers,
-                                           "Accept-Language");
+        header = soup_message_headers_get_one (message->request_headers,
+                                               "Accept-Language");
         if (header == NULL)
                 return NULL;
 

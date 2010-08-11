@@ -892,8 +892,8 @@ control_server_handler (SoupServer        *server,
         context = gupnp_service_info_get_context (GUPNP_SERVICE_INFO (service));
 
         /* Get action name */
-        soap_action = soup_message_headers_get (msg->request_headers,
-                                                "SOAPAction");
+        soap_action = soup_message_headers_get_one (msg->request_headers,
+                                                    "SOAPAction");
         if (!soap_action) {
                 soup_message_set_status (msg, SOUP_STATUS_PRECONDITION_FAILED);
                 return;
@@ -1216,9 +1216,10 @@ subscription_server_handler (SoupServer        *server,
 
         service = GUPNP_SERVICE (user_data);
 
-        callback = soup_message_headers_get (msg->request_headers, "Callback");
-        nt       = soup_message_headers_get (msg->request_headers, "NT");
-        sid      = soup_message_headers_get (msg->request_headers, "SID");
+        callback = soup_message_headers_get_one (msg->request_headers,
+                                                 "Callback");
+        nt       = soup_message_headers_get_one (msg->request_headers, "NT");
+        sid      = soup_message_headers_get_one (msg->request_headers, "SID");
 
         /* Choose appropriate handler */
         if (strcmp (msg->method, GENA_METHOD_SUBSCRIBE) == 0) {

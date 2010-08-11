@@ -743,8 +743,9 @@ action_got_response (SoupSession             *session,
                          "\"http://schemas.xmlsoap.org/soap/envelope/\"; ns=s");
 
                 /* Rename "SOAPAction" to "s-SOAPAction" */
-                full_action = soup_message_headers_get (msg->request_headers,
-                                                        "SOAPAction");
+                full_action = soup_message_headers_get_one
+                        (msg->request_headers,
+                         "SOAPAction");
                 soup_message_headers_append (msg->request_headers,
                                              "s-SOAPAction",
                                              full_action);
@@ -1736,7 +1737,7 @@ server_handler (SoupServer        *soup_server,
                 return;
         }
 
-        hdr = soup_message_headers_get (msg->request_headers, "NT");
+        hdr = soup_message_headers_get_one (msg->request_headers, "NT");
         if (hdr == NULL || strcmp (hdr, "upnp:event") != 0) {
                 /* Proper NT header lacking */
                 soup_message_set_status (msg, SOUP_STATUS_PRECONDITION_FAILED);
@@ -1744,7 +1745,7 @@ server_handler (SoupServer        *soup_server,
                 return;
         }
 
-        hdr = soup_message_headers_get (msg->request_headers, "NTS");
+        hdr = soup_message_headers_get_one (msg->request_headers, "NTS");
         if (hdr == NULL || strcmp (hdr, "upnp:propchange") != 0) {
                 /* Proper NTS header lacking */
                 soup_message_set_status (msg, SOUP_STATUS_PRECONDITION_FAILED);
@@ -1752,7 +1753,7 @@ server_handler (SoupServer        *soup_server,
                 return;
         }
 
-        hdr = soup_message_headers_get (msg->request_headers, "SEQ");
+        hdr = soup_message_headers_get_one (msg->request_headers, "SEQ");
         if (hdr == NULL) {
                 /* No SEQ header */
                 soup_message_set_status (msg, SOUP_STATUS_PRECONDITION_FAILED);
@@ -1762,7 +1763,7 @@ server_handler (SoupServer        *soup_server,
 
         seq = atoi (hdr);
 
-        hdr = soup_message_headers_get (msg->request_headers, "SID");
+        hdr = soup_message_headers_get_one (msg->request_headers, "SID");
         if (hdr == NULL) {
                 /* No SID */
                 soup_message_set_status (msg, SOUP_STATUS_PRECONDITION_FAILED);
@@ -1930,7 +1931,8 @@ subscribe_got_response (SoupSession       *session,
                 int timeout;
 
                 /* Save SID. */
-                hdr = soup_message_headers_get (msg->response_headers, "SID");
+                hdr = soup_message_headers_get_one (msg->response_headers,
+                                                    "SID");
                 if (hdr == NULL) {
                         error = g_error_new
                                         (GUPNP_EVENTING_ERROR,
@@ -1943,8 +1945,8 @@ subscribe_got_response (SoupSession       *session,
                 proxy->priv->sid = g_strdup (hdr);
 
                 /* Figure out when the subscription times out */
-                hdr = soup_message_headers_get (msg->response_headers,
-                                                "Timeout");
+                hdr = soup_message_headers_get_one (msg->response_headers,
+                                                    "Timeout");
                 if (hdr == NULL) {
                         g_warning ("No Timeout in SUBSCRIBE response.");
 
