@@ -4,6 +4,7 @@ AM_INIT_AUTOMAKE()
 AC_CONFIG_SRCDIR(libgupnp/gupnp.h)
 AM_CONFIG_HEADER(config.h)
 AM_MAINTAINER_MODE
+AC_CANONICAL_HOST
 
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 
@@ -15,13 +16,29 @@ AC_CONFIG_MACRO_DIR([m4])
 AC_FUNC_MMAP
 AC_SYS_LARGEFILE
 
+AC_MSG_CHECKING([operating system])
+case "$host_os" in
+     mingw*|cygwin*)
+        AC_MSG_RESULT(Win32)
+        UUID=uuid
+        ;;
+     darwin*)
+        AC_MSG_RESULT(Darwin)
+        UUID=
+        ;;
+     *)
+        AC_MSG_RESULT($host_os)
+        UUID=uuid
+        ;;
+esac
+
 PKG_CHECK_MODULES(LIBGUPNP, glib-2.0 >= 2.18 \
                             gobject-2.0 >= 2.18 \
                             gmodule-2.0 \
                             gssdp-1.0 >= 0.7.1 \
                             libsoup-2.4 >= 2.4.1 \
                             libxml-2.0 \
-                            uuid)
+                            $UUID)
 
 PKG_CHECK_MODULES(GTHREAD, gthread-2.0)
 
