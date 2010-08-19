@@ -117,8 +117,18 @@ static char *
 make_server_id (void)
 {
 #ifdef G_OS_WIN32
-        return g_strdup_printf ("Microsoft Windows UPnP/1.0 GUPnP/%s",
-                                VERSION);
+        OSVERSIONINFO versioninfo;
+        versioninfo.dwOSVersionInfoSize = sizeof (OSVERSIONINFO);
+        if (GetVersionEx (&versioninfo)) {
+                return g_strdup_printf ("Microsoft Windows/%ld.%ld"
+                                        " UPnP/1.0 GUPnP/%s",
+                                        versioninfo.dwMajorVersion,
+                                        versioninfo.dwMinorVersion,
+                                        VERSION);
+        } else {
+                return g_strdup_printf ("Microsoft Windows UPnP/1.0 GUPnP/%s",
+                                        VERSION);
+        }
 #else
         struct utsname sysinfo;
 
