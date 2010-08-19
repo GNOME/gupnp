@@ -31,6 +31,7 @@
 #include <gmodule.h>
 #include <libsoup/soup-date.h>
 #ifdef G_OS_WIN32
+#include <rpc.h>
 #else
 #include <uuid/uuid.h>
 #endif
@@ -1081,7 +1082,20 @@ static char *
 generate_sid (void)
 {
 #ifdef G_OS_WIN32
-        return NULL;
+        char *ret = NULL;
+        UUID uuid;
+        RPC_STATUS stat;
+        stat = UuidCreate (&uuid);
+        if (stat == RPC_S_OK) {
+                unsigned char* uuidStr = NULL;
+                stat = UuidToString (&uuid, &uuidStr);
+                if (stat == RPC_S_OK) {
+                        ret = g_strdup_printf ("uuid:%s", uuidStr);
+                        RpcStringFree (&uuidStr);
+                }
+        }
+
+        return ret;
 #else
         uuid_t id;
         char out[39];

@@ -64,6 +64,8 @@ if test "x$os_win32" = "xno"; then
                         [--with-context-manager=@<:@network-manager/connman/unix/linux@:>@],
                         [Context Manager backend to use]),,
             [with_context_manager="none"])
+else
+    LIBGUPNP_LIBS="$LIBGUPNP_LIBS -lrpcrt4"
 fi
 
 if test "x$with_context_manager" = "xnone"; then
