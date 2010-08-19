@@ -80,7 +80,7 @@ struct _GUPnPContextClass {
 
 GUPnPContext *
 gupnp_context_new                      (GMainContext *main_context,
-                                        const char   *interface,
+                                        const char   *iface,
                                         guint         port,
                                         GError      **error);
 

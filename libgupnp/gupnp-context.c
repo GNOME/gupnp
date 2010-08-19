@@ -40,9 +40,10 @@
 #include <fcntl.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <glib.h>
+#ifndef G_OS_WIN32
 #include <sys/utsname.h>
-#include <sys/ioctl.h>
-#include <sys/socket.h>
+#endif
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <libsoup/soup-address.h>
@@ -115,6 +116,10 @@ static GInitableIface* initable_parent_iface = NULL;
 static char *
 make_server_id (void)
 {
+#ifdef G_OS_WIN32
+        return g_strdup_printf ("Microsoft Windows UPnP/1.0 GUPnP/%s",
+                                VERSION);
+#else
         struct utsname sysinfo;
 
         uname (&sysinfo);
@@ -123,6 +128,7 @@ make_server_id (void)
                                 sysinfo.sysname,
                                 sysinfo.release,
                                 VERSION);
+#endif
 }
 
 static void
@@ -547,19 +553,19 @@ _gupnp_context_get_server_url (GUPnPContext *context)
  * gupnp_context_new:
  * @main_context: (allow-none): Deprecated: 0.17.2: Always set to %NULL. If you
  * want to use a different context, use g_main_context_push_thread_default().
- * @interface: (allow-none): The network interface to use, or %NULL to
+ * @iface: (allow-none): The network interface to use, or %NULL to
  * auto-detect.
  * @port: Port to run on, or 0 if you don't care what port is used.
  * @error: A location to store a #GError, or %NULL
  *
- * Create a new #GUPnPContext with the specified @main_context, @interface and
+ * Create a new #GUPnPContext with the specified @main_context, @iface and
  * @port.
  *
  * Return value: A new #GUPnPContext object, or %NULL on an error
  **/
 GUPnPContext *
 gupnp_context_new (GMainContext *main_context,
-                   const char   *interface,
+                   const char   *iface,
                    guint         port,
                    GError      **error)
 {
@@ -571,7 +577,7 @@ gupnp_context_new (GMainContext *main_context,
         return g_initable_new (GUPNP_TYPE_CONTEXT,
                                NULL,
                                error,
-                               "interface", interface,
+                               "interface", iface,
                                "port", port,
                                NULL);
 }

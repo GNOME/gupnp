@@ -30,7 +30,10 @@
 #include <gobject/gvaluecollector.h>
 #include <gmodule.h>
 #include <libsoup/soup-date.h>
+#ifdef G_OS_WIN32
+#else
 #include <uuid/uuid.h>
+#endif
 #include <string.h>
 #include "gupnp-service.h"
 #include "gupnp-root-device.h"
@@ -1077,6 +1080,9 @@ subscription_response (GUPnPService *service,
 static char *
 generate_sid (void)
 {
+#ifdef G_OS_WIN32
+        return NULL;
+#else
         uuid_t id;
         char out[39];
 
@@ -1084,6 +1090,7 @@ generate_sid (void)
         uuid_unparse (id, out);
 
         return g_strdup_printf ("uuid:%s", out);
+#endif
 }
 
 /* Subscription expired */

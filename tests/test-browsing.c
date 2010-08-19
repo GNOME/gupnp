@@ -24,6 +24,7 @@
 #include <string.h>
 #include <locale.h>
 #include <signal.h>
+#include <glib.h>
 
 GMainLoop *main_loop;
 
@@ -95,7 +96,9 @@ main (int argc, char **argv)
         GError *error;
         GUPnPContext *context;
         GUPnPControlPoint *cp;
+#ifndef G_OS_WIN32
         struct sigaction sig_action;
+#endif /* G_OS_WIN32 */
 
         g_type_init ();
         setlocale (LC_ALL, "");
@@ -134,10 +137,14 @@ main (int argc, char **argv)
 
         main_loop = g_main_loop_new (NULL, FALSE);
 
+#ifndef G_OS_WIN32
         /* Hook the handler for SIGTERM */
         memset (&sig_action, 0, sizeof (sig_action));
         sig_action.sa_handler = interrupt_signal_handler;
         sigaction (SIGINT, &sig_action, NULL);
+#else
+        signal(SIGINT, interrupt_signal_handler);
+#endif /* G_OS_WIN32 */
 
         g_main_loop_run (main_loop);
         g_main_loop_unref (main_loop);

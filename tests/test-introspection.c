@@ -26,6 +26,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <signal.h>
+#include <glib.h>
 
 GMainLoop *main_loop;
 
@@ -235,7 +236,9 @@ main (int argc, char **argv)
         GUPnPContext *context;
         GUPnPControlPoint *cp;
         GOptionContext *option_context;
+#ifndef G_OS_WIN32
         struct sigaction sig_action;
+#endif /* G_OS_WIN32 */
 
         option_context = g_option_context_new ("- test GUPnP introspection");
         g_option_context_add_main_entries (option_context,
@@ -282,9 +285,13 @@ main (int argc, char **argv)
         main_loop = g_main_loop_new (NULL, FALSE);
 
         /* Hook the handler for SIGTERM */
+#ifndef G_OS_WIN32
         memset (&sig_action, 0, sizeof (sig_action));
         sig_action.sa_handler = interrupt_signal_handler;
         sigaction (SIGINT, &sig_action, NULL);
+#else
+        signal(SIGINT,interrupt_signal_handler);
+#endif /* G_OS_WIN32 */
 
         g_main_loop_run (main_loop);
         g_main_loop_unref (main_loop);

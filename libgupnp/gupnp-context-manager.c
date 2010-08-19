@@ -37,6 +37,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <libsoup/soup-address.h>
+#include <glib.h>
 #include <glib/gstdio.h>
 
 #include "gupnp.h"
@@ -336,7 +337,8 @@ gupnp_context_manager_create (guint port)
 #endif
         GUPnPContextManager *impl;
         GType impl_type = G_TYPE_INVALID;
-
+#ifdef G_OS_WIN32
+#else
 #ifdef USE_NETWORK_MANAGER
 #include "gupnp-network-manager.h"
         system_bus = g_bus_get_sync (G_BUS_TYPE_SYSTEM, NULL, NULL);
@@ -360,7 +362,7 @@ gupnp_context_manager_create (guint port)
 #else
                 impl_type = GUPNP_TYPE_UNIX_CONTEXT_MANAGER;
 #endif
-
+#endif /* G_OS_WIN32 */
         impl = g_object_new (impl_type,
                              "port", port,
                              NULL);

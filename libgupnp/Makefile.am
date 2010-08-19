@@ -1,7 +1,10 @@
 LTVERSION = 4:0:0
 
+if OS_WIN32
+WIN32_LDFLAGS = -no-undefined
+else
 CONTEXT_MANAGER_IMPL = gupnp-unix-context-manager.c \
-		       gupnp-unix-context-manager.h
+					   gupnp-unix-context-manager.h
 if USE_NETWORK_MANAGER
 CONTEXT_MANAGER_IMPL += gupnp-network-manager.c  \
 		        gupnp-network-manager.h
@@ -11,6 +14,7 @@ if USE_CONNMAN
 CONTEXT_MANAGER_IMPL += gupnp-connman-manager.c  \
 			gupnp-connman-manager.h
 CONTEXT_MANAGER_CFLAGS = -DUSE_CONNMAN
+endif
 endif
 endif
 
@@ -79,7 +83,7 @@ gupnp-marshal.h: gupnp-marshal.list
 
 BUILT_SOURCES = gupnp-marshal.c gupnp-marshal.h
 
-libgupnp_1_0_la_LDFLAGS = -version-info $(LTVERSION)
+libgupnp_1_0_la_LDFLAGS = -version-info $(LTVERSION) $(WIN32_LDFLAGS)
 
 libgupnp_1_0_la_SOURCES = $(introspection_sources)		\
 			  http-headers.c			\
