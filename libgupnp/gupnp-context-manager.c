@@ -338,6 +338,9 @@ gupnp_context_manager_create (guint port)
         GUPnPContextManager *impl;
         GType impl_type = G_TYPE_INVALID;
 #ifdef G_OS_WIN32
+#include "gupnp-windows-context-manager.h"
+
+        impl_type = GUPNP_TYPE_WINDOWS_CONTEXT_MANAGER;
 #else
 #ifdef USE_NETWORK_MANAGER
 #include "gupnp-network-manager.h"

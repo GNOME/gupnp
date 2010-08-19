@@ -1,6 +1,10 @@
 LTVERSION = 4:0:0
 
 if OS_WIN32
+CONTEXT_MANAGER_IMPL = gupnp-windows-context-manager.c \
+		       gupnp-windows-context-manager.h
+CONTEXT_MANAGER_CFLAGS =
+CONTEXT_MANAGER_LIBS = -lws2_32 -liphlpapi
 WIN32_LDFLAGS = -no-undefined
 else
 CONTEXT_MANAGER_IMPL = gupnp-unix-context-manager.c \
@@ -114,7 +118,9 @@ EXTRA_DIST = gupnp-marshal.list 	   \
 	     gupnp-linux-context-manager.c \
 	     gupnp-linux-context-manager.h \
 	     gupnp-unix-context-manager.c  \
-	     gupnp-unix-context-manager.h
+	     gupnp-unix-context-manager.h  \
+	     gupnp-windows-context-manager.c \
+	     gupnp-windows-context-manager.h
 
 -include $(INTROSPECTION_MAKEFILE)
 INTROSPECTION_GIRS =

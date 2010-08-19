@@ -66,6 +66,7 @@ if test "x$os_win32" = "xno"; then
             [with_context_manager="none"])
 else
     LIBGUPNP_LIBS="$LIBGUPNP_LIBS -lrpcrt4"
+    with_context_manager="windows"
 fi
 
 if test "x$with_context_manager" = "xnone"; then
