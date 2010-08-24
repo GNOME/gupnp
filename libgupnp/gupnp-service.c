@@ -125,7 +125,9 @@ gupnp_service_get_session (GUPnPService *service)
                 if (g_getenv ("GUPNP_DEBUG")) {
                         SoupLogger *logger;
                         logger = soup_logger_new (SOUP_LOGGER_LOG_BODY, -1);
-                        soup_logger_attach (logger, service->priv->session);
+                        soup_session_add_feature (
+                                        service->priv->session,
+                                        SOUP_SESSION_FEATURE (logger));
                 }
         }
 

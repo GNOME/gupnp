@@ -154,7 +154,8 @@ gupnp_context_constructor (GType                  type,
         if (g_getenv ("GUPNP_DEBUG")) {
                 SoupLogger *logger;
                 logger = soup_logger_new (SOUP_LOGGER_LOG_BODY, -1);
-                soup_logger_attach (logger, context->priv->session);
+                soup_session_add_feature (context->priv->session,
+                                          SOUP_SESSION_FEATURE (logger));
         }
 
         return object;
@@ -789,7 +790,7 @@ host_path_handler (SoupServer        *server,
                              (g_mapped_file_get_contents (mapped_file) + offset,
                               length,
                               mapped_file,
-                              (GDestroyNotify) g_mapped_file_free);
+                              (GDestroyNotify) g_mapped_file_unref);
 
                 soup_message_body_append_buffer (msg->response_body, buffer);
 

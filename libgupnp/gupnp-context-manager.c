@@ -322,7 +322,6 @@ gupnp_context_manager_class_init (GUPnPContextManagerClass *klass)
                                       GUPNP_TYPE_CONTEXT_MANAGER,
                                       G_PARAM_WRITABLE |
                                       G_PARAM_CONSTRUCT_ONLY |
-                                      G_PARAM_PRIVATE |
                                       G_PARAM_STATIC_NAME |
                                       G_PARAM_STATIC_NICK |
                                       G_PARAM_STATIC_BLURB));
