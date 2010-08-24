@@ -205,7 +205,7 @@ http_request_set_accept_language (SoupMessage *message)
         g_free (lang);
 
         soup_message_headers_append (message->request_headers,
-				     "Accept-Language",
+                                     "Accept-Language",
                                      tmp->str);
 
         g_string_free (tmp, TRUE);
@@ -295,7 +295,7 @@ http_response_set_content_locale (SoupMessage *msg,
         http_language_from_locale (lang);
 
         soup_message_headers_append (msg->response_headers,
-				     "Content-Language",
+                                     "Content-Language",
                                      lang);
 
         g_free (lang);

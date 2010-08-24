@@ -175,10 +175,10 @@ xml_util_get_attribute_contents (xmlNode    *node,
 xmlNode *
 xml_util_real_node (xmlNode *node)
 {
-	while (node && (node->type == XML_COMMENT_NODE ||
-			xmlIsBlankNode (node)))
-		node = node->next;
-	return node;
+        while (node &&
+               (node->type == XML_COMMENT_NODE || xmlIsBlankNode (node)))
+                node = node->next;
+        return node;
 }
 
 /* XML string creation helpers */

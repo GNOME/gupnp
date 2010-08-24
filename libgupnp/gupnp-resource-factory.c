@@ -274,7 +274,7 @@ gupnp_resource_factory_create_device
                 if (value)
                         device_type = GPOINTER_TO_INT (value);
 
-	        g_free (upnp_type);
+                g_free (upnp_type);
         }
 
         device = g_object_new (device_type,
@@ -336,7 +336,7 @@ gupnp_resource_factory_create_service
                 if (value)
                         service_type = GPOINTER_TO_INT (value);
 
-		g_free (upnp_type);
+                g_free (upnp_type);
         }
 
         service = g_object_new (service_type,

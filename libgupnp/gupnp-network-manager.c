@@ -156,7 +156,7 @@ create_loopback_context (gpointer data)
                                 NULL);
         if (error) {
                 g_warning ("Error creating GUPnP context: %s\n",
-			   error->message);
+                           error->message);
 
                 g_error_free (error);
                 return FALSE;
@@ -189,7 +189,7 @@ create_context_for_device (NMDevice *nm_device, const char *iface)
                                            NULL);
         if (error) {
                 g_warning ("Error creating GUPnP context: %s\n",
-			   error->message);
+                           error->message);
 
                 g_error_free (error);
 

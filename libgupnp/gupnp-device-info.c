@@ -86,7 +86,7 @@ gupnp_device_info_set_property (GObject      *object,
         switch (property_id) {
         case PROP_RESOURCE_FACTORY:
                 info->priv->factory = 
-			GUPNP_RESOURCE_FACTORY (g_value_dup_object (value));
+                        GUPNP_RESOURCE_FACTORY (g_value_dup_object (value));
                 break;
         case PROP_CONTEXT:
                 info->priv->context = g_object_ref (g_value_get_object (value));

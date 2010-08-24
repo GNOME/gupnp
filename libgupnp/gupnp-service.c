@@ -164,7 +164,7 @@ subscription_data_free (SubscriptionData *data)
         g_free (data->sid);
 
         if (data->timeout_src)
-	        g_source_destroy (data->timeout_src);
+                g_source_destroy (data->timeout_src);
 
         g_slice_free (SubscriptionData, data);
 }
@@ -1128,8 +1128,8 @@ subscribe (GUPnPService *service,
         data->sid     = generate_sid ();
 
         /* Add timeout */
-	data->timeout_src = g_timeout_source_new_seconds (SUBSCRIPTION_TIMEOUT);
-	g_source_set_callback (data->timeout_src,
+        data->timeout_src = g_timeout_source_new_seconds (SUBSCRIPTION_TIMEOUT);
+        g_source_set_callback (data->timeout_src,
                                subscription_timeout,
                                data,
                                NULL);

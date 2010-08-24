@@ -439,7 +439,7 @@ gupnp_root_device_constructor (GType                  type,
                       "url-base", url_base,
                       NULL);
 
-	soup_uri_free (url_base);
+        soup_uri_free (url_base);
 
         /* Create resource group */
         device->priv->group = gssdp_resource_group_new (GSSDP_CLIENT (context));

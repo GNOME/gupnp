@@ -623,7 +623,7 @@ load_description (GUPnPControlPoint *control_point,
                         g_list_prepend (control_point->priv->pending_gets,
                                         data);
 
-	        soup_session_queue_message (session,
+                soup_session_queue_message (session,
                                             data->message,
                                             (SoupSessionCallback)
                                                    got_description_url,
@@ -823,7 +823,7 @@ gupnp_control_point_set_property (GObject      *object,
         switch (property_id) {
         case PROP_RESOURCE_FACTORY:
                 control_point->priv->factory = 
-			GUPNP_RESOURCE_FACTORY (g_value_dup_object (value));
+                        GUPNP_RESOURCE_FACTORY (g_value_dup_object (value));
                 break;
         default:
                 G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
