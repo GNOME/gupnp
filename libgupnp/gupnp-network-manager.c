@@ -541,8 +541,8 @@ gupnp_network_manager_dispose (GObject *object)
         if (priv->connection)  {
           dbus_connection_close (priv->dbus_connection);
           dbus_g_connection_unref (priv->connection);
+          priv->connection = NULL;
         }
-        priv->connection = NULL;
 
         /* Call super */
         object_class = G_OBJECT_CLASS (gupnp_network_manager_parent_class);
