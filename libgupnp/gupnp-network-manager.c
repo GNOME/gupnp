@@ -446,6 +446,11 @@ init_network_manager (GUPnPNetworkManager *manager)
 
         priv->connection =
             dbus_connection_get_g_connection (priv->dbus_connection);
+        if (G_UNLIKELY (priv->connection == NULL)) {
+                g_message ("Failed to connect to System Bus");
+
+                return;
+        }
 
         priv->manager_proxy = dbus_g_proxy_new_for_name (priv->connection,
                                                          DBUS_SERVICE_NM,
@@ -591,6 +596,11 @@ gupnp_network_manager_is_available (GMainContext *main_context)
 
         dbus_connection_setup_with_g_main (connection, main_context);
         gconnection = dbus_connection_get_g_connection (connection);
+        if (G_UNLIKELY (gconnection == NULL)) {
+                g_message ("Failed to connect to System Bus");
+
+                return FALSE;
+        }
 
         dbus_proxy = dbus_g_proxy_new_for_name (gconnection,
                                                 DBUS_SERVICE_DBUS,
