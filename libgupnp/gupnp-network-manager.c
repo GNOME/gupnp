@@ -435,6 +435,7 @@ connect_to_system_bus (GMainContext    *main_context,
         if (*connection == NULL) {
                 g_message ("Failed to connect to System Bus: %s",
                            derror.message);
+                dbus_error_free (&derror);
 
                 return NULL;
         }
