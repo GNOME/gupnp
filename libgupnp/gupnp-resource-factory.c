@@ -152,7 +152,7 @@ gupnp_resource_factory_create_device_proxy
                 value = g_hash_table_lookup (factory->priv->proxy_type_hash,
                                              upnp_type);
                 if (value)
-                        proxy_type = GPOINTER_TO_INT (value);
+                        proxy_type = GPOINTER_TO_SIZE (value);
 
                 g_free (upnp_type);
         }
@@ -213,7 +213,7 @@ gupnp_resource_factory_create_service_proxy
                 value = g_hash_table_lookup (factory->priv->proxy_type_hash,
                                              service_type);
                 if (value)
-                        proxy_type = GPOINTER_TO_INT (value);
+                        proxy_type = GPOINTER_TO_SIZE (value);
         }
 
         proxy = g_object_new (proxy_type,
@@ -272,7 +272,7 @@ gupnp_resource_factory_create_device
                 value = g_hash_table_lookup (factory->priv->resource_type_hash,
                                              upnp_type);
                 if (value)
-                        device_type = GPOINTER_TO_INT (value);
+                        device_type = GPOINTER_TO_SIZE (value);
 
                 g_free (upnp_type);
         }
@@ -334,7 +334,7 @@ gupnp_resource_factory_create_service
                 value = g_hash_table_lookup (factory->priv->resource_type_hash,
                                              upnp_type);
                 if (value)
-                        service_type = GPOINTER_TO_INT (value);
+                        service_type = GPOINTER_TO_SIZE (value);
 
                 g_free (upnp_type);
         }
@@ -371,7 +371,7 @@ gupnp_resource_factory_register_resource_type (GUPnPResourceFactory *factory,
 {
         g_hash_table_insert (factory->priv->resource_type_hash,
                              g_strdup (upnp_type),
-                             GINT_TO_POINTER (type));
+                             GSIZE_TO_POINTER (type));
 }
 
 /**
@@ -414,7 +414,7 @@ gupnp_resource_factory_register_resource_proxy_type
 {
         g_hash_table_insert (factory->priv->proxy_type_hash,
                              g_strdup (upnp_type),
-                             GINT_TO_POINTER (type));
+                             GSIZE_TO_POINTER (type));
 }
 
 /**
