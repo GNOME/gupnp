@@ -1284,7 +1284,7 @@ got_introspection (GUPnPServiceInfo          *info,
                    const GError              *error,
                    gpointer                   user_data)
 {
-        GUPnPService *service = user_data;
+        GUPnPService *service;
         const GList *state_variables, *l;
         GHashTableIter iter;
         gpointer data;
@@ -1343,7 +1343,6 @@ gupnp_service_constructor (GType                  type,
 {
         GObjectClass *object_class;
         GObject *object;
-        GUPnPService *service;
         GUPnPServiceInfo *info;
         GUPnPContext *context;
         SoupServer *server;
@@ -1357,7 +1356,6 @@ gupnp_service_constructor (GType                  type,
                                             n_construct_params,
                                             construct_params);
 
-        service = GUPNP_SERVICE (object);
         info    = GUPNP_SERVICE_INFO (object);
 
         /* Get introspection and save state variable names */
@@ -1570,7 +1568,6 @@ static void
 gupnp_service_class_init (GUPnPServiceClass *klass)
 {
         GObjectClass *object_class;
-        GUPnPServiceInfoClass *info_class;
 
         object_class = G_OBJECT_CLASS (klass);
 
@@ -1579,8 +1576,6 @@ gupnp_service_class_init (GUPnPServiceClass *klass)
         object_class->constructor  = gupnp_service_constructor;
         object_class->dispose      = gupnp_service_dispose;
         object_class->finalize     = gupnp_service_finalize;
-
-        info_class = GUPNP_SERVICE_INFO_CLASS (klass);
 
         g_type_class_add_private (klass, sizeof (GUPnPServicePrivate));
 

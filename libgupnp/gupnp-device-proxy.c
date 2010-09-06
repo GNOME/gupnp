@@ -42,14 +42,12 @@ static GUPnPDeviceInfo *
 gupnp_device_proxy_get_device (GUPnPDeviceInfo *info,
                                xmlNode         *element)
 {
-        GUPnPDeviceProxy     *proxy, *device;
+        GUPnPDeviceProxy     *device;
         GUPnPResourceFactory *factory;
         GUPnPContext         *context;
         GUPnPXMLDoc          *doc;
         const char           *location;
         const SoupURI        *url_base;
-
-        proxy = GUPNP_DEVICE_PROXY (info);
 
         factory = gupnp_device_info_get_resource_factory (info);
         context = gupnp_device_info_get_context (info);
@@ -72,15 +70,12 @@ static GUPnPServiceInfo *
 gupnp_device_proxy_get_service (GUPnPDeviceInfo *info,
                                 xmlNode         *element)
 {
-        GUPnPDeviceProxy     *proxy;
         GUPnPResourceFactory *factory;
         GUPnPServiceProxy    *service;
         GUPnPContext         *context;
         GUPnPXMLDoc          *doc;
         const char           *location, *udn;
         const SoupURI        *url_base;
-
-        proxy = GUPNP_DEVICE_PROXY (info);
 
         factory = gupnp_device_info_get_resource_factory (info);
         context = gupnp_device_info_get_context (info);
