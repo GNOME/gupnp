@@ -32,7 +32,6 @@ gvalue_util_set_value_from_string (GValue     *value,
 {
         GValue tmp_value = {0, };
         int i;
-        long l;
         double d;
 
         g_return_val_if_fail (str != NULL, FALSE);
@@ -54,44 +53,38 @@ gvalue_util_set_value_from_string (GValue     *value,
                 break;
 
         case G_TYPE_INT:
-                i = atoi (str);
-                g_value_set_int (value, i);
+                g_value_set_int (value, strtol (str, NULL, 10));
 
                 break;
 
         case G_TYPE_UINT:
-                i = atoi (str);
-                g_value_set_uint (value, (guint) i);
+                g_value_set_uint (value, strtoul (str, NULL, 10));
 
                 break;
 
         case G_TYPE_INT64:
-                i = atol (str);
-                g_value_set_int64 (value, (gint64) i);
+                g_value_set_int64 (value, g_ascii_strtoll (str, NULL, 10));
 
                 break;
 
         case G_TYPE_UINT64:
-                i = atol (str);
-                g_value_set_uint64 (value, (guint64) i);
+                g_value_set_uint64 (value, g_ascii_strtoull (str, NULL, 10));
 
                 break;
 
         case G_TYPE_LONG:
-                l = atol (str);
-                g_value_set_long (value, l);
+                g_value_set_long (value, strtol (str, NULL, 10));
 
                 break;
 
         case G_TYPE_ULONG:
-                l = atol (str);
-                g_value_set_ulong (value, (gulong) l);
+                g_value_set_ulong (value, strtoul (str, NULL, 10));
 
                 break;
 
         case G_TYPE_FLOAT:
                 d = atof (str);
-                g_value_set_float (value, (float) d);
+                g_value_set_float (value, d);
 
                 break;
 
