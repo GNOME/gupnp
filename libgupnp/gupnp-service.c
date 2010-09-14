@@ -1387,14 +1387,6 @@ gupnp_service_constructor (GType                  type,
         return object;
 }
 
-static gboolean
-say_yes (gpointer key,
-         gpointer value,
-         gpointer user_data)
-{
-        return TRUE;
-}
-
 /* Root device availability changed. */
 static void
 notify_available_cb (GObject *object,
@@ -1407,9 +1399,7 @@ notify_available_cb (GObject *object,
 
         if (!gupnp_root_device_get_available (GUPNP_ROOT_DEVICE (object))) {
                 /* Root device now unavailable: Purge subscriptions */
-                g_hash_table_foreach_remove (service->priv->subscriptions,
-                                             say_yes,
-                                             NULL);
+                g_hash_table_remove_all (service->priv->subscriptions);
         }
 }
 
