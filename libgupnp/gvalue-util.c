@@ -32,7 +32,6 @@ gvalue_util_set_value_from_string (GValue     *value,
 {
         GValue tmp_value = {0, };
         int i;
-        double d;
 
         g_return_val_if_fail (str != NULL, FALSE);
 
@@ -83,14 +82,12 @@ gvalue_util_set_value_from_string (GValue     *value,
                 break;
 
         case G_TYPE_FLOAT:
-                d = atof (str);
-                g_value_set_float (value, d);
+                g_value_set_float (value, g_ascii_strtod (str, NULL));
 
                 break;
 
         case G_TYPE_DOUBLE:
-                d = atof (str);
-                g_value_set_double (value, d);
+                g_value_set_double (value, g_ascii_strtod (str, NULL));
 
                 break;
 
@@ -166,6 +163,7 @@ gvalue_util_value_append_to_xml_string (const GValue *value,
 {
         GValue transformed_value = {0, };
         const char *tmp;
+        char buf[G_ASCII_DTOSTR_BUF_SIZE];
 
         switch (G_VALUE_TYPE (value)) {
         case G_TYPE_STRING:
@@ -219,12 +217,18 @@ gvalue_util_value_append_to_xml_string (const GValue *value,
                 return TRUE;
 
         case G_TYPE_FLOAT:
-                g_string_append_printf (str, "%f", g_value_get_float (value));
+                g_string_append (str,
+                                 g_ascii_dtostr (buf,
+                                                 sizeof (buf),
+                                                 g_value_get_float (value)));
 
                 return TRUE;
 
         case G_TYPE_DOUBLE:
-                g_string_append_printf (str, "%g", g_value_get_double (value));
+                g_string_append (str,
+                                 g_ascii_dtostr (buf,
+                                                 sizeof (buf),
+                                                 g_value_get_double (value)));
 
                 return TRUE;
 
