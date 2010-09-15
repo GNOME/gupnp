@@ -319,6 +319,10 @@ http_response_set_content_type (SoupMessage  *msg,
         mime = g_content_type_get_mime_type (content_type);
         if (mime == NULL)
                 mime = g_strdup ("application/octet-stream");
+        else if (strcmp (mime, "application/xml") == 0) {
+                g_free (mime);
+                mime = g_strdup ("text/xml; charset=\"utf-8\"");
+        }
 
         soup_message_headers_append (msg->response_headers,
                                      "Content-Type",
