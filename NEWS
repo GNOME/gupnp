@@ -17,6 +17,8 @@ Changes since 0.13.5:
 
 Bugs fixed in this release:
 
+2192 - 64bit portability issue with *_register_*_type functions
+2190 - Build fails because explicit linking is missing
 2188 - configure.ac should leave out the uuid module check on OSX
 
 All contributors:
