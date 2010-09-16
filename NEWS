@@ -1,3 +1,32 @@
+0.14.0
+======
+
+Changes since 0.13.5:
+
+- Don't use deprecated glib, gobject and libsoup APIs.
+- Check for libuuid only on platforms where we need it.
+- Explicitly link example apps to needed libraries.
+- Fix some potential crashes and leaks.
+- Fix pointer to/from integer conversion on 64-bit machines.
+- Fix parsing of unsigned integers.
+- Use locale-independent float <-> string conversions.
+- Remove some redundant functions and variables.
+- Remove some unused variables noticed.
+- Use correct mime-type for XML data.
+- Various non-functional improvements.
+
+Bugs fixed in this release:
+
+2188 - configure.ac should leave out the uuid module check on OSX
+
+All contributors:
+
+Ross Burton <ross@linux.intel.com>
+Sven Neumann <s.neumann@raumfeld.com>
+Jens Georg <mail@jensge.org>
+Zeeshan Ali (Khattak) <zeeshanak@gnome.org>
+Nader Morshed <morshed.nader@gmail.com>
+
 0.13.5
 ======
 
