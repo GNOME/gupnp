@@ -32,11 +32,11 @@ case "$host_os" in
         ;;
 esac
 
-PKG_CHECK_MODULES(LIBGUPNP, glib-2.0 >= 2.18 \
-                            gobject-2.0 >= 2.18 \
+PKG_CHECK_MODULES(LIBGUPNP, glib-2.0 >= 2.24.0 \
+                            gio-2.0 \
                             gmodule-2.0 \
                             gssdp-1.0 >= 0.7.1 \
-                            libsoup-2.4 >= 2.4.1 \
+                            libsoup-2.4 >= 2.28.2 \
                             libxml-2.0 \
                             $UUID)
 
