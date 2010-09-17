@@ -193,6 +193,7 @@ struct _GUPnPServiceAction {
         char         *name;
 
         SoupMessage  *msg;
+        gboolean      accept_gzip;
 
         GUPnPXMLDoc  *doc;
         xmlNode      *node;
@@ -252,7 +253,6 @@ static void
 finalize_action (GUPnPServiceAction *action)
 {
         SoupServer *server;
-        char *response_body;
 
         /* Embed action->response_str in a SOAP document */
         g_string_prepend (action->response_str,
@@ -273,13 +273,22 @@ finalize_action (GUPnPServiceAction *action)
                          "</s:Body>"
                          "</s:Envelope>");
 
-        response_body = g_string_free (action->response_str, FALSE);
+        soup_message_headers_replace (action->msg->response_headers,
+                                      "Content-Type",
+                                      "text/xml; charset=\"utf-8\"");
 
-        soup_message_set_response (action->msg,
-                                   "text/xml; charset=\"utf-8\"",
-                                   SOUP_MEMORY_TAKE,
-                                   response_body,
-                                   strlen (response_body));
+        if (action->accept_gzip && action->response_str->len > 1024) {
+                http_response_set_body_gzip (action->msg,
+                                             action->response_str->str,
+                                             action->response_str->len);
+                g_string_free (action->response_str, TRUE);
+        } else {
+                soup_message_body_append (action->msg->response_body,
+                                          SOUP_MEMORY_TAKE,
+                                          action->response_str->str,
+                                          action->response_str->len);
+                g_string_free (action->response_str, FALSE);
+        }
 
         /* Server header on response */
         soup_message_headers_append
@@ -873,6 +882,7 @@ control_server_handler (SoupServer        *server,
         xmlDoc *doc;
         xmlNode *action_node;
         const char *soap_action;
+        const char *accept_encoding;
         char *action_name;
         char *end;
         GUPnPServiceAction *action;
@@ -938,7 +948,7 @@ control_server_handler (SoupServer        *server,
         }
 
         /* Create action structure */
-        action = g_slice_new (GUPnPServiceAction);
+        action = g_slice_new0 (GUPnPServiceAction);
 
         action->ref_count    = 1;
         action->name         = g_strdup (action_name);
@@ -948,6 +958,24 @@ control_server_handler (SoupServer        *server,
         action->response_str = new_action_response_str (action_name,
                                                         soap_action);
         action->context      = g_object_ref (context);
+
+        /* Get accepted encodings */
+        accept_encoding = soup_message_headers_get_list (msg->request_headers,
+                                                         "Accept-Encoding");
+
+        if (accept_encoding) {
+                GSList *codings;
+
+                codings = soup_header_parse_quality_list (accept_encoding,
+                                                          NULL);
+                if (codings &&
+                    g_slist_find_custom (codings, "gzip",
+                                         (GCompareFunc) g_ascii_strcasecmp)) {
+                       action->accept_gzip = TRUE;
+                }
+
+                soup_header_free_list (codings);
+        }
 
         /* Tell soup server that response is not ready yet */
         soup_server_pause_message (server, msg);

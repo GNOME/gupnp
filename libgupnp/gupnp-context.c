@@ -158,6 +158,9 @@ gupnp_context_constructor (GType                  type,
                                           SOUP_SESSION_FEATURE (logger));
         }
 
+        soup_session_add_feature_by_type (context->priv->session,
+                                          SOUP_TYPE_CONTENT_DECODER);
+
         return object;
 }
 

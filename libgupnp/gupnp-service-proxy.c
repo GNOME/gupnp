@@ -700,6 +700,10 @@ begin_action_msg (GUPnPServiceProxy              *proxy,
         /* Specify language */
         http_request_set_accept_language (ret->msg);
 
+        /* Accept gzip encoding */
+        soup_message_headers_append (ret->msg->request_headers,
+				     "Accept-Encoding", "gzip");
+
         /* Set up envelope */
         ret->msg_str = xml_util_new_string ();
 

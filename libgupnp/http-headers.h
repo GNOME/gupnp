@@ -54,6 +54,11 @@ http_response_set_content_range  (SoupMessage  *message,
                                   gsize         length,
                                   gsize         total);
 
+G_GNUC_INTERNAL void
+http_response_set_body_gzip      (SoupMessage   *msg,
+                                  const char    *body,
+                                  const gsize    length);
+
 G_END_DECLS
 
 #endif /* __HTTP_HEADERS_H__ */

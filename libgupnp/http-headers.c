@@ -354,3 +354,56 @@ http_response_set_content_range (SoupMessage  *msg,
 
         g_free (content_range);
 }
+
+/* Set Content-Encoding header to gzip and append compressed body */
+void
+http_response_set_body_gzip (SoupMessage *msg,
+                             const char  *body,
+                             const gsize  length)
+{
+        GZlibCompressor *compressor;
+        gboolean finished = FALSE;
+        gsize converted = 0;
+
+        soup_message_headers_append (msg->response_headers,
+                                     "Content-Encoding", "gzip");
+
+        compressor = g_zlib_compressor_new (G_ZLIB_COMPRESSOR_FORMAT_GZIP, -1);
+
+        while (! finished) {
+                GError *error = NULL;
+                char buf[65536];
+                gsize bytes_read = 0;
+                gsize bytes_written = 0;
+
+                switch (g_converter_convert (G_CONVERTER (compressor),
+                                             body + converted,
+                                             length - converted,
+                                             buf, sizeof (buf),
+                                             G_CONVERTER_INPUT_AT_END,
+                                             &bytes_read, &bytes_written,
+                                             &error)) {
+                case G_CONVERTER_ERROR:
+                        g_warning ("Error compressing response: %s",
+                                   error->message);
+                        g_error_free (error);
+                        g_object_unref (compressor);
+                        return;
+                case G_CONVERTER_CONVERTED:
+                        converted += bytes_read;
+                        break;
+                case G_CONVERTER_FINISHED:
+                        finished = TRUE;
+                        break;
+                case G_CONVERTER_FLUSHED:
+                        break;
+                }
+
+                if (bytes_written)
+                        soup_message_body_append (msg->response_body,
+                                                  SOUP_MEMORY_COPY,
+                                                  buf, bytes_written);
+        }
+
+        g_object_unref (compressor);
+}
