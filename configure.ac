@@ -74,7 +74,8 @@ AC_SUBST(USE_CONIC)
 if test "x$with_context_manager" = "xnetwork-manager" -o \
         "x$with_context_manager" = "xunix" -a \
         "x$USE_CONIC" = "xyes"; then
-        PKG_CHECK_MODULES(DBUS_GLIB, dbus-glib-1 >= 0.76)
+        # We need gio >= 2.26 to use GDBus
+        PKG_CHECK_MODULES(GIO, gio-2.0 >= 2.26)
 fi
 
 # glib-genmarshal
