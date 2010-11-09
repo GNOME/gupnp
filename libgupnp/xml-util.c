@@ -116,7 +116,10 @@ xml_util_get_child_element_content_uri (xmlNode    *node,
         if (!content)
                 return NULL;
 
-        uri = soup_uri_new_with_base (base, (const char *) content);
+        if (base != NULL)
+                uri = soup_uri_new_with_base (base, (const char *) content);
+        else
+                uri = soup_uri_new ((const char *) content);
 
         xmlFree (content);
 
