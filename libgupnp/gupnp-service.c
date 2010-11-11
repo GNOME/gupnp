@@ -117,6 +117,7 @@ gupnp_service_get_session (GUPnPService *service)
                  */
                 service->priv->session = soup_session_async_new_with_options
                   (SOUP_SESSION_IDLE_TIMEOUT, 60,
+                   SOUP_SESSION_TIMEOUT, 60,
                    SOUP_SESSION_ASYNC_CONTEXT,
                    gssdp_client_get_main_context (GSSDP_CLIENT (context)),
                    SOUP_SESSION_MAX_CONNS_PER_HOST, 1,
