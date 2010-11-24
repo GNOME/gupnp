@@ -212,7 +212,7 @@ http_request_set_accept_language (SoupMessage *message)
 }
 
 static double
-get_quality (char *val)
+get_quality (const char *val)
 {
         val = strstr (val, ";q=");
         if (!val)
@@ -222,6 +222,20 @@ get_quality (char *val)
         return atof (val);
 }
 
+static int
+sort_locales_by_quality (const char *a,
+                         const char *b)
+{
+        const double diff = get_quality (a) - get_quality (b);
+
+        if (diff == 0.0)
+                return 0;
+        else if (diff > 0)
+                return -1;
+
+        return 1;
+}
+
 /* Parses the Accept-Language header in @message, and returns its values
  * in an ordered list in UNIX locale format */
 GList *
@@ -229,7 +243,7 @@ http_request_get_accept_locales (SoupMessage *message)
 {
         const char *header;
         char **bits;
-        int i, j;
+        int i;
         GList *locales;
 
         header = soup_message_headers_get_one (message->request_headers,
@@ -241,26 +255,10 @@ http_request_get_accept_locales (SoupMessage *message)
 
         bits = g_strsplit (header, ",", -1);
 
-        /* Sort by quality using insertion sort */
-        bits[0] = g_strstrip (bits[0]);
-        for (i = 1; bits[i] != NULL; i++) {
-                char *value;
-                double value_q;
-
-                value = g_strstrip (bits[i]);
-                value_q = get_quality (value);
-
-                /* INSERT (bits, i, value) */
-                j = i - 1;
-                while (j >= 0 && get_quality (bits[j]) > value_q) {
-                        bits[j + 1] = bits[j];
-                        j--;
-                }
-                bits[j + 1] = value;
-        }
-
         /* Transform to list */
         for (i = 0; bits[i] != NULL; i++) {
+                bits[i] = g_strstrip (bits[i]);
+
                 switch (bits[i][0]) {
                 case '\0':
                         /* Empty */
@@ -280,6 +278,8 @@ http_request_get_accept_locales (SoupMessage *message)
         }
 
         g_free (bits);
+
+        locales = g_list_sort (locales, (GCompareFunc) sort_locales_by_quality);
 
         return locales;
 }
