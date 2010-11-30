@@ -1,3 +1,31 @@
+0.15.0
+======
+
+Changes since 0.14.0 not included in 0.14.1:
+
+- Port from dbus-glib to GDBus.
+- Enable gzip compression for large action response bodies.
+- Fix gupnp-binding-tool to generate headers usable in C++.
+
+Dependency related changes:
+
+- Require glib >= 2.24.0.
+- Require libsoup >= 2.28.2.
+- Require gio >= 2.26 (new dependency).
+- Drop dependency on dbus-glib.
+
+Bugs fixed in this release:
+
+2184 - Migrate from dbus-glib to glib's GDBus
+
+All contributors:
+
+Ross Burton <ross@linux.intel.com>
+Sven Neumann <s.neumann@raumfeld.com>
+Henry Hoegelow <h.hoegelow@raumfeld.com>
+Zeeshan Ali (Khattak) <zeeshanak@gnome.org>
+Fargier Sylvain <fargier.sylvain@free.fr>
+
 0.14.0
 ======
 
