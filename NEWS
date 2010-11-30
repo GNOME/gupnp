@@ -1,3 +1,21 @@
+0.14.1
+======
+
+Changes since 0.14.0:
+
+- Add sanity checks to GUPnPServiceProxyAction API.
+- Fix handling of accepted locales.
+- Handle unavailability of URL base.
+
+Bugs fixed in this release:
+
+2203 - gupnp-igd does not work on TP-Link TL-R860 due to empty URLBase tag
+
+All contributors:
+
+Sven Neumann <s.neumann@raumfeld.com>
+Zeeshan Ali (Khattak) <zeeshanak@gnome.org>
+
 0.14.0
 ======
 
