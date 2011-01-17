@@ -453,6 +453,7 @@ gupnp_root_device_constructor (GType                  type,
 
  DONE:
         /* Cleanup */
+        g_free (desc_path);
         g_free (location);
 
         return object;
