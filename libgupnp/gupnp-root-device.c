@@ -65,6 +65,7 @@ gupnp_root_device_finalize (GObject *object)
 
         device = GUPNP_ROOT_DEVICE (object);
 
+        g_object_unref (device->priv->description_doc);
         g_free (device->priv->description_path);
         g_free (device->priv->description_dir);
         g_free (device->priv->relative_location);
@@ -85,11 +86,6 @@ gupnp_root_device_dispose (GObject *object)
         if (device->priv->group) {
                 g_object_unref (device->priv->group);
                 device->priv->group = NULL;
-        }
-
-        if (device->priv->description_doc) {
-                g_object_unref (device->priv->description_doc);
-                device->priv->description_doc = NULL;
         }
 
         /* Call super */
