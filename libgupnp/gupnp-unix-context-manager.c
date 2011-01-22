@@ -101,6 +101,7 @@ create_and_signal_context (GUPnPUnixContextManager *manager,
                             interface,
                             error->message);
 
+                g_object_unref (context);
                 g_error_free (error);
 
                 return;
