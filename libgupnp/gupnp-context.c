@@ -234,17 +234,17 @@ gupnp_context_dispose (GObject *object)
                 context->priv->session = NULL;
         }
 
-        if (context->priv->server) {
-                g_object_unref (context->priv->server);
-                context->priv->server = NULL;
-        }
-
         while (context->priv->host_path_datas) {
                 HostPathData *data;
 
                 data = (HostPathData *) context->priv->host_path_datas->data;
 
                 gupnp_context_unhost_path (context, data->server_path);
+        }
+
+        if (context->priv->server) {
+                g_object_unref (context->priv->server);
+                context->priv->server = NULL;
         }
 
         /* Call super */
