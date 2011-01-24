@@ -213,7 +213,7 @@ find_service_node (GUPnPControlPoint *control_point,
 
                 info = GUPNP_SERVICE_INFO (l->data);
 
-                if ((strcmp (gupnp_service_info_get_udn (info), udn) == 0) ||
+                if ((strcmp (gupnp_service_info_get_udn (info), udn) == 0) &&
                     (strcmp (gupnp_service_info_get_service_type (info),
                              service_type) == 0))
                         break;
