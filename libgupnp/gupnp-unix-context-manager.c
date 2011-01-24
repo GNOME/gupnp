@@ -95,9 +95,9 @@ create_and_signal_context (GUPnPUnixContextManager *manager,
                                 NULL);
         if (error != NULL) {
                 if (!(error->domain == GSSDP_ERROR &&
-                        error->code == GSSDP_ERROR_NO_IP_ADDRESS))
-                        g_warning (
-                            "Failed to create context for interface '%s': %s\n",
+                      error->code == GSSDP_ERROR_NO_IP_ADDRESS))
+                        g_warning
+                           ("Failed to create context for interface '%s': %s",
                             interface,
                             error->message);
 
