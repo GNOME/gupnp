@@ -227,14 +227,42 @@ on_device_signal (GDBusProxy *proxy,
 }
 
 static void
+use_new_device (GUPnPNetworkManager *manager,
+                NMDevice            *nm_device)
+{
+        NMDeviceState state;
+        GVariant *value;
+
+        manager->priv->nm_devices = g_list_append (manager->priv->nm_devices,
+                                                   nm_device);
+
+        g_signal_connect (nm_device->proxy,
+                          "g-signal",
+                          G_CALLBACK (on_device_signal),
+                          nm_device);
+
+        value = g_dbus_proxy_get_cached_property (nm_device->proxy, "State");
+        state = g_variant_get_uint32 (value);
+        g_variant_unref (value);
+
+        if (state == NM_DEVICE_STATE_ACTIVATED) {
+                value = g_dbus_proxy_get_cached_property (nm_device->proxy,
+                                                          "Interface");
+
+                create_context_for_device (nm_device,
+                                           g_variant_get_string (value, NULL));
+
+                g_variant_unref (value);
+        }
+}
+
+static void
 device_proxy_new_cb (GObject      *source_object,
                      GAsyncResult *res,
                      gpointer      user_data) {
         GUPnPNetworkManager *manager;
         GDBusProxy *device_proxy;
         NMDevice *nm_device;
-        NMDeviceState state;
-        GVariant *value;
         GError *error;
 
         manager = GUPNP_NETWORK_MANAGER (user_data);
@@ -250,27 +278,7 @@ device_proxy_new_cb (GObject      *source_object,
 
         nm_device = nm_device_new (manager, device_proxy);
 
-        manager->priv->nm_devices = g_list_append (manager->priv->nm_devices,
-                                                   nm_device);
-
-        g_signal_connect (device_proxy,
-                          "g-signal",
-                          G_CALLBACK (on_device_signal),
-                          nm_device);
-
-        value = g_dbus_proxy_get_cached_property (device_proxy, "State");
-        state = g_variant_get_uint32 (value);
-        g_variant_unref (value);
-
-        if (state == NM_DEVICE_STATE_ACTIVATED) {
-                value = g_dbus_proxy_get_cached_property (device_proxy,
-                                                          "Interface");
-
-                create_context_for_device (nm_device,
-                                           g_variant_get_string (value, NULL));
-
-                g_variant_unref (value);
-        }
+        use_new_device (manager, nm_device);
 }
 
 static int
