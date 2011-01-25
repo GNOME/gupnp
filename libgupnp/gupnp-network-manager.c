@@ -190,6 +190,20 @@ create_context_for_device (NMDevice *nm_device, const char *iface)
 }
 
 static void
+on_device_activated (NMDevice *nm_device)
+{
+        GVariant *value;
+
+        value = g_dbus_proxy_get_cached_property (nm_device->proxy,
+                                                  "Interface");
+
+        create_context_for_device (nm_device,
+                                   g_variant_get_string (value, NULL));
+
+        g_variant_unref (value);
+}
+
+static void
 on_device_signal (GDBusProxy *proxy,
                   char       *sender_name,
                   char       *signal_name,
@@ -205,17 +219,9 @@ on_device_signal (GDBusProxy *proxy,
         nm_device = (NMDevice *) user_data;
         g_variant_get_child (parameters, 0, "u", &new_state);
 
-        if (new_state == NM_DEVICE_STATE_ACTIVATED) {
-                GVariant *value;
-
-                value = g_dbus_proxy_get_cached_property (nm_device->proxy,
-                                                          "Interface");
-
-                create_context_for_device (nm_device,
-                                           g_variant_get_string (value, NULL));
-
-                g_variant_unref (value);
-        } else if (nm_device->context != NULL) {
+        if (new_state == NM_DEVICE_STATE_ACTIVATED)
+                on_device_activated (nm_device);
+        else if (nm_device->context != NULL) {
                 /* For all other states we just destroy the context */
                 g_signal_emit_by_name (nm_device->manager,
                                        "context-unavailable",
@@ -245,15 +251,8 @@ use_new_device (GUPnPNetworkManager *manager,
         state = g_variant_get_uint32 (value);
         g_variant_unref (value);
 
-        if (state == NM_DEVICE_STATE_ACTIVATED) {
-                value = g_dbus_proxy_get_cached_property (nm_device->proxy,
-                                                          "Interface");
-
-                create_context_for_device (nm_device,
-                                           g_variant_get_string (value, NULL));
-
-                g_variant_unref (value);
-        }
+        if (state == NM_DEVICE_STATE_ACTIVATED)
+                on_device_activated (nm_device);
 }
 
 static void
