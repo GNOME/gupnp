@@ -95,7 +95,7 @@ nm_device_new (GUPnPNetworkManager *manager,
 
         nm_device = g_slice_new0 (NMDevice);
 
-        nm_device->manager = g_object_ref (manager);
+        nm_device->manager = manager;
         nm_device->proxy = g_object_ref (device_proxy);
 
         return nm_device;
@@ -114,7 +114,6 @@ nm_device_free (NMDevice *nm_device)
                 g_object_unref (nm_device->context);
         }
 
-        g_object_unref (nm_device->manager);
 
         g_slice_free (NMDevice, nm_device);
 }
