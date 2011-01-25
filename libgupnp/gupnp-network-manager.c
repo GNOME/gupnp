@@ -44,7 +44,9 @@
 #define DBUS_SERVICE_NM "org.freedesktop.NetworkManager"
 #define MANAGER_PATH "/org/freedesktop/NetworkManager"
 #define MANAGER_INTERFACE "org.freedesktop.NetworkManager"
+#define AP_INTERFACE "org.freedesktop.NetworkManager.AccessPoint"
 #define DEVICE_INTERFACE "org.freedesktop.NetworkManager.Device"
+#define WIFI_INTERFACE "org.freedesktop.NetworkManager.Device.Wireless"
 
 #define DBUS_SERVICE_DBUS "org.freedesktop.DBus"
 #define DBUS_PATH_DBUS "/org/freedesktop/DBus"
@@ -68,6 +70,15 @@ typedef enum
         NM_DEVICE_STATE_FAILED
 } NMDeviceState;
 
+typedef enum
+{
+        NM_DEVICE_TYPE_UNKNOWN,
+        NM_DEVICE_TYPE_ETHERNET,
+        NM_DEVICE_TYPE_WIFI,
+        NM_DEVICE_TYPE_GSM,
+        NM_DEVICE_TYPE_CDMA,
+} NMDeviceType;
+
 typedef struct
 {
         GUPnPNetworkManager *manager;
@@ -75,6 +86,8 @@ typedef struct
         GUPnPContext *context;
 
         GDBusProxy *proxy;
+        GDBusProxy *wifi_proxy;
+        GDBusProxy *ap_proxy;
 } NMDevice;
 
 struct _GUPnPNetworkManagerPrivate {
@@ -105,6 +118,10 @@ static void
 nm_device_free (NMDevice *nm_device)
 {
         g_object_unref (nm_device->proxy);
+        if (nm_device->wifi_proxy != NULL)
+                g_object_unref (nm_device->wifi_proxy);
+        if (nm_device->ap_proxy != NULL)
+                g_object_unref (nm_device->ap_proxy);
 
         if (nm_device->context != NULL) {
                 g_signal_emit_by_name (nm_device->manager,
@@ -158,23 +175,43 @@ create_loopback_context (gpointer data)
 }
 
 static void
-create_context_for_device (NMDevice *nm_device, const char *iface)
+create_context_for_device (NMDevice *nm_device)
 {
         GError *error = NULL;
         GMainContext *main_context;
         guint port;
+        GVariant *value;
+        char *iface;
+        char *ssid = NULL;
 
         g_object_get (nm_device->manager,
                       "main-context", &main_context,
                       "port", &port,
                       NULL);
 
+        value = g_dbus_proxy_get_cached_property (nm_device->proxy,
+                                                  "Interface");
+        iface = g_variant_dup_string (value, NULL);
+        g_variant_unref (value);
+
+        if (nm_device->ap_proxy != NULL) {
+                value = g_dbus_proxy_get_cached_property (nm_device->ap_proxy,
+                                                          "Ssid");
+                ssid = g_strndup (g_variant_get_data (value),
+                                  g_variant_get_size (value));
+                g_variant_unref (value);
+        }
+
         nm_device->context = g_object_new (GUPNP_TYPE_CONTEXT,
                                            "main-context", main_context,
                                            "interface", iface,
+                                           "network", ssid,
                                            "port", port,
                                            "error", &error,
                                            NULL);
+        g_free (iface);
+        g_free (ssid);
+
         if (error) {
                 g_warning ("Error creating GUPnP context: %s\n",
                            error->message);
@@ -190,17 +227,57 @@ create_context_for_device (NMDevice *nm_device, const char *iface)
 }
 
 static void
-on_device_activated (NMDevice *nm_device)
+ap_proxy_new_cb (GObject      *source_object,
+                 GAsyncResult *res,
+                 gpointer      user_data) {
+        NMDevice *nm_device;
+        GError *error;
+
+        nm_device = (NMDevice *) user_data;
+        error = NULL;
+
+        nm_device->ap_proxy = g_dbus_proxy_new_for_bus_finish (res, &error);
+        if (G_UNLIKELY (error != NULL)) {
+                g_message ("Failed to create D-Bus proxy: %s", error->message);
+                g_error_free (error);
+        }
+
+        create_context_for_device (nm_device);
+}
+
+static void
+on_wifi_device_activated (NMDevice *nm_device)
 {
         GVariant *value;
+        const char *ap_path;
 
-        value = g_dbus_proxy_get_cached_property (nm_device->proxy,
-                                                  "Interface");
+        value = g_dbus_proxy_get_cached_property (nm_device->wifi_proxy,
+                                                  "ActiveAccessPoint");
 
-        create_context_for_device (nm_device,
-                                   g_variant_get_string (value, NULL));
+        ap_path = g_variant_get_string (value, NULL);
+        if (G_UNLIKELY (ap_path == NULL))
+                create_context_for_device (nm_device);
+        else
+                g_dbus_proxy_new_for_bus (G_BUS_TYPE_SYSTEM,
+                                          G_DBUS_PROXY_FLAGS_NONE,
+                                          NULL,
+                                          DBUS_SERVICE_NM,
+                                          ap_path,
+                                          AP_INTERFACE,
+                                          nm_device->manager->priv->cancellable,
+                                          ap_proxy_new_cb,
+                                          nm_device);
 
         g_variant_unref (value);
+}
+
+static void
+on_device_activated (NMDevice *nm_device)
+{
+        if (nm_device->wifi_proxy != NULL)
+                on_wifi_device_activated (nm_device);
+        else
+                create_context_for_device (nm_device);
 }
 
 static void
@@ -229,6 +306,11 @@ on_device_signal (GDBusProxy *proxy,
 
                 g_object_unref (nm_device->context);
                 nm_device->context = NULL;
+
+                if (nm_device->ap_proxy != NULL) {
+                        g_object_unref (nm_device->ap_proxy);
+                        nm_device->ap_proxy = NULL;
+                }
         }
 }
 
@@ -256,12 +338,33 @@ use_new_device (GUPnPNetworkManager *manager,
 }
 
 static void
+wifi_proxy_new_cb (GObject      *source_object,
+                   GAsyncResult *res,
+                   gpointer      user_data) {
+        NMDevice *nm_device;
+        GError *error;
+
+        nm_device = (NMDevice *) user_data;
+        error = NULL;
+
+        nm_device->wifi_proxy = g_dbus_proxy_new_for_bus_finish (res, &error);
+        if (G_UNLIKELY (error != NULL)) {
+                g_message ("Failed to create D-Bus proxy: %s", error->message);
+                g_error_free (error);
+        }
+
+        use_new_device (nm_device->manager, nm_device);
+}
+
+static void
 device_proxy_new_cb (GObject      *source_object,
                      GAsyncResult *res,
                      gpointer      user_data) {
         GUPnPNetworkManager *manager;
         GDBusProxy *device_proxy;
         NMDevice *nm_device;
+        NMDeviceType type;
+        GVariant *value;
         GError *error;
 
         manager = GUPNP_NETWORK_MANAGER (user_data);
@@ -277,7 +380,26 @@ device_proxy_new_cb (GObject      *source_object,
 
         nm_device = nm_device_new (manager, device_proxy);
 
-        use_new_device (manager, nm_device);
+        value = g_dbus_proxy_get_cached_property (nm_device->proxy,
+                                                  "DeviceType");
+        type = g_variant_get_uint32 (value);
+        g_variant_unref (value);
+
+        if (type == NM_DEVICE_TYPE_WIFI) {
+                const char *path;
+
+                path = g_dbus_proxy_get_object_path (nm_device->proxy);
+                g_dbus_proxy_new_for_bus (G_BUS_TYPE_SYSTEM,
+                                          G_DBUS_PROXY_FLAGS_NONE,
+                                          NULL,
+                                          DBUS_SERVICE_NM,
+                                          path,
+                                          WIFI_INTERFACE,
+                                          manager->priv->cancellable,
+                                          wifi_proxy_new_cb,
+                                          nm_device);
+        } else
+                use_new_device (manager, nm_device);
 }
 
 static int
