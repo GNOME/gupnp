@@ -1,3 +1,33 @@
+0.15.1
+======
+
+Changes since 0.15.0:
+
+- Set 'ESSID' on WiFi contexts.
+- Fix a crasher bug.
+- Fix some leaks.
+- Remove a cyclic-reference
+- Fix logic to find service from list and therefore the issue of wrongly
+  ignoring new services.
+- Remove all hosted paths from SoupServer before unrefing it.
+
+Dependency related changes:
+
+- Require gssdp >= 0.9.2.
+
+Bugs fixed in this release:
+
+2212 - Leak in gupnp_root_device_construct
+2215 - gupnp-control-point ignores services at startup
+2216 - Leak in gupnp_resource_factory
+2217 - gupnp-unix-context-manager leaks contexts if interfaces are not up
+2218 - gupnp-context creates new SoupServers on shutdown
+
+All contributors:
+
+Zeeshan Ali (Khattak) <zeeshanak@gnome.org>
+Jens Georg <mail@jensge.org>
+
 0.15.0
 ======
 
