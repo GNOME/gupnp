@@ -87,12 +87,13 @@ create_and_signal_context (GUPnPUnixContextManager *manager,
                       NULL);
 
         error = NULL;
-        context = g_object_new (GUPNP_TYPE_CONTEXT,
-                                "main-context", main_context,
-                                "interface", interface,
-                                "port", port,
-                                "error", &error,
-                                NULL);
+        context = g_initable_new (GUPNP_TYPE_CONTEXT,
+                                  NULL,
+                                  &error,
+                                  "main-context", main_context,
+                                  "interface", interface,
+                                  "port", port,
+                                  NULL);
         if (error != NULL) {
                 if (!(error->domain == GSSDP_ERROR &&
                       error->code == GSSDP_ERROR_NO_IP_ADDRESS))
@@ -101,7 +102,6 @@ create_and_signal_context (GUPnPUnixContextManager *manager,
                             interface,
                             error->message);
 
-                g_object_unref (context);
                 g_error_free (error);
 
                 return;

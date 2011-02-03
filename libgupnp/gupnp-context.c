@@ -54,9 +54,18 @@
 #include "gena-protocol.h"
 #include "http-headers.h"
 
-G_DEFINE_TYPE (GUPnPContext,
-               gupnp_context,
-               GSSDP_TYPE_CLIENT);
+static void
+gupnp_context_initable_iface_init (gpointer g_iface,
+                                   gpointer iface_data);
+
+
+G_DEFINE_TYPE_EXTENDED (GUPnPContext,
+                        gupnp_context,
+                        GSSDP_TYPE_CLIENT,
+                        0,
+                        G_IMPLEMENT_INTERFACE
+                                (G_TYPE_INITABLE,
+                                 gupnp_context_initable_iface_init));
 
 struct _GUPnPContextPrivate {
         guint        port;
@@ -92,6 +101,8 @@ typedef struct {
         GList *user_agents;
 } HostPathData;
 
+static GInitableIface* initable_parent_iface = NULL;
+
 /*
  * Generates the default server ID.
  **/
@@ -123,18 +134,24 @@ gupnp_context_init (GUPnPContext *context)
         g_free (server_id);
 }
 
-static GObject *
-gupnp_context_constructor (GType                  type,
-                           guint                  n_props,
-                           GObjectConstructParam *props)
+static gboolean
+gupnp_context_initable_init (GInitable     *initable,
+                             GCancellable  *cancellable,
+                             GError       **error)
 {
-        GObject *object;
-        GUPnPContext *context;
         char *user_agent;
+        GError *inner_error = NULL;
+        GUPnPContext *context;
 
-        object = G_OBJECT_CLASS (gupnp_context_parent_class)->constructor
-                (type, n_props, props);
-        context = GUPNP_CONTEXT (object);
+        if (!initable_parent_iface->init(initable,
+                                         cancellable,
+                                         &inner_error)) {
+                g_propagate_error (error, inner_error);
+
+                return FALSE;
+        }
+
+        context = GUPNP_CONTEXT (initable);
 
         context->priv->session = soup_session_async_new_with_options
                 (SOUP_SESSION_IDLE_TIMEOUT,
@@ -161,7 +178,16 @@ gupnp_context_constructor (GType                  type,
         soup_session_add_feature_by_type (context->priv->session,
                                           SOUP_TYPE_CONTENT_DECODER);
 
-        return object;
+        return TRUE;
+}
+
+static void
+gupnp_context_initable_iface_init (gpointer g_iface,
+                                   gpointer iface_data)
+{
+        GInitableIface *iface = (GInitableIface *)g_iface;
+        initable_parent_iface = g_type_interface_peek_parent (iface);
+        iface->init = gupnp_context_initable_init;
 }
 
 static void
@@ -274,7 +300,6 @@ gupnp_context_class_init (GUPnPContextClass *klass)
 
         object_class = G_OBJECT_CLASS (klass);
 
-        object_class->constructor  = gupnp_context_constructor;
         object_class->set_property = gupnp_context_set_property;
         object_class->get_property = gupnp_context_get_property;
         object_class->dispose      = gupnp_context_dispose;
@@ -475,12 +500,13 @@ gupnp_context_new (GMainContext *main_context,
                    guint         port,
                    GError      **error)
 {
-        return g_object_new (GUPNP_TYPE_CONTEXT,
-                             "main-context", main_context,
-                             "interface", interface,
-                             "port", port,
-                             "error", error,
-                             NULL);
+        return g_initable_new (GUPNP_TYPE_CONTEXT,
+                               NULL,
+                               error,
+                               "main-context", main_context,
+                               "interface", interface,
+                               "port", port,
+                               NULL);
 }
 
 /**
