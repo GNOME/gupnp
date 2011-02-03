@@ -52,6 +52,8 @@ gupnp_service_proxy_get_type (void) G_GNUC_CONST;
                  GUPnPServiceProxyClass))
 
 typedef struct _GUPnPServiceProxyPrivate GUPnPServiceProxyPrivate;
+typedef struct _GUPnPServiceProxy GUPnPServiceProxy;
+typedef struct _GUPnPServiceProxyClass GUPnPServiceProxyClass;
 
 /**
  * GUPnPServiceProxy:
@@ -59,13 +61,13 @@ typedef struct _GUPnPServiceProxyPrivate GUPnPServiceProxyPrivate;
  * This struct contains private data only, and should be accessed using the
  * functions below.
  */
-typedef struct {
+struct _GUPnPServiceProxy {
         GUPnPServiceInfo parent;
 
         GUPnPServiceProxyPrivate *priv;
-} GUPnPServiceProxy;
+};
 
-typedef struct {
+struct _GUPnPServiceProxyClass {
         GUPnPServiceInfoClass parent_class;
 
         /* signals */
@@ -77,7 +79,7 @@ typedef struct {
         void (* _gupnp_reserved2) (void);
         void (* _gupnp_reserved3) (void);
         void (* _gupnp_reserved4) (void);
-} GUPnPServiceProxyClass;
+};
 
 /**
  * GUPnPServiceProxyAction

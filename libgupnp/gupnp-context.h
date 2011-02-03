@@ -53,6 +53,8 @@ gupnp_context_get_type (void) G_GNUC_CONST;
                  GUPnPContextClass))
 
 typedef struct _GUPnPContextPrivate GUPnPContextPrivate;
+typedef struct _GUPnPContext GUPnPContext;
+typedef struct _GUPnPContextClass GUPnPContextClass;
 
 /**
  * GUPnPContext:
@@ -60,13 +62,13 @@ typedef struct _GUPnPContextPrivate GUPnPContextPrivate;
  * This struct contains private data only, and should be accessed using the
  * functions below.
  */
-typedef struct {
+struct _GUPnPContext {
         GSSDPClient parent;
 
         GUPnPContextPrivate *priv;
-} GUPnPContext;
+};
 
-typedef struct {
+struct _GUPnPContextClass {
         GSSDPClientClass parent_class;
 
         /* future padding */
@@ -74,7 +76,7 @@ typedef struct {
         void (* _gupnp_reserved2) (void);
         void (* _gupnp_reserved3) (void);
         void (* _gupnp_reserved4) (void);
-} GUPnPContextClass;
+};
 
 GUPnPContext *
 gupnp_context_new                      (GMainContext *main_context,

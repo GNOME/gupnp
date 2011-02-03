@@ -54,6 +54,8 @@ gupnp_context_manager_get_type (void) G_GNUC_CONST;
                  GUPnPContextManagerClass))
 
 typedef struct _GUPnPContextManagerPrivate GUPnPContextManagerPrivate;
+typedef struct _GUPnPContextManager GUPnPContextManager;
+typedef struct _GUPnPContextManagerClass GUPnPContextManagerClass;
 
 /**
  * GUPnPContextManager:
@@ -61,13 +63,13 @@ typedef struct _GUPnPContextManagerPrivate GUPnPContextManagerPrivate;
  * This struct contains private data only, and should be accessed using the
  * functions below.
  */
-typedef struct {
+struct _GUPnPContextManager {
         GObject parent;
 
         GUPnPContextManagerPrivate *priv;
-} GUPnPContextManager;
+};
 
-typedef struct {
+struct _GUPnPContextManagerClass {
         GObjectClass parent_class;
 
         /* future padding */
@@ -75,7 +77,7 @@ typedef struct {
         void (* _gupnp_reserved2) (void);
         void (* _gupnp_reserved3) (void);
         void (* _gupnp_reserved4) (void);
-} GUPnPContextManagerClass;
+};
 
 GUPnPContextManager *
 gupnp_context_manager_new              (GMainContext *main_context,

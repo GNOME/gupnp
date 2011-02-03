@@ -56,6 +56,8 @@ gupnp_control_point_get_type (void) G_GNUC_CONST;
                  GUPnPControlPointClass))
 
 typedef struct _GUPnPControlPointPrivate GUPnPControlPointPrivate;
+typedef struct _GUPnPControlPoint GUPnPControlPoint;
+typedef struct _GUPnPControlPointClass GUPnPControlPointClass;
 
 /**
  * GUPnPControlPoint:
@@ -63,13 +65,13 @@ typedef struct _GUPnPControlPointPrivate GUPnPControlPointPrivate;
  * This struct contains private data only, and should be accessed using the
  * functions below.
  */
-typedef struct {
+struct _GUPnPControlPoint {
         GSSDPResourceBrowser parent;
 
         GUPnPControlPointPrivate *priv;
-} GUPnPControlPoint;
+};
 
-typedef struct {
+struct _GUPnPControlPointClass {
         GSSDPResourceBrowserClass parent_class;
 
         /* signals */
@@ -89,7 +91,7 @@ typedef struct {
         void (* _gupnp_reserved1) (void);
         void (* _gupnp_reserved2) (void);
         void (* _gupnp_reserved3) (void);
-} GUPnPControlPointClass;
+};
 
 GUPnPControlPoint *
 gupnp_control_point_new                  (GUPnPContext         *context,

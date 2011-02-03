@@ -53,6 +53,8 @@ gupnp_resource_factory_get_type (void) G_GNUC_CONST;
                  GUPnPResourceFactoryClass))
 
 typedef struct _GUPnPResourceFactoryPrivate GUPnPResourceFactoryPrivate;
+typedef struct _GUPnPResourceFactory GUPnPResourceFactory;
+typedef struct _GUPnPResourceFactoryClass GUPnPResourceFactoryClass;
 
 /**
  * GUPnPResourceFactory:
@@ -60,13 +62,13 @@ typedef struct _GUPnPResourceFactoryPrivate GUPnPResourceFactoryPrivate;
  * This struct contains private data only, and should be accessed using the
  * functions below.
  */
-typedef struct {
+struct _GUPnPResourceFactory {
         GObject parent;
 
         GUPnPResourceFactoryPrivate *priv;
-} GUPnPResourceFactory;
+};
 
-typedef struct {
+struct _GUPnPResourceFactoryClass {
         GObjectClass parent_class;
 
         /* future padding */
@@ -74,7 +76,7 @@ typedef struct {
         void (* _gupnp_reserved2) (void);
         void (* _gupnp_reserved3) (void);
         void (* _gupnp_reserved4) (void);
-} GUPnPResourceFactoryClass;
+};
 
 GUPnPResourceFactory *
 gupnp_resource_factory_new         (void);

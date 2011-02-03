@@ -57,6 +57,8 @@ gupnp_device_info_get_type (void) G_GNUC_CONST;
                  GUPnPDeviceInfoClass))
 
 typedef struct _GUPnPDeviceInfoPrivate GUPnPDeviceInfoPrivate;
+typedef struct _GUPnPDeviceInfo GUPnPDeviceInfo;
+typedef struct _GUPnPDeviceInfoClass GUPnPDeviceInfoClass;
 
 /**
  * GUPnPDeviceInfo:
@@ -64,13 +66,13 @@ typedef struct _GUPnPDeviceInfoPrivate GUPnPDeviceInfoPrivate;
  * This struct contains private data only, and should be accessed using the
  * functions below.
  */
-typedef struct {
+struct _GUPnPDeviceInfo {
         GObject parent;
 
         GUPnPDeviceInfoPrivate *priv;
-} GUPnPDeviceInfo;
+};
 
-typedef struct {
+struct _GUPnPDeviceInfoClass {
         GObjectClass parent_class;
 
         /* vtable */
@@ -85,7 +87,7 @@ typedef struct {
         void (* _gupnp_reserved2) (void);
         void (* _gupnp_reserved3) (void);
         void (* _gupnp_reserved4) (void);
-} GUPnPDeviceInfoClass;
+};
 
 
 GUPnPContext *

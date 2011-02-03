@@ -129,6 +129,10 @@ typedef struct {
 
 typedef struct _GUPnPServiceIntrospectionPrivate
                 GUPnPServiceIntrospectionPrivate;
+typedef struct _GUPnPServiceIntrospection
+                GUPnPServiceIntrospection;
+typedef struct _GUPnPServiceIntrospectionClass
+                GUPnPServiceIntrospectionClass;
 
 /**
  * GUPnPServiceIntrospection:
@@ -136,15 +140,15 @@ typedef struct _GUPnPServiceIntrospectionPrivate
  * This struct contains private data only, and should be accessed using the
  * functions below.
  */
-typedef struct {
+struct _GUPnPServiceIntrospection {
         GObject parent;
 
         GUPnPServiceIntrospectionPrivate *priv;
-} GUPnPServiceIntrospection;
+};
 
-typedef struct {
+struct _GUPnPServiceIntrospectionClass {
         GObjectClass parent_class;
-} GUPnPServiceIntrospectionClass;
+};
 
 const GList *
 gupnp_service_introspection_list_action_names

@@ -52,15 +52,18 @@ gupnp_xml_doc_get_type (void) G_GNUC_CONST;
                  GUPNP_TYPE_XML_DOC, \
                  GUPnPXMLDocClass))
 
-typedef struct {
+typedef struct _GUPnPXMLDoc GUPnPXMLDoc;
+typedef struct _GUPnPXMLDocClass GUPnPXMLDocClass;
+
+struct _GUPnPXMLDoc {
         GObject parent;
         /*< public >*/
         xmlDoc *doc;
-} GUPnPXMLDoc;
+};
 
-typedef struct {
+struct _GUPnPXMLDocClass {
         GObjectClass parent_class;
-} GUPnPXMLDocClass;
+};
 
 GUPnPXMLDoc *
 gupnp_xml_doc_new                       (xmlDoc         *xml_doc);

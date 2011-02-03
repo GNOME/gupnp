@@ -51,6 +51,8 @@ gupnp_device_proxy_get_type (void) G_GNUC_CONST;
                  GUPnPDeviceProxyClass))
 
 typedef struct _GUPnPDeviceProxyPrivate GUPnPDeviceProxyPrivate;
+typedef struct _GUPnPDeviceProxy GUPnPDeviceProxy;
+typedef struct _GUPnPDeviceProxyClass GUPnPDeviceProxyClass;
 
 /**
  * GUPnPDeviceProxy:
@@ -58,13 +60,13 @@ typedef struct _GUPnPDeviceProxyPrivate GUPnPDeviceProxyPrivate;
  * This struct contains private data only, and should be accessed using the
  * functions below.
  */
-typedef struct {
+struct _GUPnPDeviceProxy {
         GUPnPDeviceInfo parent;
 
         GUPnPDeviceProxyPrivate *priv;
-} GUPnPDeviceProxy;
+};
 
-typedef struct {
+struct _GUPnPDeviceProxyClass {
         GUPnPDeviceInfoClass parent_class;
 
         /* future padding */
@@ -72,7 +74,7 @@ typedef struct {
         void (* _gupnp_reserved2) (void);
         void (* _gupnp_reserved3) (void);
         void (* _gupnp_reserved4) (void);
-} GUPnPDeviceProxyClass;
+};
 
 G_END_DECLS
 

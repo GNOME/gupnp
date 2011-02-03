@@ -56,6 +56,8 @@ gupnp_root_device_get_type (void) G_GNUC_CONST;
                  GUPnPRootDeviceClass))
 
 typedef struct _GUPnPRootDevicePrivate GUPnPRootDevicePrivate;
+typedef struct _GUPnPRootDevice GUPnPRootDevice;
+typedef struct _GUPnPRootDeviceClass GUPnPRootDeviceClass;
 
 /**
  * GUPnPRootDevice:
@@ -63,13 +65,13 @@ typedef struct _GUPnPRootDevicePrivate GUPnPRootDevicePrivate;
  * This struct contains private data only, and should be accessed using the
  * functions below.
  */
-typedef struct {
+struct _GUPnPRootDevice {
         GUPnPDevice parent;
 
         GUPnPRootDevicePrivate *priv;
-} GUPnPRootDevice;
+};
 
-typedef struct {
+struct _GUPnPRootDeviceClass {
         GUPnPDeviceClass parent_class;
 
         /* future padding */
@@ -77,7 +79,7 @@ typedef struct {
         void (* _gupnp_reserved2) (void);
         void (* _gupnp_reserved3) (void);
         void (* _gupnp_reserved4) (void);
-} GUPnPRootDeviceClass;
+};
 
 GUPnPRootDevice *
 gupnp_root_device_new             (GUPnPContext         *context,
