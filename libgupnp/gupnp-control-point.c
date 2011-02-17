@@ -471,9 +471,6 @@ description_loaded (GUPnPControlPoint *control_point,
                 return;
         }
 
-        if (element == NULL)
-                return;
-
         url_base = xml_util_get_child_element_content_uri (element,
                                                            "URLBase",
                                                            NULL);
