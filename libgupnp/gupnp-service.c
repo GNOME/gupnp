@@ -797,17 +797,16 @@ new_action_response_str (const char   *action_name,
 
         g_string_append (str, "<u:");
         g_string_append (str, action_name);
-        g_string_append (str, "Response xmlns:u=");
+        g_string_append (str, "Response xmlns:u=\"");
 
         if (service_type != NULL) {
                 g_string_append (str, service_type);
-                g_string_append_c (str, '"');
         } else {
                 g_warning ("No serviceType defined. Control may not work "
                            "correctly.");
         }
 
-        g_string_append_c (str, '>');
+        g_string_append (str, "\">");
 
         return str;
 }
