@@ -256,6 +256,20 @@ ap_proxy_new_cb (GObject      *source_object,
         create_context_for_device (nm_device);
 }
 
+static GMainContext *
+push_thread_main_context (GUPnPNetworkManager *manager)
+{
+     GMainContext *main_context;
+
+     g_object_get (manager,
+		   "main-context", &main_context,
+		   NULL);
+
+     g_main_context_push_thread_default (main_context);
+
+     return main_context;
+}
+
 static void
 on_wifi_device_activated (NMDevice *nm_device)
 {
@@ -276,7 +290,10 @@ on_wifi_device_activated (NMDevice *nm_device)
         ap_path = g_variant_get_string (value, NULL);
         if (G_UNLIKELY (ap_path == NULL))
                 create_context_for_device (nm_device);
-        else
+        else {
+                GMainContext *main_context;
+
+                main_context = push_thread_main_context (nm_device->manager);
                 g_dbus_proxy_new_for_bus (G_BUS_TYPE_SYSTEM,
                                           G_DBUS_PROXY_FLAGS_NONE,
                                           NULL,
@@ -286,6 +303,8 @@ on_wifi_device_activated (NMDevice *nm_device)
                                           nm_device->manager->priv->cancellable,
                                           ap_proxy_new_cb,
                                           nm_device);
+                g_main_context_pop_thread_default (main_context);
+	}
 
         g_variant_unref (value);
 }
@@ -427,6 +446,9 @@ device_proxy_new_cb (GObject      *source_object,
 
         if (type == NM_DEVICE_TYPE_WIFI) {
                 const char *path;
+                GMainContext *main_context;
+
+                main_context = push_thread_main_context (manager);
 
                 path = g_dbus_proxy_get_object_path (nm_device->proxy);
                 g_dbus_proxy_new_for_bus (G_BUS_TYPE_SYSTEM,
@@ -438,6 +460,7 @@ device_proxy_new_cb (GObject      *source_object,
                                           manager->priv->cancellable,
                                           wifi_proxy_new_cb,
                                           nm_device);
+                g_main_context_pop_thread_default (main_context);
         } else
                 use_new_device (manager, nm_device);
 }
@@ -467,11 +490,14 @@ on_manager_signal (GDBusProxy *proxy,
 
         if (g_strcmp0 (signal_name, "DeviceAdded") == 0) {
                 char *device_path = NULL;
+                GMainContext *main_context;
 
                 g_variant_get_child (parameters, 0, "o", &device_path);
                 if (G_UNLIKELY (device_path == NULL))
                         return;
 
+
+                main_context = push_thread_main_context (manager);
                 g_dbus_proxy_new_for_bus (G_BUS_TYPE_SYSTEM,
                                           G_DBUS_PROXY_FLAGS_NONE,
                                           NULL,
@@ -481,6 +507,7 @@ on_manager_signal (GDBusProxy *proxy,
                                           manager->priv->cancellable,
                                           device_proxy_new_cb,
                                           manager);
+                g_main_context_pop_thread_default (main_context);
                 g_free (device_path);
         } else if (g_strcmp0 (signal_name, "DeviceRemoved") == 0) {
                 GList *device_node;
@@ -522,6 +549,7 @@ get_devices_cb (GObject      *source_object,
         GVariantIter *device_iter;
         char* device_path;
         GError *error = NULL;
+        GMainContext *main_context;
 
         manager = GUPNP_NETWORK_MANAGER (user_data);
 
@@ -538,6 +566,7 @@ get_devices_cb (GObject      *source_object,
         }
 
         g_variant_get_child (ret, 0, "ao", &device_iter);
+        main_context = push_thread_main_context (manager);
         while (g_variant_iter_loop (device_iter, "o", &device_path))
                 g_dbus_proxy_new_for_bus (G_BUS_TYPE_SYSTEM,
                                           G_DBUS_PROXY_FLAGS_NONE,
@@ -548,6 +577,7 @@ get_devices_cb (GObject      *source_object,
                                           manager->priv->cancellable,
                                           device_proxy_new_cb,
                                           user_data);
+        g_main_context_pop_thread_default (main_context);
         g_variant_iter_free (device_iter);
 
         g_variant_unref (ret);
@@ -579,6 +609,7 @@ static void
 init_network_manager (GUPnPNetworkManager *manager)
 {
         GUPnPNetworkManagerPrivate *priv;
+        GMainContext *main_context;
         GError *error;
 
         priv = manager->priv;
@@ -606,6 +637,8 @@ init_network_manager (GUPnPNetworkManager *manager)
                           G_CALLBACK (on_manager_signal),
                           manager);
 
+
+        main_context = push_thread_main_context (manager);
         g_dbus_proxy_call (priv->manager_proxy,
                            "GetDevices",
                            NULL,
@@ -614,6 +647,7 @@ init_network_manager (GUPnPNetworkManager *manager)
                            priv->cancellable,
                            get_devices_cb,
                            manager);
+        g_main_context_pop_thread_default (main_context);
 }
 
 static void
