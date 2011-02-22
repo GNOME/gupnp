@@ -191,15 +191,26 @@ create_context_for_device (NMDevice *nm_device)
 
         value = g_dbus_proxy_get_cached_property (nm_device->proxy,
                                                   "Interface");
+        if (G_UNLIKELY (value == NULL))
+                return;
+
+        if (G_UNLIKELY (g_variant_is_of_type (value, G_VARIANT_TYPE_STRING))) {
+                g_variant_unref (value);
+
+                return;
+        }
+
         iface = g_variant_dup_string (value, NULL);
         g_variant_unref (value);
 
         if (nm_device->ap_proxy != NULL) {
                 value = g_dbus_proxy_get_cached_property (nm_device->ap_proxy,
                                                           "Ssid");
-                ssid = g_strndup (g_variant_get_data (value),
-                                  g_variant_get_size (value));
-                g_variant_unref (value);
+                if (G_LIKELY (value != NULL)) {
+                        ssid = g_strndup (g_variant_get_data (value),
+                                          g_variant_get_size (value));
+                        g_variant_unref (value);
+                }
         }
 
         nm_device->context = g_object_new (GUPNP_TYPE_CONTEXT,
@@ -253,6 +264,14 @@ on_wifi_device_activated (NMDevice *nm_device)
 
         value = g_dbus_proxy_get_cached_property (nm_device->wifi_proxy,
                                                   "ActiveAccessPoint");
+        if (G_UNLIKELY (value == NULL))
+                return;
+
+        if (G_UNLIKELY (g_variant_is_of_type (value, G_VARIANT_TYPE_STRING))) {
+                g_variant_unref (value);
+
+                return;
+        }
 
         ap_path = g_variant_get_string (value, NULL);
         if (G_UNLIKELY (ap_path == NULL))
@@ -330,6 +349,12 @@ use_new_device (GUPnPNetworkManager *manager,
                           nm_device);
 
         value = g_dbus_proxy_get_cached_property (nm_device->proxy, "State");
+        if (G_UNLIKELY (!value))
+                return;
+        if (G_UNLIKELY (g_variant_is_of_type (value, G_VARIANT_TYPE_UINT32))) {
+                g_variant_unref (value);
+                return;
+        }
         state = g_variant_get_uint32 (value);
         g_variant_unref (value);
 
@@ -378,12 +403,22 @@ device_proxy_new_cb (GObject      *source_object,
                 return;
         }
 
-        nm_device = nm_device_new (manager, device_proxy);
-
         value = g_dbus_proxy_get_cached_property (nm_device->proxy,
                                                   "DeviceType");
+        if (G_UNLIKELY (!value)) {
+                g_object_unref(device_proxy);
+                return;
+        }
+        if (G_UNLIKELY (g_variant_is_of_type (value, G_VARIANT_TYPE_UINT32))) {
+                g_variant_unref (value);
+                g_object_unref(device_proxy);
+                return;
+        }
+
         type = g_variant_get_uint32 (value);
         g_variant_unref (value);
+
+        nm_device = nm_device_new (manager, device_proxy);
 
         if (type == NM_DEVICE_TYPE_WIFI) {
                 const char *path;
