@@ -349,12 +349,15 @@ use_new_device (GUPnPNetworkManager *manager,
                           nm_device);
 
         value = g_dbus_proxy_get_cached_property (nm_device->proxy, "State");
-        if (G_UNLIKELY (!value))
+        if (G_UNLIKELY (value == NULL))
                 return;
+
         if (G_UNLIKELY (g_variant_is_of_type (value, G_VARIANT_TYPE_UINT32))) {
                 g_variant_unref (value);
+
                 return;
         }
+
         state = g_variant_get_uint32 (value);
         g_variant_unref (value);
 
@@ -404,13 +407,16 @@ device_proxy_new_cb (GObject      *source_object,
         }
 
         value = g_dbus_proxy_get_cached_property (device_proxy, "DeviceType");
-        if (G_UNLIKELY (!value)) {
-                g_object_unref(device_proxy);
+        if (G_UNLIKELY (value == NULL)) {
+                g_object_unref (device_proxy);
+
                 return;
         }
+
         if (G_UNLIKELY (g_variant_is_of_type (value, G_VARIANT_TYPE_UINT32))) {
                 g_variant_unref (value);
-                g_object_unref(device_proxy);
+                g_object_unref (device_proxy);
+
                 return;
         }
 
