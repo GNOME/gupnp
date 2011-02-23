@@ -403,8 +403,7 @@ device_proxy_new_cb (GObject      *source_object,
                 return;
         }
 
-        value = g_dbus_proxy_get_cached_property (nm_device->proxy,
-                                                  "DeviceType");
+        value = g_dbus_proxy_get_cached_property (device_proxy, "DeviceType");
         if (G_UNLIKELY (!value)) {
                 g_object_unref(device_proxy);
                 return;
