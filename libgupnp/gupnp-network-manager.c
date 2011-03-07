@@ -194,7 +194,7 @@ create_context_for_device (NMDevice *nm_device)
         if (G_UNLIKELY (value == NULL))
                 return;
 
-        if (G_UNLIKELY (g_variant_is_of_type (value, G_VARIANT_TYPE_STRING))) {
+        if (G_UNLIKELY (!g_variant_is_of_type (value, G_VARIANT_TYPE_STRING))) {
                 g_variant_unref (value);
 
                 return;
@@ -281,7 +281,8 @@ on_wifi_device_activated (NMDevice *nm_device)
         if (G_UNLIKELY (value == NULL))
                 return;
 
-        if (G_UNLIKELY (g_variant_is_of_type (value, G_VARIANT_TYPE_STRING))) {
+        if (G_UNLIKELY (!g_variant_is_of_type (value,
+                                               G_VARIANT_TYPE_OBJECT_PATH))) {
                 g_variant_unref (value);
 
                 return;
@@ -371,7 +372,7 @@ use_new_device (GUPnPNetworkManager *manager,
         if (G_UNLIKELY (value == NULL))
                 return;
 
-        if (G_UNLIKELY (g_variant_is_of_type (value, G_VARIANT_TYPE_UINT32))) {
+        if (G_UNLIKELY (!g_variant_is_of_type (value, G_VARIANT_TYPE_UINT32))) {
                 g_variant_unref (value);
 
                 return;
@@ -432,7 +433,7 @@ device_proxy_new_cb (GObject      *source_object,
                 return;
         }
 
-        if (G_UNLIKELY (g_variant_is_of_type (value, G_VARIANT_TYPE_UINT32))) {
+        if (G_UNLIKELY (!g_variant_is_of_type (value, G_VARIANT_TYPE_UINT32))) {
                 g_variant_unref (value);
                 g_object_unref (device_proxy);
 
