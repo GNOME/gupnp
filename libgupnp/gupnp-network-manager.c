@@ -763,7 +763,7 @@ gupnp_network_manager_is_available (GMainContext *main_context)
                                              g_variant_new ("(s)",
                                                             DBUS_SERVICE_NM),
                                              G_DBUS_CALL_FLAGS_NONE,
-                                             3,
+                                             -1,
                                              NULL,
                                              &error);
         if (error != NULL) {
