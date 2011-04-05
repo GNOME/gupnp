@@ -1,3 +1,31 @@
+0.16.0
+======
+
+Changes since 0.15.1:
+
+- Set the thread context before doing GDBus operations.
+- Use the default timeout on DBus calls.
+- Fix documentation of gupnp_context_manager_new().
+- Remove redundant code.
+- Clear the (obsolete) ChangeLog file.
+- Add some checks on variants.
+- Don't use uninitialized pointer.
+- Some coding-style fixes.
+
+Bugs fixed in this release:
+
+2224 - GUPnP accesses dbus properties without checking that they exist
+2223 - Missing handling of gio-style multi-main-context in GUPnPNetworkManager
+
+All contributors:
+
+Olivier Crête <olivier.crete@collabora.co.uk>
+Zeeshan Ali (Khattak) <zeeshanak@gnome.org>
+Sven Neumann <s.neumann@raumfeld.com>
+Jens Georg <mail@jensge.org>
+Ross Burton <ross@linux.intel.com>
+Luis de Bethencourt <luis@debethencourt.com>
+
 0.15.1
 ======
 
