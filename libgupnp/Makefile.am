@@ -9,8 +9,18 @@ CONTEXT_MANAGER_IMPL =
 CONTEXT_MANAGER_CFLAGS =
 endif
 
+if USE_NETLINK
+NETLINK_CFLAGS = -DUSE_NETLINK
+CONTEXT_MANAGER_IMPL += \
+			  gupnp-linux-context-manager.c		\
+			  gupnp-linux-context-manager.h
+else
+NETLINK_CFLAGS =
+endif
+
 AM_CFLAGS = $(LIBGUPNP_CFLAGS) \
 	    $(DBUS_GLIB_CFLAGS) \
+	    $(NETLINK_CFLAGS) \
 	    -I$(top_srcdir) \
 	    $(CONTEXT_MANAGER_CFLAGS)
 
@@ -87,6 +97,8 @@ libgupnp_1_0_la_LIBADD = $(LIBGUPNP_LIBS) $(DBUS_GLIB_LIBS) $(LIBCONIC_LIBS)
 EXTRA_DIST = gupnp-marshal.list 	   \
 	     gupnp-network-manager.c   	   \
 	     gupnp-network-manager.h       \
+	     gupnp-linux-context-manager.c \
+	     gupnp-linux-context-manager.h \
 	     gupnp-unix-context-manager.c  \
 	     gupnp-unix-context-manager.h
 

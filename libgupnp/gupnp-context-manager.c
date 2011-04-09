@@ -373,6 +373,9 @@ gupnp_context_manager_new (GMainContext *main_context,
 
         if (gupnp_network_manager_is_available (main_context))
                 impl_type = GUPNP_TYPE_NETWORK_MANAGER;
+#elif USE_NETLINK
+#include "gupnp-linux-context-manager.h"
+        impl_type = GUPNP_TYPE_LINUX_CONTEXT_MANAGER;
 #endif
 
         if (impl_type == G_TYPE_INVALID)

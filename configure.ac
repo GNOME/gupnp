@@ -44,7 +44,7 @@ PKG_CHECK_MODULES(GTHREAD, gthread-2.0)
 
 AC_ARG_WITH([context_manager],
             AS_HELP_STRING(
-                        [--with-context-manager=@<:@network-manager/unix@:>@],
+                        [--with-context-manager=@<:@network-manager/unix/linux@:>@],
                         [Context Manager backend to use]),,
             [with_context_manager="unix"])
 
@@ -53,6 +53,32 @@ AC_MSG_RESULT([${with_context_manager}])
 
 AM_CONDITIONAL([USE_NETWORK_MANAGER],
                [test "x$with_context_manager" = "xnetwork-manager"])
+
+USE_NETLINK=no
+if test "x$with_context_manager" = "xlinux"; then
+       dnl check for netlink (Linux)
+       AC_CHECK_HEADERS([sys/socket.h linux/rtnetlink.h],
+                        [ USE_NETLINK=yes ],
+                        [ USE_NETLINK=no ],
+                        [ #ifdef HAVE_SYS_SOCKET_H
+                          #include <sys/socket.h>
+                          #endif
+                        ])
+       if test "x$USE_NETLINK" = "xno"
+       then
+               AC_MSG_NOTICE([No rtnetlink found, falling back to unix context
+                              manager])
+       else
+               AC_CHECK_HEADERS([linux/wireless.h], [], [],
+                                [ #ifdef HAVE_SYS_SOCKET_H
+                                  #include <sys/socket.h>
+                                  #endif
+                                ])
+       fi
+fi
+
+AM_CONDITIONAL(USE_NETLINK, test "x$USE_NETLINK" = "xyes")
+AC_SUBST(USE_NETLINK)
 
 # glib-genmarshal
 GLIB_GENMARSHAL=`pkg-config --variable=glib_genmarshal glib-2.0`
