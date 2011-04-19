@@ -1870,7 +1870,7 @@ notify_subscriber (gpointer key,
 
         /* Add body */
         soup_message_set_request (msg,
-                                  "text/xml; charset=utf-8",
+                                  "text/xml; charset=\"utf-8\"",
                                   SOUP_MEMORY_TAKE,
                                   g_strdup (property_set),
                                   strlen (property_set));
