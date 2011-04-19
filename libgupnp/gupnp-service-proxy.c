@@ -787,7 +787,7 @@ finish_action_msg (GUPnPServiceProxyAction *action,
                          "</s:Envelope>");
 
         soup_message_set_request (action->msg,
-                                  "text/xml; charset=utf-8",
+                                  "text/xml; charset=\"utf-8\"",
                                   SOUP_MEMORY_TAKE,
                                   action->msg_str->str,
                                   action->msg_str->len);
