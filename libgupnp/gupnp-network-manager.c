@@ -58,16 +58,28 @@ G_DEFINE_TYPE (GUPnPNetworkManager,
 
 typedef enum
 {
-        NM_DEVICE_STATE_UNKNOWN,
-        NM_DEVICE_STATE_UNMANAGED,
-        NM_DEVICE_STATE_UNAVAILABLE,
-        NM_DEVICE_STATE_DISCONNECTED,
-        NM_DEVICE_STATE_PREPARE,
-        NM_DEVICE_STATE_CONFIG,
-        NM_DEVICE_STATE_NEED_AUTH,
-        NM_DEVICE_STATE_IP_CONFIG,
-        NM_DEVICE_STATE_ACTIVATED,
-        NM_DEVICE_STATE_FAILED
+        NM_DEVICE_STATE_UNKNOWN = 0,
+        NM_OLD_DEVICE_STATE_UNMANAGED = 1,
+        NM_OLD_DEVICE_STATE_UNAVAILABLE = 2,
+        NM_OLD_DEVICE_STATE_DISCONNECTED = 3,
+        NM_OLD_DEVICE_STATE_PREPARE = 4,
+        NM_OLD_DEVICE_STATE_CONFIG = 5,
+        NM_OLD_DEVICE_STATE_NEED_AUTH = 6,
+        NM_OLD_DEVICE_STATE_IP_CONFIG = 7,
+        NM_OLD_DEVICE_STATE_ACTIVATED = 8,
+        NM_OLD_DEVICE_STATE_FAILED = 9,
+        NM_DEVICE_STATE_UNMANAGED = 10,
+        NM_DEVICE_STATE_UNAVAILABLE = 20,
+        NM_DEVICE_STATE_DISCONNECTED = 30,
+        NM_DEVICE_STATE_PREPARE = 40,
+        NM_DEVICE_STATE_CONFIG = 50,
+        NM_DEVICE_STATE_NEED_AUTH = 60,
+        NM_DEVICE_STATE_IP_CONFIG = 70,
+        NM_DEVICE_STATE_IP_CHECK = 80,
+        NM_DEVICE_STATE_SECONDARIES = 90,
+        NM_DEVICE_STATE_ACTIVATED = 100,
+        NM_DEVICE_STATE_DEACTIVATING = 110,
+        NM_DEVICE_STATE_FAILED = 120
 } NMDeviceState;
 
 typedef enum
@@ -75,8 +87,12 @@ typedef enum
         NM_DEVICE_TYPE_UNKNOWN,
         NM_DEVICE_TYPE_ETHERNET,
         NM_DEVICE_TYPE_WIFI,
-        NM_DEVICE_TYPE_GSM,
-        NM_DEVICE_TYPE_CDMA,
+        NM_OLD_DEVICE_TYPE_GSM,
+        NM_OLD_DEVICE_TYPE_CDMA,
+        NM_DEVICE_TYPE_BT,
+        NM_DEVICE_TYPE_OLPC_MESH,
+        NM_DEVICE_TYPE_WIMAX,
+        NM_DEVICE_TYPE_MODEM
 } NMDeviceType;
 
 typedef struct
@@ -335,7 +351,8 @@ on_device_signal (GDBusProxy *proxy,
         nm_device = (NMDevice *) user_data;
         g_variant_get_child (parameters, 0, "u", &new_state);
 
-        if (new_state == NM_DEVICE_STATE_ACTIVATED)
+        if (new_state == NM_OLD_DEVICE_STATE_ACTIVATED ||
+            new_state == NM_DEVICE_STATE_ACTIVATED)
                 on_device_activated (nm_device);
         else if (nm_device->context != NULL) {
                 /* For all other states we just destroy the context */
@@ -381,7 +398,8 @@ use_new_device (GUPnPNetworkManager *manager,
         state = g_variant_get_uint32 (value);
         g_variant_unref (value);
 
-        if (state == NM_DEVICE_STATE_ACTIVATED)
+        if (state == NM_OLD_DEVICE_STATE_ACTIVATED ||
+            state == NM_DEVICE_STATE_ACTIVATED)
                 on_device_activated (nm_device);
 }
 
