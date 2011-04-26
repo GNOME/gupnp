@@ -123,7 +123,6 @@ create_contexts (gpointer data)
 {
         GUPnPUnixContextManager *manager = (GUPnPUnixContextManager *) data;
         struct ifaddrs *ifa_list, *ifa;
-        char *ret;
         GList *processed;
 
         manager->priv->idle_context_creation_src = NULL;
@@ -132,7 +131,6 @@ create_contexts (gpointer data)
                return FALSE;
         }
 
-        ret = NULL;
 
         if (getifaddrs (&ifa_list) != 0) {
                 g_warning ("Failed to retrieve list of network interfaces:%s\n",
