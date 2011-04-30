@@ -1,3 +1,18 @@
+0.16.1
+======
+
+Changes since 0.16.0:
+
+- Port to new (0.9) NetworkManager APIs.
+- Correction to 'Content-Type' HTTP header values.
+- Satisfy strict compiler checks.
+
+All contributors:
+
+Dan Williams <dcbw@redhat.com>
+Sven Neumann <s.neumann@raumfeld.com>
+Zeeshan Ali (Khattak) <zeeshanak@gnome.org>
+
 0.16.0
 ======
 
