@@ -77,11 +77,15 @@ struct _GUPnPDeviceInfoClass {
 
         /* vtable */
         xmlNode          * (* get_element) (GUPnPDeviceInfo *info);
+
+        /* FIXME: Once we can break API/ABI, clean-up and rename the
+         * _get_device/_get_service functions */
+#ifndef GOBJECT_INTROSPECTION_SKIP
         GUPnPDeviceInfo  * (* get_device)  (GUPnPDeviceInfo *info,
                                             xmlNode         *element);
         GUPnPServiceInfo * (* get_service) (GUPnPDeviceInfo *info,
                                             xmlNode         *element);
-
+#endif
         /* future padding */
         void (* _gupnp_reserved1) (void);
         void (* _gupnp_reserved2) (void);

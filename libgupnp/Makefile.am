@@ -108,7 +108,7 @@ INTROSPECTION_COMPILER_ARGS = --includedir=$(top_srcdir)
 if HAVE_INTROSPECTION
 GUPnP-1.0.gir: libgupnp-1.0.la
 GUPnP_1_0_gir_INCLUDES = libxml2-2.0 GObject-2.0 Soup-2.4 GSSDP-1.0
-GUPnP_1_0_gir_CFLAGS = $(INCLUDES) $(AM_CFLAGS)
+GUPnP_1_0_gir_CFLAGS = -DGOBJECT_INTROSPECTION_SKIP $(INCLUDES) $(AM_CFLAGS)
 GUPnP_1_0_gir_LIBS = libgupnp-1.0.la
 GUPnP_1_0_gir_FILES = $(introspection_sources)
 GUPnP_1_0_gir_NAMESPACE = GUPnP
