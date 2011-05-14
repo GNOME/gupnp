@@ -102,9 +102,6 @@ struct _GUPnPServiceClass {
 };
 
 
-GType
-gupnp_service_action_get_type (void);
-
 const char *
 gupnp_service_action_get_name     (GUPnPServiceAction *action);
 

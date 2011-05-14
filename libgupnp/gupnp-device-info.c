@@ -371,7 +371,7 @@ gupnp_device_info_class_init (GUPnPDeviceInfoClass *klass)
  *
  * Get the #GUPnPResourceFactory used by the @device_info.
  *
- * Returns: A #GUPnPResourceFactory.
+ * Returns: (transfer none): A #GUPnPResourceFactory.
  **/
 GUPnPResourceFactory *
 gupnp_device_info_get_resource_factory (GUPnPDeviceInfo *info)
@@ -387,7 +387,7 @@ gupnp_device_info_get_resource_factory (GUPnPDeviceInfo *info)
  *
  * Get the associated #GUPnPContext.
  *
- * Returns: A #GUPnPContext.
+ * Returns: (transfer none): A #GUPnPContext.
  **/
 GUPnPContext *
 gupnp_device_info_get_context (GUPnPDeviceInfo *info)
@@ -936,7 +936,7 @@ resource_type_match (const char *query,
  * Get a #GList of strings that represent the device capabilities as announced 
  * in the device description file using the &lt;dlna:X_DLNACAP&gt; element.
  *
- * Return value: (element-type utf8): a #GList of newly allocated strings or
+ * Returns: (transfer full) (element-type utf8): a #GList of newly allocated strings or
  * %NULL if the device description doesn't contain the &lt;dlna:X_DLNACAP&gt;
  * element.
  **/
@@ -1109,7 +1109,7 @@ gupnp_device_info_list_device_types (GUPnPDeviceInfo *info)
  * this function a new object is created. The application must cache any used
  * devices if it wishes to keep them around and re-use them.
  *
- * Return value: A new #GUPnPDeviceInfo.
+ * Returns: (transfer full): A new #GUPnPDeviceInfo.
  **/
 GUPnPDeviceInfo *
 gupnp_device_info_get_device (GUPnPDeviceInfo *info,
@@ -1263,7 +1263,7 @@ gupnp_device_info_list_service_types (GUPnPDeviceInfo *info)
  * this function a new object is created. The application must cache any used
  * services if it wishes to keep them around and re-use them.
  *
- * Return value: A #GUPnPServiceInfo.
+ * Returns: (transfer full): A #GUPnPServiceInfo.
  **/
 GUPnPServiceInfo *
 gupnp_device_info_get_service (GUPnPDeviceInfo *info,

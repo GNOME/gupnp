@@ -582,8 +582,8 @@ gupnp_service_action_set_valist (GUPnPServiceAction *action,
 /**
  * gupnp_service_action_set_values:
  * @action: A #GUPnPServiceAction
- * @arg_names: (element-type utf8) (transfer-none): A #GList of argument names
- * @arg_values: (element-type GValue) (transfer-none): The #GList of values (as
+ * @arg_names: (element-type utf8) (transfer none): A #GList of argument names
+ * @arg_values: (element-type GValue) (transfer none): The #GList of values (as
  * #GValues) that line up with @arg_names.
  *
  * Sets the specified action return values.

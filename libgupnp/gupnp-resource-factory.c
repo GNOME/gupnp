@@ -120,7 +120,7 @@ gupnp_resource_factory_new (void)
  *
  * Get the default singleton #GUPnPResourceFactory object.
  *
- * Return value: A @GUPnPResourceFactory object.
+ * Returns: (transfer none): A @GUPnPResourceFactory object.
  **/
 GUPnPResourceFactory *
 gupnp_resource_factory_get_default (void)

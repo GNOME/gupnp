@@ -383,7 +383,7 @@ gupnp_service_info_class_init (GUPnPServiceInfoClass *klass)
  *
  * Get the #GUPnPContext associated with @info.
  *
- * Returns: A #GUPnPContext.
+ * Returns: (transfer none): A #GUPnPContext.
  **/
 GUPnPContext *
 gupnp_service_info_get_context (GUPnPServiceInfo *info)

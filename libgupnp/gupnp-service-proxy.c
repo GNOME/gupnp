@@ -610,7 +610,7 @@ gupnp_service_proxy_send_action_list (GUPnPServiceProxy *proxy,
  * gupnp_service_proxy_end_action() to check for errors, to retrieve return
  * values, and to free the #GUPnPServiceProxyAction.
  *
- * Return value: A #GUPnPServiceProxyAction handle. This will be freed when
+ * Returns: (transfer none): A #GUPnPServiceProxyAction handle. This will be freed when
  * gupnp_service_proxy_cancel_action() or
  * gupnp_service_proxy_end_action_valist().
  **/
@@ -834,7 +834,7 @@ write_in_parameter (const char *arg_name,
  * See gupnp_service_proxy_begin_action(); this version takes a va_list for
  * use by language bindings.
  *
- * Return value: A #GUPnPServiceProxyAction handle. This will
+ * Returns: (transfer none): A #GUPnPServiceProxyAction handle. This will
  * be freed when calling gupnp_service_proxy_cancel_action() or
  * gupnp_service_proxy_end_action_valist().
  **/
@@ -1528,7 +1528,7 @@ gupnp_service_proxy_add_notify (GUPnPServiceProxy              *proxy,
  * gupnp_service_proxy_remove_notify:
  * @proxy: A #GUPnPServiceProxy
  * @variable: The variable to add notification for
- * @callback: The callback to call when @variable changes
+ * @callback: (scope call): The callback to call when @variable changes
  * @user_data: User data for @callback
  *
  * Cancels the variable change notification for @callback and @user_data.

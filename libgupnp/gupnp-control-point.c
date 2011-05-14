@@ -1031,7 +1031,7 @@ gupnp_control_point_new_full (GUPnPContext         *context,
  *
  * Get the #GUPnPControlPoint associated with @control_point.
  *
- * Return value: The #GUPnPContext.
+ * Returns: (transfer none): The #GUPnPContext.
  **/
 GUPnPContext *
 gupnp_control_point_get_context (GUPnPControlPoint *control_point)
@@ -1088,7 +1088,7 @@ gupnp_control_point_list_service_proxies (GUPnPControlPoint *control_point)
  *
  * Get the #GUPnPResourceFactory used by the @control_point.
  *
- * Return value: A #GUPnPResourceFactory.
+ * Returns: (transfer none): A #GUPnPResourceFactory.
  **/
 GUPnPResourceFactory *
 gupnp_control_point_get_resource_factory (GUPnPControlPoint *control_point)
