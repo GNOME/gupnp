@@ -1312,12 +1312,10 @@ got_introspection (GUPnPServiceInfo          *info,
                    const GError              *error,
                    gpointer                   user_data)
 {
-        GUPnPService *service;
+        GUPnPService *service = GUPNP_SERVICE (info);
         const GList *state_variables, *l;
         GHashTableIter iter;
         gpointer data;
-
-        service = GUPNP_SERVICE (user_data);
 
         if (introspection) {
                 state_variables =
@@ -1347,8 +1345,6 @@ got_introspection (GUPnPServiceInfo          *info,
 
         while (g_hash_table_iter_next (&iter, NULL, &data))
                 send_initial_state ((SubscriptionData *) data);
-
-        g_object_unref (service);
 }
 
 static char *
@@ -1389,8 +1385,7 @@ gupnp_service_constructor (GType                  type,
         /* Get introspection and save state variable names */
         gupnp_service_info_get_introspection_async (info,
                                                     got_introspection,
-                                                    object);
-        g_object_ref (object);
+                                                    NULL);
 
         /* Get server */
         context = gupnp_service_info_get_context (info);
