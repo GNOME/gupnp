@@ -1279,7 +1279,7 @@ subscription_server_handler (SoupServer        *server,
 
                 } else {
                         soup_message_set_status
-                                (msg, SOUP_STATUS_BAD_REQUEST);
+                                (msg, SOUP_STATUS_PRECONDITION_FAILED);
 
                 }
 
