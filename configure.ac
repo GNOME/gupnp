@@ -54,12 +54,6 @@ AC_MSG_RESULT([${with_context_manager}])
 AM_CONDITIONAL([USE_NETWORK_MANAGER],
                [test "x$with_context_manager" = "xnetwork-manager"])
 
-# We need dbus-glib if NetworkManager is used
-if test "x$with_context_manager" = "xnetwork-manager"; then
-        # We need gio >= 2.26 to use GDBus
-        PKG_CHECK_MODULES(GIO, gio-2.0 >= 2.26)
-fi
-
 # glib-genmarshal
 GLIB_GENMARSHAL=`pkg-config --variable=glib_genmarshal glib-2.0`
 AC_SUBST(GLIB_GENMARSHAL)
