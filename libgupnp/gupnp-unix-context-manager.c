@@ -49,12 +49,6 @@
 #include "gupnp-unix-context-manager.h"
 #include "gupnp-context.h"
 
-#ifdef USE_CONIC /* MAEMO */
-#include <conic.h>
-#include <dbus/dbus.h>
-#include <dbus/dbus-glib-lowlevel.h>
-#endif /* MAEMO */
-
 G_DEFINE_TYPE (GUPnPUnixContextManager,
                gupnp_unix_context_manager,
                GUPNP_TYPE_CONTEXT_MANAGER);
@@ -63,12 +57,6 @@ struct _GUPnPUnixContextManagerPrivate {
         GList *contexts; /* List of GUPnPContext instances */
 
         GSource *idle_context_creation_src;
-
-
-#ifdef USE_CONIC /* MAEMO */
-        ConIcConnection *conic;
-        DBusConnection  *system_bus;
-#endif /* MAEMO */
 };
 
 static void
@@ -182,36 +170,6 @@ destroy_contexts (GUPnPUnixContextManager *manager)
         }
 }
 
-#ifdef USE_CONIC /* MAEMO */
-static void conic_event (ConIcConnection*      connection,
-                         ConIcConnectionEvent* event,
-                         gpointer              user_data)
-{
-        GUPnPUnixContextManager *manager;
-        ConIcConnectionStatus status;
-        const gchar* bearer;
-
-        manager = GUPNP_UNIX_CONTEXT_MANAGER (user_data);
-        status = con_ic_connection_event_get_status (event);
-
-        bearer = con_ic_event_get_bearer_type (CON_IC_EVENT (event));
-        if (bearer != NULL &&
-            (strcmp (bearer, CON_IC_BEARER_WLAN_INFRA) == 0 ||
-             strcmp (bearer, CON_IC_BEARER_WLAN_ADHOC) == 0)) {
-                switch (status) {
-                case CON_IC_STATUS_CONNECTED:
-                        create_contexts (manager);
-                        break;
-                case CON_IC_STATUS_DISCONNECTED:
-                        destroy_contexts (manager);
-                        break;
-                default:
-                       /* Ignore other events */
-                       break;
-                }
-        }
-}
-#else
 static void
 schedule_contexts_creation (GUPnPUnixContextManager *manager)
 {
@@ -235,7 +193,6 @@ schedule_contexts_creation (GUPnPUnixContextManager *manager)
                                NULL);
         g_source_unref (manager->priv->idle_context_creation_src);
 }
-#endif /* MAEMO */
 
 static void
 gupnp_unix_context_manager_init (GUPnPUnixContextManager *manager)
@@ -253,26 +210,7 @@ gupnp_unix_context_manager_constructed (GObject *object)
         GUPnPUnixContextManager *manager;
 
         manager = GUPNP_UNIX_CONTEXT_MANAGER (object);
-
-#ifdef USE_CONIC /* MAEMO */
-        /* Initialize the system bus so libconic can receive ICD messages. */
-        manager->priv->system_bus = dbus_bus_get (DBUS_BUS_SYSTEM, NULL);
-        dbus_connection_setup_with_g_main (manager->priv->system_bus, NULL);
-
-        manager->priv->conic = con_ic_connection_new ();
-        g_assert (manager->priv->conic != NULL);
-
-        g_signal_connect (manager->priv->conic,
-                          "connection-event",
-                          G_CALLBACK (conic_event),
-                          manager);
-        g_object_set (manager->priv->conic,
-                      "automatic-connection-events",
-                      TRUE,
-                      NULL);
-#else
         schedule_contexts_creation (manager);
-#endif /* MAEMO */
 
         /* Chain-up */
         parent_class = G_OBJECT_CLASS (gupnp_unix_context_manager_parent_class);
@@ -290,18 +228,6 @@ gupnp_unix_context_manager_dispose (GObject *object)
         manager = GUPNP_UNIX_CONTEXT_MANAGER (object);
 
         destroy_contexts (manager);
-
-#ifdef USE_CONIC /* MAEMO */
-        if (manager->priv->conic != NULL) {
-                g_object_unref (manager->priv->conic);
-                manager->priv->conic = NULL;
-        }
-
-        if (manager->priv->system_bus != NULL) {
-                dbus_connection_unref (manager->priv->system_bus);
-                manager->priv->system_bus = NULL;
-        }
-#endif /* MAEMO */
 
         if (manager->priv->idle_context_creation_src) {
                 g_source_destroy (manager->priv->idle_context_creation_src);
