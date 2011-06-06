@@ -30,16 +30,16 @@ libgupnpinc_HEADERS = gupnp-context.h			\
 		      gupnp-control-point.h		\
 		      gupnp-device.h			\
 		      gupnp-device-info.h		\
-	              gupnp-device-proxy.h		\
+		      gupnp-device-proxy.h		\
 		      gupnp-error.h			\
 		      gupnp-resource-factory.h		\
 		      gupnp-root-device.h		\
 		      gupnp-service.h			\
 		      gupnp-service-info.h		\
 		      gupnp-service-proxy.h		\
-	              gupnp-service-introspection.h	\
+		      gupnp-service-introspection.h	\
 		      gupnp-xml-doc.h	                \
-	              gupnp-types.h			\
+		      gupnp-types.h			\
 		      gupnp.h
 
 introspection_sources = $(libgupnpinc_HEADERS) \
