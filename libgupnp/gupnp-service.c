@@ -290,6 +290,8 @@ finalize_action (GUPnPServiceAction *action)
                 g_string_free (action->response_str, FALSE);
         }
 
+        soup_message_headers_append (action->msg->response_headers, "Ext", "");
+
         /* Server header on response */
         soup_message_headers_append
                         (action->msg->response_headers,
