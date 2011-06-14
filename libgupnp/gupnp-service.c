@@ -199,6 +199,8 @@ struct _GUPnPServiceAction {
         xmlNode      *node;
 
         GString      *response_str;
+
+        guint         argument_count;
 };
 
 GUPnPServiceAction *
@@ -512,6 +514,20 @@ gupnp_service_action_get_gvalue (GUPnPServiceAction *action,
         gupnp_service_action_get_value (action, argument, val);
 
         return val;
+}
+
+/**
+ * gupnp_service_action_get_argument_count:
+ * @action: A #GUPnPServiceAction
+ *
+ * Get the number of IN arguments from the @action and return it.
+ *
+ * Return value: The number of IN arguments from the @action.
+ */
+guint
+gupnp_service_action_get_argument_count (GUPnPServiceAction *action)
+{
+    return action->argument_count;
 }
 
 /**
@@ -882,7 +898,7 @@ control_server_handler (SoupServer        *server,
         GUPnPService *service;
         GUPnPContext *context;
         xmlDoc *doc;
-        xmlNode *action_node;
+        xmlNode *action_node, *node;
         const char *soap_action;
         const char *accept_encoding;
         char *action_name;
@@ -960,6 +976,8 @@ control_server_handler (SoupServer        *server,
         action->response_str = new_action_response_str (action_name,
                                                         soap_action);
         action->context      = g_object_ref (context);
+        for (node = action->node->children; node; node = node->next)
+                action->argument_count++;
 
         /* Get accepted encodings */
         accept_encoding = soup_message_headers_get_list (msg->request_headers,

@@ -160,6 +160,10 @@ gupnp_service_action_return_error (GUPnPServiceAction *action,
 SoupMessage *
 gupnp_service_action_get_message  (GUPnPServiceAction *action);
 
+guint
+gupnp_service_action_get_argument_count
+                                  (GUPnPServiceAction *action);
+
 void
 gupnp_service_notify              (GUPnPService *service,
                                    ...) G_GNUC_NULL_TERMINATED;
