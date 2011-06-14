@@ -54,6 +54,8 @@
 #include "gena-protocol.h"
 #include "http-headers.h"
 
+#define GUPNP_CONTEXT_DEFAULT_LANGUAGE "en"
+
 static void
 gupnp_context_initable_iface_init (gpointer g_iface,
                                    gpointer iface_data);
@@ -76,6 +78,7 @@ struct _GUPnPContextPrivate {
 
         SoupServer  *server; /* Started on demand */
         char        *server_url;
+        char        *default_language;
 
         GList       *host_path_datas;
 };
@@ -85,7 +88,8 @@ enum {
         PROP_PORT,
         PROP_SERVER,
         PROP_SESSION,
-        PROP_SUBSCRIPTION_TIMEOUT
+        PROP_SUBSCRIPTION_TIMEOUT,
+        PROP_DEFAULT_LANGUAGE
 };
 
 typedef struct {
@@ -97,6 +101,7 @@ typedef struct {
 typedef struct {
         char *local_path;
         char *server_path;
+        char *default_language;
 
         GList *user_agents;
 } HostPathData;
@@ -207,6 +212,10 @@ gupnp_context_set_property (GObject      *object,
         case PROP_SUBSCRIPTION_TIMEOUT:
                 context->priv->subscription_timeout = g_value_get_uint (value);
                 break;
+        case PROP_DEFAULT_LANGUAGE:
+                gupnp_context_set_default_language (context,
+                                                    g_value_get_string (value));
+                break;
         default:
                 G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
                 break;
@@ -239,6 +248,11 @@ gupnp_context_get_property (GObject    *object,
         case PROP_SUBSCRIPTION_TIMEOUT:
                 g_value_set_uint (value,
                                   gupnp_context_get_subscription_timeout
+                                                                   (context));
+                break;
+        case PROP_DEFAULT_LANGUAGE:
+                g_value_set_string (value,
+                                    gupnp_context_get_default_language
                                                                    (context));
                 break;
         default:
@@ -380,6 +394,25 @@ gupnp_context_class_init (GUPnPContextClass *klass)
                                     G_PARAM_STATIC_NAME |
                                     G_PARAM_STATIC_NICK |
                                     G_PARAM_STATIC_BLURB));
+        /**
+         * GUPnPContext:default-language:
+         *
+         * The content of the Content-Language header id the client
+         * sends Accept-Language and no language-specific pages to serve
+         * exist. The property defaults to 'en'.
+         **/
+        g_object_class_install_property
+                (object_class,
+                 PROP_DEFAULT_LANGUAGE,
+                 g_param_spec_string ("default-language",
+                                      "Default language",
+                                      "Default language",
+                                      GUPNP_CONTEXT_DEFAULT_LANGUAGE,
+                                      G_PARAM_READWRITE |
+                                      G_PARAM_CONSTRUCT |
+                                      G_PARAM_STATIC_NAME |
+                                      G_PARAM_STATIC_NICK |
+                                      G_PARAM_STATIC_BLURB));
 }
 
 /**
@@ -581,6 +614,73 @@ gupnp_context_get_subscription_timeout (GUPnPContext *context)
         g_return_val_if_fail (GUPNP_IS_CONTEXT (context), 0);
 
         return context->priv->subscription_timeout;
+}
+
+static void
+host_path_data_set_language (HostPathData *data, const char *language)
+{
+        char *old_language = data->default_language;
+
+        if ((old_language != NULL) && (!strcmp (language, old_language)))
+                return;
+
+        data->default_language = g_strdup (language);
+
+
+        if (old_language != NULL)
+                g_free (old_language);
+}
+
+/**
+ * gupnp_context_set_default_language:
+ * @context: A #GUPnPContext
+ * @language A language tag as defined in RFC 2616 3.10
+ *
+ * Set the default language for the Content-Length header to @language.
+ *
+ * If the client sends an Accept-Language header the UPnP HTTP server
+ * is required to send a Content-Language header in return. If there are
+ * no files hosted in languages which match the requested ones the
+ * Content-Language header is set to this value. The default value is "en".
+ */
+void
+gupnp_context_set_default_language (GUPnPContext *context,
+                                    const char   *language)
+{
+        g_return_if_fail (GUPNP_IS_CONTEXT (context));
+        g_return_if_fail (language != NULL);
+
+
+        char *old_language = context->priv->default_language;
+
+        if ((old_language != NULL) && (!strcmp (language, old_language)))
+                return;
+
+        context->priv->default_language = g_strdup (language);
+
+        g_list_foreach (context->priv->host_path_datas,
+                        (GFunc) host_path_data_set_language,
+                        (gpointer) language);
+
+        if (old_language != NULL)
+                g_free (old_language);
+}
+
+/**
+ * gupnp_context_get_default_language:
+ * @context: A #GUPnPContext
+ *
+ * Get the default Content-Language header for this context.
+ *
+ * Returns: (transfer none): The default content of the Content-Language
+ * header.
+ */
+const char *
+gupnp_context_get_default_language (GUPnPContext *context)
+{
+        g_return_val_if_fail (GUPNP_IS_CONTEXT (context), NULL);
+
+        return context->priv->default_language;
 }
 
 /* Construct a local path from @requested path, removing the last slash
@@ -860,7 +960,13 @@ host_path_handler (SoupServer        *server,
 
         /* Set Content-Language */
         if (locales)
-               http_response_set_content_locale (msg, locales->data);
+                http_response_set_content_locale (msg, locales->data);
+        else if (soup_message_headers_get_one (msg->request_headers,
+                                               "Accept-Language")) {
+                soup_message_headers_append (msg->response_headers,
+                                             "Content-Language",
+                                             host_path_data->default_language);
+        }
 
         /* Set Accept-Ranges */
         soup_message_headers_append (msg->response_headers,
@@ -906,7 +1012,8 @@ user_agent_free (UserAgent *agent)
 
 static HostPathData *
 host_path_data_new (const char *local_path,
-                    const char *server_path)
+                    const char *server_path,
+                    const char *default_language)
 {
         HostPathData *path_data;
 
@@ -914,6 +1021,7 @@ host_path_data_new (const char *local_path,
 
         path_data->local_path  = g_strdup (local_path);
         path_data->server_path = g_strdup (server_path);
+        path_data->default_language = g_strdup (default_language);
 
         return path_data;
 }
@@ -923,6 +1031,8 @@ host_path_data_free (HostPathData *path_data)
 {
         g_free (path_data->local_path);
         g_free (path_data->server_path);
+        g_free (path_data->default_language);
+
         while (path_data->user_agents) {
                 UserAgent *agent;
 
@@ -963,7 +1073,8 @@ gupnp_context_host_path (GUPnPContext *context,
         server = gupnp_context_get_server (context);
 
         path_data = host_path_data_new (local_path,
-                                        server_path);
+                                        server_path,
+                                        context->priv->default_language);
 
         soup_server_add_handler (server,
                                  server_path,
@@ -980,6 +1091,7 @@ static unsigned int
 path_compare_func (HostPathData *path_data,
                    const char   *server_path)
 {
+        /* ignore default language */
         return strcmp (path_data->server_path, server_path);
 }
 

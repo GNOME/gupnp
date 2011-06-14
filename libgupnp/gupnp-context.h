@@ -108,6 +108,13 @@ guint
 gupnp_context_get_subscription_timeout (GUPnPContext *context);
 
 void
+gupnp_context_set_default_language     (GUPnPContext *context,
+                                        const char   *language);
+
+const char *
+gupnp_context_get_default_language     (GUPnPContext *context);
+
+void
 gupnp_context_host_path                (GUPnPContext *context,
                                         const char   *local_path,
                                         const char   *server_path);
