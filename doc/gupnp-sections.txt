@@ -119,6 +119,7 @@ gupnp_service_action_set_values
 gupnp_service_action_return
 gupnp_service_action_return_error
 gupnp_service_action_get_message
+gupnp_service_action_get_argument_count
 gupnp_service_notify
 gupnp_service_notify_valist
 gupnp_service_notify_value
@@ -135,6 +136,7 @@ GUPNP_SERVICE_CLASS
 GUPNP_IS_SERVICE_CLASS
 GUPNP_SERVICE_GET_CLASS
 GUPNP_TYPE_SERVICE_ACTION
+gupnp_service_action_get_type
 <SUBSECTION Private>
 GUPnPServicePrivate
 </SECTION>
@@ -174,6 +176,8 @@ gupnp_context_get_server
 gupnp_context_get_session
 gupnp_context_set_subscription_timeout
 gupnp_context_get_subscription_timeout
+gupnp_context_get_default_language
+gupnp_context_set_default_language
 gupnp_context_host_path
 gupnp_context_host_path_for_agent
 gupnp_context_unhost_path
