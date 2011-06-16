@@ -1,3 +1,29 @@
+0.17.0
+======
+
+Changes since 0.16.1:
+
+- Fix several crashes during initial introspection.
+- Several fixes regarding SOAP action parameter validation.
+- Always append a Content-Language header if the client has an Accept-Language
+  header.
+- Always append an Ext header in SOAP responses.
+- Improve introspection support:
+  * Classes that throw an error during construction implement GInitable.
+  * Update gobject-introspection autotools integration.
+  * Many annotation fixes.
+- Tutorial improvements.
+
+Dependency-related changes:
+ - Require gssdp >= 0.11.0.
+
+All contributors:
+
+Jens Georg <mail@jensge.org>
+Zeeshan Ali (Khattak) <zeeshanak@gnome.org>
+Sven Neumann <s.neumann@raumfeld.com>
+Santakivi Topi <Topi.Santakivi@digia.com>
+
 0.16.1
 ======
 
