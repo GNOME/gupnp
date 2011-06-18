@@ -10,7 +10,7 @@ AC_CONFIG_SRCDIR([libgupnp/gupnp.h])
 AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_AUX_DIR([build-aux])
 
-AM_INIT_AUTOMAKE()
+AM_INIT_AUTOMAKE([1.11 tar-ustar no-dist-gzip dist-xz])
 AM_MAINTAINER_MODE([enable])
 
 AM_SILENT_RULES([yes])
