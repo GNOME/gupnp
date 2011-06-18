@@ -1,20 +1,30 @@
-AC_PREREQ(2.53)
-AC_INIT(gupnp, 0.17.0, http://www.gupnp.org/)
-AM_INIT_AUTOMAKE()
-AC_CONFIG_SRCDIR(libgupnp/gupnp.h)
-AM_CONFIG_HEADER(config.h)
-AM_MAINTAINER_MODE
-AC_CANONICAL_HOST
+AC_PREREQ([2.64])
+AC_INIT([gupnp],
+        [0.17.0],
+        [http://bugzilla.gnome.org/enter_bug.cgi?product=gupnp],
+        [gupnp],
+        [http://www.gupnp.org/])
 
-m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
-
-AC_ISC_POSIX
-AC_PROG_CC
-AC_STDC_HEADERS
-AC_PROG_LIBTOOL
+AC_CONFIG_HEADERS([config.h])
+AC_CONFIG_SRCDIR([libgupnp/gupnp.h])
 AC_CONFIG_MACRO_DIR([m4])
+AC_CONFIG_AUX_DIR([build-aux])
+
+AM_INIT_AUTOMAKE()
+AM_MAINTAINER_MODE([enable])
+
+AM_SILENT_RULES([yes])
+
+# Check for programs
+AC_PROG_CC
 AC_FUNC_MMAP
 AC_SYS_LARGEFILE
+
+# Initialize libtool
+LT_PREREQ([2.2])
+LT_INIT
+
+AC_CANONICAL_HOST
 
 AC_MSG_CHECKING([operating system])
 case "$host_os" in
@@ -97,7 +107,7 @@ GOBJECT_INTROSPECTION_CHECK([0.6.4])
 # Gtk-doc
 GTK_DOC_CHECK([1.0])
 
-AC_OUTPUT([
+AC_CONFIG_FILES([
 Makefile
 libgupnp/Makefile
 examples/Makefile
@@ -108,3 +118,4 @@ doc/version.xml
 gupnp-1.0.pc
 gupnp-1.0-uninstalled.pc
 ])
+AC_OUTPUT

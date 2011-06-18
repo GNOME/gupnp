@@ -1,11 +1,11 @@
+ACLOCAL_AMFLAGS = -I m4 ${ACLOCAL_FLAGS}
+
 SUBDIRS = libgupnp tools examples tests doc
 
 pkgconfig_DATA= gupnp-1.0.pc
 pkgconfigdir = $(libdir)/pkgconfig
 
 EXTRA_DIST = gupnp-1.0.pc.in gupnp-1.0-uninstalled.pc.in
-
-ACLOCAL_AMFLAGS=-I m4
 
 DISTCHECK_CONFIGURE_FLAGS = --enable-gtk-doc
 
