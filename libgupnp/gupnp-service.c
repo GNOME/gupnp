@@ -968,16 +968,19 @@ control_server_handler (SoupServer        *server,
         /* Create action structure */
         action = g_slice_new0 (GUPnPServiceAction);
 
-        action->ref_count    = 1;
-        action->name         = g_strdup (action_name);
-        action->msg          = g_object_ref (msg);
-        action->doc          = gupnp_xml_doc_new(doc);
-        action->node         = action_node;
-        action->response_str = new_action_response_str (action_name,
+        action->ref_count      = 1;
+        action->name           = g_strdup (action_name);
+        action->msg            = g_object_ref (msg);
+        action->doc            = gupnp_xml_doc_new(doc);
+        action->node           = action_node;
+        action->response_str   = new_action_response_str (action_name,
                                                         soap_action);
-        action->context      = g_object_ref (context);
+        action->context        = g_object_ref (context);
+        action->argument_count = 0;
+
         for (node = action->node->children; node; node = node->next)
-                action->argument_count++;
+                if (node->type == XML_ELEMENT_NODE)
+                        action->argument_count++;
 
         /* Get accepted encodings */
         accept_encoding = soup_message_headers_get_list (msg->request_headers,
