@@ -24,7 +24,7 @@
 #ifndef __GUPNP_UNIX_CONTEXT_MANAGER_H__
 #define __GUPNP_UNIX_CONTEXT_MANAGER_H__
 
-#include "gupnp-context-manager.h"
+#include "gupnp-simple-context-manager.h"
 
 G_BEGIN_DECLS
 
@@ -55,13 +55,11 @@ gupnp_unix_context_manager_get_type (void) G_GNUC_CONST;
 typedef struct _GUPnPUnixContextManagerPrivate GUPnPUnixContextManagerPrivate;
 
 typedef struct {
-        GUPnPContextManager parent;
-
-        GUPnPUnixContextManagerPrivate *priv;
+        GUPnPSimpleContextManager parent;
 } GUPnPUnixContextManager;
 
 typedef struct {
-        GUPnPContextManagerClass parent_class;
+        GUPnPSimpleContextManagerClass parent_class;
 
         /* future padding */
         void (* _gupnp_reserved1) (void);

@@ -1,8 +1,10 @@
 LTVERSION = 4:0:0
 
+CONTEXT_MANAGER_IMPL = gupnp-unix-context-manager.c \
+		       gupnp-unix-context-manager.h
 if USE_NETWORK_MANAGER
-CONTEXT_MANAGER_IMPL = gupnp-network-manager.c  \
-		       gupnp-network-manager.h
+CONTEXT_MANAGER_IMPL += gupnp-network-manager.c  \
+		        gupnp-network-manager.h
 CONTEXT_MANAGER_CFLAGS = -DUSE_NETWORK_MANAGER
 else
 CONTEXT_MANAGER_IMPL =
@@ -78,8 +80,8 @@ libgupnp_1_0_la_SOURCES = $(introspection_sources)		\
 			  http-headers.h			\
 			  gupnp-context-private.h		\
 			  $(CONTEXT_MANAGER_IMPL) 		\
-			  gupnp-unix-context-manager.c  	\
-			  gupnp-unix-context-manager.h		\
+			  gupnp-simple-context-manager.h	\
+			  gupnp-simple-context-manager.c	\
 			  gupnp-device-info-private.h		\
 			  gupnp-error-private.h			\
 			  gupnp-resource-factory-private.h	\
