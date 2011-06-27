@@ -162,7 +162,7 @@ gupnp_context_initable_init (GInitable     *initable,
                 (SOUP_SESSION_IDLE_TIMEOUT,
                  60,
                  SOUP_SESSION_ASYNC_CONTEXT,
-                 gssdp_client_get_main_context (GSSDP_CLIENT (context)),
+                 g_main_context_get_thread_default (),
                  NULL);
 
         user_agent = g_strdup_printf ("%s GUPnP/" VERSION " DLNADOC/1.50",
@@ -475,7 +475,7 @@ gupnp_context_get_server (GUPnPContext *context)
                         (SOUP_SERVER_PORT,
                          context->priv->port,
                          SOUP_SERVER_ASYNC_CONTEXT,
-                         gssdp_client_get_main_context (GSSDP_CLIENT (context)),
+                         g_main_context_get_thread_default (),
                          SOUP_SERVER_INTERFACE,
                          addr,
                          NULL);
@@ -522,7 +522,8 @@ _gupnp_context_get_server_url (GUPnPContext *context)
 
 /**
  * gupnp_context_new:
- * @main_context: A #GMainContext, or %NULL to use the default one
+ * @main_context: Deprecated: 0.17.2: Always set to %NULL. If you want to use
+ *                a different context, use g_main_context_push_thread_default().
  * @interface: The network interface to use, or %NULL to auto-detect.
  * @port: Port to run on, or 0 if you don't care what port is used.
  * @error: A location to store a #GError, or %NULL
@@ -538,10 +539,14 @@ gupnp_context_new (GMainContext *main_context,
                    guint         port,
                    GError      **error)
 {
+        if (main_context)
+                g_warning ("gupnp_context_new::main_context is deprecated."
+                           " Use g_main_context_push_thread_default()"
+                           " instead");
+
         return g_initable_new (GUPNP_TYPE_CONTEXT,
                                NULL,
                                error,
-                               "main-context", main_context,
                                "interface", interface,
                                "port", port,
                                NULL);

@@ -46,7 +46,7 @@ esac
 PKG_CHECK_MODULES(LIBGUPNP, glib-2.0 >= 2.24.0 \
                             gio-2.0 \
                             gmodule-2.0 \
-                            gssdp-1.0 >= 0.11.0 \
+                            gssdp-1.0 >= 0.11.2 \
                             libsoup-2.4 >= 2.28.2 \
                             libxml-2.0 \
                             $UUID)

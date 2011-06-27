@@ -64,13 +64,11 @@ create_and_signal_context (GUPnPUnixContextManager *manager,
                            const char              *interface)
 {
         GUPnPContext *context;
-        GMainContext *main_context;
         guint port;
 
         GError *error;
 
         g_object_get (manager,
-                      "main-context", &main_context,
                       "port", &port,
                       NULL);
 
@@ -78,7 +76,6 @@ create_and_signal_context (GUPnPUnixContextManager *manager,
         context = g_initable_new (GUPNP_TYPE_CONTEXT,
                                   NULL,
                                   &error,
-                                  "main-context", main_context,
                                   "interface", interface,
                                   "port", port,
                                   NULL);
@@ -173,20 +170,14 @@ destroy_contexts (GUPnPUnixContextManager *manager)
 static void
 schedule_contexts_creation (GUPnPUnixContextManager *manager)
 {
-        GMainContext *main_context;
-
         manager->priv->idle_context_creation_src = NULL;
-
-        g_object_get (manager,
-                      "main-context", &main_context,
-                      NULL);
 
         /* Create contexts in mainloop so that is happens after user has hooked
          * to the "context-available" signal.
          */
         manager->priv->idle_context_creation_src = g_idle_source_new ();
         g_source_attach (manager->priv->idle_context_creation_src,
-            main_context);
+                         g_main_context_get_thread_default ());
         g_source_set_callback (manager->priv->idle_context_creation_src,
                                create_contexts,
                                manager,

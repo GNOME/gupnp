@@ -145,7 +145,6 @@ network_device_update_essid (NetworkInterface *device)
 static void
 network_device_create_context (NetworkInterface *device)
 {
-        GMainContext *main_context;
         guint port;
         GError *error = NULL;
 
@@ -163,7 +162,6 @@ network_device_create_context (NetworkInterface *device)
         device->flags &= ~NETWORK_INTERFACE_PRECONFIGURED;
 
         g_object_get (device->manager,
-                      "main-context", &main_context,
                       "port", &port,
                       NULL);
 
@@ -171,7 +169,6 @@ network_device_create_context (NetworkInterface *device)
         device->context = g_initable_new (GUPNP_TYPE_CONTEXT,
                                           NULL,
                                           &error,
-                                          "main-context", main_context,
                                           "interface", device->name,
                                           "network", device->essid,
                                           "port", port,
@@ -347,18 +344,13 @@ on_bootstrap (GUPnPLinuxContextManager *self)
 
                 return TRUE;
         } else {
-                GMainContext *main_context;
-
                 self->priv->netlink_socket_source = g_socket_create_source
                                                 (self->priv->netlink_socket,
                                                  G_IO_IN | G_IO_PRI,
                                                  NULL);
-                g_object_get (self,
-                              "main-context", &main_context,
-                              NULL);
 
                 g_source_attach (self->priv->netlink_socket_source,
-                                 main_context);
+                                 g_main_context_get_thread_default ());
 
                 g_source_set_callback (self->priv->netlink_socket_source,
                                        (GSourceFunc)
@@ -642,13 +634,8 @@ gupnp_linux_context_manager_constructed (GObject *object)
         GObjectClass *parent_class;
         GUPnPLinuxContextManager *self;
         GError *error = NULL;
-        GMainContext *main_context;
 
         self = GUPNP_LINUX_CONTEXT_MANAGER (object);
-
-        g_object_get (self,
-                      "main-context", &main_context,
-                      NULL);
 
         if (!create_ioctl_socket (self, &error))
                 goto cleanup;
@@ -659,7 +646,7 @@ gupnp_linux_context_manager_constructed (GObject *object)
         self->priv->bootstrap_source =
                                 g_idle_source_new ();
         g_source_attach (self->priv->bootstrap_source,
-                         main_context);
+                         g_main_context_get_thread_default ());
         g_source_set_callback (self->priv->bootstrap_source,
                                (GSourceFunc) on_bootstrap,
                                self,

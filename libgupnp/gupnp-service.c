@@ -107,9 +107,6 @@ static SoupSession *
 gupnp_service_get_session (GUPnPService *service)
 {
         if (! service->priv->session) {
-                GUPnPContext *context =
-                  gupnp_service_info_get_context (GUPNP_SERVICE_INFO (service));
-
                 /* Create a dedicated session for this service to
                  * ensure that notifications are sent in the proper
                  * order. The session from GUPnPContext may use
@@ -118,7 +115,7 @@ gupnp_service_get_session (GUPnPService *service)
                 service->priv->session = soup_session_async_new_with_options
                   (SOUP_SESSION_IDLE_TIMEOUT, 60,
                    SOUP_SESSION_ASYNC_CONTEXT,
-                   gssdp_client_get_main_context (GSSDP_CLIENT (context)),
+                   g_main_context_get_thread_default (),
                    SOUP_SESSION_MAX_CONNS_PER_HOST, 1,
                    NULL);
 
@@ -1145,7 +1142,6 @@ subscribe (GUPnPService *service,
         SubscriptionData *data;
         char *start, *end, *uri;
         GUPnPContext *context;
-        GMainContext *main_context;
 
         data = g_slice_new0 (SubscriptionData);
 
@@ -1188,8 +1184,8 @@ subscribe (GUPnPService *service,
                                NULL);
 
         context = gupnp_service_info_get_context (GUPNP_SERVICE_INFO (service));
-        main_context = gssdp_client_get_main_context (GSSDP_CLIENT (context));
-        g_source_attach (data->timeout_src, main_context);
+        g_source_attach (data->timeout_src,
+                         g_main_context_get_thread_default ());
 
         g_source_unref (data->timeout_src);
 
@@ -1212,7 +1208,6 @@ resubscribe (GUPnPService *service,
 {
         SubscriptionData *data;
         GUPnPContext *context;
-        GMainContext *main_context;
 
         data = g_hash_table_lookup (service->priv->subscriptions, sid);
         if (!data) {
@@ -1234,8 +1229,8 @@ resubscribe (GUPnPService *service,
                                NULL);
 
         context = gupnp_service_info_get_context (GUPNP_SERVICE_INFO (service));
-        main_context = gssdp_client_get_main_context (GSSDP_CLIENT (context));
-        g_source_attach (data->timeout_src, main_context);
+        g_source_attach (data->timeout_src,
+                         g_main_context_get_thread_default ());
 
         g_source_unref (data->timeout_src);
 

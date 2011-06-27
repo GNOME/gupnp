@@ -257,7 +257,7 @@ main (int argc, char **argv)
         g_type_init ();
 
         error = NULL;
-        context = gupnp_context_new (NULL, NULL, 0, &error);
+        context = g_initable_new (GUPNP_TYPE_CONTEXT, NULL, &error, NULL);
         if (error) {
                 g_printerr ("Error creating the GUPnP context: %s\n",
 			    error->message);
