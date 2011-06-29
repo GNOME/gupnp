@@ -404,7 +404,11 @@ gupnp_root_device_constructor (GType                  type,
         device = GUPNP_ROOT_DEVICE (object);
 
         /* Generate location relative to HTTP root */
-        device->priv->relative_location = g_strdup_printf ("RootDevice%p.xml",                                                             object);
+        udn = gupnp_device_info_get_udn (GUPNP_DEVICE_INFO (device));
+        if (udn && strstr (udn, "uuid:") == udn)
+                device->priv->relative_location = g_strdup_printf ("%s.xml", udn + 5);
+        else
+                device->priv->relative_location = g_strdup_printf ("RootDevice%p.xml", device);
 
         relative_location = g_strjoin (NULL,
                                        "/",
@@ -441,7 +445,6 @@ gupnp_root_device_constructor (GType                  type,
         device->priv->group = gssdp_resource_group_new (GSSDP_CLIENT (context));
 
         /* Add services and devices to resource group */
-        udn = gupnp_device_info_get_udn (GUPNP_DEVICE_INFO (device));
         usn = g_strdup_printf ("%s::upnp:rootdevice", (const char *) udn);
         gssdp_resource_group_add_resource_simple (device->priv->group,
                                                   "upnp:rootdevice",
