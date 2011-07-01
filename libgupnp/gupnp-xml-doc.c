@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2006, 2007 OpenedHand Ltd.
- * Copyright (C) 2009 Nokia Corporation, all rights reserved.
+ * Copyright (C) 2009 Nokia Corporation.
  *
  * Author: Jorn Baayen <jorn@openedhand.com>
  *         Zeeshan Ali (Khattak) <zeeshanak@gnome.org>
