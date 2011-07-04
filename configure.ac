@@ -25,6 +25,7 @@ LT_PREREQ([2.2])
 LT_INIT
 
 AC_CANONICAL_HOST
+AC_CANONICAL_TARGET
 
 AC_MSG_CHECKING([operating system])
 case "$target_os" in
