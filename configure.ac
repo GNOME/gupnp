@@ -27,7 +27,7 @@ LT_INIT
 AC_CANONICAL_HOST
 
 AC_MSG_CHECKING([operating system])
-case "$host_os" in
+case "$target_os" in
      mingw*|cygwin*)
         AC_MSG_RESULT(Win32)
         UUID=uuid
@@ -41,7 +41,7 @@ case "$host_os" in
         UUID=e2fs-uuid
         ;;
      *)
-        AC_MSG_RESULT($host_os)
+        AC_MSG_RESULT($target_os)
         UUID=uuid
         ;;
 esac
