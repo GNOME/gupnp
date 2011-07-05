@@ -37,10 +37,6 @@ case "$target_os" in
         AC_MSG_RESULT(Darwin)
         UUID=
         ;;
-     openbsd*)
-        AC_MSG_RESULT(OpenBSD)
-        UUID=e2fs-uuid
-        ;;
      *)
         AC_MSG_RESULT($target_os)
         UUID=uuid
