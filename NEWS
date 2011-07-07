@@ -1,3 +1,27 @@
+0.17.1
+======
+
+Changes since 0.17.1:
+
+- Drop deprecated conic support.
+- A Linux context manager. Unlinke the generic static unix context-manger,
+  the Linux context-manager can dynamically react to device and address
+  changes, similar to the NetworkManager-based context-manager, but without
+  depending on DBus or NetworkManager.
+- Fix for a SOAP action parameter validation regression.
+- Updates to the build system such as:
+  - Modernized autotools.
+  - xz tarballs as default.
+- Improved OpenBSD support.
+- More stable RootDevice URIs.
+
+All contributors:
+
+Jens Georg <mail@jensge.org>
+Jasper Lievisse Adriaanse <jasper@humppa.nl>
+Javier Jardón <jjardon@gnome.org>
+Zeeshan Ali (Khattak) <zeeshanak@gnome.org>
+
 0.17.0
 ======
 
