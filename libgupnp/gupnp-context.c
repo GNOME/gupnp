@@ -300,6 +300,11 @@ gupnp_context_finalize (GObject *object)
 
         context = GUPNP_CONTEXT (object);
 
+        if (context->priv->default_language) {
+                g_free (context->priv->default_language);
+                context->priv->default_language = NULL;
+        }
+
         g_free (context->priv->server_url);
 
         /* Call super */
