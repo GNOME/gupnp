@@ -50,6 +50,7 @@
 
 #include "gupnp-context.h"
 #include "gupnp-context-private.h"
+#include "gupnp-error.h"
 #include "gupnp-marshal.h"
 #include "gena-protocol.h"
 #include "http-headers.h"
@@ -182,6 +183,24 @@ gupnp_context_initable_init (GInitable     *initable,
 
         soup_session_add_feature_by_type (context->priv->session,
                                           SOUP_TYPE_CONTENT_DECODER);
+
+        /* Create the server already if the port is not null*/
+        if (context->priv->port != 0) {
+                gupnp_context_get_server (context);
+
+                if (context->priv->server == NULL) {
+                        g_object_unref (context->priv->session);
+                        context->priv->session = NULL;
+
+                        g_set_error (error,
+                                     GUPNP_SERVER_ERROR,
+                                     GUPNP_SERVER_ERROR_OTHER,
+                                     "Could not create HTTP server on port %d",
+                                     context->priv->port);
+
+                        return FALSE;
+                }
+        }
 
         return TRUE;
 }
@@ -481,11 +500,15 @@ gupnp_context_get_server (GUPnPContext *context)
                          NULL);
                 g_object_unref (addr);
 
-                soup_server_add_handler (context->priv->server, NULL,
-                                         default_server_handler, context,
-                                         NULL);
+                if (context->priv->server) {
+                        soup_server_add_handler (context->priv->server,
+                                                 NULL,
+                                                 default_server_handler,
+                                                 context,
+                                                 NULL);
 
-                soup_server_run_async (context->priv->server);
+                        soup_server_run_async (context->priv->server);
+                }
         }
 
         return context->priv->server;
