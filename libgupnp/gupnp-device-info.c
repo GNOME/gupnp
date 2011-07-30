@@ -89,7 +89,7 @@ gupnp_device_info_set_property (GObject      *object,
                         GUPNP_RESOURCE_FACTORY (g_value_dup_object (value));
                 break;
         case PROP_CONTEXT:
-                info->priv->context = g_object_ref (g_value_get_object (value));
+                info->priv->context = g_value_dup_object (value);
                 break;
         case PROP_LOCATION:
                 info->priv->location = g_value_dup_string (value);
@@ -191,7 +191,7 @@ gupnp_device_info_finalize (GObject *object)
         g_free (info->priv->udn);
         g_free (info->priv->device_type);
 
-        soup_uri_free (info->priv->url_base);
+        g_clear_pointer (&info->priv->url_base, soup_uri_free);
 
         G_OBJECT_CLASS (gupnp_device_info_parent_class)->finalize (object);
 }
@@ -260,7 +260,7 @@ gupnp_device_info_class_init (GUPnPDeviceInfoClass *klass)
                                       "file",
                                       NULL,
                                       G_PARAM_READWRITE |
-                                      G_PARAM_CONSTRUCT_ONLY |
+                                      G_PARAM_CONSTRUCT |
                                       G_PARAM_STATIC_NAME |
                                       G_PARAM_STATIC_NICK |
                                       G_PARAM_STATIC_BLURB));
@@ -314,7 +314,7 @@ gupnp_device_info_class_init (GUPnPDeviceInfoClass *klass)
                                      "The URL base",
                                      SOUP_TYPE_URI,
                                      G_PARAM_READWRITE |
-                                     G_PARAM_CONSTRUCT_ONLY |
+                                     G_PARAM_CONSTRUCT |
                                      G_PARAM_STATIC_NAME |
                                      G_PARAM_STATIC_NICK |
                                      G_PARAM_STATIC_BLURB));
@@ -355,7 +355,7 @@ gupnp_device_info_class_init (GUPnPDeviceInfoClass *klass)
                                        "The XML element related to this "
                                        "device",
                                        G_PARAM_WRITABLE |
-                                       G_PARAM_CONSTRUCT_ONLY |
+                                       G_PARAM_CONSTRUCT |
                                        G_PARAM_STATIC_NAME |
                                        G_PARAM_STATIC_NICK |
                                        G_PARAM_STATIC_BLURB));

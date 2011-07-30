@@ -42,6 +42,8 @@ ControlError skip
 control_error_quark skip
 EventingError skip
 eventing_error_quark skip
+RootdeviceError skip
+rootdevice_error_quark skip
 ServerError skip
 server_error_quark skip
 XMLError skip

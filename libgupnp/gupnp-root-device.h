@@ -86,14 +86,16 @@ struct _GUPnPRootDeviceClass {
 GUPnPRootDevice *
 gupnp_root_device_new             (GUPnPContext         *context,
                                    const char           *description_path,
-                                   const char           *description_dir);
+                                   const char           *description_dir,
+                                   GError              **error);
 
 GUPnPRootDevice *
 gupnp_root_device_new_full        (GUPnPContext         *context,
                                    GUPnPResourceFactory *factory,
                                    GUPnPXMLDoc          *description_doc,
                                    const char           *description_path,
-                                   const char           *description_dir);
+                                   const char           *description_dir,
+                                   GError              **error);
 
 void
 gupnp_root_device_set_available   (GUPnPRootDevice      *root_device,

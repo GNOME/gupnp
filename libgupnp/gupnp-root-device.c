@@ -32,12 +32,26 @@
 
 #include "gupnp-root-device.h"
 #include "gupnp-context-private.h"
+#include "gupnp-error.h"
 #include "http-headers.h"
 #include "xml-util.h"
 
-G_DEFINE_TYPE (GUPnPRootDevice,
-               gupnp_root_device,
-               GUPNP_TYPE_DEVICE);
+static void
+gupnp_root_device_initable_iface_init (gpointer g_iface,
+                                       gpointer iface_data);
+
+static gboolean
+gupnp_root_device_initable_init (GInitable     *initable,
+                                 GCancellable  *cancellable,
+                                 GError       **error);
+
+G_DEFINE_TYPE_EXTENDED (GUPnPRootDevice,
+                        gupnp_root_device,
+                        GUPNP_TYPE_DEVICE,
+                        0,
+                        G_IMPLEMENT_INTERFACE
+                                (G_TYPE_INITABLE,
+                                 gupnp_root_device_initable_iface_init));
 
 struct _GUPnPRootDevicePrivate {
         GUPnPXMLDoc *description_doc;
@@ -65,7 +79,7 @@ gupnp_root_device_finalize (GObject *object)
 
         device = GUPNP_ROOT_DEVICE (object);
 
-        g_object_unref (device->priv->description_doc);
+        g_clear_object (&device->priv->description_doc);
         g_free (device->priv->description_path);
         g_free (device->priv->description_dir);
         g_free (device->priv->relative_location);
@@ -99,6 +113,14 @@ gupnp_root_device_init (GUPnPRootDevice *device)
         device->priv = G_TYPE_INSTANCE_GET_PRIVATE (device,
                                                     GUPNP_TYPE_ROOT_DEVICE,
                                                     GUPnPRootDevicePrivate);
+}
+
+static void
+gupnp_root_device_initable_iface_init (gpointer g_iface,
+                                       gpointer iface_data)
+{
+        GInitableIface *iface = (GInitableIface *) g_iface;
+        iface->init = gupnp_root_device_initable_init;
 }
 
 static void
@@ -262,106 +284,86 @@ load_and_parse (const char *description_path)
         return description_doc;
 }
 
-static GObject *
-gupnp_root_device_constructor (GType                  type,
-                               guint                  n_construct_params,
-                               GObjectConstructParam *construct_params)
+static gboolean
+gupnp_root_device_initable_init (GInitable     *initable,
+                                 GCancellable  *cancellable,
+                                 GError       **error)
 {
-        GObjectClass *object_class;
-        GObject *object;
         GUPnPRootDevice *device;
         GUPnPContext *context;
-        const char *description_path, *description_dir, *udn;
+        const char *udn;
         SoupURI *uri;
         char *desc_path, *location, *usn, *relative_location;
-        unsigned int i;
-        GUPnPXMLDoc *description_doc;
         xmlNode *root_element, *element;
         SoupURI *url_base;
+        gboolean result = FALSE;
 
-        object = NULL;
+        device = GUPNP_ROOT_DEVICE (initable);
+
         location = NULL;
 
-        /* Get 'description-doc', 'context', 'description-dir' and
-         * 'description-path' property values */
-        description_doc   = NULL;
-        context           = NULL;
-        description_path  = NULL;
-        description_dir   = NULL;
+        g_object_get (G_OBJECT (device),
+                      "context", &context,
+                      NULL);
 
-        for (i = 0; i < n_construct_params; i++) {
-                const char *par_name;
+        if (context == NULL) {
+                g_set_error_literal (error,
+                                     GUPNP_ROOT_DEVICE_ERROR,
+                                     GUPNP_ROOT_DEVICE_ERROR_NO_CONTEXT,
+                                     "No context specified");
 
-                par_name = construct_params[i].pspec->name;
-
-                if (strcmp (par_name, "description-doc") == 0) {
-                        description_doc =
-                                g_value_get_object (construct_params[i].value);
-
-                        continue;
-                } 
-
-                if (strcmp (par_name, "context") == 0) {
-                        context =
-                                g_value_get_object (construct_params[i].value);
-
-                        continue;
-                }
-
-                if (strcmp (par_name, "description-path") == 0) {
-                        description_path =
-                                g_value_get_string (construct_params[i].value);
-
-                        continue;
-                }
-
-                if (strcmp (par_name, "description-dir") == 0) {
-                        description_dir =
-                                g_value_get_string (construct_params[i].value);
-
-                        continue;
-                }
+                return FALSE;
         }
 
-        if (!context) {
-                g_warning ("No context specified.");
+        if (device->priv->description_path == NULL) {
+                g_set_error_literal (error,
+                                     GUPNP_ROOT_DEVICE_ERROR,
+                                     GUPNP_ROOT_DEVICE_ERROR_NO_DESCRIPTION_PATH,
+                                     "Path to description document not specified.");
 
-                return NULL;
+                return FALSE;
         }
 
-        if (!description_path) {
-                g_warning ("Path to description document not specified.");
+        if (device->priv->description_dir == NULL) {
+                g_set_error_literal (error,
+                                     GUPNP_ROOT_DEVICE_ERROR,
+                                     GUPNP_ROOT_DEVICE_ERROR_NO_DESCRIPTION_FOLDER,
+                                     "Path to description directory not specified.");
 
-                return NULL;
+                return FALSE;
         }
 
-        if (!description_dir) {
-                g_warning ("Path to description directory not specified.");
 
-                return NULL;
-        }
-
-        if (g_path_is_absolute (description_path))
-                desc_path = g_strdup (description_path);
+        if (g_path_is_absolute (device->priv->description_path))
+                desc_path = g_strdup (device->priv->description_path);
         else
-                desc_path = g_build_filename (description_dir,
-                                              description_path,
+                desc_path = g_build_filename (device->priv->description_dir,
+                                              device->priv->description_path,
                                               NULL);
 
         /* Check whether we have a parsed description document */
-        if (!description_doc) {
+        if (device->priv->description_doc == NULL) {
                 /* We don't, so load and parse it */
-                description_doc = load_and_parse (desc_path);
-                if (description_doc == NULL)
+                device->priv->description_doc = load_and_parse (desc_path);
+                if (device->priv->description_doc == NULL) {
+                        g_set_error_literal (error,
+                                             GUPNP_XML_ERROR,
+                                             GUPNP_XML_ERROR_PARSE,
+                                             "Coupld not parse description document");
+
                         goto DONE;
+                }
         }
 
         /* Find correct element */
-        root_element = xml_util_get_element ((xmlNode *) description_doc->doc,
+        root_element = xml_util_get_element ((xmlNode *) device->priv->description_doc->doc,
                                              "root",
                                              NULL);
         if (!root_element) {
-                g_warning ("\"/root\" element not found.");
+                g_set_error_literal (error,
+                                     GUPNP_XML_ERROR,
+                                     GUPNP_XML_ERROR_NO_NODE,
+                                     "\"/root\" element not found.");
 
                 goto DONE;
         }
@@ -370,39 +372,17 @@ gupnp_root_device_constructor (GType                  type,
                                         "device",
                                         NULL);
         if (!element) {
-                g_warning ("\"/root/device\" element not found.");
+                g_set_error_literal (error,
+                                     GUPNP_XML_ERROR,
+                                     GUPNP_XML_ERROR_NO_NODE,
+                                     "\"/root/device\" element not found.");
 
                 goto DONE;
         }
 
-        /* Set 'element' and 'description-doc' properties */
-        for (i = 0; i < n_construct_params; i++) {
-                const char *par_name;
-
-                par_name = construct_params[i].pspec->name;
-
-                if (strcmp (par_name, "element") == 0) {
-                        g_value_set_pointer (construct_params[i].value,
-                                             element);
-
-                        continue;
-                }
-
-                if (strcmp (par_name, "description-doc") == 0) {
-                        g_value_set_object (construct_params[i].value,
-                                            description_doc);
-
-                        continue;
-                }
-        }
-
-        /* Create object */
-        object_class = G_OBJECT_CLASS (gupnp_root_device_parent_class);
-
-        object = object_class->constructor (type,
-                                            n_construct_params,
-                                            construct_params);
-        device = GUPNP_ROOT_DEVICE (object);
+        g_object_set (G_OBJECT (device),
+                      "element", element,
+                      NULL);
 
         /* Generate location relative to HTTP root */
         udn = gupnp_device_info_get_udn (GUPNP_DEVICE_INFO (device));
@@ -436,7 +416,7 @@ gupnp_root_device_constructor (GType                  type,
                 url_base = soup_uri_new (location);
 
         /* Set additional properties */
-        g_object_set (object,
+        g_object_set (G_OBJECT (device),
                       "location", location,
                       "url-base", url_base,
                       NULL);
@@ -456,12 +436,14 @@ gupnp_root_device_constructor (GType                  type,
 
         fill_resource_group (element, location, device->priv->group);
 
+        result = TRUE;
+
  DONE:
         /* Cleanup */
         g_free (desc_path);
         g_free (location);
 
-        return object;
+        return result;
 }
 
 static void
@@ -473,7 +455,6 @@ gupnp_root_device_class_init (GUPnPRootDeviceClass *klass)
 
         object_class->set_property = gupnp_root_device_set_property;
         object_class->get_property = gupnp_root_device_get_property;
-        object_class->constructor  = gupnp_root_device_constructor;
         object_class->dispose      = gupnp_root_device_dispose;
         object_class->finalize     = gupnp_root_device_finalize;
 
@@ -563,6 +544,8 @@ gupnp_root_device_class_init (GUPnPRootDeviceClass *klass)
  * @description_path: Path to device description document. This could either
  * be an absolute path or path relative to @description_dir.
  * @description_dir: Path to directory where description documents are provided.
+ * @error: (allow-none): The location for a #GError to report issue with
+ * creation on or %NULL.
  *
  * Create a new #GUPnPRootDevice object, automatically loading and parsing
  * device description document from @description_path.
@@ -572,7 +555,8 @@ gupnp_root_device_class_init (GUPnPRootDeviceClass *klass)
 GUPnPRootDevice *
 gupnp_root_device_new (GUPnPContext *context,
                        const char   *description_path,
-                       const char   *description_dir)
+                       const char   *description_dir,
+                       GError      **error)
 {
         GUPnPResourceFactory *factory;
 
@@ -582,7 +566,8 @@ gupnp_root_device_new (GUPnPContext *context,
                                            factory,
                                            NULL,
                                            description_path,
-                                           description_dir);
+                                           description_dir,
+                                           error);
 }
 
 /**
@@ -593,6 +578,8 @@ gupnp_root_device_new (GUPnPContext *context,
  * @description_path: Path to device description document. This could either
  * be an absolute path or path relative to @description_dir.
  * @description_dir: Path to directory where description documents are provided.
+ * @error: (allow-none): The location for a #GError to report issue with
+ * creation on or %NULL.
  *
  * Create a new #GUPnPRootDevice, automatically loading and parsing
  * device description document from @description_path if @description_doc is
@@ -605,19 +592,22 @@ gupnp_root_device_new_full (GUPnPContext         *context,
                             GUPnPResourceFactory *factory,
                             GUPnPXMLDoc          *description_doc,
                             const char           *description_path,
-                            const char           *description_dir)
+                            const char           *description_dir,
+                            GError              **error)
 {
         g_return_val_if_fail (GUPNP_IS_CONTEXT (context), NULL);
         g_return_val_if_fail (GUPNP_IS_RESOURCE_FACTORY (factory), NULL);
 
-        return g_object_new (GUPNP_TYPE_ROOT_DEVICE,
-                             "context", context,
-                             "resource-factory", factory,
-                             "root-device", NULL,
-                             "description-doc", description_doc,
-                             "description-path", description_path,
-                             "description-dir", description_dir,
-                             NULL);
+        return g_initable_new (GUPNP_TYPE_ROOT_DEVICE,
+                               NULL,
+                               error,
+                               "context", context,
+                               "resource-factory", factory,
+                               "root-device", NULL,
+                               "description-doc", description_doc,
+                               "description-path", description_path,
+                               "description-dir", description_dir,
+                               NULL);
 }
 
 /**

@@ -118,6 +118,25 @@ typedef enum {
         GUPNP_XML_ERROR_OTHER
 } GUPnPXMLError;
 
+GQuark
+gupnp_rootdevice_error_quark (void) G_GNUC_CONST;
+
+#define GUPNP_ROOT_DEVICE_ERROR (gupnp_rootdevice_error_quark ())
+
+/**
+ * GUPnPRootDeviceError:
+ * @GUPNP_ROOT_DEVICE_ERROR_NO_CONTEXT: No #GUPnPContext was passed to the root device.
+ * @GUPNP_ROOT_DEVICE_ERROR_NO_DESCRIPTION_PATH: Device description path was missing
+ * @GUPNP_ROOT_DEVICE_ERROR_NO_DESCRIPTION_FOLDER: Description folder was missing
+ *
+ * #GError codes used for errors during #GUPnPRootDevice creation
+ */
+typedef enum {
+        GUPNP_ROOT_DEVICE_ERROR_NO_CONTEXT,
+        GUPNP_ROOT_DEVICE_ERROR_NO_DESCRIPTION_PATH,
+        GUPNP_ROOT_DEVICE_ERROR_NO_DESCRIPTION_FOLDER
+} GUPnPRootdeviceError;
+
 G_END_DECLS
 
 #endif /* __GUPNP_ERROR_H__ */

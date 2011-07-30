@@ -36,6 +36,13 @@ public interface GUPnP.Acl : GLib.Object {
 }
 
 namespace GUPnP {
+	[CCode (cheader_filename = "libgupnp/gupnp.h", cprefix = "GUPNP_ROOT_DEVICEL_ERROR_")]
+	public errordomain RootdeviceError {
+		NO_CONTEXT,
+		NO_DESCRIPTION_PATH,
+		NO_DESCRIPTION_FOLDER;
+		public static GLib.Quark quark ();
+	}
 	[CCode (cheader_filename = "libgupnp/gupnp.h", cprefix = "GUPNP_CONTROL_ERROR_")]
 	public errordomain ControlError {
 		INVALID_ACTION,

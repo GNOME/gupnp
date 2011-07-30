@@ -99,6 +99,24 @@ gupnp_xml_error_quark (void)
         return quark;
 }
 
+/**
+ * GUPNP_ROOT_DEVICE_ERROR:
+ *
+ * The #GQuark uniquely used by GUPnP RootDevice creation errors.
+ *
+ * Returns: a #GQuark uniquely used by GUPnP RootDevice creation errors.
+ */
+GQuark
+gupnp_rootdevice_error_quark (void)
+{
+        static GQuark quark = 0;
+
+        if (!quark)
+                quark = g_quark_from_static_string ("gupnp-root-device-error");
+
+        return quark;
+}
+
 /* Soup status code => GUPnPServerError */
 static int
 code_from_status_code (int status_code)

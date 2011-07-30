@@ -229,7 +229,9 @@ test_bgo_696762 (void)
                       &data);
 
 
-    rd = gupnp_root_device_new (context, "TestDevice.xml", DATA_PATH);
+    rd = gupnp_root_device_new (context, "TestDevice.xml", DATA_PATH, &error);
+    g_assert_no_error (error);
+    g_assert (rd != NULL);
     gupnp_root_device_set_available (rd, TRUE);
     info = gupnp_device_info_get_service (GUPNP_DEVICE_INFO (rd),
                                           "urn:test-gupnp-org:service:TestService:1");
@@ -291,7 +293,9 @@ test_bgo_678701 (void)
                                                          "urn:test-gupnp-org:device:TestSubDevice:1",
                                                          test_bgo_678701_device_get_type ());
 
-    rd = gupnp_root_device_new (context, "TestDevice.xml", DATA_PATH);
+    rd = gupnp_root_device_new (context, "TestDevice.xml", DATA_PATH, &error);
+    g_assert_no_error (error);
+    g_assert (rd != NULL);
     gupnp_root_device_set_available (rd, TRUE);
 
     cp = gupnp_control_point_new (context,
@@ -347,7 +351,9 @@ test_bgo_690400 (void)
                       G_CALLBACK (test_on_sp_available),
                       &data);
 
-    rd = gupnp_root_device_new (context, "TestDevice.xml", DATA_PATH);
+    rd = gupnp_root_device_new (context, "TestDevice.xml", DATA_PATH, &error);
+    g_assert_no_error (error);
+    g_assert (rd != NULL);
     service = gupnp_device_info_get_service (GUPNP_DEVICE_INFO (rd),
                                              "urn:test-gupnp-org:service:TestService:1");
     g_signal_connect (service, "query-variable",
@@ -375,8 +381,8 @@ test_bgo_690400 (void)
     g_main_loop_unref (data.loop);
     g_object_unref (data.proxy);
     g_object_unref (cp);
-    g_object_unref (rd);
     g_object_unref (service);
+    g_object_unref (rd);
     g_object_unref (context);
 }
 
@@ -395,7 +401,9 @@ test_bgo_722696 (void)
     g_assert (context != NULL);
     g_assert (error == NULL);
 
-    rd = gupnp_root_device_new (context, "TestDevice.xml", DATA_PATH);
+    rd = gupnp_root_device_new (context, "TestDevice.xml", DATA_PATH, &error);
+    g_assert_no_error (error);
+    g_assert (rd != NULL);
 
     /* prefer bigger */
     width = -1;
