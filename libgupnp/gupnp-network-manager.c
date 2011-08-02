@@ -198,7 +198,6 @@ create_context_for_device (NMDevice *nm_device)
         char *ssid = NULL;
 
         g_object_get (nm_device->manager,
-                      "main-context", &main_context,
                       "port", &port,
                       NULL);
 
@@ -229,7 +228,6 @@ create_context_for_device (NMDevice *nm_device)
         nm_device->context = g_initable_new (GUPNP_TYPE_CONTEXT,
                                              NULL,
                                              &error,
-                                             "main-context", main_context,
                                              "interface", iface,
                                              "network", ssid,
                                              "port", port,
