@@ -311,7 +311,10 @@ remove_context (GUPnPLinuxContextManager *self, struct ifaddrmsg *ifa)
         device = g_hash_table_lookup (self->priv->interfaces,
                                       GINT_TO_POINTER (ifa->ifa_index));
 
-        if (device && device->context) {
+        if (!device)
+                return;
+
+        if (device->context) {
                 if (device->flags & NETWORK_INTERFACE_UP)
                         g_signal_emit_by_name (self,
                                                "context-unavailable",
