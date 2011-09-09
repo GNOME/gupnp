@@ -252,6 +252,10 @@ static void
 finalize_action (GUPnPServiceAction *action)
 {
         SoupServer *server;
+        GHashTable *params;
+
+        params = g_hash_table_new (g_str_hash, g_str_equal);
+        g_hash_table_insert (params, "charset", "utf-8");
 
         /* Embed action->response_str in a SOAP document */
         g_string_prepend (action->response_str,
@@ -272,9 +276,9 @@ finalize_action (GUPnPServiceAction *action)
                          "</s:Body>"
                          "</s:Envelope>");
 
-        soup_message_headers_replace (action->msg->response_headers,
-                                      "Content-Type",
-                                      "text/xml; charset=\"utf-8\"");
+        soup_message_headers_set_content_type (action->msg->response_headers,
+                                               "text/xml",
+                                               params);
 
         if (action->accept_gzip && action->response_str->len > 1024) {
                 http_response_set_body_gzip (action->msg,
@@ -304,6 +308,8 @@ finalize_action (GUPnPServiceAction *action)
 
         /* Cleanup */
         gupnp_service_action_unref (action);
+
+        g_hash_table_destroy (params);
 }
 
 /**

@@ -310,6 +310,7 @@ http_response_set_content_type (SoupMessage  *msg,
                                 gsize         data_size)
 {
         char *content_type, *mime;
+        GHashTable *params = NULL;
 
         content_type = g_content_type_guess
                                 (path,
@@ -321,12 +322,17 @@ http_response_set_content_type (SoupMessage  *msg,
                 mime = g_strdup ("application/octet-stream");
         else if (strcmp (mime, "application/xml") == 0) {
                 g_free (mime);
-                mime = g_strdup ("text/xml; charset=\"utf-8\"");
+                mime = g_strdup ("text/xml");
+                params = g_hash_table_new (g_str_hash, g_str_equal);
+                g_hash_table_insert (params, "charset", "utf-8");
         }
 
-        soup_message_headers_append (msg->response_headers,
-                                     "Content-Type",
-                                     mime);
+        soup_message_headers_set_content_type (msg->response_headers,
+                                               mime,
+                                               params);
+
+        if (params)
+                g_hash_table_destroy (params);
 
         g_free (mime);
         g_free (content_type);
