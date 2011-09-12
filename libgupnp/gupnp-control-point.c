@@ -1071,7 +1071,7 @@ gupnp_control_point_list_device_proxies (GUPnPControlPoint *control_point)
  * Get the #GList of discovered #GUPnPServiceProxy objects. Do not free the
  * list nor its elements.
  *
- * Return value: (element-type: GUPnP.ServiceProxy) (transfer none): a #GList
+ * Return value: (element-type GUPnP.ServiceProxy) (transfer none): a #GList
  * of #GUPnPServiceProxy objects.
  **/
 const GList *
