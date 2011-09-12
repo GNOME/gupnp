@@ -296,15 +296,11 @@ gupnp_context_manager_class_init (GUPnPContextManagerClass *klass)
  *                g_main_context_push_thread_default() instead.
  * @port: Port to create contexts for, or 0 if you don't care what port is used.
  *
- * Factory-method to create a new #GUPnPContextManager. The final type of the
- * #GUPnPContextManager depends on the compile-time selection or - in case of
- * NetworkManager - on its availability during runtime. If it is not available,
- * the implementation falls back to the basic Unix context manager instead.
+ * Same as gupnp_context_manager_create().
  *
  * Returns: (transfer full): A new #GUPnPContextManager object.
  * Deprecated: 0.17.2: Use gupnp_context_manager_create().
  **/
-
 GUPnPContextManager *
 gupnp_context_manager_new (GMainContext *main_context,
                            guint         port)
@@ -316,6 +312,7 @@ gupnp_context_manager_new (GMainContext *main_context,
 
     return gupnp_context_manager_create (port);
 }
+
 /**
  * gupnp_context_manager_create:
  * @port: Port to create contexts for, or 0 if you don't care what port is used.
