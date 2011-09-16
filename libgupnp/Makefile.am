@@ -6,9 +6,6 @@ if USE_NETWORK_MANAGER
 CONTEXT_MANAGER_IMPL += gupnp-network-manager.c  \
 		        gupnp-network-manager.h
 CONTEXT_MANAGER_CFLAGS = -DUSE_NETWORK_MANAGER
-else
-CONTEXT_MANAGER_IMPL =
-CONTEXT_MANAGER_CFLAGS =
 endif
 
 if USE_NETLINK
