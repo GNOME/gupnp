@@ -10,6 +10,9 @@ AC_CONFIG_SRCDIR([libgupnp/gupnp.h])
 AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_AUX_DIR([build-aux])
 
+AC_CANONICAL_HOST
+AC_CANONICAL_TARGET
+
 AM_INIT_AUTOMAKE([1.11 tar-ustar no-dist-gzip dist-xz])
 AM_MAINTAINER_MODE([enable])
 
@@ -24,8 +27,6 @@ AC_SYS_LARGEFILE
 LT_PREREQ([2.2])
 LT_INIT
 
-AC_CANONICAL_HOST
-AC_CANONICAL_TARGET
 
 AC_MSG_CHECKING([operating system])
 case "$target_os" in
