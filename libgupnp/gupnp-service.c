@@ -98,7 +98,14 @@ typedef struct {
 
         GList        *pending_messages; /* Pending SoupMessages from this
                                            subscription */
+        gboolean      initial_state_sent;
+        gboolean      to_delete;
 } SubscriptionData;
+
+static gboolean
+subscription_data_can_delete (SubscriptionData *data) {
+    return data->initial_state_sent && data->to_delete;
+}
 
 static void
 send_initial_state (SubscriptionData *data);
@@ -1250,9 +1257,17 @@ unsubscribe (GUPnPService *service,
              SoupMessage  *msg,
              const char   *sid)
 {
-        if (g_hash_table_remove (service->priv->subscriptions, sid))
+        SubscriptionData *data;
+
+        data = g_hash_table_lookup (service->priv->subscriptions, sid);
+        if (data) {
+                if (data->initial_state_sent)
+                        g_hash_table_remove (service->priv->subscriptions,
+                                             sid);
+                else
+                        data->to_delete = TRUE;
                 soup_message_set_status (msg, SOUP_STATUS_OK);
-        else
+        } else
                 soup_message_set_status (msg, SOUP_STATUS_PRECONDITION_FAILED);
 }
 
@@ -1367,8 +1382,11 @@ got_introspection (GUPnPServiceInfo          *info,
 
         g_hash_table_iter_init (&iter, service->priv->subscriptions);
 
-        while (g_hash_table_iter_next (&iter, NULL, &data))
+        while (g_hash_table_iter_next (&iter, NULL, &data)) {
                 send_initial_state ((SubscriptionData *) data);
+                if (subscription_data_can_delete ((SubscriptionData *) data))
+                        g_hash_table_iter_remove (&iter);
+        }
 }
 
 static char *
@@ -1788,6 +1806,8 @@ notify_got_response (SoupSession *session,
         data->pending_messages = g_list_remove (data->pending_messages, msg);
 
         if (SOUP_STATUS_IS_SUCCESSFUL (msg->status_code)) {
+                data->initial_state_sent = TRUE;
+
                 /* Success: reset callbacks pointer */
                 data->callbacks = g_list_first (data->callbacks);
 
@@ -1853,6 +1873,10 @@ notify_subscriber (gpointer key,
 
         data = value;
         property_set = user_data;
+
+        /* Subscriber called unsubscribe */
+        if (subscription_data_can_delete (data))
+                return;
 
         /* Create message */
         msg = soup_message_new (GENA_METHOD_NOTIFY, data->callbacks->data);
