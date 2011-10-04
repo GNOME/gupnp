@@ -23,7 +23,7 @@
 # - could warn if values outside allowedValueRange are used in *_action_set() 
 # - add option to generate skeleton source code that uses the bindings? 
 
-import sys, os.path, re, xml.etree.ElementTree as ET
+import os.path, re, xml.etree.ElementTree as ET
 from optparse import OptionParser
 
 
@@ -162,7 +162,7 @@ def getVariables(var_elements, prefix):
         
         dataType = varElement.find("{urn:schemas-upnp-org:service-1-0}dataType").text
         if not dataType in typemap:
-            raise Exception("Unknown dataType %s" % data_type)
+            raise Exception("Unknown dataType %s" % dataType)
         (var.ctype, var.gtype, g_value_type) = typemap[dataType];
         var.get_function = "g_value_get_" + g_value_type
         var.set_function = "g_value_set_" + g_value_type
