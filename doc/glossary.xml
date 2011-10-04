@@ -163,7 +163,7 @@
       </para>
       <para>
         A common practise is to generate a unique UDN on first boot from a
-        random seed, or use some unique and persistant property such as the
+        random seed, or use some unique and persistent property such as the
         device's MAC address to create the UDN.
       </para>
       <glossseealso otherterm="device"/>
