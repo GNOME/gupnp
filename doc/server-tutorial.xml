@@ -78,7 +78,7 @@
   <simplesect>
     <title>Defining Services</title>
     <para>
-      Becase we are using a standard service we can use the service description
+      Because we are using a standard service we can use the service description
       from the specification.  This is the <literal>SwitchPower1</literal>
       service description file:
     </para>
