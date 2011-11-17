@@ -1154,7 +1154,6 @@ subscribe (GUPnPService *service,
 {
         SubscriptionData *data;
         char *start, *end, *uri;
-        GUPnPContext *context;
 
         data = g_slice_new0 (SubscriptionData);
 
@@ -1196,7 +1195,6 @@ subscribe (GUPnPService *service,
                                data,
                                NULL);
 
-        context = gupnp_service_info_get_context (GUPNP_SERVICE_INFO (service));
         g_source_attach (data->timeout_src,
                          g_main_context_get_thread_default ());
 
@@ -1220,7 +1218,6 @@ resubscribe (GUPnPService *service,
              const char   *sid)
 {
         SubscriptionData *data;
-        GUPnPContext *context;
 
         data = g_hash_table_lookup (service->priv->subscriptions, sid);
         if (!data) {
@@ -1241,7 +1238,6 @@ resubscribe (GUPnPService *service,
                                data,
                                NULL);
 
-        context = gupnp_service_info_get_context (GUPNP_SERVICE_INFO (service));
         g_source_attach (data->timeout_src,
                          g_main_context_get_thread_default ());
 
