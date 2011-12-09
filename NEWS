@@ -1,3 +1,28 @@
+0.18.1
+======
+
+Changes since 0.18.0:
+
+- Properly quote charset in SOAP requests.
+- Fix GUPnPContextManager documentation.
+- Fix several build warnings.
+- Several documentation fixes.
+- Error handling fix in gupnp-binding-tool.
+- Always send the initial event after a subscribtion even if the client
+  immediately unsubscribes.
+- Some minor code clean-up.
+
+All contributors:
+Jens Georg <mail@jensge.org>
+Zeeshan Ali (Khattak) <zeeshanak@gnome.org>
+Ville Skyttä <ville.skytta@iki.fi>
+Lukasz Pawlik <lucas.pawlik@gmail.com>
+
+Bugs fixed:
+- https://bugzilla.gnome.org/show_bug.cgi?id=658633
+- https://bugzilla.gnome.org/show_bug.cgi?id=658486
+
+
 0.18.0
 ======
 
