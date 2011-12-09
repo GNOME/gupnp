@@ -30,7 +30,7 @@
  * GUPnP classes. It automatically starts a web server on demand.
  *
  * For debugging, it is possible to see the messages being sent and received by
- * exporting #GUPNP_DEBUG.
+ * exporting %GUPNP_DEBUG.
  */
 
 #include <config.h>

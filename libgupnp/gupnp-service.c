@@ -1651,7 +1651,7 @@ gupnp_service_class_init (GUPnPServiceClass *klass)
         /**
          * GUPnPService::action-invoked:
          * @service: The #GUPnPService that received the signal
-         * @action: The invoked #GUPnPAction
+         * @action: The invoked #GUPnPServiceAction
          *
          * Emitted whenever an action is invoked. Handler should process
          * @action and must call either gupnp_service_action_return() or
@@ -2172,7 +2172,7 @@ connect_names_to_signal_handlers (GUPnPService *service,
  * #GUPnPService::action-invoked and #GUPnPService::query-variable signals to
  * appropriate callbacks for the service @service. It uses service introspection
  * and GModule's introspective features. It is very simillar to
- * glade_xml_signal_autoconnect() except that it attempts to guess the names of
+ * gtk_builder_connect_signals() except that it attempts to guess the names of
  * the signal handlers on its own.
  *
  * For this function to do its magic, the application must name the callback
