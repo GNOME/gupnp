@@ -1,3 +1,23 @@
+0.18.2
+======
+
+Changes since 0.18.1:
+
+- Revert the charset quoting patch from 0.18.1. Apparently this issue
+  was only present in a special version of libsoup.
+- Fix subscription timeout calculation.
+- Minor fixes from static code analysis.
+- Fix byte-range requests.
+- Add a unit-test for byte-range requests.
+
+All contributors:
+Jens Georg <mail@jensge.org>
+Sven Neumann <s.neumann@raumfeld.com>
+Lukasz Pawlik <lukasz.pawlik@comarch.com>
+
+Bugs fixed:
+- https://bugzilla.gnome.org/show_bug.cgi?id=670518
+
 0.18.1
 ======
 
