@@ -117,11 +117,12 @@ typedef struct {
 } UserAgent;
 
 typedef struct {
-        char *local_path;
-        char *server_path;
-        char *default_language;
+        char         *local_path;
+        char         *server_path;
+        char         *default_language;
 
-        GList *user_agents;
+        GList        *user_agents;
+        GUPnPContext *context;
 } HostPathData;
 
 static GInitableIface* initable_parent_iface = NULL;
@@ -897,6 +898,28 @@ redirect_to_folder (SoupMessage *msg)
         g_free (uri);
 }
 
+static void
+update_client_cache (GUPnPContext *context,
+                     const char   *host,
+                     const char   *user_agent)
+{
+        const char *entry;
+        GSSDPClient *client;
+        char *ip_address = NULL;
+
+        if (user_agent == NULL)
+                return;
+
+        client = GSSDP_CLIENT (context);
+
+        entry = gssdp_client_guess_user_agent (client, host);
+        if (!entry) {
+                gssdp_client_add_cache_entry (client,
+                                              ip_address,
+                                              user_agent);
+        }
+}
+
 /* Serve @path. Note that we do not need to check for path including bogus
  * '..' as libsoup does this for us. */
 static void
@@ -942,6 +965,9 @@ host_path_handler (G_GNUC_UNUSED SoupServer        *server,
 
         user_agent = soup_message_headers_get_one (msg->request_headers,
                                                    "User-Agent");
+        update_client_cache (host_path_data->context,
+                             soup_client_context_get_host (client),
+                             user_agent);
 
         /* Construct base local path */
         local_path = construct_local_path (path, user_agent, host_path_data);
@@ -1155,7 +1181,8 @@ user_agent_free (UserAgent *agent)
 static HostPathData *
 host_path_data_new (const char *local_path,
                     const char *server_path,
-                    const char *default_language)
+                    const char *default_language,
+                    GUPnPContext *context)
 {
         HostPathData *path_data;
 
@@ -1164,6 +1191,7 @@ host_path_data_new (const char *local_path,
         path_data->local_path  = g_strdup (local_path);
         path_data->server_path = g_strdup (server_path);
         path_data->default_language = g_strdup (default_language);
+        path_data->context = context;
 
         return path_data;
 }
@@ -1207,7 +1235,8 @@ gupnp_context_host_path (GUPnPContext *context,
 
         path_data = host_path_data_new (local_path,
                                         server_path,
-                                        context->priv->default_language);
+                                        context->priv->default_language,
+                                        context);
 
         soup_server_add_handler (server,
                                  server_path,
@@ -1381,7 +1410,10 @@ gupnp_acl_server_handler (SoupServer *server,
 {
         AclServerHandler *handler = (AclServerHandler *) user_data;
         const char *agent;
+        const char *host;
         GUPnPDevice *device = NULL;
+
+        host = soup_client_context_get_host (client);
 
         if (handler->service) {
                 g_object_get (handler->service,
@@ -1395,6 +1427,11 @@ gupnp_acl_server_handler (SoupServer *server,
 
         agent = soup_message_headers_get_one (msg->request_headers,
                                               "User-Agent");
+        if (agent == NULL) {
+                agent = gssdp_client_guess_user_agent
+                                (GSSDP_CLIENT (handler->context),
+                                 host);
+        }
 
         if (handler->context->priv->acl != NULL) {
                 if (gupnp_acl_can_sync (handler->context->priv->acl)) {
@@ -1402,7 +1439,7 @@ gupnp_acl_server_handler (SoupServer *server,
                                                    device,
                                                    handler->service,
                                                    path,
-                                                   soup_client_context_get_host (client),
+                                                   host,
                                                    agent)) {
                                 soup_message_set_status (msg, SOUP_STATUS_FORBIDDEN);
 
