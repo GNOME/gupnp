@@ -1949,10 +1949,6 @@ subscribe_got_response (SoupSession       *session,
                         /* We have a finite timeout */
                         timeout = atoi (hdr + strlen ("Second-"));
 
-                        /* We want to resubscribe before the subscription
-                         * expires. */
-                        timeout = g_random_int_range (1, timeout / 2);
-
                         if (timeout < 0) {
                                 g_warning ("Invalid time-out specified. "
                                            "Assuming default value of %d.",
@@ -1960,6 +1956,10 @@ subscribe_got_response (SoupSession       *session,
 
                                 timeout = GENA_DEFAULT_TIMEOUT;
                         }
+
+                        /* We want to resubscribe before the subscription
+                         * expires. */
+                        timeout = g_random_int_range (1, timeout / 2);
 
                         /* Add actual timeout */
                         proxy->priv->subscription_timeout_src =
