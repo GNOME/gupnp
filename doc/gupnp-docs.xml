@@ -4,10 +4,7 @@
   <bookinfo>
     <title>GUPnP Reference Manual</title>
 
-    <releaseinfo>Version <xi:include href="version.xml" parse="text"/>
-        <ulink role="online-location"
-               url="http://developer.gnome.org/gupnp/stable">http://developer.gnome.org/gupnp/stable</ulink>
-    </releaseinfo>
+    <releaseinfo>Version <xi:include href="version.xml" parse="text"/></releaseinfo>
 
     <copyright>
       <year>2007</year>
