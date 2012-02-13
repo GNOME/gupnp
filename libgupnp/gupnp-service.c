@@ -2092,9 +2092,10 @@ find_callback_by_name (GModule    *module,
                                        "cb",
                                        NULL);
 
-                g_module_symbol (module,
-                                 full_name,
-                                 (gpointer) &callback);
+                if (!g_module_symbol (module,
+                                      full_name,
+                                      (gpointer) &callback))
+                        callback = NULL;
         }
 
         g_free (full_name);
