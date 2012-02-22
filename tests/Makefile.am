@@ -1,3 +1,5 @@
+SUBDIRS = gtest
+
 AM_CFLAGS = $(LIBGUPNP_CFLAGS) $(GTHREAD_CFLAGS) -I$(top_srcdir)
 
 noinst_PROGRAMS = test-browsing      \
