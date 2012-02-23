@@ -916,58 +916,67 @@ host_path_handler (SoupServer        *server,
         status = SOUP_STATUS_OK;
 
         if (msg->method == SOUP_METHOD_GET) {
-                gsize offset, length;
                 gboolean have_range;
                 SoupBuffer *buffer;
+                SoupRange *ranges;
+                int nranges;
 
                 /* Find out range */
                 have_range = FALSE;
 
-                offset = 0;
-                length = st.st_size;
+                if (soup_message_headers_get_ranges (msg->request_headers,
+                                                     st.st_size,
+                                                     &ranges,
+                                                     &nranges))
+                        have_range = TRUE;
 
-                if (!http_request_get_range (msg,
-                                             &have_range,
-                                             &offset,
-                                             &length)) {
-                        soup_message_set_status
-                                (msg,
-                                 SOUP_STATUS_REQUESTED_RANGE_NOT_SATISFIABLE);
-
-                        goto DONE;
-                }
-
-                if (have_range && (length > st.st_size - offset ||
+                /* We do not support mulipart/byteranges so only first first */
+                /* range from request is handled */
+                if (have_range && (ranges[0].end > st.st_size ||
                                    st.st_size < 0 ||
-                                   (off_t) offset >= st.st_size)) {
+                                   ranges[0].start >= st.st_size ||
+                                   ranges[0].start > ranges[0].end)) {
                         soup_message_set_status
                                 (msg,
                                  SOUP_STATUS_REQUESTED_RANGE_NOT_SATISFIABLE);
+                        soup_message_headers_free_ranges (msg->request_headers,
+                                                          ranges);
 
                         goto DONE;
                 }
 
                 /* Add requested content */
                 buffer = soup_buffer_new_with_owner
-                             (g_mapped_file_get_contents (mapped_file) + offset,
-                              length,
+                             (g_mapped_file_get_contents (mapped_file),
+                              g_mapped_file_get_length (mapped_file),
                               mapped_file,
                               (GDestroyNotify) g_mapped_file_unref);
 
-                soup_message_body_append_buffer (msg->response_body, buffer);
+                /* Set range and status */
+                if (have_range) {
+                        SoupBuffer *range_buffer;
+
+                        soup_message_body_truncate (msg->response_body);
+                        soup_message_headers_set_content_range (
+                                                          msg->response_headers,
+                                                          ranges[0].start,
+                                                          ranges[0].end,
+                                                          buffer->length);
+                        range_buffer = soup_buffer_new_subbuffer (
+                                           buffer,
+                                           ranges[0].start,
+                                           ranges[0].end - ranges[0].start + 1);
+                        soup_message_body_append_buffer (msg->response_body,
+                                                         range_buffer);
+                        status = SOUP_STATUS_PARTIAL_CONTENT;
+
+                        soup_message_headers_free_ranges (msg->request_headers,
+                                                          ranges);
+                        soup_buffer_free (range_buffer);
+                } else
+                        soup_message_body_append_buffer (msg->response_body, buffer);
 
                 soup_buffer_free (buffer);
-
-                /* Set status */
-                if (have_range) {
-                        http_response_set_content_range (msg,
-                                                         offset,
-                                                         offset + length,
-                                                         st.st_size);
-
-                        status = SOUP_STATUS_PARTIAL_CONTENT;
-                }
-
         } else if (msg->method == SOUP_METHOD_HEAD) {
                 char *length;
 
