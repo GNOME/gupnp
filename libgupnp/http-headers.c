@@ -109,66 +109,6 @@ locale_from_http_language (char *lang)
         return underscore_index;
 }
 
-/* Parses the HTTP Range header on @message and sets:
- *
- * @have_range to %TRUE if a range was specified,
- * @offset to the requested offset (left unchanged if none specified),
- * @length to the requested length (left unchanged if none specified).
- *
- * Both @offset and @length are expected to be initialised to their default
- * values.
- *
- * Returns %TRUE on success. */
-gboolean
-http_request_get_range (SoupMessage *message,
-                        gboolean    *have_range,
-                        gsize       *offset,
-                        gsize       *length)
-{
-        const char *header;
-        char **v;
-
-        header = soup_message_headers_get_one (message->request_headers,
-                                               "Range");
-        if (header == NULL) {
-                *have_range = FALSE;
-
-                return TRUE;
-        }
-
-        /* We have a Range header. Parse. */
-        if (strncmp (header, "bytes=", 6) != 0)
-                return FALSE;
-
-        header += 6;
-
-        v = g_strsplit (header, "-", 2);
-
-        /* Get first byte position */
-        if (v[0] != NULL && *v[0] != 0)
-                *offset = atoll (v[0]);
-
-        else {
-                /* We don't support ranges without first byte position */
-                g_strfreev (v);
-
-                return FALSE;
-        }
-
-        /* Get last byte position if specified */
-        if (v[1] != NULL && *v[1] != 0)
-                *length = atoll (v[1]) - *offset;
-        else
-                *length = *length - *offset;
-
-        *have_range = TRUE;
-
-        /* Cleanup */
-        g_strfreev (v);
-
-        return TRUE;
-}
-
 /* Sets the Accept-Language on @message with the language taken from the
  * current locale. */
 void
@@ -330,29 +270,6 @@ http_response_set_content_type (SoupMessage  *msg,
 
         g_free (mime);
         g_free (content_type);
-}
-
-/* Set Content-Range header */
-void
-http_response_set_content_range (SoupMessage  *msg,
-                                 gsize         offset,
-                                 gsize         length,
-                                 gsize         total)
-{
-        char *content_range;
-
-        content_range = g_strdup_printf
-                ("bytes %" G_GSIZE_FORMAT "-%"
-                 G_GSIZE_FORMAT "/%" G_GSIZE_FORMAT,
-                 offset,
-                 offset + length,
-                 total);
-
-        soup_message_headers_append (msg->response_headers,
-                                     "Content-Range",
-                                     content_range);
-
-        g_free (content_range);
 }
 
 /* Set Content-Encoding header to gzip and append compressed body */
