@@ -6,6 +6,12 @@ if USE_NETWORK_MANAGER
 CONTEXT_MANAGER_IMPL += gupnp-network-manager.c  \
 		        gupnp-network-manager.h
 CONTEXT_MANAGER_CFLAGS = -DUSE_NETWORK_MANAGER
+else
+if USE_CONNMAN
+CONTEXT_MANAGER_IMPL += gupnp-connman-manager.c  \
+			gupnp-connman-manager.h
+CONTEXT_MANAGER_CFLAGS = -DUSE_CONNMAN
+endif
 endif
 
 if USE_NETLINK
@@ -96,6 +102,8 @@ libgupnp_1_0_la_LIBADD = $(LIBGUPNP_LIBS) $(DBUS_GLIB_LIBS) $(LIBCONIC_LIBS)
 EXTRA_DIST = gupnp-marshal.list 	   \
 	     gupnp-network-manager.c   	   \
 	     gupnp-network-manager.h       \
+	     gupnp-connman-manager.c   	   \
+	     gupnp-connman-manager.h       \
 	     gupnp-linux-context-manager.c \
 	     gupnp-linux-context-manager.h \
 	     gupnp-unix-context-manager.c  \
