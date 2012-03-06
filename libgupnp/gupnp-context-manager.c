@@ -335,6 +335,12 @@ gupnp_context_manager_create (guint port)
 
         if (gupnp_network_manager_is_available ())
                 impl_type = GUPNP_TYPE_NETWORK_MANAGER;
+#elif USE_CONNMAN
+#include "gupnp-connman-manager.h"
+
+       if (gupnp_connman_manager_is_available ())
+                impl_type = GUPNP_TYPE_CONNMAN_MANAGER;
+
 #elif USE_NETLINK
 #include "gupnp-linux-context-manager.h"
         impl_type = GUPNP_TYPE_LINUX_CONTEXT_MANAGER;
