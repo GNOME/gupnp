@@ -16,3 +16,5 @@ AM_CFLAGS = \
 	    $(LIBGUPNP_CFLAGS) \
 	    -I $(top_srcdir) \
 	    -DDATA_PATH="\"$(srcdir)\""
+
+EXTRA_DIST=random4k.bin
