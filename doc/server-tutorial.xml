@@ -129,7 +129,6 @@
     </para>
     <programlisting>GUPnPContext *context;
 /* Initialize required subsystems */
-g_thread_init (NULL);
 g_type_init ();
 /* Create the GUPnP context with default host and port */
 context = gupnp_context_new (NULL, NULL, 0, NULL);</programlisting>

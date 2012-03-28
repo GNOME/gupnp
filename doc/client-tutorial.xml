@@ -47,7 +47,6 @@ main (int argc, char **argv)
   GUPnPControlPoint *cp;
   
   /* Required initialisation */
-  g_thread_init (NULL);
   g_type_init ();
 
   /* Create a new GUPnP Context.  By here we are using the default GLib main

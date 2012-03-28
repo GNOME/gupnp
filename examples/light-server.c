@@ -109,7 +109,6 @@ main (int argc, char **argv)
   GUPnPRootDevice *dev;
   GUPnPServiceInfo *service;
   
-  g_thread_init (NULL);
   g_type_init ();
 
   /* By default the light is off */

@@ -97,7 +97,6 @@ main (int argc, char **argv)
         GUPnPControlPoint *cp;
         struct sigaction sig_action;
 
-        g_thread_init (NULL);
         g_type_init ();
         setlocale (LC_ALL, "");
 
