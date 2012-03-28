@@ -77,7 +77,6 @@ main (int argc, char **argv)
   GUPnPContext *context;
   GUPnPControlPoint *cp;
 
-  g_thread_init (NULL);
   g_type_init ();
 
   /* Check and parse command line arguments */

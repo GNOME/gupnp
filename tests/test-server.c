@@ -70,7 +70,6 @@ main (int argc, char **argv)
                 return EXIT_FAILURE;
         }
 
-        g_thread_init (NULL);
         g_type_init ();
         setlocale (LC_ALL, "");
 
