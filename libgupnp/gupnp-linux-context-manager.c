@@ -279,7 +279,7 @@ is_wireless_status_message (struct nlmsghdr *header)
         return FALSE;
 }
 
-void
+static void
 create_context (GUPnPLinuxContextManager *self, struct ifaddrmsg *ifa)
 {
         NetworkInterface *device;
@@ -303,7 +303,7 @@ create_context (GUPnPLinuxContextManager *self, struct ifaddrmsg *ifa)
         network_device_create_context (device);
 }
 
-void
+static void
 remove_context (GUPnPLinuxContextManager *self, struct ifaddrmsg *ifa)
 {
         NetworkInterface *device;
