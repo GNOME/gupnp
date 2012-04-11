@@ -115,7 +115,7 @@ network_device_new (GUPnPLinuxContextManager *manager,
 }
 
 /* Try to update the ESSID of a network interface. */
-void
+static void
 network_device_update_essid (NetworkInterface *device)
 {
         char *old_essid = device->essid;
