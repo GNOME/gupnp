@@ -28,7 +28,7 @@
 
 G_BEGIN_DECLS
 
-GType
+G_GNUC_INTERNAL GType
 gupnp_unix_context_manager_get_type (void) G_GNUC_CONST;
 
 #define GUPNP_TYPE_UNIX_CONTEXT_MANAGER \

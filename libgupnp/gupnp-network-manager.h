@@ -27,7 +27,7 @@
 
 G_BEGIN_DECLS
 
-GType
+G_GNUC_INTERNAL GType
 gupnp_network_manager_get_type (void) G_GNUC_CONST;
 
 #define GUPNP_TYPE_NETWORK_MANAGER \
@@ -69,7 +69,7 @@ typedef struct {
         void (* _gupnp_reserved4) (void);
 } GUPnPNetworkManagerClass;
 
-gboolean
+G_GNUC_INTERNAL gboolean
 gupnp_network_manager_is_available                      ();
 
 G_END_DECLS
