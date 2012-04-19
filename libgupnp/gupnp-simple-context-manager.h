@@ -29,7 +29,7 @@
 
 G_BEGIN_DECLS
 
-GType
+G_GNUC_INTELNAL GType
 gupnp_simple_context_manager_get_type (void) G_GNUC_CONST;
 
 #define GUPNP_TYPE_SIMPLE_CONTEXT_MANAGER \
