@@ -114,6 +114,8 @@ struct _GUPnPNetworkManagerPrivate {
         GList *nm_devices;
 
         GCancellable *cancellable;
+
+        GDBusConnection *system_bus;
 };
 
 static NMDevice *
@@ -649,6 +651,7 @@ gupnp_network_manager_constructed (GObject *object)
 
         priv->cancellable = g_cancellable_new ();
         priv->nm_devices = NULL;
+        priv->system_bus = g_bus_get_sync (G_BUS_TYPE_SYSTEM, NULL, NULL);
 
         init_network_manager (manager);
 
@@ -690,6 +693,11 @@ gupnp_network_manager_dispose (GObject *object)
         if (priv->cancellable != NULL)  {
                 g_object_unref (priv->cancellable);
                 priv->cancellable = NULL;
+        }
+
+        if (priv->system_bus != NULL) {
+                g_object_unref (priv->system_bus);
+                priv->system_bus = NULL;
         }
 
         /* Call super */

@@ -57,6 +57,7 @@ struct _GUPnPConnmanManagerPrivate {
         GSource    *idle_context_creation_src;
         GHashTable *cm_services;
         guint      sig_change_id;
+        GDBusConnection *system_bus;
 };
 
 #define CM_DBUS_CONNMAN_NAME      "net.connman"
@@ -668,6 +669,11 @@ gupnp_connman_manager_dispose (GObject *object)
                 priv->cm_services = NULL;
         }
 
+        if (priv->system_bus) {
+                g_object_unref (priv->system_bus);
+                priv->system_bus = NULL;
+        }
+
         /* Call super */
         object_class = G_OBJECT_CLASS (gupnp_connman_manager_parent_class);
         object_class->dispose (object);
@@ -680,6 +686,10 @@ gupnp_connman_manager_constructed (GObject *object)
         GObjectClass        *object_class;
 
         manager = GUPNP_CONNMAN_MANAGER (object);
+
+        manager->priv->system_bus = g_bus_get_sync (G_BUS_TYPE_SYSTEM,
+                                                    NULL,
+                                                    NULL);
 
         init_connman_manager (manager);
 

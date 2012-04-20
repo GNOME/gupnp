@@ -327,11 +327,15 @@ gupnp_context_manager_new (GMainContext *main_context,
 GUPnPContextManager *
 gupnp_context_manager_create (guint port)
 {
+#if defined(USE_NETWORK_MANAGER) || defined (USE_CONNMAN)
+        GDBusConnection *system_bus;
+#endif
         GUPnPContextManager *impl;
         GType impl_type = G_TYPE_INVALID;
 
 #ifdef USE_NETWORK_MANAGER
 #include "gupnp-network-manager.h"
+        system_bus = g_bus_get_sync (G_BUS_TYPE_SYSTEM, NULL, NULL);
 
         if (gupnp_network_manager_is_available ())
                 impl_type = GUPNP_TYPE_NETWORK_MANAGER;
@@ -353,6 +357,9 @@ gupnp_context_manager_create (guint port)
                              "port", port,
                              NULL);
 
+#if defined(USE_NETWORK_MANAGER) || defined(USE_CONNMAN)
+        g_object_unref (system_bus);
+#endif
         return impl;
 }
 
