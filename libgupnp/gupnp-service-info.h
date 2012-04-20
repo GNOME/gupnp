@@ -82,7 +82,7 @@ struct _GUPnPServiceInfoClass {
 };
 
 /**
- * GUPnPServiceIntrospectionCallback
+ * GUPnPServiceIntrospectionCallback:
  * @info: The #GUPnPServiceInfo introspection was requested for
  * @introspection: The new #GUPnPServiceIntrospection object, or NULL
  * @error: The #GError that occurred, or NULL

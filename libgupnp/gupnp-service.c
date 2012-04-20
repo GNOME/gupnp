@@ -497,13 +497,14 @@ gupnp_service_action_get_value (GUPnPServiceAction *action,
  * @argument: The name of the argument to retrieve
  * @type: The type of argument to retrieve
  *
- * Rename To: gupnp_service_action_get_value
  * Retrieves the value of @argument into a GValue of type @type and returns it.
  * The method exists only and only to satify PyGI, please use
  * #gupnp_service_action_get_value and ignore this if possible.
  *
  * Return value: (transfer full): Value as #GValue associated with @action.
  * #g_value_unset and #g_slice_free it after usage.
+ *
+ * Rename To: gupnp_service_action_get_value
  **/
 GValue *
 gupnp_service_action_get_gvalue (GUPnPServiceAction *action,
