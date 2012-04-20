@@ -82,7 +82,7 @@ struct _GUPnPServiceProxyClass {
 };
 
 /**
- * GUPnPServiceProxyAction
+ * GUPnPServiceProxyAction:
  *
  * Opaque structure for holding in-progress action data.
  **/

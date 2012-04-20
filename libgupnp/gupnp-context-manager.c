@@ -233,7 +233,7 @@ gupnp_context_manager_class_init (GUPnPContextManagerClass *klass)
         /**
          * GUPnPContextManager:port:
          *
-         * @port: Port to create contexts for, or 0 if you don't care what
+         * Port the contexts listen on, or 0 if you don't care what
          * port is used by #GUPnPContext objects created by this object.
          **/
         g_object_class_install_property

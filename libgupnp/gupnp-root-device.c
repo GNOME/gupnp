@@ -552,7 +552,7 @@ gupnp_root_device_class_init (GUPnPRootDeviceClass *klass)
 }
 
 /**
- * gupnp_root_device_new
+ * gupnp_root_device_new:
  * @context: The #GUPnPContext
  * @description_path: Path to device description document. This could either
  * be an absolute path or path relative to @description_dir.

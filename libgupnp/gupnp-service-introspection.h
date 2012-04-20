@@ -53,7 +53,7 @@ gupnp_service_introspection_get_type (void) G_GNUC_CONST;
                  GUPnPServiceIntrospectionClass))
 
 /**
- * GUPnPServiceActionArgDirection
+ * GUPnPServiceActionArgDirection:
  * @GUPNP_SERVICE_ACTION_ARG_DIRECTION_IN: An "in" variable, to the service.
  * @GUPNP_SERVICE_ACTION_ARG_DIRECTION_OUT: An "out" variable, from the service.
  *

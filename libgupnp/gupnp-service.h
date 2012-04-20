@@ -53,7 +53,7 @@ gupnp_service_get_type (void) G_GNUC_CONST;
                  GUPnPServiceClass))
 
 /**
- * GUPnPServiceAction
+ * GUPnPServiceAction:
  *
  * Opaque structure for holding in-progress action data.
  **/

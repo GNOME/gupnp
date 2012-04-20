@@ -301,7 +301,7 @@ gupnp_service_info_class_init (GUPnPServiceInfoClass *klass)
                                       G_PARAM_STATIC_BLURB));
 
         /**
-         * GUPnPServiceInfo:service-type
+         * GUPnPServiceInfo:service-type:
          *
          * The service type.
          **/
