@@ -6,7 +6,7 @@ CONTEXT_MANAGER_IMPL = gupnp-network-manager.c  \
 CONTEXT_MANAGER_CFLAGS = -DUSE_NETWORK_MANAGER
 else
 if USE_CONNMAN
-CONTEXT_MANAGER_IMPL += gupnp-connman-manager.c  \
+CONTEXT_MANAGER_IMPL = gupnp-connman-manager.c  \
 			gupnp-connman-manager.h
 CONTEXT_MANAGER_CFLAGS = -DUSE_CONNMAN
 else
