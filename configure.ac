@@ -47,7 +47,7 @@ case "$target_os" in
         ;;
 esac
 
-PKG_CHECK_MODULES(LIBGUPNP, glib-2.0 >= 2.28.0 \
+PKG_CHECK_MODULES(LIBGUPNP, glib-2.0 >= 2.24.0 \
                             gio-2.0 \
                             gmodule-2.0 \
                             gssdp-1.0 >= 0.11.2 \
@@ -68,12 +68,14 @@ AC_MSG_RESULT([${with_context_manager}])
 
 AM_CONDITIONAL([USE_NETWORK_MANAGER],
                [test "x$with_context_manager" = "xnetwork-manager"])
+AS_IF([test "x$with_context_manager" = "xnetwork-manager"],
+      [PKG_CHECK_MODULES(GIO, gio-2.0 >= 2.26)])
 
 AM_CONDITIONAL([USE_CONNMAN],
                [test "x$with_context_manager" = "xconnman"])
 
 if test "x$with_context_manager" = "xconnman"; then
-        PKG_CHECK_MODULES(CONNMAN, connman >= 0.80)
+        PKG_CHECK_MODULES(CONNMAN, glib-2.0 >= 2.28 connman >= 0.80)
 fi
 
 USE_NETLINK=no
