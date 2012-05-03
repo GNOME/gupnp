@@ -1,3 +1,29 @@
+0.18.3
+======
+
+Changes since 0.18.2:
+
+- Add a Connman (http://connman.net) context manager.
+- Add a work-around for one of the lock-ups in bug 667494.
+- Don't leak private symbols.
+- Don't leak DBus proxies in network-manager context-manager.
+- Fix some g-i annotations.
+
+All contributors to this release:
+Ludovic Ferrandis <ludovic.ferrandis@linux.intel.com>
+Jens Georg <mail@jensge.org>
+Andreas Henriksson <andreas@fatal.se>
+
+Changes in dependencies:
+If the Connman context-manager is enabled (--with-context-manager=connman),
+the required glib version is 2.28.
+
+Bugs fixed:
+- https://bugzilla.gnome.org/show_bug.cgi?id=673933
+- https://bugzilla.gnome.org/show_bug.cgi?id=674410
+- https://bugzilla.gnome.org/show_bug.cgi?id=672998
+
+
 0.18.2
 ======
 
