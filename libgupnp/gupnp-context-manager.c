@@ -341,6 +341,7 @@ gupnp_context_manager_create (guint port)
                 impl_type = GUPNP_TYPE_NETWORK_MANAGER;
 #elif USE_CONNMAN
 #include "gupnp-connman-manager.h"
+        system_bus = g_bus_get_sync (G_BUS_TYPE_SYSTEM, NULL, NULL);
 
        if (gupnp_connman_manager_is_available ())
                 impl_type = GUPNP_TYPE_CONNMAN_MANAGER;
