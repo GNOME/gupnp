@@ -61,7 +61,18 @@ AC_ARG_WITH([context_manager],
             AS_HELP_STRING(
                         [--with-context-manager=@<:@network-manager/connman/unix/linux@:>@],
                         [Context Manager backend to use]),,
-            [with_context_manager="unix"])
+            [with_context_manager="none"])
+
+if test "x$with_context_manager" = "xnone"; then
+        case "$target_os" in
+        linux*)
+                with_context_manager="linux"
+                ;;
+        *)
+                with_context_manager="unix"
+                ;;
+        esac
+fi
 
 AC_MSG_CHECKING([Context Manager backend to use])
 AC_MSG_RESULT([${with_context_manager}])
