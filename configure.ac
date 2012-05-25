@@ -121,7 +121,7 @@ AC_SUBST(GLIB_GENMARSHAL)
 
 # Debugging
 AC_ARG_ENABLE(debug,
-	[  --enable-debug          enable debugging],,
+        AS_HELP_STRING([--enable-debug], [enable debugging]),,
         enable_debug=no)
 if test "x$enable_debug" = "xyes"; then
         CFLAGS="$CFLAGS -g -Wall -Werror"
