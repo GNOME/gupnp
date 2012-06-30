@@ -102,11 +102,16 @@ gupnp_xml_doc_new_from_path (const char *path,
                              GError    **error)
 {
         xmlDoc *doc;
+        int flags;
+
+        flags = XML_PARSE_PEDANTIC;
+
+        if (!g_getenv ("GUPNP_DEBUG")) {
+                flags |= XML_PARSE_NOWARNING | XML_PARSE_NOERROR;
+        }
 
         g_return_val_if_fail (path != NULL, NULL);
-        doc = xmlReadFile (path,
-                           NULL,
-                           XML_PARSE_PEDANTIC);
+        doc = xmlReadFile (path, NULL, flags);
         if (doc == NULL) {
                 g_set_error (error,
                              GUPNP_XML_ERROR,
