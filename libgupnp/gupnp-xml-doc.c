@@ -104,7 +104,9 @@ gupnp_xml_doc_new_from_path (const char *path,
         xmlDoc *doc;
 
         g_return_val_if_fail (path != NULL, NULL);
-        doc = xmlRecoverFile (path);
+        doc = xmlReadFile (path,
+                           NULL,
+                           XML_PARSE_PEDANTIC);
         if (doc == NULL) {
                 g_set_error (error,
                              GUPNP_XML_ERROR,
