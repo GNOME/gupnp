@@ -2113,36 +2113,36 @@ unsubscribe (GUPnPServiceProxy *proxy)
         soup_server_remove_handler (server, proxy->priv->path);
 
         if (proxy->priv->sid != NULL) {
-	        SoupMessage *msg;
-	        char *sub_url;
+                SoupMessage *msg;
+                char *sub_url;
 
-	        /* Create unsubscription message */
-	        sub_url = gupnp_service_info_get_event_subscription_url
+                /* Create unsubscription message */
+                sub_url = gupnp_service_info_get_event_subscription_url
                                                    (GUPNP_SERVICE_INFO (proxy));
 
-		msg = soup_message_new (GENA_METHOD_UNSUBSCRIBE, sub_url);
+                msg = soup_message_new (GENA_METHOD_UNSUBSCRIBE, sub_url);
 
-		g_free (sub_url);
+                g_free (sub_url);
 
-		if (msg != NULL) {
-		        /* Add headers */
-		        soup_message_headers_append (msg->request_headers,
-						     "SID",
-						     proxy->priv->sid);
+                if (msg != NULL) {
+                        /* Add headers */
+                        soup_message_headers_append (msg->request_headers,
+                                                     "SID",
+                                                     proxy->priv->sid);
 
-			/* And queue it */
-			session = gupnp_context_get_session (context);
+                        /* And queue it */
+                        session = gupnp_context_get_session (context);
 
-			soup_session_queue_message (session, msg, NULL, NULL);
-		}
+                        soup_session_queue_message (session, msg, NULL, NULL);
+                }
 
-		/* Reset SID */
-		g_free (proxy->priv->sid);
-		proxy->priv->sid = NULL;
+                /* Reset SID */
+                g_free (proxy->priv->sid);
+                proxy->priv->sid = NULL;
 
-		/* Reset sequence number */
-		proxy->priv->seq = 0;
-	}
+                /* Reset sequence number */
+                proxy->priv->seq = 0;
+        }
 
         /* Remove subscription timeout */
         if (proxy->priv->subscription_timeout_src) {
