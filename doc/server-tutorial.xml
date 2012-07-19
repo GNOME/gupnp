@@ -14,10 +14,10 @@
       Before any code can be written, the device and services that it implement
       need to be described in XML.  Although this can be frustrating, if you are
       implementing a standardised service (see <ulink
-      url="http://upnp.org/standardizeddcps/"/> for the list of standard devices
-      and services) then the service description is already written for you and
-      the device description is trivial.  UPnP has standardised <ulink
-      url="http://upnp.org/standardizeddcps/lighting.asp">Lighting
+      url="http://upnp.org/sdcps-and-certification/standards/sdcps/"/> for the
+      list of standard devices and services) then the service description is
+      already written for you and the device description is trivial.  UPnP has
+      standardised <ulink url="http://upnp.org/specs/ha/lighting/">Lighting
       Controls</ulink>, so we'll be using the device and service types defined
       there.
     </para>
@@ -29,7 +29,7 @@
       The first step is to write the <firstterm>device description</firstterm>
       file.  This is a short XML document which describes the device and what
       services it provides (for more details see the <ulink
-      url="http://upnp.org/specs/arch/UPnP-DeviceArchitecture-v1.0.pdf">UPnP
+      url="http://upnp.org/specs/arch/UPnP-arch-DeviceArchitecture-v1.0.pdf">UPnP
       Device Architecture</ulink> specification, section 2.1).  We'll be using
       the <literal>BinaryLight1</literal> device type, but if none of the
       existing device types are suitable a custom device type can be created.
@@ -115,7 +115,7 @@
       For the full specification of the service definition file, including a
       complete list of valid <sgmltag>dataType</sgmltag>s, see section 2.3 of
       the <ulink
-      url="http://upnp.org/specs/arch/UPnP-DeviceArchitecture-v1.0.pdf">UPnP
+      url="http://upnp.org/specs/arch/UPnP-arch-DeviceArchitecture-v1.0.pdf">UPnP
       Device Architecture</ulink>.
     </para>
   </simplesect>
