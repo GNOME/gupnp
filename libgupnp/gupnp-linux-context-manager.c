@@ -31,12 +31,15 @@
 #include <sys/socket.h>
 #include <linux/netlink.h>
 #include <linux/rtnetlink.h>
+#include <linux/if.h>
 #ifdef HAVE_LINUX_WIRELESS_H
 #include <linux/wireless.h>
 #endif
 #include <sys/ioctl.h>
 #include <errno.h>
 #include <string.h>
+
+#include <gio/gio.h>
 
 #include "gupnp-linux-context-manager.h"
 #include "gupnp-context.h"
