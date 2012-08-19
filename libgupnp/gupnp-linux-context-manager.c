@@ -83,8 +83,9 @@ struct _NetworkInterface {
         /* States of the interface */
         NetworkInterfaceFlags flags;
 
-        /* UPnP context associated with this interface */
-        GUPnPContext *context;
+        /* UPnP contexts associated with this interface. Can be more than one
+         * with alias addresses like eth0:1 etc. */
+        GHashTable *contexts;
 };
 
 typedef struct _NetworkInterface NetworkInterface;
@@ -113,6 +114,11 @@ network_device_new (GUPnPLinuxContextManager *manager,
         device = g_slice_new0 (NetworkInterface);
         device->manager = manager;
         device->name = g_strdup (ifr.ifr_name);
+
+        device->contexts = g_hash_table_new_full (g_str_hash,
+                                                  g_str_equal,
+                                                  g_free,
+                                                  g_object_unref);
 
         return device;
 }
@@ -146,10 +152,11 @@ network_device_update_essid (NetworkInterface *device)
 }
 
 static void
-network_device_create_context (NetworkInterface *device)
+network_device_create_context (NetworkInterface *device, const char *label)
 {
         guint port;
         GError *error = NULL;
+        GUPnPContext *context;
 
         /* We cannot create a context yet. But it may be that there will not
          * be a RTM_NEWADDR message for this device if the IP address does not
@@ -169,13 +176,13 @@ network_device_create_context (NetworkInterface *device)
                       NULL);
 
         network_device_update_essid (device);
-        device->context = g_initable_new (GUPNP_TYPE_CONTEXT,
-                                          NULL,
-                                          &error,
-                                          "interface", device->name,
-                                          "network", device->essid,
-                                          "port", port,
-                                          NULL);
+        context = g_initable_new (GUPNP_TYPE_CONTEXT,
+                                  NULL,
+                                  &error,
+                                  "interface", label,
+                                  "network", device->essid,
+                                  "port", port,
+                                  NULL);
 
         if (error) {
                 g_warning ("Error creating GUPnP context: %s",
@@ -184,10 +191,23 @@ network_device_create_context (NetworkInterface *device)
 
                 return;
         }
+        g_hash_table_insert (device->contexts, g_strdup (label), context);
 
         g_signal_emit_by_name (device->manager,
                                "context-available",
-                               device->context);
+                               context);
+}
+
+static void
+context_signal_up (gpointer key, gpointer value, gpointer user_data)
+{
+    g_signal_emit_by_name (user_data, "context-available", value);
+}
+
+static void
+context_signal_down (gpointer key, gpointer value, gpointer user_data)
+{
+    g_signal_emit_by_name (user_data, "context-unavailable", value);
 }
 
 static void
@@ -198,12 +218,12 @@ network_device_up (NetworkInterface *device)
 
         device->flags |= NETWORK_INTERFACE_UP;
 
-        if (device->context)
-                g_signal_emit_by_name (device->manager,
-                                       "context-available",
-                                       device->context);
+        if (g_hash_table_size (device->contexts) > 0)
+                g_hash_table_foreach (device->contexts,
+                                      context_signal_up,
+                                      device->manager);
         else if (device->flags & NETWORK_INTERFACE_PRECONFIGURED)
-                network_device_create_context (device);
+                network_device_create_context (device, device->name);
 }
 
 static void
@@ -214,10 +234,10 @@ network_device_down (NetworkInterface *device)
 
         device->flags &= ~NETWORK_INTERFACE_UP;
 
-        if (device->context)
-                g_signal_emit_by_name (device->manager,
-                                       "context-unavailable",
-                                       device->context);
+        if (device->contexts)
+                g_hash_table_foreach (device->contexts,
+                                      context_signal_down,
+                                      device->manager);
 }
 
 static void
@@ -228,13 +248,24 @@ network_device_free (NetworkInterface *device)
         if (device->essid != NULL)
                 g_free (device->essid);
 
-        if (device->context != NULL) {
-                g_signal_emit_by_name (device->manager,
-                                       "context-unavailable",
-                                       device->context);
+        if (device->contexts != NULL) {
+                GHashTableIter iter;
+                char *key;
+                GUPnPContext *value;
 
-                g_object_unref (device->context);
+                g_hash_table_iter_init (&iter, device->contexts);
+                while (g_hash_table_iter_next (&iter,
+                                               (gpointer *) &key,
+                                               (gpointer *) &value)) {
+                    g_signal_emit_by_name (device->manager,
+                                           "context-unavailable",
+                                           value);
+                    g_hash_table_iter_remove (&iter);
+                }
         }
+
+        g_hash_table_unref (device->contexts);
+        device->contexts = NULL;
 }
 
 
@@ -243,8 +274,10 @@ static void query_all_addresses (GUPnPLinuxContextManager *self);
 static void receive_netlink_message (GUPnPLinuxContextManager  *self,
                                      GError                   **error);
 static void create_context (GUPnPLinuxContextManager *self,
+                            const char               *label,
                             struct ifaddrmsg         *ifa);
 static void remove_context (GUPnPLinuxContextManager *self,
+                            const char               *label,
                             struct ifaddrmsg         *ifa);
 
 static gboolean
@@ -263,6 +296,23 @@ on_netlink_message_available (GSocket      *socket,
 
 #define RT_ATTR_OK(a,l) \
         ((l > 0) && RTA_OK (a, l))
+
+static void
+extract_info (struct nlmsghdr *header, char **label)
+{
+    int rt_attr_len;
+    struct rtattr *rt_attr;
+
+    rt_attr = IFLA_RTA (NLMSG_DATA (header));
+    rt_attr_len = IFLA_PAYLOAD (header);
+    while (RT_ATTR_OK (rt_attr, rt_attr_len)) {
+        if (rt_attr->rta_type == IFA_LABEL) {
+            *label = g_strdup ((char *) RTA_DATA (rt_attr));
+            break;
+        }
+        rt_attr = RTA_NEXT (rt_attr, rt_attr_len);
+    }
+}
 
 static gboolean
 is_wireless_status_message (struct nlmsghdr *header)
@@ -283,14 +333,17 @@ is_wireless_status_message (struct nlmsghdr *header)
 }
 
 static void
-create_context (GUPnPLinuxContextManager *self, struct ifaddrmsg *ifa)
+create_context (GUPnPLinuxContextManager *self,
+                const char               *label,
+                struct ifaddrmsg         *ifa)
 {
         NetworkInterface *device;
 
-        remove_context (self, ifa);
+        remove_context (self, label, ifa);
 
         device = g_hash_table_lookup (self->priv->interfaces,
                                       GINT_TO_POINTER (ifa->ifa_index));
+
         if (!device) {
                 g_warning ("Got new address for device %d but device is"
                            " not active",
@@ -300,16 +353,20 @@ create_context (GUPnPLinuxContextManager *self, struct ifaddrmsg *ifa)
         }
 
         /* If device isn't one we consider, silently skip address */
-        if (device->flags & NETWORK_INTERFACE_IGNORE)
+        if (device->flags & NETWORK_INTERFACE_IGNORE) {
                 return;
+        }
 
-        network_device_create_context (device);
+        network_device_create_context (device, label);
 }
 
 static void
-remove_context (GUPnPLinuxContextManager *self, struct ifaddrmsg *ifa)
+remove_context (GUPnPLinuxContextManager *self,
+                const char               *label,
+                struct ifaddrmsg         *ifa)
 {
         NetworkInterface *device;
+        GUPnPContext *context;
 
         device = g_hash_table_lookup (self->priv->interfaces,
                                       GINT_TO_POINTER (ifa->ifa_index));
@@ -317,17 +374,18 @@ remove_context (GUPnPLinuxContextManager *self, struct ifaddrmsg *ifa)
         if (!device)
                 return;
 
-        if (device->context) {
-                if (device->flags & NETWORK_INTERFACE_UP)
+        context = g_hash_table_lookup (device->contexts, label);
+        if (context) {
+                if (device->flags & NETWORK_INTERFACE_UP) {
                         g_signal_emit_by_name (self,
                                                "context-unavailable",
-                                               device->context);
-                g_object_unref (device->context);
-
-                device->context = NULL;
+                                               context);
+                }
+                g_hash_table_remove (device->contexts, label);
         }
 
-        device->flags &= ~NETWORK_INTERFACE_PRECONFIGURED;
+        if (g_hash_table_size (device->contexts) == 0)
+                device->flags &= ~NETWORK_INTERFACE_PRECONFIGURED;
 }
 
 /* Idle-handler for initial interface and address bootstrapping.
@@ -515,13 +573,25 @@ receive_netlink_message (GUPnPLinuxContextManager *self, GError **error)
                          * RTM_DELLINK is sent only if device is removed, like
                          * openvpn --rmtun /dev/tun0, NOT on ifconfig down. */
                         case RTM_NEWADDR:
+                            {
+                                char *label = NULL;
+
                                 ifa = NLMSG_DATA (header);
-                                create_context (self, ifa);
-                                break;
+                                extract_info (header, &label);
+                                create_context (self, label, ifa);
+                                g_free (label);
+                            }
+                            break;
                         case RTM_DELADDR:
+                            {
+                                char *label = NULL;
+
                                 ifa = NLMSG_DATA (header);
-                                remove_context (self, ifa);
-                                break;
+                                extract_info (header, &label);
+                                remove_context (self, label, ifa);
+                                g_free (label);
+                            }
+                            break;
                         case RTM_NEWLINK:
                                 ifi = NLMSG_DATA (header);
 
