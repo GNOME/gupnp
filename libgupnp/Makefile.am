@@ -15,11 +15,14 @@ CONTEXT_MANAGER_CFLAGS =
 endif
 endif
 
+if HAVE_NETLINK
+CONTEXT_MANAGER_IMPL += \
+	gupnp-linux-context-manager.c \
+	gupnp-linux-context-manager.h
+endif
+
 if USE_NETLINK
 NETLINK_CFLAGS = -DUSE_NETLINK
-CONTEXT_MANAGER_IMPL += \
-			  gupnp-linux-context-manager.c		\
-			  gupnp-linux-context-manager.h
 else
 NETLINK_CFLAGS =
 endif

@@ -313,6 +313,10 @@ gupnp_context_manager_new (GMainContext *main_context,
     return gupnp_context_manager_create (port);
 }
 
+#ifdef HAVE_LINUX_RTNETLINK_H
+#include "gupnp-linux-context-manager.h"
+#endif
+
 /**
  * gupnp_context_manager_create:
  * @port: Port to create contexts for, or 0 if you don't care what port is used.
@@ -345,14 +349,17 @@ gupnp_context_manager_create (guint port)
 
        if (gupnp_connman_manager_is_available ())
                 impl_type = GUPNP_TYPE_CONNMAN_MANAGER;
-
-#elif USE_NETLINK
-#include "gupnp-linux-context-manager.h"
-        impl_type = GUPNP_TYPE_LINUX_CONTEXT_MANAGER;
 #endif
 
         if (impl_type == G_TYPE_INVALID)
+            /* Either user requested us to use the Linux CM explicitly or we
+             * are using one of the DBus managers but it's not available, so we
+             * fall-back to it. */
+#if defined (USE_NETLINK) || defined (HAVE_LINUX_RTNETLINK_H)
+                impl_type = GUPNP_TYPE_LINUX_CONTEXT_MANAGER;
+#else
                 impl_type = GUPNP_TYPE_UNIX_CONTEXT_MANAGER;
+#endif
 
         impl = g_object_new (impl_type,
                              "port", port,

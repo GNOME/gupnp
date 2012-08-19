@@ -74,6 +74,22 @@ if test "x$with_context_manager" = "xnone"; then
         esac
 fi
 
+AC_CHECK_HEADERS([sys/socket.h linux/rtnetlink.h],
+                [ HAVE_NETLINK=yes ],
+                [ HAVE_NETLINK=no ],
+                [ #ifdef HAVE_SYS_SOCKET_H
+                  #include <sys/socket.h>
+                  #endif
+                ])
+AM_CONDITIONAL([HAVE_NETLINK], [test "x$HAVE_NETLINK" = "xyes"])
+AC_SUBST(HAVE_NETLINK)
+
+AC_CHECK_HEADERS([linux/wireless.h], [], [],
+                [ #ifdef HAVE_SYS_SOCKET_H
+                  #include <sys/socket.h>
+                  #endif
+                ])
+
 AC_MSG_CHECKING([Context Manager backend to use])
 AC_MSG_RESULT([${with_context_manager}])
 
@@ -90,27 +106,11 @@ if test "x$with_context_manager" = "xconnman"; then
 fi
 
 USE_NETLINK=no
-if test "x$with_context_manager" = "xlinux"; then
-       dnl check for netlink (Linux)
-       AC_CHECK_HEADERS([sys/socket.h linux/rtnetlink.h],
-                        [ USE_NETLINK=yes ],
-                        [ USE_NETLINK=no ],
-                        [ #ifdef HAVE_SYS_SOCKET_H
-                          #include <sys/socket.h>
-                          #endif
-                        ])
-       if test "x$USE_NETLINK" = "xno"
-       then
-               AC_MSG_NOTICE([No rtnetlink found, falling back to unix context
-                              manager])
-       else
-               AC_CHECK_HEADERS([linux/wireless.h], [], [],
-                                [ #ifdef HAVE_SYS_SOCKET_H
-                                  #include <sys/socket.h>
-                                  #endif
-                                ])
-       fi
-fi
+AS_IF([test "x$with_context_manager" = "xlinux"],
+      [AS_IF([test "x$HAVE_NETLINK" = "xno"],
+             [AC_MSG_NOTICE([No rtnetlink found, falling back to static context manager])],
+             [USE_NETLINK=yes])
+      ],[])
 
 AM_CONDITIONAL(USE_NETLINK, test "x$USE_NETLINK" = "xyes")
 AC_SUBST(USE_NETLINK)
