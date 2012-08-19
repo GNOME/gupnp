@@ -1,3 +1,39 @@
+0.18.4
+======
+
+Changes since 0.18.3:
+
+- Make sure that subscribtion timeouts are always removed.
+- Update tutorial to use correct upnp.org links.
+- Add missing includes.
+- Remove deprecated g_thread_init() calls.
+- Don't leak internal functions from context managers.
+- Make "linux" context manager the default context manager when building on
+  Linux.
+- Fix some more deprecation warnings.
+- Connman and NM context managers fall back to linux context manager now if
+  available.
+- Add support for device aliases (such as eth0:1) in the linux context
+  manager.
+- Really report a bug on faulty device descripton XMLs.
+- Silence libxml2 console output.
+
+All contributors to this release:
+Jens Georg <mail@jensge.org>
+Riko Yamada <rik0yamada@yahoo.co.jp>
+Ludovic Ferrandis <ludovic.ferrandis@linux.intel.com>
+Sven Neumann <s.neumann@raumfeld.com>
+Andreas Henriksson <andreas@fatal.se>
+
+Bugs fixed:
+- https://bugzilla.gnome.org/show_bug.cgi?id=680322
+- https://bugzilla.gnome.org/show_bug.cgi?id=681963
+- https://bugzilla.gnome.org/show_bug.cgi?id=673100
+- https://bugzilla.gnome.org/show_bug.cgi?id=673933
+- https://bugzilla.gnome.org/show_bug.cgi?id=676803
+- https://bugzilla.gnome.org/show_bug.cgi?id=682005
+- https://bugzilla.gnome.org/show_bug.cgi?id=679204
+
 0.18.3
 ======
 
