@@ -20,16 +20,19 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
+test -n "$srcdir" || srcdir=`dirname "$0"`
+test -n "$srcdir" || srcdir=.
+
 which gnome-autogen.sh || {
     echo "You need to install gnome-common from the GNOME git"
     exit 1
 }
 
-mkdir -p m4
+test -d $srcdir/m4 || mkdir -p $srcdir/m4
 
 # require automak 1.11 for vala support
 REQUIRED_AUTOMAKE_VERSION=1.11 \
 REQUIRED_AUTOCONF_VERSION=2.64 \
 REQUIRED_LIBTOOL_VERSION=2.2.6 \
 REQUIRED_INTLTOOL_VERSION=0.40.0 \
-gnome-autogen.sh "$@"
+. gnome-autogen.sh "$@"
