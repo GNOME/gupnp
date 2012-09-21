@@ -9,4 +9,3 @@ Version: @VERSION@
 Libs: ${libdir}/libgupnp-1.0.la
 Cflags: -I${includedir}
 Requires: gssdp-1.0 libxml-2.0 libsoup-2.4
-Requires.Private: uuid gmodule-2.0
