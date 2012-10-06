@@ -117,7 +117,8 @@ INTROSPECTION_GIRS =
 INTROSPECTION_SCANNER_ARGS = --warn-all			\
 			     --symbol-prefix=gupnp	\
 			     --identifier-prefix=GUPnP	\
-			     --add-include-path=$(top_srcdir)
+			     --add-include-path=$(top_srcdir) \
+			     --pkg-export=gupnp-1.0
 INTROSPECTION_COMPILER_ARGS = --includedir=$(top_srcdir)
 
 if HAVE_INTROSPECTION
