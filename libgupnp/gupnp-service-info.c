@@ -118,11 +118,7 @@ gupnp_service_info_set_property (GObject      *object,
                 info->priv->service_type = g_value_dup_string (value);
                 break;
         case PROP_URL_BASE:
-                info->priv->url_base = g_value_get_pointer (value);
-                if (info->priv->url_base)
-                        info->priv->url_base =
-                                soup_uri_copy (info->priv->url_base);
-
+                info->priv->url_base = g_value_dup_boxed (value);
                 break;
         case PROP_DOCUMENT:
                 info->priv->doc = g_value_dup_object (value);
@@ -164,8 +160,8 @@ gupnp_service_info_get_property (GObject    *object,
                                     gupnp_service_info_get_service_type (info));
                 break;
         case PROP_URL_BASE:
-                g_value_set_pointer (value,
-                                     info->priv->url_base);
+                g_value_set_boxed (value,
+                                   info->priv->url_base);
                 break;
         default:
                 G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -326,14 +322,15 @@ gupnp_service_info_class_init (GUPnPServiceInfoClass *klass)
         g_object_class_install_property
                 (object_class,
                  PROP_URL_BASE,
-                 g_param_spec_pointer ("url-base",
-                                       "URL base",
-                                       "The URL base",
-                                       G_PARAM_READWRITE |
-                                       G_PARAM_CONSTRUCT_ONLY |
-                                       G_PARAM_STATIC_NAME |
-                                       G_PARAM_STATIC_NICK |
-                                       G_PARAM_STATIC_BLURB));
+                 g_param_spec_boxed ("url-base",
+                                     "URL base",
+                                     "The URL base",
+                                     SOUP_TYPE_URI,
+                                     G_PARAM_READWRITE |
+                                     G_PARAM_CONSTRUCT_ONLY |
+                                     G_PARAM_STATIC_NAME |
+                                     G_PARAM_STATIC_NICK |
+                                     G_PARAM_STATIC_BLURB));
 
         /**
          * GUPnPServiceInfo:document:

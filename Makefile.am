@@ -1,6 +1,6 @@
 ACLOCAL_AMFLAGS = -I m4 ${ACLOCAL_FLAGS}
 
-SUBDIRS = libgupnp tools examples tests doc
+SUBDIRS = libgupnp tools examples tests doc vala
 
 pkgconfig_DATA= gupnp-1.0.pc
 pkgconfigdir = $(libdir)/pkgconfig

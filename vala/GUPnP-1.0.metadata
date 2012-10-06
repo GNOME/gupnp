@@ -1,0 +1,28 @@
+GUPnP cheader_filename="libgupnp/gupnp.h"
+DeviceInfo
+    .get_device nullable=true
+    .get_service nullable=true
+    .element skip
+    .document skip
+Service
+    .notify skip=false
+    .signals_autoconnect skip
+    .notify_failed#signal virtual
+ServiceAction
+    .get skip=false
+    .get_value skip=false
+    .set skip=false
+ServiceInfo
+    .document skip
+    .element skip
+    .get_introspection nullable=true
+ServiceIntrospection
+    .get_action nullable=true unowned=true
+    .get_state_variable nullable=true unowned=true
+    .scpd skip
+ServiceProxy
+    .begin_action skip=false
+    .end_action_hash skip
+    .end_action_list skip
+    .send_action_hash skip
+    .send_action_list skip

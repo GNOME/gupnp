@@ -348,7 +348,7 @@ gupnp_service_proxy_class_init (GUPnPServiceProxyClass *klass)
         /**
          * GUPnPServiceProxy::subscription-lost:
          * @proxy: The #GUPnPServiceProxy that received the signal
-         * @error: A pointer to a #GError describing why the subscription has
+         * @error: (type GError):A pointer to a #GError describing why the subscription has
          * been lost
          *
          * Emitted whenever the subscription to this service has been lost due
@@ -967,7 +967,7 @@ gupnp_service_proxy_begin_action_list
  * @callback: (scope async): The callback to call when sending the action has succeeded
  * or failed
  * @user_data: User data for @callback
- * @hash: A #GHashTable of in parameter name and #GValue pairs
+ * @hash: (element-type utf8 GValue): A #GHashTable of in parameter name and #GValue pairs
  *
  * See gupnp_service_proxy_begin_action(); this version takes a #GHashTable
  * for runtime generated parameter lists.

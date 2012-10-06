@@ -83,6 +83,7 @@ struct _GUPnPService {
 struct _GUPnPServiceClass {
         GUPnPServiceInfoClass parent_class;
 
+        /* <signals> */
         void (* action_invoked) (GUPnPService       *service,
                                  GUPnPServiceAction *action);
 

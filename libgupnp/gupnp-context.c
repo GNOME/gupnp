@@ -545,9 +545,10 @@ _gupnp_context_get_server_url (GUPnPContext *context)
 
 /**
  * gupnp_context_new:
- * @main_context: Deprecated: 0.17.2: Always set to %NULL. If you want to use
- *                a different context, use g_main_context_push_thread_default().
- * @interface: The network interface to use, or %NULL to auto-detect.
+ * @main_context: (allow-none): Deprecated: 0.17.2: Always set to %NULL. If you
+ * want to use a different context, use g_main_context_push_thread_default().
+ * @interface: (allow-none): The network interface to use, or %NULL to
+ * auto-detect.
  * @port: Port to run on, or 0 if you don't care what port is used.
  * @error: A location to store a #GError, or %NULL
  *

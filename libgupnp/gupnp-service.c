@@ -458,7 +458,7 @@ gupnp_service_action_get_values (GUPnPServiceAction *action,
  * gupnp_service_action_get_value: (skip)
  * @action: A #GUPnPServiceAction
  * @argument: The name of the argument to retrieve
- * @value: The #GValue to store the value of the argument, initialized
+ * @value: (inout):The #GValue to store the value of the argument, initialized
  * to the correct type.
  *
  * Retrieves the value of @argument into @value.
@@ -1669,7 +1669,7 @@ gupnp_service_class_init (GUPnPServiceClass *klass)
          * GUPnPService::query-variable:
          * @service: The #GUPnPService that received the signal
          * @variable: The variable that is being queried
-         * @value: The location of the #GValue of the variable
+         * @value: (type GValue)(inout):The location of the #GValue of the variable
          *
          * Emitted whenever @service needs to know the value of @variable.
          * Handler should fill @value with the value of @variable.
@@ -1692,8 +1692,8 @@ gupnp_service_class_init (GUPnPServiceClass *klass)
         /**
          * GUPnPService::notify-failed:
          * @service: The #GUPnPService that received the signal
-         * @callback_url: The callback URL
-         * @reason: A pointer to a #GError describing why the notify failed
+         * @callback_url: (type GList)(element-type SoupURI):A #GList of callback URLs
+         * @reason: (type GError): A pointer to a #GError describing why the notify failed
          *
          * Emitted whenever notification of a client fails.
          **/
