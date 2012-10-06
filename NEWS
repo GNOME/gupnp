@@ -1,3 +1,19 @@
+0.19.0
+======
+
+Changes since 0.18.4:
+
+- Add an abstract base class for simple context managers.
+- Clean-up pkg-config files to not leak libraries.
+- Generate VAPI from GIR file.
+
+Dependency-related changes:
+ - Require gssdp >= 0.13.0
+
+All contributors:
+ Jens Georg <mail@jensge.org>
+ Andreas Henriksson <andreas@fatal.se>
+
 0.18.0
 ======
 
