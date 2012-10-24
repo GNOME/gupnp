@@ -26,3 +26,11 @@ ServiceProxy
     .end_action_list skip
     .send_action_hash skip
     .send_action_list skip
+ControlError skip
+control_error_quark skip
+EventingError skip
+eventing_error_quark skip
+ServerError skip
+server_error_quark skip
+XMLError skip
+xml_error_quark skip
