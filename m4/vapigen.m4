@@ -37,5 +37,5 @@ AC_DEFUN([VALA_PROG_VAPIGEN],
            [AC_MSG_RESULT([yes])],
            [AC_MSG_RESULT([yes])],
            [AC_MSG_RESULT([no])
-            AC_MSG_ERROR([Vala API Generator $1 not found.])])])])
+            AC_MSG_WARN([Vala API Generator $1 not found.])])])])
 ])
