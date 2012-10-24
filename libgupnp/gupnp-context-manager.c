@@ -415,3 +415,17 @@ gupnp_context_manager_manage_root_device (GUPnPContextManager *manager,
                                                 g_object_ref (root_device));
 }
 
+/**
+ * gupnp_context_manager_get_port:
+ * @manager: A #GUPnPContextManager
+ *
+ * Get the network port associated with this context manager.
+ * Returns: The network port asssociated with this context manager.
+ */
+guint
+gupnp_context_manager_get_port (GUPnPContextManager *manager)
+{
+        g_return_if_fail (GUPNP_IS_CONTEXT_MANAGER (manager));
+
+        return manager->priv->port;
+}

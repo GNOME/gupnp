@@ -99,6 +99,8 @@ gupnp_context_manager_manage_root_device
                                        (GUPnPContextManager     *manager,
                                         GUPnPRootDevice         *root_device);
 
+guint
+gupnp_context_manager_get_port         (GUPnPContextManager *manager);
 G_END_DECLS
 
 #endif /* __GUPNP_CONTEXT_MANAGER_H__ */
