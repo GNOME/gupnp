@@ -100,7 +100,7 @@ libgupnp_1_0_la_SOURCES = $(introspection_sources)		\
 			  gena-protocol.h			\
 			  $(BUILT_SOURCES)
 
-libgupnp_1_0_la_LIBADD = $(LIBGUPNP_LIBS) $(DBUS_GLIB_LIBS) $(LIBCONIC_LIBS)
+libgupnp_1_0_la_LIBADD = $(LIBGUPNP_LIBS) $(DBUS_GLIB_LIBS)
 
 EXTRA_DIST = gupnp-marshal.list 	   \
 	     gupnp-network-manager.c   	   \
