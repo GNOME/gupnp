@@ -430,7 +430,7 @@ gupnp_context_manager_manage_root_device (GUPnPContextManager *manager,
 guint
 gupnp_context_manager_get_port (GUPnPContextManager *manager)
 {
-        g_return_if_fail (GUPNP_IS_CONTEXT_MANAGER (manager));
+        g_return_val_if_fail (GUPNP_IS_CONTEXT_MANAGER (manager), 0);
 
         return manager->priv->port;
 }
