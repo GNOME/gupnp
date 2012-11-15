@@ -109,7 +109,9 @@ main (int argc, char **argv)
   GUPnPRootDevice *dev;
   GUPnPServiceInfo *service;
   
+#if !GLIB_CHECK_VERSION(2,35,0)
   g_type_init ();
+#endif
 
   /* By default the light is off */
   status = FALSE;

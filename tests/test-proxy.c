@@ -156,7 +156,9 @@ main (int argc, char **argv)
         struct sigaction sig_action;
 #endif /* G_OS_WIN32 */
 
+#if !GLIB_CHECK_VERSION(2,35,0)
         g_type_init ();
+#endif
         setlocale (LC_ALL, "");
 
         error = NULL;

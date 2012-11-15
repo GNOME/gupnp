@@ -77,7 +77,10 @@ main (int argc, char **argv)
   GUPnPContext *context;
   GUPnPControlPoint *cp;
 
+#if !GLIB_CHECK_VERSION(2,35,0)
   g_type_init ();
+#endif
+
 
   /* Check and parse command line arguments */
   if (argc != 2) {

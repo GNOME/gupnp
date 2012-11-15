@@ -129,7 +129,9 @@
     </para>
     <programlisting>GUPnPContext *context;
 /* Initialize required subsystems */
-g_type_init ();
+#if !GLIB_CHECK_VERSION(2,35,0)
+  g_type_init ();
+#endif
 /* Create the GUPnP context with default host and port */
 context = gupnp_context_new (NULL, NULL, 0, NULL);</programlisting>
     <para>

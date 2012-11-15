@@ -47,7 +47,9 @@ main (int argc, char **argv)
   GUPnPControlPoint *cp;
   
   /* Required initialisation */
-  g_type_init ();
+  #if !GLIB_CHECK_VERSION(2,35,0)
+    g_type_init ();
+  #endif
 
   /* Create a new GUPnP Context.  By here we are using the default GLib main
      context, and connecting to the current machine's default IP on an
