@@ -323,6 +323,44 @@ create_and_report_device_proxy (GUPnPControlPoint  *control_point,
                        proxy);
 }
 
+static gboolean
+compare_service_types_versioned (const char *searched_service,
+                                 const char *current_service)
+{
+        const char *searched_version_ptr, *current_version_ptr;
+        guint searched_version, current_version, searched_length;
+        guint current_length;
+
+        searched_version_ptr = strrchr (searched_service, ':');
+        if (searched_version_ptr == NULL)
+                return FALSE;
+
+        current_version_ptr = strrchr (current_service, ':');
+        if (current_version_ptr == NULL)
+                return FALSE;
+
+        searched_length = (searched_version_ptr - searched_service);
+        current_length = (current_version_ptr - current_service);
+
+        if (searched_length != current_length)
+                return FALSE;
+
+        searched_version = (guint) atol (searched_version_ptr + 1);
+        if (searched_version == 0)
+                return FALSE;
+
+        current_version = (guint) atol (current_version_ptr + 1);
+        if (current_version == 0)
+                return FALSE;
+
+        if (current_version < searched_version)
+                return FALSE;
+
+        return strncmp (searched_service,
+                        current_service,
+                        searched_length) == 0;
+}
+
 /* Search @element for matching services */
 static void
 process_service_list (xmlNode           *element,
@@ -348,8 +386,8 @@ process_service_list (xmlNode           *element,
                 if (!prop)
                         continue;
 
-                match = (strcmp ((char *) prop, service_type) == 0);
-
+                match = compare_service_types_versioned (service_type,
+                                                         (char *) prop);
                 xmlFree (prop);
 
                 if (!match)
