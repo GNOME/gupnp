@@ -1,3 +1,32 @@
+0.19.2
+======
+
+Changes since 0.19.1:
+
+- Support Windows.
+- Fix searching for services in ControlPoint.
+- Drop deprecated calls to g_type_init on glib >= 2.35.
+- Fix LD_LIBRARY_PATH in make check.
+- Explicitly use IPv4 in tests.
+- Allow autogen.sh to be run out-of-tree.
+- Expose GSSDPResourceGroup of a root device.
+
+Bugs fixed in this release:
+ - https://bugzilla.gnome.org/show_bug.cgi?id=687320
+ - https://bugzilla.gnome.org/show_bug.cgi?id=687621
+ - https://bugzilla.gnome.org/show_bug.cgi?id=689028
+ - https://bugzilla.gnome.org/show_bug.cgi?id=688411
+ - https://bugzilla.gnome.org/show_bug.cgi?id=685643
+ - https://bugzilla.gnome.org/show_bug.cgi?id=682580
+ - https://bugzilla.gnome.org/show_bug.cgi?id=672830
+
+All contributors to this release:
+  Jens Georg <mail@jensge.org>
+  Theppitak Karoonboonyanan <thep@linux.thai.net>
+  Stef Walter <stefw@gnome.org>
+  Juan A. Suarez Romero <jasuarez@igalia.com>
+  Alban Browaeys <prahal@yahoo.com>
+
 0.19.1
 ======
 Changes since 0.19.0:
