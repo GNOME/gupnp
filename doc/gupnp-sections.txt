@@ -203,6 +203,7 @@ gupnp_context_manager_new
 gupnp_context_manager_create
 gupnp_context_manager_manage_control_point
 gupnp_context_manager_manage_root_device
+gupnp_context_manager_get_port
 <SUBSECTION Standard>
 GUPnPContextManagerClass
 GUPNP_CONTEXT_MANAGER
