@@ -152,6 +152,7 @@ gupnp_root_device_get_available
 gupnp_root_device_get_relative_location
 gupnp_root_device_get_description_dir
 gupnp_root_device_get_description_path
+gupnp_root_device_get_ssdp_resource_group
 <SUBSECTION Standard>
 GUPnPRootDeviceClass
 GUPNP_ROOT_DEVICE

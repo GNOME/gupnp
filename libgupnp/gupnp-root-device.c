@@ -698,3 +698,19 @@ gupnp_root_device_get_description_dir (GUPnPRootDevice *root_device)
 
         return root_device->priv->description_dir;
 }
+
+/**
+ * gupnp_root_device_get_ssdp_resource_group:
+ * @root_device: A #GUPnPRootDevice
+ *
+ * Get the #GSSDPResourceGroup used by @root_device.
+ *
+ * Returns: (transfer none): The #GSSDPResourceGroup of @root_device.
+ **/
+GSSDPResourceGroup *
+gupnp_root_device_get_ssdp_resource_group (GUPnPRootDevice *root_device)
+{
+        g_return_val_if_fail (GUPNP_IS_ROOT_DEVICE (root_device), NULL);
+
+        return root_device->priv->group;
+}

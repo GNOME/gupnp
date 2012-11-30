@@ -24,6 +24,8 @@
 
 #include <libxml/tree.h>
 
+#include <libgssdp/gssdp-resource-group.h>
+
 #include "gupnp-context.h"
 #include "gupnp-device.h"
 #include "gupnp-resource-factory.h"
@@ -110,6 +112,10 @@ gupnp_root_device_get_description_path
 
 const char *
 gupnp_root_device_get_description_dir
+                                  (GUPnPRootDevice      *root_device);
+
+GSSDPResourceGroup *
+gupnp_root_device_get_ssdp_resource_group
                                   (GUPnPRootDevice      *root_device);
 
 G_END_DECLS
