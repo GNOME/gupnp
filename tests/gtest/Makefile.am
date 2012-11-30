@@ -1,6 +1,6 @@
 if HAVE_GTEST
 TESTS_ENVIRONMENT = G_SLICE=debug-blocks \
-		    LD_LIBRARY_PATH=$(top_builddir)/libgupnp/.libs
+		    LD_LIBRARY_PATH=$(top_builddir)/libgupnp/.libs:$(LD_LIBRARY_PATH)
 
 TESTS=$(check_PROGRAMS)
 
