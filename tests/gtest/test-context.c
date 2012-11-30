@@ -146,7 +146,7 @@ test_gupnp_context_http_ranged_requests (void)
                                  DATA_PATH "/random4k.bin",
                                  "/random4k.bin");
 
-        uri = g_strdup_printf ("http://localhost:%u/random4k.bin", port);
+        uri = g_strdup_printf ("http://127.0.0.1:%u/random4k.bin", port);
         g_assert (uri != NULL);
 
         session = soup_session_async_new ();
