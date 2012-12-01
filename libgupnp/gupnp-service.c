@@ -1932,6 +1932,8 @@ notify_subscriber (gpointer key,
 
         /* Queue */
         data->pending_messages = g_list_prepend (data->pending_messages, msg);
+        soup_message_headers_append (msg->request_headers,
+                                     "Connection", "close");
 
         session = gupnp_service_get_session (data->service);
 
