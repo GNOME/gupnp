@@ -1567,7 +1567,7 @@ gupnp_service_proxy_remove_notify (GUPnPServiceProxy              *proxy,
                         if (data->callbacks == NULL) {
                                 /* No callbacks left: Remove from hash */
                                 g_hash_table_remove (proxy->priv->notify_hash,
-                                                     data);
+                                                     variable);
                         }
 
                         found = TRUE;
