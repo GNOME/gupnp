@@ -15,6 +15,6 @@ LDADD = \
 AM_CFLAGS = \
 	    $(LIBGUPNP_CFLAGS) \
 	    -I $(top_srcdir) \
-	    -DDATA_PATH="\"$(srcdir)\""
+	    -DDATA_PATH="\"$(srcdir)/data\""
 
-EXTRA_DIST=random4k.bin
+EXTRA_DIST=data/random4k.bin
