@@ -118,7 +118,8 @@ http_request_set_accept_language (SoupMessage *message)
         int dash_index;
         GString *tmp;
 
-        locale = setlocale (LC_ALL, NULL);
+        locale = setlocale (LC_MESSAGES, NULL);
+
         if (locale == NULL)
                 return;
 
