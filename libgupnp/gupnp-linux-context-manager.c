@@ -473,6 +473,8 @@ query_all_network_interfaces (GUPnPLinuxContextManager *self)
         do {
                 receive_netlink_message (self, &error);
         } while (error == NULL);
+
+        g_error_free (error);
 }
 
 static void
