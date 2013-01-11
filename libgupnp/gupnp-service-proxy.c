@@ -1524,6 +1524,10 @@ gupnp_service_proxy_add_notify (GUPnPServiceProxy              *proxy,
  *
  * Cancels the variable change notification for @callback and @user_data.
  *
+ * This function must not be called directly or indirectly from a
+ * #GUPnPServiceProxyNotifyCallback associated with this service proxy, even
+ * if it is for another variable.
+ *
  * Return value: %TRUE on success.
  **/
 gboolean
