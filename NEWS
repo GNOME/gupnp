@@ -1,3 +1,17 @@
+0.19.4
+======
+
+Changes since 0.19.3:
+- Shuffle around some test data.
+- Fix a GError leak in the linux cm.
+- Fix a leak in variable notification.
+- Clarify usage of gupnp_service_proxy_remove_notify.
+
+All contributors to this release:
+  Jens Georg <mail@jensge.org>
+  Sven Neumann <s.neumann@raumfeld.com>
+  Marcin Nowakowski <marcin.nowakowski@pure.com>
+
 0.19.3
 ======
 
