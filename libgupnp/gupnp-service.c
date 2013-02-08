@@ -30,11 +30,6 @@
 #include <gobject/gvaluecollector.h>
 #include <gmodule.h>
 #include <libsoup/soup-date.h>
-#ifdef G_OS_WIN32
-#include <rpc.h>
-#else
-#include <uuid/uuid.h>
-#endif
 #include <string.h>
 #include "gupnp-service.h"
 #include "gupnp-root-device.h"
@@ -45,6 +40,12 @@
 #include "gena-protocol.h"
 #include "xml-util.h"
 #include "gvalue-util.h"
+
+#ifdef G_OS_WIN32
+#include <rpc.h>
+#else
+#include <uuid/uuid.h>
+#endif
 
 #define SUBSCRIPTION_TIMEOUT 300 /* DLNA (7.2.22.1) enforced */
 
