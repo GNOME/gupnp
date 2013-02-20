@@ -1,3 +1,16 @@
+0.20.0
+======
+
+Changes since 0.19.4:
+- Fix Accept-Language header generation.
+- Fix some issues with Windows support on mingw64.
+
+Bugs fixed in this release:
+ - https://bugzilla.gnome.org/show_bug.cgi?id=683199
+
+All contributors to this release:
+  Jens Georg <mail@jensge.org>
+
 0.19.4
 ======
 
