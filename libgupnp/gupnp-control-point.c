@@ -39,6 +39,9 @@
 #include "http-headers.h"
 #include "xml-util.h"
 
+#define GUPNP_MAX_DESCRIPTION_DOWNLOAD_RETRIES 4
+#define GUPNP_INITIAL_DESCRIPTION_RETRY_TIMEOUT 5
+
 G_DEFINE_TYPE (GUPnPControlPoint,
                gupnp_control_point,
                GSSDP_TYPE_RESOURCE_BROWSER);
@@ -77,6 +80,9 @@ typedef struct {
         char *description_url;
 
         SoupMessage *message;
+        GSource *timeout_source;
+        int tries;
+        int timeout;
 } GetDescriptionURLData;
 
 static void
@@ -85,11 +91,49 @@ get_description_url_data_free (GetDescriptionURLData *data)
         data->control_point->priv->pending_gets =
                 g_list_remove (data->control_point->priv->pending_gets, data);
 
+        if (data->message) {
+                GUPnPContext *context;
+                SoupSession *session;
+
+
+                context = gupnp_control_point_get_context (data->control_point);
+                session = gupnp_context_get_session (context);
+
+                soup_session_cancel_message (session,
+                                             data->message,
+                                             SOUP_STATUS_CANCELLED);
+        }
+
+        if (data->timeout_source) {
+                g_source_destroy (data->timeout_source);
+                g_source_unref (data->timeout_source);
+        }
+
         g_free (data->udn);
         g_free (data->service_type);
         g_free (data->description_url);
 
         g_slice_free (GetDescriptionURLData, data);
+}
+
+static GetDescriptionURLData*
+find_get_description_url_data (GUPnPControlPoint *control_point,
+                               const char        *udn,
+                               const char        *service_type)
+{
+        GList *l = control_point->priv->pending_gets;
+
+        while (l) {
+                GetDescriptionURLData *data = l->data;
+
+                if ((g_strcmp0 (udn, data->udn) == 0) &&
+                    (service_type == data->service_type ||
+                     g_strcmp0 (service_type, data->service_type) == 0))
+                        break;
+                l = g_list_next (l);
+        }
+
+        return l ? l->data : NULL;
 }
 
 static void
@@ -159,18 +203,8 @@ gupnp_control_point_dispose (GObject *object)
         /* Cancel any pending description file GETs */
         while (control_point->priv->pending_gets) {
                 GetDescriptionURLData *data;
-                GUPnPContext *context;
-                SoupSession *session;
 
                 data = control_point->priv->pending_gets->data;
-
-                context = gupnp_control_point_get_context (control_point);
-                session = gupnp_context_get_session (context);
-
-                soup_session_cancel_message (session,
-                                             data->message,
-                                             SOUP_STATUS_CANCELLED);
-
                 get_description_url_data_free (data);
         }
 
@@ -528,18 +562,24 @@ description_loaded (GUPnPControlPoint *control_point,
         soup_uri_free (url_base);
 }
 
+
+static gboolean
+description_url_retry_timeout (gpointer user_data);
+
 /*
  * Description URL downloaded.
  */
 static void
-got_description_url (G_GNUC_UNUSED SoupSession *session,
-                     SoupMessage               *msg,
-                     GetDescriptionURLData     *data)
+got_description_url (SoupSession           *session,
+                     SoupMessage           *msg,
+                     GetDescriptionURLData *data)
 {
         GUPnPXMLDoc *doc;
 
         if (msg->status_code == SOUP_STATUS_CANCELLED)
                 return;
+
+        data->message = NULL;
 
         /* Now, make sure again this document is not already cached. If it is,
          * we re-use the cached one. */
@@ -590,12 +630,34 @@ got_description_url (G_GNUC_UNUSED SoupSession *session,
                         g_object_unref (doc);
                 } else
                         g_warning ("Failed to parse %s", data->description_url);
-        } else
-                g_warning ("Failed to GET %s: %s",
-                           data->description_url,
-                           msg->reason_phrase);
 
-        get_description_url_data_free (data);
+                get_description_url_data_free (data);
+        } else {
+                GMainContext *async_context;
+
+                /* Retry GET after a timeout */
+                async_context = soup_session_get_async_context (session);
+
+                data->tries--;
+
+                if (data->tries > 0) {
+                        g_warning ("Failed to GET %s: %s, retrying in %d seconds",
+                                   data->description_url,
+                                   msg->reason_phrase,
+                                   data->timeout);
+
+                        data->timeout_source = g_timeout_source_new_seconds
+                                        (data->timeout);
+                        g_source_set_callback (data->timeout_source,
+                                               description_url_retry_timeout,
+                                               data,
+                                               NULL);
+                        g_source_attach (data->timeout_source, async_context);
+                        data->timeout <<= 1;
+                } else {
+                        g_warning ("Maximum number of retries failed, not trying again");
+                }
+        }
 }
 
 /*
@@ -610,7 +672,9 @@ static void
 load_description (GUPnPControlPoint *control_point,
                   const char        *description_url,
                   const char        *udn,
-                  const char        *service_type)
+                  const char        *service_type,
+                  guint              max_tries,
+                  guint              timeout)
 {
         GUPnPXMLDoc *doc;
 
@@ -635,6 +699,8 @@ load_description (GUPnPControlPoint *control_point,
 
                 data = g_slice_new (GetDescriptionURLData);
 
+                data->tries = max_tries;
+                data->timeout = timeout;
                 data->message = soup_message_new (SOUP_METHOD_GET,
                                                   description_url);
                 if (data->message == NULL) {
@@ -653,6 +719,7 @@ load_description (GUPnPControlPoint *control_point,
                 data->udn             = g_strdup (udn);
                 data->service_type    = g_strdup (service_type);
                 data->description_url = g_strdup (description_url);
+                data->timeout_source  = NULL;
 
                 control_point->priv->pending_gets =
                         g_list_prepend (control_point->priv->pending_gets,
@@ -664,6 +731,26 @@ load_description (GUPnPControlPoint *control_point,
                                                    got_description_url,
                                             data);
         }
+}
+
+/*
+ * Retry the description download
+ */
+static gboolean
+description_url_retry_timeout (gpointer user_data)
+{
+        GetDescriptionURLData *data = (GetDescriptionURLData *) user_data;
+
+        load_description (data->control_point,
+                          data->description_url,
+                          data->udn,
+                          data->service_type,
+                          data->tries,
+                          data->timeout);
+
+        get_description_url_data_free (data);
+
+        return FALSE;
 }
 
 static gboolean
@@ -771,7 +858,9 @@ gupnp_control_point_resource_available (GSSDPResourceBrowser *resource_browser,
         load_description (control_point,
                           locations->data,
                           udn,
-                          service_type);
+                          service_type,
+                          GUPNP_MAX_DESCRIPTION_DOWNLOAD_RETRIES,
+                          GUPNP_INITIAL_DESCRIPTION_RETRY_TIMEOUT);
 
         g_free (udn);
         g_free (service_type);
@@ -784,6 +873,7 @@ gupnp_control_point_resource_unavailable
 {
         GUPnPControlPoint *control_point;
         char *udn, *service_type;
+        GetDescriptionURLData *get_data;
 
         control_point = GUPNP_CONTROL_POINT (resource_browser);
 
@@ -832,6 +922,16 @@ gupnp_control_point_resource_unavailable
 
                         g_object_unref (proxy);
                 }
+        }
+
+        /* Find the description get request if it has not finished yet and stop
+         * and remove it */
+        get_data = find_get_description_url_data (control_point,
+                                                  udn,
+                                                  service_type);
+
+        if (get_data) {
+                get_description_url_data_free (get_data);
         }
 
         g_free (udn);
