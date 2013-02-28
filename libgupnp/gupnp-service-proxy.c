@@ -90,9 +90,6 @@ struct _GUPnPServiceProxyAction {
 
         GError *error;    /* If non-NULL, description of error that
                              occurred when preparing message */
-
-        va_list var_args; /* The va_list after begin_action_valist has
-                             gone through it. Used by send_action_valist(). */
 };
 
 typedef struct {
@@ -410,6 +407,132 @@ stop_main_loop (GUPnPServiceProxy       *proxy,
         g_main_loop_quit ((GMainLoop *) user_data);
 }
 
+/* This is a skip variant of G_VALUE_LCOPY, same as there is
+ * G_VALUE_COLLECT_SKIP for G_VALUE_COLLECT.
+ */
+#define VALUE_LCOPY_SKIP(value_type, var_args) \
+        G_STMT_START { \
+                GTypeValueTable *_vtable = g_type_value_table_peek (value_type); \
+                const gchar *_lcopy_format = _vtable->lcopy_format; \
+         \
+                while (*_lcopy_format) { \
+                        switch (*_lcopy_format++) { \
+                        case G_VALUE_COLLECT_INT: \
+                                va_arg ((var_args), gint); \
+                                break; \
+                        case G_VALUE_COLLECT_LONG: \
+                                va_arg ((var_args), glong); \
+                                break; \
+                        case G_VALUE_COLLECT_INT64: \
+                                va_arg ((var_args), gint64); \
+                                break; \
+                        case G_VALUE_COLLECT_DOUBLE: \
+                                va_arg ((var_args), gdouble); \
+                                break; \
+                        case G_VALUE_COLLECT_POINTER: \
+                                va_arg ((var_args), gpointer); \
+                                break; \
+                        default: \
+                                g_assert_not_reached (); \
+                        } \
+                } \
+        } G_STMT_END
+
+/* Initializes hash table to hold arg names as keys and GValues of
+ * given type, but without any specific value. Note that if you are
+ * going to use OUT_HASH_TABLE_TO_VAR_ARGS then you have to store a
+ * copy of var_args with G_VA_COPY before using this macro.
+ */
+#define VAR_ARGS_TO_OUT_HASH_TABLE(var_args, hash) \
+        G_STMT_START { \
+                const gchar *arg_name = va_arg (var_args, const gchar *); \
+         \
+                while (arg_name != NULL) { \
+                        GValue *value = g_new0 (GValue, 1); \
+                        GType type = va_arg (var_args, GType); \
+         \
+                        VALUE_LCOPY_SKIP (type, var_args); \
+                        g_value_init (value, type); \
+                        g_hash_table_insert (hash, g_strdup (arg_name), value); \
+                        arg_name = va_arg (var_args, const gchar *); \
+                } \
+        } G_STMT_END
+
+/* Initializes hash table to hold arg names as keys and GValues of
+ * given type and value.
+ */
+#define VAR_ARGS_TO_IN_HASH_TABLE(var_args, hash) \
+        G_STMT_START { \
+                const gchar *arg_name = va_arg (var_args, const gchar *); \
+         \
+                while (arg_name != NULL) { \
+                        GValue *value = g_new0 (GValue, 1); \
+                        gchar *error = NULL; \
+                        GType type = va_arg (var_args, GType); \
+         \
+                        G_VALUE_COLLECT_INIT (value, \
+                                              type, \
+                                              var_args, \
+                                              G_VALUE_NOCOPY_CONTENTS, \
+                                              &error); \
+                        if (error == NULL) { \
+                                g_hash_table_insert (hash, g_strdup (arg_name), value); \
+                        } else { \
+                                g_warning ("Failed to collect value of type %s for %s: %s", \
+                                           g_type_name (type), \
+                                           arg_name, \
+                                           error); \
+                                g_free (error); \
+                        } \
+                        arg_name = va_arg (var_args, const gchar *); \
+                } \
+        } G_STMT_END
+
+/* Puts values stored in hash table with GValues into var args.
+ */
+#define OUT_HASH_TABLE_TO_VAR_ARGS(hash, var_args) \
+        G_STMT_START { \
+                const gchar *arg_name = va_arg (var_args, const gchar *); \
+         \
+                while (arg_name != NULL) { \
+                        GValue *value = g_hash_table_lookup (hash, arg_name); \
+                        GType type = va_arg (var_args, GType); \
+         \
+                        if (value == NULL) { \
+                                g_warning ("No value for %s", arg_name); \
+                                G_VALUE_COLLECT_SKIP (type, var_args); \
+                        } else if (G_VALUE_TYPE (value) != type) { \
+                                g_warning ("Different GType in value (%s) and in var args (%s) for %s.", \
+                                           G_VALUE_TYPE_NAME (value), \
+                                           g_type_name (type), \
+                                           arg_name); \
+                        } else { \
+                                gchar *error = NULL; \
+         \
+                                G_VALUE_LCOPY (value, var_args, 0, &error); \
+                                if (error != NULL) { \
+                                        g_warning ("Failed to lcopy the value of type %s for %s: %s", \
+                                                   g_type_name (type), \
+                                                   arg_name, \
+                                                   error); \
+                                        g_free (error); \
+                                } \
+                        } \
+                        arg_name = va_arg (var_args, const gchar *); \
+                } \
+        } G_STMT_END
+
+/* GDestroyNotify for GHashTable holding GValues.
+ */
+static void
+value_free (gpointer data)
+{
+  GValue *value = (GValue *) data;
+
+  g_value_unset (value);
+  g_free (value);
+}
+
 /**
  * gupnp_service_proxy_send_action_valist:
  * @proxy: A #GUPnPServiceProxy
@@ -419,8 +542,7 @@ stop_main_loop (GUPnPServiceProxy       *proxy,
  * parameter value, followed by %NULL, and then tuples of out parameter name,
  * out parameter type, and out parameter value location
  *
- * See gupnp_service_proxy_send_action(); this version takes a va_list for
- * use by language bindings.
+ * See gupnp_service_proxy_send_action().
  *
  * Return value: %TRUE if sending the action was succesful.
  **/
@@ -430,34 +552,44 @@ gupnp_service_proxy_send_action_valist (GUPnPServiceProxy *proxy,
                                         GError           **error,
                                         va_list            var_args)
 {
-        GMainLoop *main_loop;
-        GUPnPServiceProxyAction *handle;
+        GHashTable *in_hash;
+        GHashTable *out_hash;
+        va_list var_args_copy;
+        gboolean result;
+        GError *local_error;
 
         g_return_val_if_fail (GUPNP_IS_SERVICE_PROXY (proxy), FALSE);
         g_return_val_if_fail (action, FALSE);
 
-        main_loop = g_main_loop_new (g_main_context_get_thread_default (),
-                                     TRUE);
+        in_hash = g_hash_table_new_full (g_str_hash,
+                                         g_str_equal,
+                                         g_free,
+                                         value_free);
+        VAR_ARGS_TO_IN_HASH_TABLE (var_args, in_hash);
+        G_VA_COPY (var_args_copy, var_args);
+        out_hash = g_hash_table_new_full (g_str_hash,
+                                          g_str_equal,
+                                          g_free,
+                                          value_free);
+        VAR_ARGS_TO_OUT_HASH_TABLE (var_args, out_hash);
 
-        handle = gupnp_service_proxy_begin_action_valist (proxy,
-                                                          action,
-                                                          stop_main_loop,
-                                                          main_loop,
-                                                          var_args);
+        local_error = NULL;
+        result = gupnp_service_proxy_send_action_hash (proxy,
+                                                       action,
+                                                       &local_error,
+                                                       in_hash,
+                                                       out_hash);
 
-        /* Loop till we get a reply (or time out) */
-        if (g_main_loop_is_running (main_loop))
-                g_main_loop_run (main_loop);
+        if (local_error == NULL) {
+                OUT_HASH_TABLE_TO_VAR_ARGS (out_hash, var_args_copy);
+        } else {
+                g_propagate_error (error, local_error);
+        }
+        va_end (var_args_copy);
+        g_hash_table_unref (in_hash);
+        g_hash_table_unref (out_hash);
 
-        g_main_loop_unref (main_loop);
-
-        if (!gupnp_service_proxy_end_action_valist (proxy,
-                                                    handle,
-                                                    error,
-                                                    handle->var_args))
-                return FALSE;
-
-        return TRUE;
+        return result;
 }
 
 /**
@@ -822,8 +954,7 @@ write_in_parameter (const char *arg_name,
  * @var_args: A va_list of tuples of in parameter name, in parameter type, and
  * in parameter value
  *
- * See gupnp_service_proxy_begin_action(); this version takes a va_list for
- * use by language bindings.
+ * See gupnp_service_proxy_begin_action().
  *
  * Returns: (transfer none): A #GUPnPServiceProxyAction handle. This will
  * be freed when calling gupnp_service_proxy_cancel_action() or
@@ -837,58 +968,25 @@ gupnp_service_proxy_begin_action_valist
                                     gpointer                        user_data,
                                     va_list                         var_args)
 {
-        const char *arg_name;
         GUPnPServiceProxyAction *ret;
+        GHashTable *in_hash;
 
         g_return_val_if_fail (GUPNP_IS_SERVICE_PROXY (proxy), NULL);
         g_return_val_if_fail (action, NULL);
         g_return_val_if_fail (callback, NULL);
 
-        /* Create message */
-        ret = begin_action_msg (proxy, action, callback, user_data);
 
-        if (ret->error) {
-                callback (proxy, ret, user_data);
-
-                return ret;
-        }
-
-        /* Arguments */
-        arg_name = va_arg (var_args, const char *);
-        while (arg_name) {
-                GType arg_type;
-                GValue value = { 0, };
-                char *collect_error = NULL;
-
-                arg_type = va_arg (var_args, GType);
-                g_value_init (&value, arg_type);
-
-                G_VALUE_COLLECT (&value, var_args, G_VALUE_NOCOPY_CONTENTS,
-                                 &collect_error);
-                if (!collect_error) {
-                        write_in_parameter (arg_name, &value, ret->msg_str);
-
-                        g_value_unset (&value);
-
-                } else {
-                        g_warning ("Error collecting value: %s\n",
-                                   collect_error);
-
-                        g_free (collect_error);
-
-                        /* we purposely leak the value here, it might not be
-                         * in a sane state if an error condition occoured
-                         */
-                }
-
-                arg_name = va_arg (var_args, const char *);
-        }
-
-        /* Finish and send off */
-        finish_action_msg (ret, action);
-
-        /* Save the current position in the va_list for send_action_valist() */
-        G_VA_COPY (ret->var_args, var_args);
+        in_hash = g_hash_table_new_full (g_str_hash,
+                                         g_str_equal,
+                                         g_free,
+                                         value_free);
+        VAR_ARGS_TO_IN_HASH_TABLE (var_args, in_hash);
+        ret = gupnp_service_proxy_begin_action_hash (proxy,
+                                                     action,
+                                                     callback,
+                                                     user_data,
+                                                     in_hash);
+        g_hash_table_unref (in_hash);
 
         return ret;
 }
@@ -1203,8 +1301,7 @@ read_out_parameter (const char *arg_name,
  * and out parameter value location. The out parameter values should be
  * freed after use
  *
- * See gupnp_service_proxy_end_action(); this version takes a va_list for
- * use by language bindings.
+ * See gupnp_service_proxy_end_action().
  *
  * Return value: %TRUE on success.
  **/
@@ -1214,66 +1311,36 @@ gupnp_service_proxy_end_action_valist (GUPnPServiceProxy       *proxy,
                                        GError                 **error,
                                        va_list                  var_args)
 {
-        xmlDoc *response;
-        xmlNode *params;
-        const char *arg_name;
+        GHashTable *out_hash;
+        va_list var_args_copy;
+        gboolean result;
+        GError *local_error;
 
         g_return_val_if_fail (GUPNP_IS_SERVICE_PROXY (proxy), FALSE);
         g_return_val_if_fail (action, FALSE);
         g_return_val_if_fail (proxy == action->proxy, FALSE);
 
-        /* Check for saved error from begin_action() */
-        if (action->error) {
-                if (error)
-                        *error = action->error;
-                else
-                        g_error_free (action->error);
+        out_hash = g_hash_table_new_full (g_str_hash,
+                                          g_str_equal,
+                                          g_free,
+                                          value_free);
+        G_VA_COPY (var_args_copy, var_args);
+        VAR_ARGS_TO_OUT_HASH_TABLE (var_args, out_hash);
+        local_error = NULL;
+        result = gupnp_service_proxy_end_action_hash (proxy,
+                                                      action,
+                                                      &local_error,
+                                                      out_hash);
 
-                gupnp_service_proxy_action_free (action);
-
-                return FALSE;
+        if (error != NULL) {
+                g_propagate_error (error, local_error);
+        } else {
+                OUT_HASH_TABLE_TO_VAR_ARGS (out_hash, var_args_copy);
         }
+        va_end (var_args_copy);
+        g_hash_table_unref (out_hash);
 
-        /* Check response for errors and do initial parsing */
-        response = check_action_response (proxy, action, &params, error);
-        if (response == NULL) {
-                gupnp_service_proxy_action_free (action);
-
-                return FALSE;
-        }
-
-        /* Arguments */
-        arg_name = va_arg (var_args, const char *);
-        while (arg_name) {
-                GType arg_type;
-                GValue value = { 0, };
-                char *copy_error = NULL;
-
-                arg_type = va_arg (var_args, GType);
-
-                g_value_init (&value, arg_type);
-
-                read_out_parameter (arg_name, &value, params);
-
-                G_VALUE_LCOPY (&value, var_args, 0, &copy_error);
-
-                g_value_unset (&value);
-
-                if (copy_error) {
-                        g_warning ("Error copying value: %s", copy_error);
-
-                        g_free (copy_error);
-                }
-
-                arg_name = va_arg (var_args, const char *);
-        }
-
-        /* Cleanup */
-        gupnp_service_proxy_action_free (action);
-
-        xmlFreeDoc (response);
-
-        return TRUE;
+        return result;
 }
 
 /**
