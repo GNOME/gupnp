@@ -1332,10 +1332,10 @@ gupnp_service_proxy_end_action_valist (GUPnPServiceProxy       *proxy,
                                                       &local_error,
                                                       out_hash);
 
-        if (error != NULL) {
-                g_propagate_error (error, local_error);
-        } else {
+        if (local_error == NULL) {
                 OUT_HASH_TABLE_TO_VAR_ARGS (out_hash, var_args_copy);
+        } else {
+                g_propagate_error (error, local_error);
         }
         va_end (var_args_copy);
         g_hash_table_unref (out_hash);
