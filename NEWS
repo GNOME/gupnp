@@ -1,3 +1,15 @@
+0.20.1
+======
+
+Changes since 0.20.0:
+- Fix suspicious use of va_list in the code.
+
+Bugs fixed in this release:
+ - https://bugzilla.gnome.org/show_bug.cgi?id=689813
+
+All contributors to this release:
+  Krzesimir Nowak <krnowak@openismus.com>
+
 0.20.0
 ======
 
