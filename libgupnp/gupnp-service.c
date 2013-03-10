@@ -491,7 +491,7 @@ gupnp_service_action_get_value (GUPnPServiceAction *action,
         }
 
         if (!found)
-                g_warning ("Failed to retreive '%s' argument of '%s' action",
+                g_warning ("Failed to retrieve '%s' argument of '%s' action",
                            argument,
                            action->name);
 }

@@ -445,7 +445,7 @@ set_variable_type (GUPnPServiceStateVariableInfo *variable,
         }
 
         if (type == G_TYPE_INVALID) {
-                g_warning ("Unkown type '%s' in the SCPD", data_type);
+                g_warning ("Unknown type '%s' in the SCPD", data_type);
                 return FALSE;
         }
 
@@ -851,7 +851,7 @@ state_variable_search_func (GUPnPServiceStateVariableInfo *variable,
 /**
  * gupnp_service_introspection_get_state_variable:
  * @introspection: A #GUPnPServiceIntrospection
- * @variable_name: The name of the variable to retreive
+ * @variable_name: The name of the variable to retrieve
  *
  * Returns the state variable by the name @variable_name in this service.
  *
@@ -888,7 +888,7 @@ action_search_func (GUPnPServiceActionInfo *action,
 /**
  * gupnp_service_introspection_get_action:
  * @introspection: A #GUPnPServiceIntrospection
- * @action_name: The name of the action to retreive
+ * @action_name: The name of the action to retrieve
  *
  * Returns the action by the name @action_name in this service.
  *
