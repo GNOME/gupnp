@@ -1860,7 +1860,9 @@ server_handler (SoupServer        *soup_server,
         seq = atoi (hdr);
 
         hdr = soup_message_headers_get_one (msg->request_headers, "SID");
-        if (hdr == NULL) {
+        if (hdr == NULL ||
+            strlen (hdr) <= strlen ("uuid:") ||
+            strncmp (hdr, "uuid:", strlen ("uuid:")) != 0) {
                 /* No SID */
                 soup_message_set_status (msg, SOUP_STATUS_PRECONDITION_FAILED);
 
