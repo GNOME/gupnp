@@ -461,7 +461,7 @@ stop_main_loop (GUPnPServiceProxy       *proxy,
 /* Initializes hash table to hold arg names as keys and GValues of
  * given type and value.
  */
-#define VAR_ARGS_TO_IN_HASH_TABLE(var_args, hash) \
+#define VAR_ARGS_TO_IN_LIST(var_args, names, values) \
         G_STMT_START { \
                 const gchar *arg_name = va_arg (var_args, const gchar *); \
          \
@@ -476,7 +476,8 @@ stop_main_loop (GUPnPServiceProxy       *proxy,
                                               G_VALUE_NOCOPY_CONTENTS, \
                                               &error); \
                         if (error == NULL) { \
-                                g_hash_table_insert (hash, g_strdup (arg_name), value); \
+                                names = g_list_prepend (names, g_strdup (arg_name)); \
+                                values = g_list_prepend (values, value); \
                         } else { \
                                 g_warning ("Failed to collect value of type %s for %s: %s", \
                                            g_type_name (type), \
@@ -486,6 +487,8 @@ stop_main_loop (GUPnPServiceProxy       *proxy,
                         } \
                         arg_name = va_arg (var_args, const gchar *); \
                 } \
+                names = g_list_reverse (names); \
+                values = g_list_reverse (values); \
         } G_STMT_END
 
 /* Puts values stored in hash table with GValues into var args.
@@ -552,20 +555,22 @@ gupnp_service_proxy_send_action_valist (GUPnPServiceProxy *proxy,
                                         GError           **error,
                                         va_list            var_args)
 {
-        GHashTable *in_hash;
-        GHashTable *out_hash;
+        GList *in_names = NULL, *in_values = NULL;
+        GHashTable *out_hash = NULL;
         va_list var_args_copy;
         gboolean result;
         GError *local_error;
+        GMainLoop *main_loop;
+        GUPnPServiceProxyAction *handle;
 
         g_return_val_if_fail (GUPNP_IS_SERVICE_PROXY (proxy), FALSE);
         g_return_val_if_fail (action, FALSE);
 
-        in_hash = g_hash_table_new_full (g_str_hash,
-                                         g_str_equal,
-                                         g_free,
-                                         value_free);
-        VAR_ARGS_TO_IN_HASH_TABLE (var_args, in_hash);
+
+        main_loop = g_main_loop_new (g_main_context_get_thread_default (),
+                                     TRUE);
+
+        VAR_ARGS_TO_IN_LIST (var_args, in_names, in_values);
         G_VA_COPY (var_args_copy, var_args);
         out_hash = g_hash_table_new_full (g_str_hash,
                                           g_str_equal,
@@ -574,11 +579,28 @@ gupnp_service_proxy_send_action_valist (GUPnPServiceProxy *proxy,
         VAR_ARGS_TO_OUT_HASH_TABLE (var_args, out_hash);
 
         local_error = NULL;
-        result = gupnp_service_proxy_send_action_hash (proxy,
-                                                       action,
-                                                       &local_error,
-                                                       in_hash,
-                                                       out_hash);
+        handle = gupnp_service_proxy_begin_action_list (proxy,
+                                                        action,
+                                                        in_names,
+                                                        in_values,
+                                                        stop_main_loop,
+                                                        main_loop);
+        if (!handle) {
+                g_main_loop_unref (main_loop);
+
+                return FALSE;
+        }
+
+        /* Loop till we get a reply (or time out) */
+        if (g_main_loop_is_running (main_loop))
+                g_main_loop_run (main_loop);
+
+        g_main_loop_unref (main_loop);
+
+        result = gupnp_service_proxy_end_action_hash (proxy,
+                                                      handle,
+                                                      &local_error,
+                                                      out_hash);
 
         if (local_error == NULL) {
                 OUT_HASH_TABLE_TO_VAR_ARGS (out_hash, var_args_copy);
@@ -586,7 +608,8 @@ gupnp_service_proxy_send_action_valist (GUPnPServiceProxy *proxy,
                 g_propagate_error (error, local_error);
         }
         va_end (var_args_copy);
-        g_hash_table_unref (in_hash);
+        g_list_free_full (in_names, g_free);
+        g_list_free_full (in_values, value_free);
         g_hash_table_unref (out_hash);
 
         return result;
@@ -969,24 +992,21 @@ gupnp_service_proxy_begin_action_valist
                                     va_list                         var_args)
 {
         GUPnPServiceProxyAction *ret;
-        GHashTable *in_hash;
+        GList *in_names = NULL, *in_values = NULL;
 
         g_return_val_if_fail (GUPNP_IS_SERVICE_PROXY (proxy), NULL);
         g_return_val_if_fail (action, NULL);
         g_return_val_if_fail (callback, NULL);
 
-
-        in_hash = g_hash_table_new_full (g_str_hash,
-                                         g_str_equal,
-                                         g_free,
-                                         value_free);
-        VAR_ARGS_TO_IN_HASH_TABLE (var_args, in_hash);
-        ret = gupnp_service_proxy_begin_action_hash (proxy,
+        VAR_ARGS_TO_IN_LIST (var_args, in_names, in_values);
+        ret = gupnp_service_proxy_begin_action_list (proxy,
                                                      action,
+                                                     in_names,
+                                                     in_values,
                                                      callback,
-                                                     user_data,
-                                                     in_hash);
-        g_hash_table_unref (in_hash);
+                                                     user_data);
+        g_list_free_full (in_names, g_free);
+        g_list_free_full (in_values, value_free);
 
         return ret;
 }
