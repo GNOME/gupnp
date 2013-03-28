@@ -1,0 +1,21 @@
+<root xmlns="urn:schemas-upnp-org:device-1-0">
+<specVersion>
+<major>1</major>
+<minor>0</minor>
+</specVersion>
+<device>
+<deviceType>urn:test-gupnp-org:device:TestBgo696762:1</deviceType>
+<friendlyName>Regression Test for bgo#696762</friendlyName>
+<modelURL>https://bugzilla.gnome.org/show_bug.cgi?id=696762</modelURL>
+<UDN>uuid:1234</UDN>
+<serviceList>
+<service>
+<serviceType>urn:test-gupnp-org:service:bgo696762:1</serviceType>
+<serviceId>urn:test-gupnp-org:serviceId:bgo696762:1</serviceId>
+<SCPDURL>/ServiceBgo69762.xml</SCPDURL>
+<controlURL>/ServiceBgo69762/Control</controlURL>
+<eventSubURL>/ServiceBgo69762/Event</eventSubURL>
+</service>
+</serviceList>
+</device>
+</root>
