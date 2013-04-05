@@ -1,3 +1,19 @@
+0.20.2
+======
+
+Changes since 0.20.1:
+- Fix some typos in docs and warning messages.
+- Fix argument order issue introduced with the va_list fix in 0.20.1.
+- Add some tests for this bug.
+
+Bugs fixed in this release:
+ - https://bugzilla.gnome.org/show_bug.cgi?id=695591
+ - https://bugzilla.gnome.org/show_bug.cgi?id=696762
+
+All contributors to this release:
+  Jens Georg <mail@jensge.org>
+  Benjamin Kerensa <bkerensa@ubuntu.com>
+
 0.20.1
 ======
 
