@@ -377,6 +377,35 @@ gupnp_context_manager_create (guint port)
 }
 
 /**
+ * gupnp_context_manager_rescan_control_points:
+ * @manager: A #GUPnPContextManager
+ *
+ * This function starts a rescan on every control point managed by @manager.
+ * Only the active control points send discovery messages.
+ * This function should be called when servers are suspected to have
+ * disappeared.
+ **/
+void
+gupnp_context_manager_rescan_control_points (GUPnPContextManager *manager)
+{
+        GList *l;
+
+        g_return_if_fail (GUPNP_IS_CONTEXT_MANAGER (manager));
+
+        l = manager->priv->objects;
+
+        while (l) {
+                if (GUPNP_IS_CONTROL_POINT (l->data)) {
+                        GSSDPResourceBrowser *browser =
+                                GSSDP_RESOURCE_BROWSER (l->data);
+                        gssdp_resource_browser_rescan (browser);
+                }
+
+                l = l->next;
+        }
+}
+
+/**
  * gupnp_context_manager_manage_control_point:
  * @manager: A #GUPnPContextManager
  * @control_point: The #GUPnPControlPoint to be taken care of

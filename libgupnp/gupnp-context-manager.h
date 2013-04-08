@@ -90,6 +90,10 @@ GUPnPContextManager *
 gupnp_context_manager_create           (guint port);
 
 void
+gupnp_context_manager_rescan_control_points
+                                       (GUPnPContextManager *manager);
+
+void
 gupnp_context_manager_manage_control_point
                                        (GUPnPContextManager     *manager,
                                         GUPnPControlPoint       *control_point);
