@@ -26,7 +26,7 @@ dnl dropped everything but VALA_PROG_VAPIGEN - Jens Georg <mail@jensge.org>
 #
 # VALA_PROG_VAPIGEN([MINIMUM-VERSION])
 # ------------------------------------
-AC_DEFUN([VALA_PROG_VAPIGEN],
+AC_DEFUN([GUPNP_PROG_VAPIGEN],
 [AC_PATH_PROG([VAPIGEN], [vapigen], [])
   AS_IF([test -z "$VAPIGEN"],
     [AC_MSG_WARN([No Vala API Generator found. You will not be able to generate .vapi files.])],
@@ -37,5 +37,7 @@ AC_DEFUN([VALA_PROG_VAPIGEN],
            [AC_MSG_RESULT([yes])],
            [AC_MSG_RESULT([yes])],
            [AC_MSG_RESULT([no])
-            AC_MSG_WARN([Vala API Generator $1 not found.])])])])
+            AC_MSG_WARN([Vala API Generator $1 not found.])
+            VAPIGEN=""
+           ])])])
 ])
