@@ -1760,13 +1760,19 @@ emit_notifications (gpointer user_data)
                 emit_notify_data = pending_notify->data;
 
                 if (emit_notify_data->seq > proxy->priv->seq) {
-                        /* Oops, we missed a notify. Resubscribe .. */
+                        /* Error procedure on missed event according to
+                         * UDA 1.0, section 4.2, §5:
+                         * Re-subscribe to get a new SID and SEQ */
                         resubscribe = TRUE;
 
                         break;
                 }
 
                 /* Increment our own event sequence number */
+                /* UDA 1.0, section 4.2, §3: To prevent overflow, SEQ is set to
+                 * 1, NOT 0, when encountering G_MAXUINT32. SEQ == 0 always
+                 * indicates the initial event message.
+                 * FIXME: bgo#698125 */
                 if (proxy->priv->seq < G_MAXINT32)
                         proxy->priv->seq++;
                 else
