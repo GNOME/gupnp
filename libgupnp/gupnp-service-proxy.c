@@ -32,6 +32,7 @@
 #include <gobject/gvaluecollector.h>
 #include <string.h>
 #include <locale.h>
+#include <errno.h>
 
 #include "gupnp-service-proxy.h"
 #include "gupnp-context-private.h"
@@ -57,7 +58,7 @@ struct _GUPnPServiceProxyPrivate {
         char *sid; /* Subscription ID */
         GSource *subscription_timeout_src;
 
-        int seq; /* Event sequence number */
+        guint32 seq; /* Event sequence number */
 
         GHashTable *notify_hash;
 
@@ -105,7 +106,7 @@ typedef struct {
 
 typedef struct {
         char *sid;
-        int seq;
+        guint32 seq;
 
         xmlDoc *doc;
 } EmitNotifyData;
@@ -142,7 +143,7 @@ notify_data_free (NotifyData *data)
 /* Steals doc reference */
 static EmitNotifyData *
 emit_notify_data_new (const char *sid,
-                      int         seq,
+                      guint32     seq,
                       xmlDoc     *doc)
 {
         EmitNotifyData *data;
@@ -1771,9 +1772,8 @@ emit_notifications (gpointer user_data)
                 /* Increment our own event sequence number */
                 /* UDA 1.0, section 4.2, §3: To prevent overflow, SEQ is set to
                  * 1, NOT 0, when encountering G_MAXUINT32. SEQ == 0 always
-                 * indicates the initial event message.
-                 * FIXME: bgo#698125 */
-                if (proxy->priv->seq < G_MAXINT32)
+                 * indicates the initial event message. */
+                if (proxy->priv->seq < G_MAXUINT32)
                         proxy->priv->seq++;
                 else
                         proxy->priv->seq = 1;
@@ -1819,7 +1819,8 @@ server_handler (SoupServer        *soup_server,
 {
         GUPnPServiceProxy *proxy;
         const char *hdr, *nt, *nts;
-        int seq;
+        guint32 seq;
+        guint64 seq_parsed;
         xmlDoc *doc;
         xmlNode *node;
         EmitNotifyData *emit_notify_data;
@@ -1858,7 +1859,16 @@ server_handler (SoupServer        *soup_server,
                 return;
         }
 
-        seq = atoi (hdr);
+        errno = 0;
+        seq_parsed = strtoul (hdr, NULL, 10);
+        if (errno != 0 || seq_parsed > G_MAXUINT32) {
+                /* Invalid SEQ header value */
+                soup_message_set_status (msg, SOUP_STATUS_PRECONDITION_FAILED);
+
+                return;
+        }
+
+        seq = (guint32) seq_parsed;
 
         hdr = soup_message_headers_get_one (msg->request_headers, "SID");
         if (hdr == NULL ||
