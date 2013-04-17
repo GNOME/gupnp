@@ -1818,7 +1818,7 @@ server_handler (SoupServer        *soup_server,
                 gpointer           user_data)
 {
         GUPnPServiceProxy *proxy;
-        const char *hdr;
+        const char *hdr, *nt, *nts;
         int seq;
         xmlDoc *doc;
         xmlNode *node;
@@ -1833,17 +1833,18 @@ server_handler (SoupServer        *soup_server,
                 return;
         }
 
-        hdr = soup_message_headers_get_one (msg->request_headers, "NT");
-        if (hdr == NULL || strcmp (hdr, "upnp:event") != 0) {
-                /* Proper NT header lacking */
-                soup_message_set_status (msg, SOUP_STATUS_PRECONDITION_FAILED);
+        nt = soup_message_headers_get_one (msg->request_headers, "NT");
+        nts = soup_message_headers_get_one (msg->request_headers, "NTS");
+        if (nt == NULL || nts == NULL) {
+                /* Required header is missing */
+                soup_message_set_status (msg, SOUP_STATUS_BAD_REQUEST);
 
                 return;
         }
 
-        hdr = soup_message_headers_get_one (msg->request_headers, "NTS");
-        if (hdr == NULL || strcmp (hdr, "upnp:propchange") != 0) {
-                /* Proper NTS header lacking */
+        if (strcmp (nt, "upnp:event") != 0 ||
+            strcmp (nts, "upnp:propchange") != 0) {
+                /* Unexpected header content */
                 soup_message_set_status (msg, SOUP_STATUS_PRECONDITION_FAILED);
 
                 return;
