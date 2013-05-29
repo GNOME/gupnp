@@ -356,15 +356,19 @@ gupnp_context_manager_create (guint port)
                 impl_type = GUPNP_TYPE_CONNMAN_MANAGER;
 #endif
 
-        if (impl_type == G_TYPE_INVALID)
+        if (impl_type == G_TYPE_INVALID) {
             /* Either user requested us to use the Linux CM explicitly or we
              * are using one of the DBus managers but it's not available, so we
              * fall-back to it. */
 #if defined (USE_NETLINK) || defined (HAVE_LINUX_RTNETLINK_H)
-                impl_type = GUPNP_TYPE_LINUX_CONTEXT_MANAGER;
+                if (gupnp_linux_context_manager_is_available ())
+                        impl_type = GUPNP_TYPE_LINUX_CONTEXT_MANAGER;
+                else
+                    impl_type = GUPNP_TYPE_UNIX_CONTEXT_MANAGER;
 #else
                 impl_type = GUPNP_TYPE_UNIX_CONTEXT_MANAGER;
 #endif
+        }
 #endif /* G_OS_WIN32 */
         impl = g_object_new (impl_type,
                              "port", port,

@@ -686,6 +686,21 @@ create_netlink_socket (GUPnPLinuxContextManager *self, GError **error)
         return TRUE;
 }
 
+gboolean
+gupnp_linux_context_manager_is_available (void)
+{
+        int fd = -1;
+
+        fd = socket (PF_NETLINK, SOCK_DGRAM, NETLINK_ROUTE);
+
+        if (fd == -1)
+                return FALSE;
+
+        close (fd);
+
+        return TRUE;
+}
+
 static void
 gupnp_linux_context_manager_init (GUPnPLinuxContextManager *self)
 {

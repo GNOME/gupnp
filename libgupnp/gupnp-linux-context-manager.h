@@ -68,6 +68,8 @@ typedef struct {
         void (* _gupnp_reserved4) (void);
 } GUPnPLinuxContextManagerClass;
 
+G_GNUC_INTERNAL gboolean gupnp_linux_context_manager_is_available (void);
+
 G_END_DECLS
 
 #endif /* __GUPNP_LINUX_CONTEXT_MANAGER_H__ */
