@@ -401,9 +401,9 @@ gupnp_service_proxy_send_action (GUPnPServiceProxy *proxy,
 }
 
 static void
-stop_main_loop (GUPnPServiceProxy       *proxy,
-                GUPnPServiceProxyAction *action,
-                gpointer                 user_data)
+stop_main_loop (G_GNUC_UNUSED GUPnPServiceProxy       *proxy,
+                G_GNUC_UNUSED GUPnPServiceProxyAction *action,
+                gpointer                               user_data)
 {
         g_main_loop_quit ((GMainLoop *) user_data);
 }
@@ -1164,10 +1164,10 @@ gupnp_service_proxy_end_action (GUPnPServiceProxy       *proxy,
 /* Checks an action response for errors and returns the parsed
  * xmlDoc object. */
 static xmlDoc *
-check_action_response (GUPnPServiceProxy       *proxy,
-                       GUPnPServiceProxyAction *action,
-                       xmlNode                **params,
-                       GError                 **error)
+check_action_response (G_GNUC_UNUSED GUPnPServiceProxy *proxy,
+                       GUPnPServiceProxyAction         *action,
+                       xmlNode                        **params,
+                       GError                         **error)
 {
         xmlDoc *response;
         int code;
@@ -1810,12 +1810,12 @@ emit_notifications (gpointer user_data)
  * message with our SID.
  */
 static void
-server_handler (SoupServer        *soup_server,
-                SoupMessage       *msg, 
-                const char        *server_path,
-                GHashTable        *query,
-                SoupClientContext *soup_client,
-                gpointer           user_data)
+server_handler (G_GNUC_UNUSED SoupServer        *soup_server,
+                SoupMessage                     *msg,
+                G_GNUC_UNUSED const char        *server_path,
+                G_GNUC_UNUSED GHashTable        *query,
+                G_GNUC_UNUSED SoupClientContext *soup_client,
+                gpointer                         user_data)
 {
         GUPnPServiceProxy *proxy;
         const char *hdr, *nt, *nts;
@@ -2004,9 +2004,9 @@ subscription_expire (gpointer user_data)
  * Received subscription response.
  */
 static void
-subscribe_got_response (SoupSession       *session,
-                        SoupMessage       *msg,
-                        GUPnPServiceProxy *proxy)
+subscribe_got_response (G_GNUC_UNUSED SoupSession *session,
+                        SoupMessage               *msg,
+                        GUPnPServiceProxy         *proxy)
 {
         GError *error;
 

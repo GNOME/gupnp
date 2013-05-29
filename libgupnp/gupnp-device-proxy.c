@@ -97,7 +97,7 @@ gupnp_device_proxy_get_service (GUPnPDeviceInfo *info,
 }
 
 static void
-gupnp_device_proxy_init (GUPnPDeviceProxy *proxy)
+gupnp_device_proxy_init (G_GNUC_UNUSED GUPnPDeviceProxy *proxy)
 {
 }
 

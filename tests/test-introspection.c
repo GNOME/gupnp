@@ -39,7 +39,7 @@ static GOptionEntry entries[] =
 };
 
 static void
-interrupt_signal_handler (int signum)
+interrupt_signal_handler (G_GNUC_UNUSED int signum)
 {
         g_main_loop_quit (main_loop);
 }
@@ -173,7 +173,7 @@ static void
 got_introspection (GUPnPServiceInfo          *info,
                    GUPnPServiceIntrospection *introspection,
                    const GError              *error,
-                   gpointer                   user_data)
+                   G_GNUC_UNUSED gpointer     user_data)
 {
         if (error) {
                 g_warning ("Failed to create introspection for '%s': %s",
@@ -192,8 +192,8 @@ got_introspection (GUPnPServiceInfo          *info,
 }
 
 static void
-service_proxy_available_cb (GUPnPControlPoint *cp,
-                            GUPnPServiceProxy *proxy)
+service_proxy_available_cb (G_GNUC_UNUSED GUPnPControlPoint *cp,
+                            GUPnPServiceProxy               *proxy)
 {
         GUPnPServiceInfo *info;
         GUPnPServiceIntrospection *introspection;
@@ -216,8 +216,8 @@ service_proxy_available_cb (GUPnPControlPoint *cp,
 }
 
 static void
-service_proxy_unavailable_cb (GUPnPControlPoint *cp,
-                              GUPnPServiceProxy *proxy)
+service_proxy_unavailable_cb (G_GNUC_UNUSED GUPnPControlPoint *cp,
+                              GUPnPServiceProxy               *proxy)
 {
         const char *type, *location;
 

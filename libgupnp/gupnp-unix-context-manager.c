@@ -62,6 +62,8 @@ gupnp_unix_context_manager_get_interfaces (GUPnPSimpleContextManager *manager)
         struct ifaddrs *ifa_list, *ifa;
         GList *processed;
 
+        g_return_val_if_fail (GUPNP_IS_UNIX_CONTEXT_MANAGER (manager), NULL);
+
         if (getifaddrs (&ifa_list) != 0) {
                 g_warning ("Failed to retrieve list of network interfaces:%s\n",
                            strerror (errno));
@@ -92,7 +94,7 @@ gupnp_unix_context_manager_get_interfaces (GUPnPSimpleContextManager *manager)
 }
 
 static void
-gupnp_unix_context_manager_init (GUPnPUnixContextManager *manager)
+gupnp_unix_context_manager_init (G_GNUC_UNUSED GUPnPUnixContextManager *manager)
 {
 }
 

@@ -29,14 +29,14 @@
 GMainLoop *main_loop;
 
 static void
-interrupt_signal_handler (int signum)
+interrupt_signal_handler (G_GNUC_UNUSED int signum)
 {
         g_main_loop_quit (main_loop);
 }
 
 static void
-device_proxy_available_cb (GUPnPControlPoint *cp,
-                           GUPnPDeviceProxy  *proxy)
+device_proxy_available_cb (G_GNUC_UNUSED GUPnPControlPoint *cp,
+                           GUPnPDeviceProxy                *proxy)
 {
         const char *type, *location;
 
@@ -49,8 +49,8 @@ device_proxy_available_cb (GUPnPControlPoint *cp,
 }
 
 static void
-device_proxy_unavailable_cb (GUPnPControlPoint *cp,
-                             GUPnPDeviceProxy  *proxy)
+device_proxy_unavailable_cb (G_GNUC_UNUSED GUPnPControlPoint *cp,
+                             GUPnPDeviceProxy                *proxy)
 {
         const char *type, *location;
 
@@ -63,8 +63,8 @@ device_proxy_unavailable_cb (GUPnPControlPoint *cp,
 }
 
 static void
-service_proxy_available_cb (GUPnPControlPoint *cp,
-                            GUPnPServiceProxy *proxy)
+service_proxy_available_cb (G_GNUC_UNUSED GUPnPControlPoint *cp,
+                            GUPnPServiceProxy               *proxy)
 {
         const char *type, *location;
 
@@ -77,8 +77,8 @@ service_proxy_available_cb (GUPnPControlPoint *cp,
 }
 
 static void
-service_proxy_unavailable_cb (GUPnPControlPoint *cp,
-                              GUPnPServiceProxy *proxy)
+service_proxy_unavailable_cb (G_GNUC_UNUSED GUPnPControlPoint *cp,
+                              GUPnPServiceProxy               *proxy)
 {
         const char *type, *location;
 
@@ -91,7 +91,7 @@ service_proxy_unavailable_cb (GUPnPControlPoint *cp,
 }
 
 int
-main (int argc, char **argv)
+main (G_GNUC_UNUSED int argc, G_GNUC_UNUSED char **argv)
 {
         GError *error;
         GUPnPContext *context;

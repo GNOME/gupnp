@@ -434,7 +434,7 @@ gupnp_service_action_get_values (GUPnPServiceAction *action,
                                  GList              *arg_types)
 {
         GList *arg_values;
-        int i;
+        guint i;
 
         g_return_val_if_fail (action != NULL, NULL);
 
@@ -898,12 +898,12 @@ query_state_variable (GUPnPService       *service,
 
 /* controlURL handler */
 static void
-control_server_handler (SoupServer        *server,
-                        SoupMessage       *msg, 
-                        const char        *server_path,
-                        GHashTable        *query,
-                        SoupClientContext *soup_client,
-                        gpointer           user_data)
+control_server_handler (SoupServer                      *server,
+                        SoupMessage                     *msg,
+                        G_GNUC_UNUSED const char        *server_path,
+                        G_GNUC_UNUSED GHashTable        *query,
+                        G_GNUC_UNUSED SoupClientContext *soup_client,
+                        gpointer                         user_data)
 {
         GUPnPService *service;
         GUPnPContext *context;
@@ -1286,12 +1286,12 @@ unsubscribe (GUPnPService *service,
 
 /* eventSubscriptionURL handler */
 static void
-subscription_server_handler (SoupServer        *server,
-                             SoupMessage       *msg, 
-                             const char        *server_path,
-                             GHashTable        *query,
-                             SoupClientContext *soup_client,
-                             gpointer           user_data)
+subscription_server_handler (G_GNUC_UNUSED SoupServer        *server,
+                             SoupMessage                     *msg,
+                             G_GNUC_UNUSED const char        *server_path,
+                             G_GNUC_UNUSED GHashTable        *query,
+                             G_GNUC_UNUSED SoupClientContext *soup_client,
+                             gpointer                         user_data)
 {
         GUPnPService *service;
         const char *callback, *nt, *sid;
@@ -1362,7 +1362,7 @@ static void
 got_introspection (GUPnPServiceInfo          *info,
                    GUPnPServiceIntrospection *introspection,
                    const GError              *error,
-                   gpointer                   user_data)
+                   G_GNUC_UNUSED gpointer     user_data)
 {
         GUPnPService *service = GUPNP_SERVICE (info);
         const GList *state_variables, *l;
@@ -1467,9 +1467,9 @@ gupnp_service_constructor (GType                  type,
 
 /* Root device availability changed. */
 static void
-notify_available_cb (GObject *object,
-                     GParamSpec *pspec,
-                     gpointer    user_data)
+notify_available_cb (GObject                  *object,
+                     G_GNUC_UNUSED GParamSpec *pspec,
+                     gpointer                  user_data)
 {
         GUPnPService *service;
 
@@ -1803,9 +1803,9 @@ gupnp_service_notify_valist (GUPnPService *service,
 
 /* Received notify response. */
 static void
-notify_got_response (SoupSession *session,
-                     SoupMessage *msg,
-                     gpointer     user_data)
+notify_got_response (G_GNUC_UNUSED SoupSession *session,
+                     SoupMessage               *msg,
+                     gpointer                   user_data)
 {
         SubscriptionData *data;
 
@@ -1874,9 +1874,9 @@ notify_got_response (SoupSession *session,
 
 /* Send notification @user_data to subscriber @value */
 static void
-notify_subscriber (gpointer key,
-                   gpointer value,
-                   gpointer user_data)
+notify_subscriber (G_GNUC_UNUSED gpointer key,
+                   gpointer               value,
+                   gpointer               user_data)
 {
         SubscriptionData *data;
         const char *property_set;

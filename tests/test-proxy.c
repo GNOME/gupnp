@@ -29,24 +29,24 @@
 GMainLoop *main_loop;
 
 static void
-interrupt_signal_handler (int signum)
+interrupt_signal_handler (G_GNUC_UNUSED int signum)
 {
         g_main_loop_quit (main_loop);
 }
 
 static void
-subscription_lost_cb (GUPnPServiceProxy *proxy,
-                      const GError      *reason,
-                      gpointer           user_data)
+subscription_lost_cb (G_GNUC_UNUSED GUPnPServiceProxy *proxy,
+                      const GError                    *reason,
+                      G_GNUC_UNUSED gpointer           user_data)
 {
         g_print ("Lost subscription: %s\n", reason->message);
 }
 
 static void
-notify_cb (GUPnPServiceProxy *proxy,
-           const char        *variable,
-           GValue            *value,
-           gpointer           user_data)
+notify_cb (G_GNUC_UNUSED GUPnPServiceProxy *proxy,
+           const char                      *variable,
+           GValue                          *value,
+           gpointer                         user_data)
 {
         g_print ("Received a notification for variable '%s':\n", variable);
         g_print ("\tvalue:     %d\n", g_value_get_uint (value));
@@ -54,8 +54,8 @@ notify_cb (GUPnPServiceProxy *proxy,
 }
 
 static void
-service_proxy_available_cb (GUPnPControlPoint *cp,
-                            GUPnPServiceProxy *proxy)
+service_proxy_available_cb (G_GNUC_UNUSED GUPnPControlPoint *cp,
+                            GUPnPServiceProxy               *proxy)
 {
         const char *location;
         char *result = NULL;
@@ -135,8 +135,8 @@ service_proxy_available_cb (GUPnPControlPoint *cp,
 }
 
 static void
-service_proxy_unavailable_cb (GUPnPControlPoint *cp,
-                              GUPnPServiceProxy *proxy)
+service_proxy_unavailable_cb (G_GNUC_UNUSED GUPnPControlPoint *cp,
+                              GUPnPServiceProxy               *proxy)
 {
         const char *location;
 
@@ -147,7 +147,7 @@ service_proxy_unavailable_cb (GUPnPControlPoint *cp,
 }
 
 int
-main (int argc, char **argv)
+main (G_GNUC_UNUSED int argc, G_GNUC_UNUSED char **argv)
 {
         GError *error;
         GUPnPContext *context;

@@ -29,16 +29,16 @@
 GMainLoop *main_loop;
 
 static void
-interrupt_signal_handler (int signum)
+interrupt_signal_handler (G_GNUC_UNUSED int signum)
 {
         g_main_loop_quit (main_loop);
 }
 
 static void
-notify_failed_cb (GUPnPService *service,
-                  const GList  *callback_urls,
-                  const GError *reason,
-                  gpointer      user_data)
+notify_failed_cb (G_GNUC_UNUSED GUPnPService *service,
+                  G_GNUC_UNUSED const GList  *callback_urls,
+                  const GError               *reason,
+                  G_GNUC_UNUSED gpointer      user_data)
 {
         g_print ("NOTIFY failed: %s\n", reason->message);
 }

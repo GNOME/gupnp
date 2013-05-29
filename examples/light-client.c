@@ -21,7 +21,8 @@ static enum {
 } mode;
 
 static void
-service_proxy_available_cb (GUPnPControlPoint *cp, GUPnPServiceProxy *proxy)
+service_proxy_available_cb (G_GNUC_UNUSED GUPnPControlPoint *cp,
+                            GUPnPServiceProxy               *proxy)
 {
   GError *error = NULL;
   gboolean target;

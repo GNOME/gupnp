@@ -50,41 +50,41 @@ typedef struct _TestBgo696762Data {
 } TestBgo696762Data;
 
 static void
-test_bgo_696762_on_browse_call (GUPnPService *service,
-                                GUPnPServiceAction *action,
-                                gpointer user_data)
+test_bgo_696762_on_browse_call (G_GNUC_UNUSED GUPnPService *service,
+                                G_GNUC_UNUSED GUPnPServiceAction *action,
+                                G_GNUC_UNUSED gpointer user_data)
 {
     xmlNode *node = action->node->children;
     g_assert (node != NULL);
-    g_assert_cmpstr (node->name, ==, "ObjectID");
+    g_assert_cmpstr ((const char *) node->name, ==, "ObjectID");
     node = node->next;
 
     g_assert (node != NULL);
-    g_assert_cmpstr (node->name, ==, "BrowseFlag");
+    g_assert_cmpstr ((const char *) node->name, ==, "BrowseFlag");
     node = node->next;
 
     g_assert (node != NULL);
-    g_assert_cmpstr (node->name, ==, "Filter");
+    g_assert_cmpstr ((const char *) node->name, ==, "Filter");
     node = node->next;
 
     g_assert (node != NULL);
-    g_assert_cmpstr (node->name, ==, "StartingIndex");
+    g_assert_cmpstr ((const char *) node->name, ==, "StartingIndex");
     node = node->next;
 
     g_assert (node != NULL);
-    g_assert_cmpstr (node->name, ==, "RequestedCount");
+    g_assert_cmpstr ((const char *) node->name, ==, "RequestedCount");
     node = node->next;
 
     g_assert (node != NULL);
-    g_assert_cmpstr (node->name, ==, "SortCriteria");
+    g_assert_cmpstr ((const char *) node->name, ==, "SortCriteria");
     node = node->next;
     gupnp_service_action_return (action);
 }
 
 static void
-test_bgo_696762_on_browse (GUPnPServiceProxy *proxy,
-                           GUPnPServiceProxyAction *action,
-                           gpointer                 user_data)
+test_bgo_696762_on_browse (G_GNUC_UNUSED GUPnPServiceProxy       *proxy,
+                           G_GNUC_UNUSED GUPnPServiceProxyAction *action,
+                           gpointer                               user_data)
 {
     TestBgo696762Data *data = (TestBgo696762Data *) user_data;
 
@@ -92,9 +92,9 @@ test_bgo_696762_on_browse (GUPnPServiceProxy *proxy,
 }
 
 static void
-test_bgo_696762_on_sp_available (GUPnPControlPoint *cp,
-                                 GUPnPServiceProxy *proxy,
-                                 gpointer           user_data)
+test_bgo_696762_on_sp_available (G_GNUC_UNUSED GUPnPControlPoint *cp,
+                                 GUPnPServiceProxy               *proxy,
+                                 gpointer                         user_data)
 {
     TestBgo696762Data *data = (TestBgo696762Data *) user_data;
 
@@ -104,7 +104,7 @@ test_bgo_696762_on_sp_available (GUPnPControlPoint *cp,
 }
 
 static gboolean
-test_bgo_696762_on_timeout (gpointer user_data)
+test_bgo_696762_on_timeout (G_GNUC_UNUSED gpointer user_data)
 {
     g_assert_not_reached ();
 

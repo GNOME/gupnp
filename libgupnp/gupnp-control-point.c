@@ -109,9 +109,9 @@ gupnp_control_point_init (GUPnPControlPoint *control_point)
 
 /* Return TRUE if value == user_data */
 static gboolean
-find_doc (gpointer key,
-          gpointer value,
-          gpointer user_data)
+find_doc (G_GNUC_UNUSED gpointer key,
+          gpointer               value,
+          G_GNUC_UNUSED gpointer user_data)
 {
         return (value == user_data);
 }
@@ -132,9 +132,9 @@ doc_finalized (gpointer user_data,
 
 /* Release weak reference on xmlDoc wrapper */
 static void
-weak_unref_doc (gpointer key,
-                gpointer value,
-                gpointer user_data)
+weak_unref_doc (G_GNUC_UNUSED gpointer key,
+                gpointer               value,
+                gpointer               user_data)
 {
         g_object_weak_unref (G_OBJECT (value), doc_finalized, user_data);
 }
@@ -532,9 +532,9 @@ description_loaded (GUPnPControlPoint *control_point,
  * Description URL downloaded.
  */
 static void
-got_description_url (SoupSession           *session,
-                     SoupMessage           *msg,
-                     GetDescriptionURLData *data)
+got_description_url (G_GNUC_UNUSED SoupSession *session,
+                     SoupMessage               *msg,
+                     GetDescriptionURLData     *data)
 {
         GUPnPXMLDoc *doc;
 

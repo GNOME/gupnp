@@ -72,9 +72,9 @@ enum {
 static guint signals[SIGNAL_LAST];
 
 static void
-on_context_unavailable (GUPnPContextManager *manager,
-                        GUPnPContext        *context,
-                        gpointer            *user_data)
+on_context_unavailable (GUPnPContextManager    *manager,
+                        GUPnPContext           *context,
+                        G_GNUC_UNUSED gpointer *user_data)
 {
         GList *l;
 

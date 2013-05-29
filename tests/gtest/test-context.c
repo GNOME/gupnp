@@ -23,13 +23,15 @@
 #include <config.h>
 #endif
 
+#include <string.h>
+
 #include <libsoup/soup.h>
 #include "libgupnp/gupnp.h"
 
 static void
-on_message_finished (SoupSession *session,
-                     SoupMessage *message,
-                     gpointer user_data) {
+on_message_finished (G_GNUC_UNUSED SoupSession *session,
+                     G_GNUC_UNUSED SoupMessage *message,
+                     gpointer                   user_data) {
         GMainLoop *loop = (GMainLoop*) user_data;
 
         g_main_loop_quit (loop);
@@ -119,9 +121,7 @@ test_gupnp_context_http_ranged_requests (void)
         guint port = 0;
         char *uri = NULL;
         GMainLoop *loop;
-        goffset start, end, length;
         GMappedFile *file;
-        int result = 0;
         goffset file_length = 0;
 
         loop = g_main_loop_new (NULL, FALSE);

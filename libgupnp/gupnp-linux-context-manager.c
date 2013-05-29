@@ -196,13 +196,17 @@ network_device_create_context (NetworkInterface *device, const char *label)
 }
 
 static void
-context_signal_up (gpointer key, gpointer value, gpointer user_data)
+context_signal_up (G_GNUC_UNUSED gpointer key,
+                   gpointer               value,
+                   gpointer               user_data)
 {
     g_signal_emit_by_name (user_data, "context-available", value);
 }
 
 static void
-context_signal_down (gpointer key, gpointer value, gpointer user_data)
+context_signal_down (G_GNUC_UNUSED gpointer key,
+                     gpointer               value,
+                     gpointer               user_data)
 {
     g_signal_emit_by_name (user_data, "context-unavailable", value);
 }
@@ -278,9 +282,9 @@ static void remove_context (GUPnPLinuxContextManager *self,
                             struct ifaddrmsg         *ifa);
 
 static gboolean
-on_netlink_message_available (GSocket      *socket,
-                              GIOCondition  condition,
-                              gpointer      user_data)
+on_netlink_message_available (G_GNUC_UNUSED GSocket     *socket,
+                              G_GNUC_UNUSED GIOCondition condition,
+                              gpointer                   user_data)
 {
         GUPnPLinuxContextManager *self;
 
@@ -540,7 +544,7 @@ receive_netlink_message (GUPnPLinuxContextManager *self, GError **error)
         static char buf[4096];
         static const int bufsize = 4096;
 
-        int len;
+        gssize len;
         GError *inner_error = NULL;
         struct nlmsghdr *header = (struct nlmsghdr *) buf;
         struct ifinfomsg *ifi;

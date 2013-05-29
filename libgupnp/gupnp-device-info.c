@@ -654,7 +654,7 @@ typedef struct {
 } Icon;
 
 static Icon *
-icon_parse (GUPnPDeviceInfo *info, xmlNode *element)
+icon_parse (G_GNUC_UNUSED GUPnPDeviceInfo *info, xmlNode *element)
 {
         Icon *icon;
 

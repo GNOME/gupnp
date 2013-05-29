@@ -616,9 +616,9 @@ gupnp_service_info_get_introspection (GUPnPServiceInfo *info,
  * SCPD URL downloaded.
  */
 static void
-got_scpd_url (SoupSession    *session,
-              SoupMessage    *msg,
-              GetSCPDURLData *data)
+got_scpd_url (G_GNUC_UNUSED SoupSession *session,
+              SoupMessage               *msg,
+              GetSCPDURLData            *data)
 {
         GUPnPServiceIntrospection *introspection;
         GError *error;

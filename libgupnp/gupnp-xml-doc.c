@@ -39,7 +39,7 @@ G_DEFINE_TYPE (GUPnPXMLDoc,
                G_TYPE_OBJECT);
 
 static void
-gupnp_xml_doc_init (GUPnPXMLDoc *doc)
+gupnp_xml_doc_init (G_GNUC_UNUSED GUPnPXMLDoc *doc)
 {
         /* Empty */
 }

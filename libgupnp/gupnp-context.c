@@ -222,8 +222,8 @@ gupnp_context_initable_init (GInitable     *initable,
 }
 
 static void
-gupnp_context_initable_iface_init (gpointer g_iface,
-                                   gpointer iface_data)
+gupnp_context_initable_iface_init (gpointer               g_iface,
+                                   G_GNUC_UNUSED gpointer iface_data)
 {
         GInitableIface *iface = (GInitableIface *)g_iface;
         initable_parent_iface = g_type_interface_peek_parent (iface);
@@ -476,12 +476,12 @@ gupnp_context_get_session (GUPnPContext *context)
  * Default server handler: Return 404 not found.
  **/
 static void
-default_server_handler (SoupServer        *server,
-                        SoupMessage       *msg, 
-                        const char        *path,
-                        GHashTable        *query,
-                        SoupClientContext *client,
-                        gpointer           user_data)
+default_server_handler (G_GNUC_UNUSED SoupServer        *server,
+                        SoupMessage                     *msg,
+                        G_GNUC_UNUSED const char        *path,
+                        G_GNUC_UNUSED GHashTable        *query,
+                        G_GNUC_UNUSED SoupClientContext *client,
+                        G_GNUC_UNUSED gpointer           user_data)
 {
         soup_message_set_status (msg, SOUP_STATUS_NOT_FOUND);
 }
@@ -825,12 +825,12 @@ redirect_to_folder (SoupMessage *msg)
 /* Serve @path. Note that we do not need to check for path including bogus
  * '..' as libsoup does this for us. */
 static void
-host_path_handler (SoupServer        *server,
-                   SoupMessage       *msg, 
-                   const char        *path,
-                   GHashTable        *query,
-                   SoupClientContext *client,
-                   gpointer           user_data)
+host_path_handler (G_GNUC_UNUSED SoupServer        *server,
+                   SoupMessage                     *msg,
+                   const char                      *path,
+                   G_GNUC_UNUSED GHashTable        *query,
+                   G_GNUC_UNUSED SoupClientContext *client,
+                   gpointer                         user_data)
 {
         char *local_path, *path_to_open;
         struct stat st;
