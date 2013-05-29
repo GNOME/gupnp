@@ -927,6 +927,39 @@ resource_type_match (const char *query,
 }
 
 /**
+ * gupnp_device_info_list_dlna_device_class_identifier:
+ * @info: A #GUPnPDeviceInfo
+ *
+ * Get a #GList of strings that represent the device class and version as
+ * announced in the device description file using the &lt;dlna:X_DLNADOC&gt;
+ * element.
+ * Returns: (transfer full) (element-type utf8): a #GList of newly allocated strings or
+ * %NULL if the device description doesn't contain the &lt;dlna:X_DLNADOC&gt;
+ * element.
+ **/
+GList *
+gupnp_device_info_list_dlna_device_class_identifier (GUPnPDeviceInfo *info)
+{
+        xmlNode *element;
+        GList *list  = NULL;
+
+        g_return_val_if_fail (GUPNP_IS_DEVICE_INFO (info), NULL);
+
+        element = info->priv->element;
+
+        for (element = element->children; element; element = element->next) {
+                /* No early exit since the node explicitly may appear multiple
+                 * times: 7.2.10.3 */
+                if (!strcmp ("X_DLNADOC", (char *) element->name))
+                        list = g_list_prepend (list,
+                                               xmlNodeGetContent(element));
+        }
+
+        /* Return in order of appearance in document */
+        return g_list_reverse (list);
+}
+
+/**
  * gupnp_device_info_list_dlna_capabilities:
  * @info: A #GUPnPDeviceInfo
  *
