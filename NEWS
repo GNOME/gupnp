@@ -1,3 +1,31 @@
+0.20.3
+======
+
+Changes since 0.20.2:
+- Add a gupnp_context_manager_rescan_control_points feature.
+- Fix VAPI generation if g-i version is >= 1.36.
+- Some internal documentation updates.
+- Check SID and return a proper error.
+- Fix error code returned on invalid NT and NTS headers.
+- Fix SEQ to be a uint32.
+- Fall-back to unix static CM if netlink sockets are not availabe on runtime.
+- Prevent some C++ name mangling in the examples.
+- Fix compiling with -Wall -Wextra.
+
+Bugs fixed in this release:
+ - https://bugzilla.gnome.org/show_bug.cgi?id=697314
+ - https://bugzilla.gnome.org/show_bug.cgi?id=696289
+ - https://bugzilla.gnome.org/show_bug.cgi?id=698192
+ - https://bugzilla.gnome.org/show_bug.cgi?id=698125
+
+All contributors to this release:
+  Jens Georg <mail@jensge.org>
+  Jussi Kukkonen <jussi.kukkonen@intel.com>
+  Sébastien Bianti <sebastien.bianti@linux.intel.com>
+
+Changes in dependencies:
+  vapigen >= 0.20 if gobject-introspection is >= 1.36
+
 0.20.2
 ======
 
