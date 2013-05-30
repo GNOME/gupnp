@@ -2191,7 +2191,7 @@ connect_names_to_signal_handlers (GUPnPService *service,
  * A convenience function that attempts to connect all possible
  * #GUPnPService::action-invoked and #GUPnPService::query-variable signals to
  * appropriate callbacks for the service @service. It uses service introspection
- * and GModule's introspective features. It is very simillar to
+ * and #GModule<!-- -->'s introspective features. It is very simillar to
  * gtk_builder_connect_signals() except that it attempts to guess the names of
  * the signal handlers on its own.
  *
@@ -2200,17 +2200,18 @@ connect_names_to_signal_handlers (GUPnPService *service,
  * off the action names and either prepend "on_" or append "_cb" to them. Same
  * goes for #GUPnPService::query-variable signals, except that "query_" should
  * be prepended to the variable name. For example, callback function for
- * "GetSystemUpdateID" action should be either named as
+ * <varname>GetSystemUpdateID</varname> action should be either named as
  * "get_system_update_id_cb" or "on_get_system_update_id" and callback function
  * for the query of "SystemUpdateID" state variable should be named
- * "query_system_update_id_cb" or "on_query_system_update_id".
+ * <function>query_system_update_id_cb</function> or
+ * <function>on_query_system_update_id</function>.
  *
- * Note that this function will not work correctly if GModule is not supported
- * on the platform or introspection is not available for service @service.
+ * <note>This function will not work correctly if #GModule is not supported
+ * on the platform or introspection is not available for @service.</note>
  *
- * WARNING: This function can not and therefore does not guarantee that the
+ * <warning>This function can not and therefore does not guarantee that the
  * resulting signal connections will be correct as it depends heavily on a
- * particular naming schemes described above.
+ * particular naming schemes described above.</warning>
  **/
 void
 gupnp_service_signals_autoconnect (GUPnPService *service,
