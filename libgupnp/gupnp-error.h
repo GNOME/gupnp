@@ -104,6 +104,7 @@ gupnp_xml_error_quark (void) G_GNUC_CONST;
  * @GUPNP_XML_ERROR_PARSE: Generic XML parsing error.
  * @GUPNP_XML_ERROR_NO_NODE: A required XML node was not found.
  * @GUPNP_XML_ERROR_EMPTY_NODE: An XML node is unexpectedly empty.
+ * @GUPNP_XML_ERROR_INVALID_ATTRIBUTE: An XML node has an unknown attribute.
  * @GUPNP_XML_ERROR_OTHER: Unknown/unhandled XML related errors.
  *
  * #GError codes used for errors in the #GUPNP_XML_ERROR domain, during

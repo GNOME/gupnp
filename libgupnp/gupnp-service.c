@@ -355,7 +355,7 @@ gupnp_service_action_get_locales (GUPnPServiceAction *action)
 /**
  * gupnp_service_action_get:
  * @action: A #GUPnPServiceAction
- * @Varargs: tuples of argument name, argument type, and argument value
+ * @...: tuples of argument name, argument type, and argument value
  * location, terminated with %NULL.
  *
  * Retrieves the specified action arguments.
@@ -543,7 +543,7 @@ gupnp_service_action_get_argument_count (GUPnPServiceAction *action)
 /**
  * gupnp_service_action_set:
  * @action: A #GUPnPServiceAction
- * @Varargs: tuples of return value name, return value type, and
+ * @...: tuples of return value name, return value type, and
  * actual return value, terminated with %NULL.
  *
  * Sets the specified action return values.
@@ -1737,7 +1737,7 @@ gupnp_service_class_init (GUPnPServiceClass *klass)
 /**
  * gupnp_service_notify:
  * @service: A #GUPnPService
- * @Varargs: Tuples of variable name, variable type, and variable value,
+ * @...: Tuples of variable name, variable type, and variable value,
  * terminated with %NULL.
  *
  * Notifies listening clients that the properties listed in @Varargs

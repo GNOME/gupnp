@@ -371,7 +371,7 @@ gupnp_service_proxy_class_init (GUPnPServiceProxyClass *klass)
  * @proxy: A #GUPnPServiceProxy
  * @action: An action
  * @error: The location where to store any error, or %NULL
- * @Varargs: tuples of in parameter name, in parameter type, and in parameter
+ * @...: tuples of in parameter name, in parameter type, and in parameter
  * value, followed by %NULL, and then tuples of out parameter name,
  * out parameter type, and out parameter value location, terminated with %NULL
  *
@@ -749,7 +749,7 @@ gupnp_service_proxy_send_action_list (GUPnPServiceProxy *proxy,
  * @callback: (scope async): The callback to call when sending the action has succeeded
  * or failed
  * @user_data: User data for @callback
- * @Varargs: tuples of in parameter name, in parameter type, and in parameter
+ * @...: tuples of in parameter name, in parameter type, and in parameter
  * value, terminated with %NULL
  *
  * Sends action @action with parameters @Varargs to the service exposed by
@@ -1132,7 +1132,7 @@ gupnp_service_proxy_begin_action_hash
  * @proxy: A #GUPnPServiceProxy
  * @action: A #GUPnPServiceProxyAction handle
  * @error: The location where to store any error, or %NULL
- * @Varargs: tuples of out parameter name, out parameter type, and out parameter
+ * @...: tuples of out parameter name, out parameter type, and out parameter
  * value location, terminated with %NULL. The out parameter values should be
  * freed after use
  *
@@ -1381,7 +1381,7 @@ gupnp_service_proxy_end_action_valist (GUPnPServiceProxy       *proxy,
  * in @out_values must be freed using #g_list_free and each element in it using
  * #g_value_unset and #g_slice_free.
  *
- * Return value : %TRUE on success.
+ * Returns: %TRUE on success.
  **/
 gboolean
 gupnp_service_proxy_end_action_list (GUPnPServiceProxy       *proxy,

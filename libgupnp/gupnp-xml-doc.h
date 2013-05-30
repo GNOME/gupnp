@@ -55,6 +55,12 @@ gupnp_xml_doc_get_type (void) G_GNUC_CONST;
 typedef struct _GUPnPXMLDoc GUPnPXMLDoc;
 typedef struct _GUPnPXMLDocClass GUPnPXMLDocClass;
 
+/**
+ * GUPnPXMLDoc:
+ * @doc: Pointer to the document.
+ *
+ * Reference-counting wrapper for libxml's #xmlDoc
+ */
 struct _GUPnPXMLDoc {
         GObject parent;
         /*< public >*/

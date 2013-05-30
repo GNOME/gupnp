@@ -52,6 +52,7 @@ IGNORE_HFILES=gena-protocol.h				\
 	      http-headers.h				\
 	      gupnp-marshal.h				\
 	      gupnp-context-private.h			\
+	      gupnp-linux-context-manager.h		\
 	      gupnp-network-manager.h			\
 	      gupnp-unix-context-manager.h		\
 	      gupnp-device-info-private.h		\

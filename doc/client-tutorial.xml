@@ -139,7 +139,7 @@ service_proxy_available_cb (GUPnPControlPoint *cp,
     <para>
       It is possible to get change notifications for the service state variables 
       that have attribute <literal>sendEvents="yes"</literal>. We'll demonstrate
-      this by modifying <function>service_proxy_available_cb()</function> and using 
+      this by modifying <function>service_proxy_available_cb</function> and using
       gupnp_service_proxy_add_notify() to setup a notification callback:
     </para>
     <programlisting>static void
