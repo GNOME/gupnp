@@ -929,6 +929,14 @@ control_server_handler (SoupServer                      *server,
                 return;
         }
 
+        /* DLNA 7.2.5.6: Always use HTTP 1.1 */
+        if (soup_message_get_http_version (msg) == SOUP_HTTP_1_0) {
+                soup_message_set_http_version (msg, SOUP_HTTP_1_1);
+                soup_message_headers_append (msg->response_headers,
+                                             "Connection",
+                                             "close");
+        }
+
         context = gupnp_service_info_get_context (GUPNP_SERVICE_INFO (service));
 
         /* Get action name */
