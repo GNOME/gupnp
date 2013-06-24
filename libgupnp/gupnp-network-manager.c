@@ -254,7 +254,8 @@ create_context_for_device (NMDevice *nm_device)
 static void
 ap_proxy_new_cb (GObject      *source_object,
                  GAsyncResult *res,
-                 gpointer      user_data) {
+                 gpointer      user_data)
+{
         NMDevice *nm_device;
         GError *error;
 
