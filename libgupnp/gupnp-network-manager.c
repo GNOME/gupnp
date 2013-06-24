@@ -97,6 +97,8 @@ typedef enum
 
 typedef struct
 {
+        gint ref_count;
+
         GUPnPNetworkManager *manager;
 
         GUPnPContext *context;
@@ -128,13 +130,25 @@ nm_device_new (GUPnPNetworkManager *manager,
 
         nm_device->manager = manager;
         nm_device->proxy = device_proxy;
+        g_atomic_int_set (&nm_device->ref_count, 1);
+
+        return nm_device;
+}
+
+static NMDevice *
+nm_device_ref (NMDevice *nm_device)
+{
+        g_atomic_int_inc (&nm_device->ref_count);
 
         return nm_device;
 }
 
 static void
-nm_device_free (NMDevice *nm_device)
+nm_device_unref (NMDevice *nm_device)
 {
+       if (!g_atomic_int_dec_and_test (&nm_device->ref_count))
+          return;
+
         g_object_unref (nm_device->proxy);
         if (nm_device->wifi_proxy != NULL)
                 g_object_unref (nm_device->wifi_proxy);
@@ -527,7 +541,7 @@ on_manager_signal (GDBusProxy *proxy,
                 nm_device = (NMDevice *) device_node->data;
 
                 priv->nm_devices = g_list_remove (priv->nm_devices, nm_device);
-                nm_device_free (nm_device);
+                nm_device_unref (nm_device);
                 g_free (device_path);
         }
 }
@@ -686,7 +700,8 @@ gupnp_network_manager_dispose (GObject *object)
         }
 
         if (priv->nm_devices != NULL) {
-                g_list_foreach (priv->nm_devices, (GFunc) nm_device_free, NULL);
+                g_list_foreach (priv->nm_devices, (GFunc) nm_device_unref,
+                    NULL);
                 g_list_free (priv->nm_devices);
                 priv->nm_devices = NULL;
         }
