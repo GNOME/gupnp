@@ -14,6 +14,13 @@
 #include <gmodule.h>
 
 static gboolean status;
+static gboolean quiet;
+
+static GOptionEntry entries[] =
+{
+  { "quiet", 'q', 0, G_OPTION_ARG_NONE, &quiet, "Turn off output", NULL },
+  { NULL }
+};
 
 G_BEGIN_DECLS
 G_MODULE_EXPORT void set_target_cb (GUPnPService *service,
@@ -55,7 +62,10 @@ set_target_cb (GUPnPService          *service,
                           "Status", G_TYPE_BOOLEAN, status,
                           NULL);
 
-    g_print ("The light is now %s.\n", status ? "on" : "off");
+    if (!quiet)
+    {
+      g_print ("The light is now %s.\n", status ? "on" : "off");
+    }
   }
 
   /* Return success to the client */
@@ -116,6 +126,7 @@ query_status_cb (G_GNUC_UNUSED GUPnPService *service,
 int
 main (G_GNUC_UNUSED int argc, G_GNUC_UNUSED char **argv)
 {
+  GOptionContext *optionContext;
   GMainLoop *main_loop;
   GError *error = NULL;
   GUPnPContext *context;
@@ -126,9 +137,20 @@ main (G_GNUC_UNUSED int argc, G_GNUC_UNUSED char **argv)
   g_type_init ();
 #endif
 
+  optionContext = g_option_context_new (NULL);
+  g_option_context_add_main_entries (optionContext, entries, NULL);
+  if (!g_option_context_parse (optionContext, &argc, &argv, &error))
+  {
+    g_print ("option parsing failed: %s\n", error->message);
+    exit (1);
+  }
+
   /* By default the light is off */
   status = FALSE;
-  g_print ("The light is now %s.\n", status ? "on" : "off");
+  if (!quiet)
+  {
+    g_print ("The light is now %s.\n", status ? "on" : "off");
+  }
 
   /* Create the UPnP context */
   context = gupnp_context_new (NULL, NULL, 0, &error);
