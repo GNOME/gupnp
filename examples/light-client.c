@@ -20,9 +20,21 @@ static enum {
   TOGGLE
 } mode;
 
+static gboolean quiet;
+static gint repeat_counter = 1;
+static gint repeat_delay;
+
+static GOptionEntry entries[] =
+{
+  { "quiet", 'q', 0, G_OPTION_ARG_NONE, &quiet, "Turn off output", NULL },
+  { "repeat-counter", 'c', 0, G_OPTION_ARG_INT, &repeat_counter, "Repeat counter", "value" },
+  { "repeat-delay", 'd', 0, G_OPTION_ARG_INT, &repeat_delay, "Delay in [ms] between each iteration", "value" },
+  { NULL }
+};
+
+
 static void
-service_proxy_available_cb (G_GNUC_UNUSED GUPnPControlPoint *cp,
-                            GUPnPServiceProxy               *proxy)
+send_cmd (GUPnPServiceProxy *proxy)
 {
   GError *error = NULL;
   gboolean target;
@@ -51,12 +63,16 @@ service_proxy_available_cb (G_GNUC_UNUSED GUPnPControlPoint *cp,
                                         NULL)) {
     goto error;
   } else {
-    g_print ("Set switch to %s.\n", target ? "on" : "off");
+    if (!quiet) {
+      g_print ("Set switch to %s.\n", target ? "on" : "off");
+    }
   }
   
  done:
   /* Only manipulate the first light switch that is found */
-  g_main_loop_quit (main_loop);
+  if (--repeat_counter <= 0) {
+    g_main_loop_quit (main_loop);
+  }
   return;
 
  error:
@@ -65,15 +81,41 @@ service_proxy_available_cb (G_GNUC_UNUSED GUPnPControlPoint *cp,
   goto done;
 }
 
-static void
-usage (void)
+static gboolean timeout_func (gpointer user_data)
 {
-    g_printerr ("$ light-client [on|off|toggle]\n");
+  GUPnPServiceProxy *proxy = (GUPnPServiceProxy *) user_data;
+
+  send_cmd (proxy);
+  return TRUE;
+}
+
+static void
+service_proxy_available_cb (G_GNUC_UNUSED GUPnPControlPoint *cp,
+                            GUPnPServiceProxy               *proxy)
+{
+  if (repeat_counter>0)
+  {
+    send_cmd (proxy);
+    g_timeout_add (repeat_delay, timeout_func, proxy);
+  } else {
+    g_main_loop_quit (main_loop);
+  }
+}
+
+static void
+usage (GOptionContext *optionContext)
+{
+  gchar *help_text;
+
+  help_text = g_option_context_get_help (optionContext, TRUE, NULL);
+  g_printerr ("%s", help_text);
+  g_free (help_text);
 }
 
 int
 main (int argc, char **argv)
 {
+  GOptionContext *optionContext;
   GError *error = NULL;
   GUPnPContext *context;
   GUPnPControlPoint *cp;
@@ -82,10 +124,17 @@ main (int argc, char **argv)
   g_type_init ();
 #endif
 
+  optionContext = g_option_context_new ("[on|off|toggle]");
+  g_option_context_add_main_entries (optionContext, entries, NULL);
+  if (!g_option_context_parse (optionContext, &argc, &argv, &error))
+  {
+    g_print ("option parsing failed: %s\n", error->message);
+    exit (1);
+  }
 
   /* Check and parse command line arguments */
   if (argc != 2) {
-    usage ();
+    usage (optionContext);
     return EXIT_FAILURE;
   }
   
@@ -96,7 +145,7 @@ main (int argc, char **argv)
   } else if (g_str_equal (argv[1], "toggle")) {
     mode = TOGGLE;
   } else {
-    usage ();
+    usage (optionContext);
     return EXIT_FAILURE;
   }
 
