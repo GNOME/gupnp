@@ -1117,6 +1117,7 @@ gupnp_device_info_get_device (GUPnPDeviceInfo *info,
         xmlNode *element;
 
         g_return_val_if_fail (GUPNP_IS_DEVICE_INFO (info), NULL);
+        g_return_val_if_fail (type != NULL, NULL);
 
         class = GUPNP_DEVICE_INFO_GET_CLASS (info);
 
@@ -1271,6 +1272,7 @@ gupnp_device_info_get_service (GUPnPDeviceInfo *info,
         xmlNode *element;
 
         g_return_val_if_fail (GUPNP_IS_DEVICE_INFO (info), NULL);
+        g_return_val_if_fail (type != NULL, NULL);
 
         class = GUPNP_DEVICE_INFO_GET_CLASS (info);
 
