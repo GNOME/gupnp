@@ -85,7 +85,7 @@ gupnp_device_info_set_property (GObject      *object,
 
         switch (property_id) {
         case PROP_RESOURCE_FACTORY:
-                info->priv->factory = 
+                info->priv->factory =
                         GUPNP_RESOURCE_FACTORY (g_value_dup_object (value));
                 break;
         case PROP_CONTEXT:
@@ -474,7 +474,7 @@ gupnp_device_info_get_device_type (GUPnPDeviceInfo *info)
  * @info: A #GUPnPDeviceInfo
  *
  * Get the friendly name of the device.
- * 
+ *
  * Return value: A string, or %NULL. g_free() after use.
  **/
 char *
@@ -577,7 +577,7 @@ gupnp_device_info_get_model_number (GUPnPDeviceInfo *info)
  * @info: A #GUPnPDeviceInfo
  *
  * Get a URL pointing to the device model's website.
- * 
+ *
  * Return value: A string, or %NULL. g_free() after use.
  **/
 char *
@@ -595,7 +595,7 @@ gupnp_device_info_get_model_url (GUPnPDeviceInfo *info)
  * @info: A #GUPnPDeviceInfo
  *
  * Get the serial number of the device.
- * 
+ *
  * Return value: A string, or %NULL. g_free() after use.
  **/
 char *
@@ -630,7 +630,7 @@ gupnp_device_info_get_upc (GUPnPDeviceInfo *info)
  *
  * Get a URL pointing to the device's presentation page, for web-based
  * administration.
- * 
+ *
  * Return value: A string, or %NULL. g_free() after use.
  **/
 char *
@@ -870,7 +870,7 @@ gupnp_device_info_get_icon_url (GUPnPDeviceInfo *info,
         return ret;
 }
 
-/* Returns TRUE if @query matches against @base. 
+/* Returns TRUE if @query matches against @base.
  * - If @query does not specify a version, it matches any version specified
  *   in @base.
  * - If @query specifies a version, it matches any version specified in @base
@@ -930,7 +930,7 @@ resource_type_match (const char *query,
  * gupnp_device_info_list_dlna_capabilities:
  * @info: A #GUPnPDeviceInfo
  *
- * Get a #GList of strings that represent the device capabilities as announced 
+ * Get a #GList of strings that represent the device capabilities as announced
  * in the device description file using the &lt;dlna:X_DLNACAP&gt; element.
  *
  * Returns: (transfer full) (element-type utf8): a #GList of newly allocated strings or

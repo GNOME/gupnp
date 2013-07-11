@@ -281,14 +281,14 @@ gupnp_service_proxy_dispose (GObject *object)
                 g_source_destroy (proxy->priv->notify_idle_src);
                 proxy->priv->notify_idle_src = NULL;
         }
-        
+
         while (proxy->priv->pending_notifies) {
                 emit_notify_data_free (proxy->priv->pending_notifies->data);
                 proxy->priv->pending_notifies =
                         g_list_delete_link (proxy->priv->pending_notifies,
                                             proxy->priv->pending_notifies);
         }
-        
+
         /* Call super */
         object_class = G_OBJECT_CLASS (gupnp_service_proxy_parent_class);
         object_class->dispose (object);
@@ -1925,7 +1925,7 @@ server_handler (G_GNUC_UNUSED SoupServer        *soup_server,
 
                 g_source_unref (proxy->priv->notify_idle_src);
         }
-        
+
         /* Everything went OK */
         soup_message_set_status (msg, SOUP_STATUS_OK);
 }
