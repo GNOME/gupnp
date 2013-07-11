@@ -588,8 +588,9 @@ gupnp_service_proxy_send_action_valist (GUPnPServiceProxy *proxy,
                                                         main_loop);
         if (!handle) {
                 g_main_loop_unref (main_loop);
+                result = FALSE;
 
-                return FALSE;
+                goto out;
         }
 
         /* Loop till we get a reply (or time out) */
@@ -608,6 +609,7 @@ gupnp_service_proxy_send_action_valist (GUPnPServiceProxy *proxy,
         } else {
                 g_propagate_error (error, local_error);
         }
+out:
         va_end (var_args_copy);
         g_list_free_full (in_names, g_free);
         g_list_free_full (in_values, value_free);
