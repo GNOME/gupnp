@@ -751,9 +751,10 @@ gupnp_device_info_get_icon_url (GUPnPDeviceInfo *info,
                         icon = icon_parse (info, element);
 
                         if (requested_mime_type) {
-                                mime_type_ok =
-                                        !strcmp (requested_mime_type,
-                                                 (char *) icon->mime_type);
+				if (icon->mime_type)
+					mime_type_ok = !strcmp (
+						requested_mime_type,
+						(char *) icon->mime_type);
                         } else
                                 mime_type_ok = TRUE;
 
