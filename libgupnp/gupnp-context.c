@@ -183,7 +183,7 @@ gupnp_context_initable_init (GInitable     *initable,
                  NULL);
 
         user_agent = g_strdup_printf ("%s GUPnP/" VERSION " DLNADOC/1.50",
-                                      g_get_application_name ()? : "");
+                                      g_get_prgname ()? : "");
         g_object_set (context->priv->session,
                       SOUP_SESSION_USER_AGENT,
                       user_agent,
