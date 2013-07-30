@@ -1,3 +1,30 @@
+0.20.4
+======
+
+Changes since 0.20.3:
+- Fix warnings in gtk-doc run.
+- Some minor improvements to the documentation.
+- Make the user-agent ASCII-only to fix issues with discovery when
+  g_get_application_name () returned a translated string.
+- Force HTTP version to be 1.1 in SOAP requests.
+- Fix potential crashes in XML parsing.
+- Fix potential memory leak in gupnp_service_proxy_send_action_valist.
+- Some codestyle fixes.
+- Add gupnp_device_info_list_dlna_device_class_identifier () to retrieve the
+  content of <dlna:X_DLNADOC> nodes.
+
+Bugs fixed in this release:
+ - https://bugzilla.gnome.org/show_bug.cgi?id=704953
+ - https://bugzilla.gnome.org/show_bug.cgi?id=702555
+ - https://bugzilla.gnome.org/show_bug.cgi?id=704094
+ - https://bugzilla.gnome.org/show_bug.cgi?id=700947
+
+All contributors to this release:
+  Ludovic Ferrandis <ludovic.ferrandis@intel.com>
+  Jens Georg <mail@jensge.org>
+  Sébastien Bianti <sebastien.bianti@linux.intel.com>
+  Bastien Nocera <hadess@hadess.net>
+
 0.20.3
 ======
 
