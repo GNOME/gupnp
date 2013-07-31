@@ -173,94 +173,94 @@ def getVariables(var_elements, prefix):
 def printClientSyncActionBinding(a):
     indent = (2 + len (a.c_prefixed_name)) * " "
 
-    print "static inline gboolean"
-    print "%s (GUPnPServiceProxy *proxy," % a.c_prefixed_name
+    print("static inline gboolean")
+    print("%s (GUPnPServiceProxy *proxy," % a.c_prefixed_name)
     
     for arg in a.in_args:
-        print "%sconst %sin_%s," % (indent, arg.related_var.ctype, arg.c_name)
+        print("%sconst %sin_%s," % (indent, arg.related_var.ctype, arg.c_name))
         
     for arg in a.out_args:
-        print "%s%s*out_%s," % (indent, arg.related_var.ctype, arg.c_name)
+        print("%s%s*out_%s," % (indent, arg.related_var.ctype, arg.c_name))
         
-    print "%sGError **error)" % indent
+    print("%sGError **error)" % indent)
     
-    print "{"
+    print("{")
 
-    print "  return gupnp_service_proxy_send_action"
-    print "    (proxy, \"%s\", error," % a.name
+    print("  return gupnp_service_proxy_send_action")
+    print("    (proxy, \"%s\", error," % a.name)
     
     for arg in a.in_args:
-        print "     \"%s\", %s, in_%s," % (arg.name, arg.related_var.gtype, arg.c_name)
-    print "     NULL,"
+        print("     \"%s\", %s, in_%s," % (arg.name, arg.related_var.gtype, arg.c_name))
+    print("     NULL,")
     
     for arg in a.out_args:
-        print "     \"%s\", %s, out_%s," % (arg.name, arg.related_var.gtype, arg.c_name)
-    print "     NULL);"
+        print("     \"%s\", %s, out_%s," % (arg.name, arg.related_var.gtype, arg.c_name))
+    print("     NULL);")
     
-    print "}\n"
+    print("}\n")
 
 
 def printClientAsyncActionBinding(a):
     # User-callback prototype
     indent = (24 + len (a.c_prefixed_name)) * " "
-    print "typedef void (*%s_reply) (GUPnPServiceProxy *proxy," % a.c_prefixed_name
+    print("typedef void (*%s_reply) (GUPnPServiceProxy *proxy," % a.c_prefixed_name)
     for arg in a.out_args:
-        print "%sconst %sout_%s," % (indent, arg.related_var.ctype, arg.c_name)
-    print "%sGError *error," % indent
-    print "%sgpointer userdata);" % indent
-    print
+        print("%sconst %sout_%s," % (indent, arg.related_var.ctype, arg.c_name))
+    print("%sGError *error," % indent)
+    print("%sgpointer userdata);" % indent)
+    print("")
 
     # Generated async callback handler, calls user-provided callback
     indent = (30 + len (a.c_prefixed_name)) * " "
-    print "static void _%s_async_callback (GUPnPServiceProxy *proxy," % a.c_prefixed_name
-    print "%sGUPnPServiceProxyAction *action," % indent
-    print "%sgpointer user_data)" % indent
-    print "{"
-    print "  GUPnPAsyncData *cbdata;"
-    print "  GError *error = NULL;"
+    print("static void _%s_async_callback (GUPnPServiceProxy *proxy," % a.c_prefixed_name)
+    print("%sGUPnPServiceProxyAction *action," % indent)
+    print("%sgpointer user_data)" % indent)
+    print("{")
+    print("  GUPnPAsyncData *cbdata;")
+    print("  GError *error = NULL;")
     for arg in a.out_args:
-        print "  %s%s;" % (arg.related_var.ctype, arg.c_name)
-    print
-    print "  cbdata = (GUPnPAsyncData *) user_data;"
-    print "  gupnp_service_proxy_end_action"
-    print "    (proxy, action, &error,"
+        print("  %s%s;" % (arg.related_var.ctype, arg.c_name))
+    print("")
+    print("  cbdata = (GUPnPAsyncData *) user_data;")
+    print("  gupnp_service_proxy_end_action")
+    print("    (proxy, action, &error,")
     for arg in a.out_args:
-        print "     \"%s\", %s, &%s," % (arg.name, arg.related_var.gtype, arg.c_name)
-    print "     NULL);"
-    print "  ((%s_reply)cbdata->cb)" % a.c_prefixed_name
-    print "    (proxy,"
+        print("     \"%s\", %s, &%s," % (arg.name, arg.related_var.gtype, arg.c_name))
+    print("     NULL);")
+    print("  ((%s_reply)cbdata->cb)" % a.c_prefixed_name)
+    print("    (proxy,")
     for arg in a.out_args:
-        print "     %s," % arg.c_name
-    print "     error, cbdata->userdata);"
-    print
-    print "  g_slice_free1 (sizeof (*cbdata), cbdata);"
-    print "}"
-    print
+        print("     %s," % arg.c_name)
+    print("     error, cbdata->userdata);")
+    print("")
+    print("  g_slice_free1 (sizeof (*cbdata), cbdata);")
+    print("}")
+    print("")
 
     # Entry point
     indent = (8 + len (a.c_prefixed_name)) * " "
-    print "static inline GUPnPServiceProxyAction *"
-    print "%s_async (GUPnPServiceProxy *proxy," % a.c_prefixed_name
+    print("static inline GUPnPServiceProxyAction *")
+    print("%s_async (GUPnPServiceProxy *proxy," % a.c_prefixed_name)
     for arg in a.in_args:
-        print "%sconst %sin_%s," % (indent, arg.related_var.ctype, arg.c_name)
-    print "%s%s_reply callback," % (indent, a.c_prefixed_name)
-    print "%sgpointer userdata)" % indent
-    print "{"
-    print "  GUPnPServiceProxyAction* action;"
-    print "  GUPnPAsyncData *cbdata;"
-    print
-    print "  cbdata = (GUPnPAsyncData *) g_slice_alloc (sizeof (*cbdata));"
-    print "  cbdata->cb = G_CALLBACK (callback);"
-    print "  cbdata->userdata = userdata;"
-    print "  action = gupnp_service_proxy_begin_action"
-    print "    (proxy, \"%s\"," % a.name
-    print "     _%s_async_callback, cbdata," % a.c_prefixed_name
+        print("%sconst %sin_%s," % (indent, arg.related_var.ctype, arg.c_name))
+    print("%s%s_reply callback," % (indent, a.c_prefixed_name))
+    print("%sgpointer userdata)" % indent)
+    print("{")
+    print("  GUPnPServiceProxyAction* action;")
+    print("  GUPnPAsyncData *cbdata;")
+    print("")
+    print("  cbdata = (GUPnPAsyncData *) g_slice_alloc (sizeof (*cbdata));")
+    print("  cbdata->cb = G_CALLBACK (callback);")
+    print("  cbdata->userdata = userdata;")
+    print("  action = gupnp_service_proxy_begin_action")
+    print("    (proxy, \"%s\"," % a.name)
+    print("     _%s_async_callback, cbdata," % a.c_prefixed_name)
     for arg in a.in_args:
-        print "     \"%s\", %s, in_%s," % (arg.name, arg.related_var.gtype, arg.c_name)
-    print "     NULL);"
-    print
-    print "  return action;"
-    print "}"
+        print("     \"%s\", %s, in_%s," % (arg.name, arg.related_var.gtype, arg.c_name))
+    print("     NULL);")
+    print("")
+    print("  return action;")
+    print("}")
 
 
 def printClientVariableNotifyBinding(v):
@@ -268,159 +268,159 @@ def printClientVariableNotifyBinding(v):
     
     # callback prototype
     indent = (22 + len (v.c_prefixed_name)) * " "
-    print "typedef void"
-    print "(*%s_changed_callback) (GUPnPServiceProxy *proxy," % v.c_prefixed_name
-    print "%s%s%s," % (indent, ctype, v.c_name)
-    print "%sgpointer userdata);" % indent
-    print
+    print("typedef void")
+    print("(*%s_changed_callback) (GUPnPServiceProxy *proxy," % v.c_prefixed_name)
+    print("%s%s%s," % (indent, ctype, v.c_name))
+    print("%sgpointer userdata);" % indent)
+    print("")
     
     # private callback
     indent = (20 + len (v.c_prefixed_name)) * " "
-    print "static void"
-    print "_%s_changed_callback (GUPnPServiceProxy *proxy," % v.c_prefixed_name
-    print "%sconst gchar *variable," % indent
-    print "%sGValue *value," % indent
-    print "%sgpointer userdata)" % indent
-    print "{"
-    print "  GUPnPAsyncData *cbdata;"
-    print "  %s%s;" % (ctype, v.c_name)
-    print
-    print "  cbdata = (GUPnPAsyncData *) userdata;"
-    print "  %s = %s (value);" % (v.c_name, v.get_function)
-    print "  ((%s_changed_callback)cbdata->cb)" % v.c_prefixed_name
-    print "    (proxy,"
-    print "     %s," % v.c_name
-    print "     cbdata->userdata);"
-    print
-    print "  g_slice_free1 (sizeof (*cbdata), cbdata);"
-    print "}"
-    print
+    print("static void")
+    print("_%s_changed_callback (GUPnPServiceProxy *proxy," % v.c_prefixed_name)
+    print("%sconst gchar *variable," % indent)
+    print("%sGValue *value," % indent)
+    print("%sgpointer userdata)" % indent)
+    print("{")
+    print("  GUPnPAsyncData *cbdata;")
+    print("  %s%s;" % (ctype, v.c_name))
+    print("")
+    print("  cbdata = (GUPnPAsyncData *) userdata;")
+    print("  %s = %s (value);" % (v.c_name, v.get_function))
+    print("  ((%s_changed_callback)cbdata->cb)" % v.c_prefixed_name)
+    print("    (proxy,")
+    print("     %s," % v.c_name)
+    print("     cbdata->userdata);")
+    print("")
+    print("  g_slice_free1 (sizeof (*cbdata), cbdata);")
+    print("}")
+    print("")
     
     # public notify_add function
     indent = (13 + len (v.c_prefixed_name)) * " "
-    print "static inline gboolean"
-    print "%s_add_notify (GUPnPServiceProxy *proxy," % v.c_prefixed_name
-    print "%s%s_changed_callback callback," % (indent, v.c_prefixed_name)
-    print "%sgpointer userdata)" % indent
-    print "{"
-    print "  GUPnPAsyncData *cbdata;"
-    print
-    print "  cbdata = (GUPnPAsyncData *) g_slice_alloc (sizeof (*cbdata));"
-    print "  cbdata->cb = G_CALLBACK (callback);"
-    print "  cbdata->userdata = userdata;"
-    print
-    print "  return gupnp_service_proxy_add_notify"
-    print "    (proxy,"
-    print "     \"%s\"," % v.name
-    print "     %s," % v.gtype
-    print "     _%s_changed_callback," % v.c_prefixed_name
-    print "     cbdata);"
-    print "}"
+    print("static inline gboolean")
+    print("%s_add_notify (GUPnPServiceProxy *proxy," % v.c_prefixed_name)
+    print("%s%s_changed_callback callback," % (indent, v.c_prefixed_name))
+    print("%sgpointer userdata)" % indent)
+    print("{")
+    print("  GUPnPAsyncData *cbdata;")
+    print("")
+    print("  cbdata = (GUPnPAsyncData *) g_slice_alloc (sizeof (*cbdata));")
+    print("  cbdata->cb = G_CALLBACK (callback);")
+    print("  cbdata->userdata = userdata;")
+    print("")
+    print("  return gupnp_service_proxy_add_notify")
+    print("    (proxy,")
+    print("     \"%s\"," % v.name)
+    print("     %s," % v.gtype)
+    print("     _%s_changed_callback," % v.c_prefixed_name)
+    print("     cbdata);")
+    print("}")
 
 
 def printServerVariableQueryBinding(v):
     # User callback proto
     indent = (28 + len (v.ctype)+ len (v.c_prefixed_name)) * " "
-    print "typedef %s(*%s_query_callback) (GUPnPService *service," % (v.ctype, v.c_prefixed_name)
-    print "%sgpointer userdata);" % indent
-    print 
+    print("typedef %s(*%s_query_callback) (GUPnPService *service," % (v.ctype, v.c_prefixed_name))
+    print("%sgpointer userdata);" % indent)
+    print("")
     
     indent = (12 + len (v.c_prefixed_name)) * " "
-    print "static void"
-    print "_%s_query_cb (GUPnPService *service," % v.c_prefixed_name
-    print "%sgchar *variable," % indent
-    print "%sGValue *value," % indent
-    print "%sgpointer userdata)" % indent
-    print "{"
-    print "  GUPnPAsyncData *cbdata;"
-    print "  %s%s;" % (v.ctype, v.c_name)
-    print 
+    print("static void")
+    print("_%s_query_cb (GUPnPService *service," % v.c_prefixed_name)
+    print("%sgchar *variable," % indent)
+    print("%sGValue *value," % indent)
+    print("%sgpointer userdata)" % indent)
+    print("{")
+    print("  GUPnPAsyncData *cbdata;")
+    print("  %s%s;" % (v.ctype, v.c_name))
+    print("")
     
     indent = (36 + len (v.c_name) + len (v.c_prefixed_name)) * " "
-    print "  cbdata = (GUPnPAsyncData *) userdata;"
-    print "  %s = ((%s_query_callback)cbdata->cb) (service," % (v.c_name, v.c_prefixed_name)
-    print "%scbdata->userdata);" % indent
-    print "  g_value_init (value, %s);" % v.gtype
-    print "  %s (value, %s);" % (v.set_function, v.c_name)
-    print "}"
-    print
+    print("  cbdata = (GUPnPAsyncData *) userdata;")
+    print("  %s = ((%s_query_callback)cbdata->cb) (service," % (v.c_name, v.c_prefixed_name))
+    print("%scbdata->userdata);" % indent)
+    print("  g_value_init (value, %s);" % v.gtype)
+    print("  %s (value, %s);" % (v.set_function, v.c_name))
+    print("}")
+    print("")
     
     indent = (16 + len (v.c_prefixed_name)) * " "
-    print "gulong"
-    print "%s_query_connect (GUPnPService *service," % v.c_prefixed_name
-    print "%s%s_query_callback callback," % (indent, v.c_prefixed_name)
-    print "%sgpointer userdata)" % indent
-    print "{"
-    print "  GUPnPAsyncData *cbdata;"
-    print
-    print "  cbdata = (GUPnPAsyncData *) g_slice_alloc (sizeof (*cbdata));"
-    print "  cbdata->cb = G_CALLBACK (callback);"
-    print "  cbdata->userdata = userdata;"
-    print
-    print "  return g_signal_connect_data (service,"
-    print "                                \"query-variable::%s\"," % v.name
-    print "                                G_CALLBACK (_%s_query_cb)," % v.c_prefixed_name
-    print "                                cbdata,"
-    print "                                _free_cb_data,"
-    print "                                (GConnectFlags) 0);"
-    print "}"
-    print
+    print("gulong")
+    print("%s_query_connect (GUPnPService *service," % v.c_prefixed_name)
+    print("%s%s_query_callback callback," % (indent, v.c_prefixed_name))
+    print("%sgpointer userdata)" % indent)
+    print("{")
+    print("  GUPnPAsyncData *cbdata;")
+    print("")
+    print("  cbdata = (GUPnPAsyncData *) g_slice_alloc (sizeof (*cbdata));")
+    print("  cbdata->cb = G_CALLBACK (callback);")
+    print("  cbdata->userdata = userdata;")
+    print("")
+    print("  return g_signal_connect_data (service,")
+    print("                                \"query-variable::%s\"," % v.name)
+    print("                                G_CALLBACK (_%s_query_cb)," % v.c_prefixed_name)
+    print("                                cbdata,")
+    print("                                _free_cb_data,")
+    print("                                (GConnectFlags) 0);")
+    print("}")
+    print("")
 
 
 def printServerActionBinding(a):
     # getter and setter func for GUPnPServiceAction
     indent = (13 + len (a.c_prefixed_name)) * " "
     if len (a.in_args) > 0:
-        print "static inline void"
-        print "%s_action_get (GUPnPServiceAction *action," % (a.c_prefixed_name)
+        print("static inline void")
+        print("%s_action_get (GUPnPServiceAction *action," % (a.c_prefixed_name))
         for arg in a.in_args[:-1]:
-            print "%s%s*in_%s," % (indent, arg.related_var.ctype, arg.c_name)
-        print "%s%s*in_%s)" % (indent, a.in_args[-1].related_var.ctype, a.in_args[-1].c_name)
-        print "{"
-        print "  gupnp_service_action_get (action,"
+            print("%s%s*in_%s," % (indent, arg.related_var.ctype, arg.c_name))
+        print("%s%s*in_%s)" % (indent, a.in_args[-1].related_var.ctype, a.in_args[-1].c_name))
+        print("{")
+        print("  gupnp_service_action_get (action,")
         for arg in a.in_args:
-            print "                            \"%s\", %s, in_%s," % (arg.name, arg.related_var.gtype, arg.c_name)
-        print "                            NULL);"
-        print "}"
-        print
+            print("                            \"%s\", %s, in_%s," % (arg.name, arg.related_var.gtype, arg.c_name))
+        print("                            NULL);")
+        print("}")
+        print("")
     if len (a.out_args) > 0:
-        print "static inline void"
-        print "%s_action_set (GUPnPServiceAction *action," % (a.c_prefixed_name)
+        print("static inline void")
+        print("%s_action_set (GUPnPServiceAction *action," % (a.c_prefixed_name))
         for arg in a.out_args[:-1]:
-            print "%sconst %sout_%s," % (indent, arg.related_var.ctype, arg.c_name)
-        print "%sconst %sout_%s)" % (indent, a.out_args[-1].related_var.ctype, a.out_args[-1].c_name)
-        print "{"
-        print "  gupnp_service_action_set (action,"
+            print("%sconst %sout_%s," % (indent, arg.related_var.ctype, arg.c_name))
+        print("%sconst %sout_%s)" % (indent, a.out_args[-1].related_var.ctype, a.out_args[-1].c_name))
+        print("{")
+        print("  gupnp_service_action_set (action,")
         for arg in a.out_args:
-            print "                            \"%s\", %s, out_%s," % (arg.name, arg.related_var.gtype, arg.c_name)
-        print "                            NULL);"
-        print "}"
-        print
+            print("                            \"%s\", %s, out_%s," % (arg.name, arg.related_var.gtype, arg.c_name))
+        print("                            NULL);")
+        print("}")
+        print("")
     
     indent = (17 + len (a.c_prefixed_name)) * " "
-    print "static inline gulong"
-    print "%s_action_connect (GUPnPService *service," % a.c_prefixed_name
-    print "%sGCallback callback," % indent 
-    print "%sgpointer userdata)" % indent
-    print "{"
-    print "  return g_signal_connect (service," 
-    print "                           \"action-invoked::%s\"," % a.name
-    print "                           callback,"
-    print "                           userdata);"
-    print "}"
-    print
+    print("static inline gulong")
+    print("%s_action_connect (GUPnPService *service," % a.c_prefixed_name)
+    print("%sGCallback callback," % indent)
+    print("%sgpointer userdata)" % indent)
+    print("{")
+    print("  return g_signal_connect (service,")
+    print("                           \"action-invoked::%s\"," % a.name)
+    print("                           callback,")
+    print("                           userdata);")
+    print("}")
+    print("")
 
 def PrintServerVariableNotifyBinding(v):
     indent = (18 + len (v.c_prefixed_name)) * " "
-    print "void"
-    print "%s_variable_notify (GUPnPService *service," % v.c_prefixed_name
-    print "%sconst %s%s)" % (indent ,v.ctype, v.c_name)
-    print "{"
-    print "  gupnp_service_notify (service,"
-    print "                        \"%s\", %s, %s," % (v.name, v.gtype, v.c_name)
-    print "                        NULL);"
-    print "}"
-    print
+    print("void")
+    print("%s_variable_notify (GUPnPService *service," % v.c_prefixed_name)
+    print("%sconst %s%s)" % (indent ,v.ctype, v.c_name))
+    print("{")
+    print("  gupnp_service_notify (service,")
+    print("                        \"%s\", %s, %s," % (v.name, v.gtype, v.c_name))
+    print("                        NULL);")
+    print("}")
+    print("")
 
 def parseSCPD(scpd, prefix):
     """
@@ -441,74 +441,74 @@ def parseSCPD(scpd, prefix):
 def printClientBindings(binding_name, actions, variables):
     define = "GUPNP_GENERATED_CLIENT_BINDING_%s" % binding_name
     
-    print "/* Generated by gupnp-binding-tool */"
-    print
-    print "#include <libgupnp/gupnp.h>"
-    print
-    print "#ifndef %s" % define
-    print "#define %s" % define
-    print
-    print "G_BEGIN_DECLS"
+    print("/* Generated by gupnp-binding-tool */")
+    print("")
+    print("#include <libgupnp/gupnp.h>")
+    print("")
+    print("#ifndef %s" % define)
+    print("#define %s" % define)
+    print("")
+    print("G_BEGIN_DECLS")
 
-    print "\n#ifndef __GUPNPASYNCDATA_TYPE__"
-    print "#define __GUPNPASYNCDATA_TYPE__"
-    print "typedef struct {GCallback cb; gpointer userdata; } GUPnPAsyncData;"
-    print "#endif"
+    print("\n#ifndef __GUPNPASYNCDATA_TYPE__")
+    print("#define __GUPNPASYNCDATA_TYPE__")
+    print("typedef struct {GCallback cb; gpointer userdata; } GUPnPAsyncData;")
+    print("#endif")
 
     for a in actions:
-        print "\n/* action %s */\n" % a.name
+        print("\n/* action %s */\n" % a.name)
         printClientSyncActionBinding(a)
         printClientAsyncActionBinding(a)
     for v in variables:
         if (not v.dummy) and v.notified:
-            print "\n/* state variable %s */\n" % v.name
+            print("\n/* state variable %s */\n" % v.name)
             printClientVariableNotifyBinding(v)
     
-    print
-    print "G_END_DECLS"
-    print
-    print "#endif /* %s */" % define
+    print("")
+    print("G_END_DECLS")
+    print("")
+    print("#endif /* %s */" % define)
 
 
 def printServerBindings(binding_name, actions, variables):
     define = "GUPNP_GENERATED_CLIENT_BINDING_%s" % binding_name
     
-    print "/* Generated by gupnp-binding-tool */"
-    print
-    print "#include <libgupnp/gupnp.h>"
-    print
-    print "#ifndef %s" % define
-    print "#define %s" % define
-    print
-    print "G_BEGIN_DECLS"
+    print("/* Generated by gupnp-binding-tool */")
+    print("")
+    print("#include <libgupnp/gupnp.h>")
+    print("")
+    print("#ifndef %s" % define)
+    print("#define %s" % define)
+    print("")
+    print("G_BEGIN_DECLS")
 
-    print "\n#ifndef __GUPNPASYNCDATA_TYPE__"
-    print "#define __GUPNPASYNCDATA_TYPE__"
-    print "typedef struct {GCallback cb; gpointer userdata; } GUPnPAsyncData;"
-    print "#endif"
+    print("\n#ifndef __GUPNPASYNCDATA_TYPE__")
+    print("#define __GUPNPASYNCDATA_TYPE__")
+    print("typedef struct {GCallback cb; gpointer userdata; } GUPnPAsyncData;")
+    print("#endif")
 
-    print "static void"
-    print "_free_cb_data (gpointer data, GClosure *closure)"
-    print "{"
-    print "  GUPnPAsyncData *cbdata = (GUPnPAsyncData *) data;"
-    print "  g_slice_free1 (sizeof (*cbdata), cbdata);"
-    print "}"
-    print
+    print("static void")
+    print("_free_cb_data (gpointer data, GClosure *closure)")
+    print("{")
+    print("  GUPnPAsyncData *cbdata = (GUPnPAsyncData *) data;")
+    print("  g_slice_free1 (sizeof (*cbdata), cbdata);")
+    print("}")
+    print("")
     
     for a in actions:
-        print "\n/* action %s */\n" % a.name
+        print("\n/* action %s */\n" % a.name)
         printServerActionBinding(a)
     for v in variables:
         if not v.dummy:
-            print "\n/* state variable %s */\n" % v.name
+            print("\n/* state variable %s */\n" % v.name)
             printServerVariableQueryBinding(v)
             if v.notified:
                 PrintServerVariableNotifyBinding(v)
     
-    print
-    print "G_END_DECLS"
-    print
-    print "#endif /* %s */" % define
+    print("")
+    print("G_END_DECLS")
+    print("")
+    print("#endif /* %s */" % define)
 
 
 def main ():
