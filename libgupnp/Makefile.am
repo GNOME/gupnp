@@ -58,6 +58,7 @@ libgupnpinc_HEADERS = gupnp-context.h			\
 		      gupnp-service-proxy.h		\
 		      gupnp-service-introspection.h	\
 		      gupnp-xml-doc.h	                \
+		      gupnp-white-list.h                \
 		      gupnp-types.h			\
 		      gupnp.h
 
@@ -76,6 +77,7 @@ introspection_sources = $(libgupnpinc_HEADERS) \
 			gupnp-service-proxy.c		\
 			gupnp-service-introspection.c	\
 			gupnp-xml-doc.c			\
+			gupnp-white-list.c		\
 			gupnp-types.c
 
 
