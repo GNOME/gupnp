@@ -26,6 +26,7 @@
 
 #include <glib.h>
 #include "gupnp.h"
+#include "gupnp-white-list.h"
 
 G_BEGIN_DECLS
 
@@ -105,6 +106,10 @@ gupnp_context_manager_manage_root_device
 
 guint
 gupnp_context_manager_get_port         (GUPnPContextManager *manager);
+
+GUPnPWhiteList *
+gupnp_context_manager_get_white_list   (GUPnPContextManager *manager);
+
 G_END_DECLS
 
 #endif /* __GUPNP_CONTEXT_MANAGER_H__ */

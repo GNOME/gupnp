@@ -5,7 +5,8 @@ AM_CFLAGS = $(LIBGUPNP_CFLAGS) $(GTHREAD_CFLAGS) -I$(top_srcdir)
 noinst_PROGRAMS = test-browsing      \
 		  test-proxy         \
 		  test-server        \
-		  test-introspection
+		  test-introspection \
+		  test-white-list
 
 test_browsing_SOURCES = test-browsing.c
 test_browsing_LDADD   = $(top_builddir)/libgupnp/libgupnp-1.0.la \
@@ -27,6 +28,11 @@ test_server_LDADD   = $(top_builddir)/libgupnp/libgupnp-1.0.la \
 		      $(GTHREAD_LIBS) \
 		      $(LIBGUPNP_LIBS)
 test_server_LDFLAGS = -export-dynamic
+
+test_white_list_SOURCES = test-white-list.c
+test_white_list_LDADD   = $(top_builddir)/libgupnp/libgupnp-1.0.la \
+			  $(GTHREAD_LIBS) \
+			  $(LIBGUPNP_LIBS)
 
 CLEANFILES = $(BUILT_SOURCES)
 DISTCLEANFILES = $(BUILT_SOURCES)
