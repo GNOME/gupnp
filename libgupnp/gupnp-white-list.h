@@ -75,11 +75,11 @@ GUPnPWhiteList *
 gupnp_white_list_new            (void);
 
 void
-gupnp_white_list_enable         (GUPnPWhiteList *white_list,
+gupnp_white_list_set_enabled    (GUPnPWhiteList *white_list,
                                  gboolean enable);
 
 gboolean
-gupnp_white_list_is_enabled     (GUPnPWhiteList *white_list);
+gupnp_white_list_get_enabled     (GUPnPWhiteList *white_list);
 
 gboolean
 gupnp_white_list_is_empty       (GUPnPWhiteList *white_list);
@@ -93,7 +93,7 @@ gupnp_white_list_remove_entry   (GUPnPWhiteList *white_list,
                                  gchar* entry);
 
 GList *
-gupnp_white_list_get_entry_list (GUPnPWhiteList *white_list);
+gupnp_white_list_get_entries    (GUPnPWhiteList *white_list);
 
 void
 gupnp_white_list_clear          (GUPnPWhiteList *white_list);

@@ -89,7 +89,7 @@ on_context_available (GUPnPContextManager    *manager,
         /* Try to catch the notification, only if the white list
          * is enabled, not empty and the context doesn't match */
         if (!gupnp_white_list_is_empty (white_list) &&
-            gupnp_white_list_is_enabled (white_list) &&
+            gupnp_white_list_get_enabled (white_list) &&
             !gupnp_white_list_check_context (white_list, context)) {
                 /* If the conext doesn't match, block the notification
                  * and disable the context */
@@ -236,7 +236,7 @@ on_white_list_change_cb (GUPnPWhiteList *white_list,
         gboolean enabled;
         gboolean is_empty;
 
-        enabled = gupnp_white_list_is_enabled (white_list);
+        enabled = gupnp_white_list_get_enabled (white_list);
         is_empty = gupnp_white_list_is_empty (white_list);
 
         if (enabled)
@@ -254,7 +254,7 @@ on_white_list_enabled_cb (GUPnPWhiteList *white_list,
         gboolean enabled;
         gboolean is_empty;
 
-        enabled = gupnp_white_list_is_enabled (white_list);
+        enabled = gupnp_white_list_get_enabled (white_list);
         is_empty = gupnp_white_list_is_empty (white_list);
 
         if (!is_empty)

@@ -161,6 +161,8 @@ gupnp_white_list_class_init (GUPnPWhiteListClass *klass)
          * GUPnPWhiteList:entries:
          *
          * Whether this white list is active or not.
+         * Type: GList
+         * Transfer: none
          **/
         g_object_class_install_property
                 (object_class,
@@ -189,14 +191,14 @@ gupnp_white_list_new (void)
 }
 
 /**
- * gupnp_white_list_enable:
+ * gupnp_white_list_set_enabled:
  * @white_list: A #GUPnPWhiteList
  * @enable:  %TRUE to enable @white_list, %FALSE otherwise
  *
  * Enable or disable the #GUPnPWhiteList to perform the network filtering.
 **/
 void
-gupnp_white_list_enable (GUPnPWhiteList *white_list, gboolean enable)
+gupnp_white_list_set_enabled (GUPnPWhiteList *white_list, gboolean enable)
 {
         g_return_if_fail (GUPNP_IS_WHITE_LIST (white_list));
 
@@ -205,7 +207,7 @@ gupnp_white_list_enable (GUPnPWhiteList *white_list, gboolean enable)
 }
 
 /**
- * gupnp_white_list_is_enabled:
+ * gupnp_white_list_get_enabled:
  * @white_list: A #GUPnPWhiteList
  *
  * Return the status of the #GUPnPWhiteList
@@ -213,7 +215,7 @@ gupnp_white_list_enable (GUPnPWhiteList *white_list, gboolean enable)
  * Return value: %TRUE if @white_list is enabled, %FALSE otherwise.
  **/
 gboolean
-gupnp_white_list_is_enabled (GUPnPWhiteList *white_list)
+gupnp_white_list_get_enabled (GUPnPWhiteList *white_list)
 {
         g_return_val_if_fail (GUPNP_IS_WHITE_LIST (white_list), FALSE);
 
@@ -309,7 +311,7 @@ gupnp_white_list_remove_entry (GUPnPWhiteList *white_list, gchar* entry)
 }
 
 /**
- * gupnp_white_list_get_entry_list:
+ * gupnp_white_list_get_entries:
  * @white_list: A #GUPnPWhiteList
  *
  * Get the #GList of entries that compose the white list. Do not free
@@ -319,7 +321,7 @@ gupnp_white_list_remove_entry (GUPnPWhiteList *white_list, gchar* entry)
  * Do not modify or free the list nor its elements.
  **/
 GList *
-gupnp_white_list_get_entry_list (GUPnPWhiteList *white_list)
+gupnp_white_list_get_entries (GUPnPWhiteList *white_list)
 {
         g_return_val_if_fail (GUPNP_IS_WHITE_LIST (white_list), NULL);
 

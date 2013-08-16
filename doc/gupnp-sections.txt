@@ -453,10 +453,10 @@ GUPnPWhiteList
 gupnp_white_list_add_entry
 gupnp_white_list_check_context
 gupnp_white_list_clear
-gupnp_white_list_enable
-gupnp_white_list_get_entry_list
+gupnp_white_list_set_enabled
+gupnp_white_list_get_entries
 gupnp_white_list_is_empty
-gupnp_white_list_is_enabled
+gupnp_white_list_get_enabled
 gupnp_white_list_new
 gupnp_white_list_remove_entry
 <SUBSECTION Standard>

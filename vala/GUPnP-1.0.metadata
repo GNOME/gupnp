@@ -28,6 +28,8 @@ ServiceProxy
     .end_action_list skip
     .send_action_hash skip
     .send_action_list skip
+WhiteList
+    .entries skip
 ControlError skip
 control_error_quark skip
 EventingError skip
