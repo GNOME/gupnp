@@ -32,5 +32,6 @@
 #include "gupnp-service-info.h"
 #include "gupnp-service-introspection.h"
 #include "gupnp-service-proxy.h"
+#include "gupnp-white-list.h"
 #include "gupnp-xml-doc.h"
 #include "gupnp-types.h"
