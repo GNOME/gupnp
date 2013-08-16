@@ -166,7 +166,7 @@ change_white_list(gpointer user_data)
                 break;
         case 1:
                 g_print ("\t Enable WL\n\n");
-                gupnp_white_list_enable(white_list, TRUE);
+                gupnp_white_list_set_enabled (white_list, TRUE);
                 break;
         case 2:
                 g_print ("\t Add Entry 127.0.0.1\n\n");
@@ -182,11 +182,11 @@ change_white_list(gpointer user_data)
                 break;
         case 5:
                 g_print ("\t Disable WL\n\n");
-                gupnp_white_list_enable(white_list, FALSE);
+                gupnp_white_list_set_enabled (white_list, FALSE);
                 break;
         case 6:
                 g_print ("\t Enable WL\n\n");
-                gupnp_white_list_enable(white_list, TRUE);
+                gupnp_white_list_set_enabled (white_list, TRUE);
                 break;
         case 7:
                 g_print ("\t Connect to wlan0\n\n");
