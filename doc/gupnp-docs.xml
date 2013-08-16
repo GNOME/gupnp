@@ -75,6 +75,7 @@
       
       <xi:include href="xml/gupnp-context.xml"/>
       <xi:include href="xml/gupnp-context-manager.xml"/>
+      <xi:include href="xml/gupnp-white-list.xml"/>
       <xi:include href="xml/gupnp-resource-factory.xml"/>
       <xi:include href="xml/gupnp-xml-doc.xml"/>
       <xi:include href="xml/gupnp-error.xml"/>

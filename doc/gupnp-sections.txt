@@ -206,6 +206,7 @@ gupnp_context_manager_rescan_control_points
 gupnp_context_manager_manage_control_point
 gupnp_context_manager_manage_root_device
 gupnp_context_manager_get_port
+gupnp_context_manager_get_white_list
 <SUBSECTION Standard>
 GUPnPContextManagerClass
 GUPNP_CONTEXT_MANAGER
@@ -443,4 +444,30 @@ gupnp_windows_context_manager_get_type
 
 <SECTION>
 <FILE>gupnp-network-manager</FILE>
+</SECTION>
+
+<SECTION>
+<FILE>gupnp-white-list</FILE>
+<TITLE>GUPnPWhiteList</TITLE>
+GUPnPWhiteList
+gupnp_white_list_add_entry
+gupnp_white_list_check_context
+gupnp_white_list_clear
+gupnp_white_list_enable
+gupnp_white_list_get_entry_list
+gupnp_white_list_is_empty
+gupnp_white_list_is_enabled
+gupnp_white_list_new
+gupnp_white_list_remove_entry
+<SUBSECTION Standard>
+gupnp_white_list_get_type
+GUPNP_IS_WHITE_LIST
+GUPNP_IS_WHITE_LIST_CLASS
+GUPNP_TYPE_WHITE_LIST
+GUPNP_WHITE_LIST
+GUPNP_WHITE_LIST_CLASS
+GUPNP_WHITE_LIST_GET_CLASS
+GUPnPWhiteListClass
+<SUBSECTION Private>
+GUPnPWhiteListPrivate
 </SECTION>
