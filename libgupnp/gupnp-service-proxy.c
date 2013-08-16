@@ -1674,6 +1674,37 @@ gupnp_service_proxy_add_notify_full (GUPnPServiceProxy              *proxy,
 }
 
 /**
+ * gupnp_service_proxy_add_raw_notify:
+ * @proxy: A #GUPnPServiceProxy
+ * @callback: (scope notified): The callback to call when the peer issues any
+ * variable notification.
+ * @user_data: User data for @callback
+ * @notify: (allow-none): A #GDestroyNotify for @user_data
+ *
+ * Get a notification for anything that happens on the peer. @value in
+ * @callback will be of type #G_TYPE_POINTER and contain the pre-parsed
+ * #xmlDoc. Do NOT free or modify this document.
+ *
+ * Return value: %TRUE on success.
+ *
+ * Since: 0.20.12
+ **/
+gboolean
+gupnp_service_proxy_add_raw_notify (GUPnPServiceProxy              *proxy,
+                                    GUPnPServiceProxyNotifyCallback callback,
+                                    gpointer                        user_data,
+                                    GDestroyNotify                  notify)
+{
+        return gupnp_service_proxy_add_notify_full (proxy,
+                                                    "*",
+                                                    G_TYPE_NONE,
+                                                    callback,
+                                                    user_data,
+                                                    notify);
+}
+
+
+/**
  * gupnp_service_proxy_remove_notify:
  * @proxy: A #GUPnPServiceProxy
  * @variable: The variable to add notification for
@@ -1749,6 +1780,31 @@ gupnp_service_proxy_remove_notify (GUPnPServiceProxy              *proxy,
         return found;
 }
 
+/**
+ * gupnp_service_proxy_remove_raw_notify:
+ * @proxy: A #GUPnPServiceProxy
+ * @callback: (scope call): The callback to call when @variable changes
+ * @user_data: User data for @callback
+ *
+ * Cancels the variable change notification for @callback and @user_data.
+ *
+ * This function must not be called directly or indirectly from a
+ * #GUPnPServiceProxyNotifyCallback associated with this service proxy, even
+ * if it is for another variable.
+ *
+ * Return value: %TRUE on success.
+ **/
+gboolean
+gupnp_service_proxy_remove_raw_notify (GUPnPServiceProxy              *proxy,
+                                       GUPnPServiceProxyNotifyCallback callback,
+                                       gpointer                        user_data)
+{
+        return gupnp_service_proxy_remove_notify (proxy,
+                                                  "*",
+                                                  callback,
+                                                  user_data);
+}
+
 static void
 emit_notification (GUPnPServiceProxy *proxy,
                    xmlNode           *var_node)
@@ -1792,6 +1848,7 @@ static void
 emit_notifications_for_doc (GUPnPServiceProxy *proxy,
                             xmlDoc            *doc)
 {
+        NotifyData *data = NULL;
         xmlNode *node;
 
         node = xmlDocGetRootElement (doc);
@@ -1811,6 +1868,26 @@ emit_notifications_for_doc (GUPnPServiceProxy *proxy,
                         if (strcmp ((char *) node->name, "property") == 0)
                                 emit_notification (proxy, var_node);
                 }
+        }
+
+        data = g_hash_table_lookup (proxy->priv->notify_hash, "*");
+        if (data != NULL) {
+                GValue value = {0, };
+                GList *it = NULL;
+
+                g_value_init (&value, G_TYPE_POINTER);
+                g_value_set_pointer (&value, doc);
+
+                for (it = data->callbacks; it != NULL; it = it->next) {
+                        CallbackData *callback_data = it->data;
+
+                        callback_data->callback (proxy,
+                                                 "*",
+                                                 &value,
+                                                 callback_data->user_data);
+                }
+
+                g_value_unset (&value);
         }
 }
 
