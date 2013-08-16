@@ -334,7 +334,7 @@ gupnp_device_info_class_init (GUPnPDeviceInfoClass *klass)
                                       "The XML document related to this "
                                       "device",
                                       GUPNP_TYPE_XML_DOC,
-                                      G_PARAM_WRITABLE |
+                                      G_PARAM_READWRITE |
                                       G_PARAM_CONSTRUCT_ONLY |
                                       G_PARAM_STATIC_NAME |
                                       G_PARAM_STATIC_NICK |
