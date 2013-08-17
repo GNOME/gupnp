@@ -1840,23 +1840,20 @@ notify_got_response (G_GNUC_UNUSED SoupSession *session,
         } else {
                 /* Other failure: Try next callback or signal failure. */
                 if (data->callbacks->next) {
-                        SoupURI *uri;
-                        SoupSession *service_session;
+                        SoupBuffer *buffer;
+                        guint8 *property_set;
+                        gsize length;
 
                         /* Call next callback */
                         data->callbacks = data->callbacks->next;
 
-                        uri = soup_uri_new (data->callbacks->data);
-                        soup_message_set_uri (msg, uri);
-                        soup_uri_free (uri);
-
-                        /* And re-queue */
-                        data->pending_messages = 
-                                g_list_prepend (data->pending_messages, msg);
-
-                        service_session = gupnp_service_get_session (data->service);
-
-                        soup_session_requeue_message (service_session, msg);
+                        /* Get property-set from old message */
+                        buffer = soup_message_body_flatten (msg->request_body);
+                        soup_buffer_get_data (buffer,
+                                              (const guint8 **) &property_set,
+                                              &length);
+                        notify_subscriber (NULL, data, property_set);
+                        soup_buffer_free (buffer);
                 } else {
                         /* Emit 'notify-failed' signal */
                         GError *error;
