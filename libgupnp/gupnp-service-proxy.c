@@ -970,6 +970,16 @@ write_in_parameter (const char *arg_name,
         xml_util_end_element (msg_str, arg_name);
 }
 
+static gboolean
+action_error_idle_cb (gpointer user_data)
+{
+        GUPnPServiceProxyAction *action = (GUPnPServiceProxyAction *) user_data;
+
+        action->callback (action->proxy, action, action->user_data);
+
+        return FALSE;
+}
+
 /**
  * gupnp_service_proxy_begin_action_valist:
  * @proxy: A #GUPnPServiceProxy
@@ -1057,7 +1067,7 @@ gupnp_service_proxy_begin_action_list
         ret = begin_action_msg (proxy, action, callback, user_data);
 
         if (ret->error) {
-                callback (proxy, ret, user_data);
+                g_idle_add (action_error_idle_cb, ret);
 
                 return ret;
         }
@@ -1115,7 +1125,7 @@ gupnp_service_proxy_begin_action_hash
         ret = begin_action_msg (proxy, action, callback, user_data);
 
         if (ret->error) {
-                callback (proxy, ret, user_data);
+                g_idle_add (action_error_idle_cb, ret);
 
                 return ret;
         }
