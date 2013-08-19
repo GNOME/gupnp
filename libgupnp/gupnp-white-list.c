@@ -29,6 +29,8 @@
  * list is empty, it behaves as disabled.
  */
 
+#include <string.h>
+
 #include "gupnp-white-list.h"
 
 G_DEFINE_TYPE (GUPnPWhiteList,
@@ -52,8 +54,6 @@ enum {
         SIGNAL_LAST
 };
 
-static guint signals[SIGNAL_LAST];
-
 static void
 gupnp_white_list_init (GUPnPWhiteList *list)
 {
@@ -71,7 +71,6 @@ gupnp_white_list_set_property (GObject      *object,
                                GParamSpec   *pspec)
 {
         GUPnPWhiteList *list;
-        gpointer cp;
 
         list = GUPNP_WHITE_LIST (object);
 
@@ -236,12 +235,6 @@ gupnp_white_list_is_empty (GUPnPWhiteList *white_list)
         g_return_val_if_fail (GUPNP_IS_WHITE_LIST (white_list), TRUE);
 
         return (white_list->priv->entries == NULL);
-}
-
-static gint
-gupnp_white_list_compare_entry(gconstpointer a, gconstpointer b)
-{
-        return strcmp (a, b);
 }
 
 /**

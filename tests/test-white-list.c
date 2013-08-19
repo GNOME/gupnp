@@ -147,6 +147,23 @@ context_unavailable_cb(GUPnPContextManager *context_manager,
         g_print ("\tActive   :     %s\n", gssdp_client_get_active (client)? "TRUE" : "FALSE");
 }
 
+static void
+print_wl_entry(gpointer data, gpointer user_data)
+{
+        g_print ("\t\t\tEntry: %s\n", (char *)data);
+}
+
+static void
+print_white_list_entries(GUPnPWhiteList *wl)
+{
+        GList *list;
+
+        g_print ("\t\tWhite List Entries:\n");
+        list = gupnp_white_list_get_entries(wl);
+        g_list_foreach (list, print_wl_entry, NULL);
+        g_print ("\n");
+}
+
 static gboolean
 change_white_list(gpointer user_data)
 {
@@ -163,6 +180,7 @@ change_white_list(gpointer user_data)
         case 0:
                 g_print ("\t Add Entry eth0\n\n");
                 gupnp_white_list_add_entry(white_list, "eth0");
+                print_white_list_entries (white_list);
                 break;
         case 1:
                 g_print ("\t Enable WL\n\n");
@@ -171,32 +189,46 @@ change_white_list(gpointer user_data)
         case 2:
                 g_print ("\t Add Entry 127.0.0.1\n\n");
                 gupnp_white_list_add_entry(white_list, "127.0.0.1");
+                print_white_list_entries (white_list);
                 break;
         case 3:
-                g_print ("\t Clear all entries\n\n");
-                gupnp_white_list_clear(white_list);
+                g_print ("\t Add Entry eth5\n\n");
+                gupnp_white_list_add_entry(white_list, "eth5");
+                print_white_list_entries (white_list);
                 break;
         case 4:
-                g_print ("\t Add Entry wlan2\n\n");
-                gupnp_white_list_add_entry(white_list, "wlan2");
+                g_print ("\t Remove Entry eth5\n\n");
+                gupnp_white_list_remove_entry(white_list, "eth5");
+                print_white_list_entries (white_list);
                 break;
         case 5:
+                g_print ("\t Clear all entries\n\n");
+                gupnp_white_list_clear(white_list);
+                print_white_list_entries (white_list);
+                break;
+        case 6:
+                g_print ("\t Add Entry wlan2\n\n");
+                gupnp_white_list_add_entry(white_list, "wlan2");
+                print_white_list_entries(white_list);
+                break;
+        case 7:
                 g_print ("\t Disable WL\n\n");
                 gupnp_white_list_set_enabled (white_list, FALSE);
                 break;
-        case 6:
+        case 8:
                 g_print ("\t Enable WL\n\n");
                 gupnp_white_list_set_enabled (white_list, TRUE);
                 break;
-        case 7:
+        case 9:
                 g_print ("\t Connect to wlan0\n\n");
                 g_timeout_add_seconds (35, change_white_list, context_manager);
                 break;
-        case 8:
+        case 10:
                 g_print ("\t Add Entry wlan0\n\n");
                 gupnp_white_list_add_entry(white_list, "wlan0");
+                print_white_list_entries (white_list);
                 break;
-        //~ case 8:
+        //~ case 11:
                 //~ g_print ("\t Enable WL\n");
                 //~ gupnp_white_list_enable(white_list, FALSE);
                 //~ break;
@@ -206,13 +238,12 @@ change_white_list(gpointer user_data)
 
         tomato++;
 
-        return (tomato < 9) && (tomato != 8);
+        return (tomato < 11) && (tomato != 10);
 }
 
 int
 main (G_GNUC_UNUSED int argc, G_GNUC_UNUSED char **argv)
 {
-        GError *error;
         GUPnPContextManager *cm;
         guint id;
 #ifndef G_OS_WIN32
@@ -223,8 +254,6 @@ main (G_GNUC_UNUSED int argc, G_GNUC_UNUSED char **argv)
         g_type_init ();
 #endif
         setlocale (LC_ALL, "");
-
-        error = NULL;
 
         cm = gupnp_context_manager_create(0);
 

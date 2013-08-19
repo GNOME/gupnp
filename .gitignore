@@ -44,6 +44,7 @@ Makefile.in
 /tests/test-introspection
 /tests/test-proxy
 /tests/test-server
+/tests/test-white-list
 
 /vala/gupnp-1.0.stamp
 /vala/gupnp-1.0.vapi
