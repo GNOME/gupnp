@@ -135,19 +135,15 @@
 /* Create the GUPnP context with default host and port */
 context = gupnp_context_new (NULL, NULL, 0, NULL);</programlisting>
     <para>
-      UPnP uses HTTP to provide the device and service description files, so
-      next we tell GUPnP to publish them.  This is done with
-      gupnp_context_host_path() which takes a local filename to send when a
-      certain server path is requested.
-    </para>
-<programlisting>gupnp_context_host_path (context, "BinaryLight1.xml", "/BinaryLight1.xml");
-gupnp_context_host_path (context, "SwitchPower1.xml", "/SwitchPower1.xml");</programlisting>
-    <para>
-      Next the root device can be created. 
+      Next the root device can be created. The name of the device description
+      file can be passed as an absolute file path or a relative path to the
+      second parameter of gupnp_root_device_new(). The service description
+      files referenced in the device description are expected to be at the path
+      given there as well.
     </para>
     <programlisting>GUPnPRootDevice *dev;
 /* Create the root device object */
-dev = gupnp_root_device_new (context, "/BinaryLight1.xml");
+dev = gupnp_root_device_new (context, "BinaryLight1.xml", ".");
 /* Activate the root device, so that it announces itself */
 gupnp_root_device_set_available (dev, TRUE);</programlisting>
     <para>
