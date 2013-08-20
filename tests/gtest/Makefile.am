@@ -1,4 +1,3 @@
-if HAVE_GTEST
 TESTS_ENVIRONMENT = G_SLICE=debug-blocks \
 		    LD_LIBRARY_PATH=$(top_builddir)/libgupnp/.libs:$(LD_LIBRARY_PATH)
 
@@ -8,7 +7,6 @@ check_PROGRAMS = test-context test-bugs
 
 test_context_SOURCES = test-context.c
 test_bugs_SOURCES = test-bugs.c
-endif
 
 LDADD = \
 	$(top_builddir)/libgupnp/libgupnp-1.0.la \

@@ -28,9 +28,6 @@ LT_PREREQ([2.2])
 LT_INIT
 
 
-PKG_CHECK_MODULES(GTest, glib-2.0 >= 2.16, [gtest=yes], [gtest=no])
-AM_CONDITIONAL(HAVE_GTEST, [test x$gtest = xyes])
-
 AC_MSG_CHECKING([operating system])
 os_win32=no
 case "$target_os" in
