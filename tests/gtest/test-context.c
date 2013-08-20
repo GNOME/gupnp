@@ -200,21 +200,6 @@ test_gupnp_context_http_ranged_requests (void)
 
         g_object_unref (message);
 
-        /* Try with inverted arguments */
-        message = soup_message_new ("GET", uri);
-        g_object_ref (message);
-
-        soup_message_headers_set_range (message->request_headers, 499, 0);
-        soup_session_queue_message (session,
-                                    message,
-                                    on_message_finished,
-                                    loop);
-
-        g_main_loop_run (loop);
-        g_assert_cmpint (message->status_code, ==, SOUP_STATUS_REQUESTED_RANGE_NOT_SATISFIABLE);
-
-        g_object_unref (message);
-
         g_free (uri);
         g_object_unref (context);
         g_main_loop_unref (loop);
