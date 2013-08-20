@@ -114,7 +114,7 @@ create_contexts (gpointer data)
         while (ifaces) {
                 create_and_signal_context ((char *) ifaces->data, manager);
                 g_free (ifaces->data);
-                ifaces = g_list_remove_link (ifaces, ifaces);
+                ifaces = g_list_delete_link (ifaces, ifaces);
         }
 
         return FALSE;
