@@ -1,3 +1,32 @@
+0.20.5
+======
+
+Changes since 0.20.5:
+ - Add some missing G_{BEGIN,END}_DECLS guards.
+ - Fix uninitialized variable use introduced in previous version.
+ - Add simple network device whitelisting infrastructure.
+ - Port gupnp-binding-tool so it's usable with python3.
+ - Minor code fixes.
+ - Fix crashes in NetworkManager context manager during some async calls.
+ - Fix a small memory leak in the unix and windows CM.
+ - Always enable GTest tests.
+ - Upgrade gtk-doc stuff.
+ - Fix the service example in documentation.
+ - Remove the test for inverted arguments in the GUPnPContext tests.
+
+Bugs fixed in this release:
+ - https://bugzilla.gnome.org/show_bug.cgi?id=694454
+ - https://bugzilla.gnome.org/show_bug.cgi?id=704094
+ - https://bugzilla.gnome.org/show_bug.cgi?id=704383
+ - https://bugzilla.gnome.org/show_bug.cgi?id=705712
+ - https://bugzilla.gnome.org/show_bug.cgi?id=706326
+
+All contributors to this release:
+ - Jens Georg <mail@jensge.org>
+ - Ludovic Ferrandis <ludovic.ferrandis@intel.com>
+ - Olivier Crête <olivier.crete@collabora.com>
+ - Bohuslav Kabrda <bkabrda@redhat.com>
+
 0.20.4
 ======
 
