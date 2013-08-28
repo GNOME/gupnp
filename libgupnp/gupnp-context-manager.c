@@ -193,9 +193,6 @@ gupnp_context_manager_filter_context (GUPnPWhiteList *white_list,
                 browser = GSSDP_RESOURCE_BROWSER (obj->data);
                 gssdp_resource_browser_set_active (browser, match);
 
-                if (match)
-                        (void) gssdp_resource_browser_rescan (browser);
-
                 obj = obj->next;
         }
 
