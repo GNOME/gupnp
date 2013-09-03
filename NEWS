@@ -1,7 +1,20 @@
-0.20.5
+0.20.6
 ======
 
 Changes since 0.20.5:
+ - Don't do excessive network rescans.
+
+Bugs fixed in this release:
+ - https://bugzilla.gnome.org/show_bug.cgi?id=706996
+
+All contributors to this release:
+ - Ludovic Ferrandis <ludovic.ferrandis@intel.com>
+ - Jens Georg <mail@jensge.org>
+
+0.20.5
+======
+
+Changes since 0.20.4:
  - Add some missing G_{BEGIN,END}_DECLS guards.
  - Fix uninitialized variable use introduced in previous version.
  - Add simple network device whitelisting infrastructure.
