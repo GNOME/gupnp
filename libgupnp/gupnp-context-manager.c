@@ -47,6 +47,14 @@
 
 #include "gupnp-unix-context-manager.h"
 
+#ifdef G_OS_WIN32
+#include "gupnp-windows-context-manager.h"
+#elif defined(USE_NETWORK_MANAGER)
+#include "gupnp-network-manager.h"
+#elif defined(USE_CONNMAN)
+#include "gupnp-connman-manager.h"
+#endif
+
 G_DEFINE_ABSTRACT_TYPE (GUPnPContextManager,
                         gupnp_context_manager,
                         G_TYPE_OBJECT);
@@ -526,19 +534,16 @@ gupnp_context_manager_create (guint port)
 #endif
         GUPnPContextManager *impl;
         GType impl_type = G_TYPE_INVALID;
-#ifdef G_OS_WIN32
-#include "gupnp-windows-context-manager.h"
 
+#ifdef G_OS_WIN32
         impl_type = GUPNP_TYPE_WINDOWS_CONTEXT_MANAGER;
 #else
-#ifdef USE_NETWORK_MANAGER
-#include "gupnp-network-manager.h"
+#if defined(USE_NETWORK_MANAGER)
         system_bus = g_bus_get_sync (G_BUS_TYPE_SYSTEM, NULL, NULL);
 
         if (gupnp_network_manager_is_available ())
                 impl_type = GUPNP_TYPE_NETWORK_MANAGER;
-#elif USE_CONNMAN
-#include "gupnp-connman-manager.h"
+#elif defined(USE_CONNMAN)
         system_bus = g_bus_get_sync (G_BUS_TYPE_SYSTEM, NULL, NULL);
 
        if (gupnp_connman_manager_is_available ())
