@@ -952,9 +952,18 @@ gupnp_device_info_list_dlna_device_class_identifier (GUPnPDeviceInfo *info)
         for (element = element->children; element; element = element->next) {
                 /* No early exit since the node explicitly may appear multiple
                  * times: 7.2.10.3 */
-                if (!strcmp ("X_DLNADOC", (char *) element->name))
+                if (!strcmp ("X_DLNADOC", (char *) element->name)) {
+                        xmlChar *content = NULL;
+
+                        content = xmlNodeGetContent (element);
+
+                        if (content == NULL)
+                                continue;
+
                         list = g_list_prepend (list,
-                                               xmlNodeGetContent(element));
+                                               g_strdup ((char *) content));
+                        xmlFree (content);
+                }
         }
 
         /* Return in order of appearance in document */
