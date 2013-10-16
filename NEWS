@@ -1,3 +1,25 @@
+0.20.7
+======
+
+Changes since 0.20.6:
+- Fix GCC warnings about local includes.
+- Do not hand out libxml2-allocated strings.
+- Fix a crash when a notification host was not available.
+- Always call action call-back asynchronously, even when there was an error.
+- Add performance measurement options to light-server/-client.
+
+Bugs fixed in this release:
+ - https://bugzilla.gnome.org/show_bug.cgi?id=669729
+ - https://bugzilla.gnome.org/show_bug.cgi?id=703263
+ - https://bugzilla.gnome.org/show_bug.cgi?id=708162
+ - https://bugzilla.gnome.org/show_bug.cgi?id=708575
+ - https://bugzilla.gnome.org/show_bug.cgi?id=708751
+
+All contributors to this release:
+ - Jens Georg <mail@jensge.org>
+ - Andrzej Bieniek <andyhelp@gmail.com>
+ - Emanuele Aina <emanuele.aina@collabora.com>
+
 0.20.6
 ======
 
