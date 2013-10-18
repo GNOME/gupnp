@@ -38,6 +38,8 @@
 #include <errno.h>
 #include <string.h>
 
+#include <gio/gio.h>
+
 #include "gupnp-linux-context-manager.h"
 #include "gupnp-context.h"
 
