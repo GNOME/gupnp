@@ -22,6 +22,9 @@
 #ifndef __GUPNP_LINUX_CONTEXT_MANAGER_H__
 #define __GUPNP_LINUX_CONTEXT_MANAGER_H__
 
+#include <glib.h>
+#include <glib-object.h>
+
 #include "gupnp-context-manager.h"
 
 G_BEGIN_DECLS
