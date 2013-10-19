@@ -631,7 +631,13 @@ out:
  * See gupnp_service_proxy_send_action(); this version takes a pair of
  * #GHashTable<!-- -->s for runtime determined parameter lists.
  *
+ * Do not use this function in newly written code; it cannot guarantee the
+ * order of arguments and thus breaks interaction with many devices.
+ *
  * Return value: %TRUE if sending the action was succesful.
+ *
+ * Deprecated: 0.20.9: Use gupnp_service_proxy_send_action() or
+ * gupnp_service_proxy_send_action_list()
  **/
 gboolean
 gupnp_service_proxy_send_action_hash (GUPnPServiceProxy *proxy,
@@ -1103,9 +1109,16 @@ gupnp_service_proxy_begin_action_list
  * See gupnp_service_proxy_begin_action(); this version takes a #GHashTable
  * for runtime generated parameter lists.
  *
+ * Do not use this function in newly written code; it cannot guarantee the
+ * order of arguments and thus breaks interaction with many devices.
+ *
  * Return value: (transfer none): A #GUPnPServiceProxyAction handle. This will
  * be freed when calling gupnp_service_proxy_cancel_action() or
  * gupnp_service_proxy_end_action_hash().
+ *
+ * Deprecated: 0.20.9: Use gupnp_service_proxy_send_action() or
+ * gupnp_service_proxy_send_action_list()
+ *
  **/
 GUPnPServiceProxyAction *
 gupnp_service_proxy_begin_action_hash

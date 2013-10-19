@@ -136,7 +136,7 @@ gupnp_service_proxy_send_action_hash
                                     const char                     *action,
                                     GError                        **error,
                                     GHashTable                     *in_hash,
-                                    GHashTable                     *out_hash);
+                                    GHashTable                     *out_hash) G_GNUC_DEPRECATED;
 
 
 gboolean
@@ -180,7 +180,7 @@ gupnp_service_proxy_begin_action_hash
                                     const char                     *action,
                                     GUPnPServiceProxyActionCallback callback,
                                     gpointer                        user_data,
-                                    GHashTable                     *hash);
+                                    GHashTable                     *hash) G_GNUC_DEPRECATED;
 
 gboolean
 gupnp_service_proxy_end_action     (GUPnPServiceProxy              *proxy,
