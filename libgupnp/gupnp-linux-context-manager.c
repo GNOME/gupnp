@@ -23,6 +23,19 @@
  * SECTION:gupnp-linux-context-manager
  * @short_description: Linux-specific implementation of #GUPnPContextManager
  *
+ * This is a Linux-specific context manager which uses <ulink
+ * url="http://www.linuxfoundation.org/collaborate/workgroups/networking/netlink">Netlink</ulink>
+ * to detect the changes in network interface configurations, such as
+ * added or removed interfaces, network addresses, ...
+ *
+ * The context manager works in two phase.
+ *
+ * Phase one is the "bootstrapping" phase where we query all currently
+ * configured interfaces and addresses.
+ *
+ * Phase two is the "listening" phase where we just listen to the netlink
+ * messages that are happening and create or destroy #GUPnPContext<!-- -->s
+ * accordingly.
  */
 
 #include <config.h>
@@ -49,12 +62,23 @@ G_DEFINE_TYPE (GUPnPLinuxContextManager,
                GUPNP_TYPE_CONTEXT_MANAGER);
 
 struct _GUPnPLinuxContextManagerPrivate {
+        /* Socket used for IOCTL calls */
         int fd;
+
+        /* Netlink sequence number; nl_seq > 1 means bootstrapping done */
         int nl_seq;
+
+        /* Socket used to do netlink communication */
         GSocket *netlink_socket;
+
+        /* Socket source used for normal netlink communication */
         GSource *netlink_socket_source;
+
+        /* Idle source used during bootstrap */
         GSource *bootstrap_source;
 
+        /* A hash table mapping system interface indices to a NetworkInterface
+         * structure */
         GHashTable *interfaces;
 };
 
@@ -468,6 +492,8 @@ send_netlink_request (GUPnPLinuxContextManager *self,
                            strerror (errno));
 }
 
+/* Query all available interfaces and immediately process all answers. We need
+ * to do this to be able to send RTM_GETADDR in the next step */
 static void
 query_all_network_interfaces (GUPnPLinuxContextManager *self)
 {
@@ -481,6 +507,8 @@ query_all_network_interfaces (GUPnPLinuxContextManager *self)
         g_error_free (error);
 }
 
+/* Start query of all currenly available network addresses. The answer will be
+ * processed by the normal netlink socket source call-back. */
 static void
 query_all_addresses (GUPnPLinuxContextManager *self)
 {
@@ -494,6 +522,7 @@ query_all_addresses (GUPnPLinuxContextManager *self)
         (((ifi)->ifi_flags & (IFF_MULTICAST | IFF_LOOPBACK)) && \
          !((ifi)->ifi_flags & IFF_POINTOPOINT))
 
+/* Handle status changes (up, down, new address, ...) on network interfaces */
 static void
 handle_device_status_change (GUPnPLinuxContextManager *self,
                              struct ifinfomsg         *ifi)
@@ -538,6 +567,8 @@ remove_device (GUPnPLinuxContextManager *self,
 #define NLMSG_IS_VALID(msg,len) \
         (NLMSG_OK(msg,len) && (msg->nlmsg_type != NLMSG_DONE))
 
+/* Process the raw netlink message and dispatch to helper functions
+ * accordingly */
 static void
 receive_netlink_message (GUPnPLinuxContextManager *self, GError **error)
 {
@@ -690,6 +721,8 @@ create_netlink_socket (GUPnPLinuxContextManager *self, GError **error)
         return TRUE;
 }
 
+/* public helper function to determine runtime-fallback depending on netlink
+ * availability. */
 gboolean
 gupnp_linux_context_manager_is_available (void)
 {
@@ -704,6 +737,8 @@ gupnp_linux_context_manager_is_available (void)
 
         return TRUE;
 }
+
+/* GObject virtual functions */
 
 static void
 gupnp_linux_context_manager_init (GUPnPLinuxContextManager *self)
@@ -722,6 +757,7 @@ gupnp_linux_context_manager_init (GUPnPLinuxContextManager *self)
                                        (GDestroyNotify) network_device_free);
 }
 
+/* Constructor, kicks off bootstrapping */
 static void
 gupnp_linux_context_manager_constructed (GObject *object)
 {
