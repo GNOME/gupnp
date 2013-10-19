@@ -147,8 +147,7 @@ network_device_update_essid (NetworkInterface *device)
         else
                 old_essid = NULL;
 #endif
-        if (old_essid)
-                g_free (old_essid);
+        g_free (old_essid);
 }
 
 static void
@@ -203,7 +202,7 @@ context_signal_up (G_GNUC_UNUSED gpointer key,
                    gpointer               value,
                    gpointer               user_data)
 {
-    g_signal_emit_by_name (user_data, "context-available", value);
+        g_signal_emit_by_name (user_data, "context-available", value);
 }
 
 static void
@@ -211,7 +210,7 @@ context_signal_down (G_GNUC_UNUSED gpointer key,
                      gpointer               value,
                      gpointer               user_data)
 {
-    g_signal_emit_by_name (user_data, "context-unavailable", value);
+        g_signal_emit_by_name (user_data, "context-unavailable", value);
 }
 
 static void
@@ -247,10 +246,8 @@ network_device_down (NetworkInterface *device)
 static void
 network_device_free (NetworkInterface *device)
 {
-        if (device->name != NULL)
-                g_free (device->name);
-        if (device->essid != NULL)
-                g_free (device->essid);
+        g_free (device->name);
+        g_free (device->essid);
 
         if (device->contexts != NULL) {
                 GHashTableIter iter;
@@ -261,10 +258,10 @@ network_device_free (NetworkInterface *device)
                 while (g_hash_table_iter_next (&iter,
                                                (gpointer *) &key,
                                                (gpointer *) &value)) {
-                    g_signal_emit_by_name (device->manager,
-                                           "context-unavailable",
-                                           value);
-                    g_hash_table_iter_remove (&iter);
+                        g_signal_emit_by_name (device->manager,
+                                               "context-unavailable",
+                                               value);
+                        g_hash_table_iter_remove (&iter);
                 }
         }
 
@@ -304,18 +301,19 @@ on_netlink_message_available (G_GNUC_UNUSED GSocket     *socket,
 static void
 extract_info (struct nlmsghdr *header, char **label)
 {
-    int rt_attr_len;
-    struct rtattr *rt_attr;
+        int rt_attr_len;
+        struct rtattr *rt_attr;
 
-    rt_attr = IFLA_RTA (NLMSG_DATA (header));
-    rt_attr_len = IFLA_PAYLOAD (header);
-    while (RT_ATTR_OK (rt_attr, rt_attr_len)) {
-        if (rt_attr->rta_type == IFA_LABEL) {
-            *label = g_strdup ((char *) RTA_DATA (rt_attr));
-            break;
+        rt_attr = IFLA_RTA (NLMSG_DATA (header));
+        rt_attr_len = IFLA_PAYLOAD (header);
+        while (RT_ATTR_OK (rt_attr, rt_attr_len)) {
+                if (rt_attr->rta_type == IFA_LABEL) {
+                        *label = g_strdup ((char *) RTA_DATA (rt_attr));
+
+                        break;
+                }
+                rt_attr = RTA_NEXT (rt_attr, rt_attr_len);
         }
-        rt_attr = RTA_NEXT (rt_attr, rt_attr_len);
-    }
 }
 
 static gboolean
@@ -357,9 +355,8 @@ create_context (GUPnPLinuxContextManager *self,
         }
 
         /* If device isn't one we consider, silently skip address */
-        if (device->flags & NETWORK_INTERFACE_IGNORE) {
+        if (device->flags & NETWORK_INTERFACE_IGNORE)
                 return;
-        }
 
         network_device_create_context (device, label);
 }
