@@ -451,6 +451,7 @@ gupnp_windows_context_manager_get_type
 <TITLE>GUPnPWhiteList</TITLE>
 GUPnPWhiteList
 gupnp_white_list_add_entry
+gupnp_white_list_add_entryv
 gupnp_white_list_check_context
 gupnp_white_list_clear
 gupnp_white_list_set_enabled

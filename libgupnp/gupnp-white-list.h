@@ -87,6 +87,9 @@ gupnp_white_list_is_empty       (GUPnPWhiteList *white_list);
 gboolean
 gupnp_white_list_add_entry      (GUPnPWhiteList *white_list,
                                  gchar* entry);
+void
+gupnp_white_list_add_entryv     (GUPnPWhiteList *white_list,
+                                 gchar** entries);
 
 gboolean
 gupnp_white_list_remove_entry   (GUPnPWhiteList *white_list,

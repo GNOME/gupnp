@@ -272,6 +272,29 @@ gupnp_white_list_add_entry (GUPnPWhiteList *white_list, gchar* entry)
 }
 
 /**
+ * gupnp_white_list_add_entryv:
+ * @white_list: A #GUPnPWhiteList
+ * @entries: (array zero-terminated=1): A %NULL-terminated list of strings
+ *
+ * Add a list of entries to a #GUPnPWhiteList. This is a helper function to
+ * directly add a %NULL-terminated array of string usually aquired from
+ * commandline args.
+ *
+ * Since: 0.20.8
+ */
+void
+gupnp_white_list_add_entryv (GUPnPWhiteList *white_list, gchar **entries)
+{
+        gchar * const * iter = entries;
+
+        g_return_if_fail (GUPNP_IS_WHITE_LIST (white_list));
+        g_return_if_fail ((entries != NULL));
+
+        for (; *iter != NULL; iter++)
+                gupnp_white_list_add_entry (white_list, *iter);
+ }
+
+/**
  * gupnp_white_list_remove_entry:
  * @white_list: A #GUPnPWhiteList
  * @entry: A value to remove from the filter list.
