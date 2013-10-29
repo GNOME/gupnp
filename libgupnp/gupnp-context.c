@@ -347,6 +347,43 @@ gupnp_context_finalize (GObject *object)
         object_class->finalize (object);
 }
 
+static GObject *
+gupnp_context_constructor (GType                  type,
+                           guint                  n_construct_params,
+                           GObjectConstructParam *construct_params)
+{
+        GObjectClass *object_class;
+        guint port = 0, msearch_port = 0;
+        int i, msearch_idx = -1;
+
+        for (i = 0; i < n_construct_params; i++) {
+                const char *par_name;
+
+                par_name = construct_params[i].pspec->name;
+
+                if (strcmp (par_name, "port") == 0)
+                        port = g_value_get_uint (construct_params[i].value);
+                else if (strcmp (par_name, "msearch-port") == 0) {
+                        msearch_idx = i;
+                        msearch_port = g_value_get_uint
+                                        (construct_params[i].value);
+                }
+        }
+
+        object_class = G_OBJECT_CLASS (gupnp_context_parent_class);
+
+        /* Override msearch-port property if port is set, the property exists
+         * and wasn't provided otherwise */
+        if (port != 0 && msearch_port != -1 && msearch_port == 0) {
+                g_value_set_uint (construct_params[msearch_idx].value, port);
+        }
+
+        return object_class->constructor (type,
+                                          n_construct_params,
+                                          construct_params);
+}
+
+
 static void
 gupnp_context_class_init (GUPnPContextClass *klass)
 {
@@ -358,6 +395,7 @@ gupnp_context_class_init (GUPnPContextClass *klass)
         object_class->get_property = gupnp_context_get_property;
         object_class->dispose      = gupnp_context_dispose;
         object_class->finalize     = gupnp_context_finalize;
+        object_class->constructor  = gupnp_context_constructor;
 
         g_type_class_add_private (klass, sizeof (GUPnPContextPrivate));
 
