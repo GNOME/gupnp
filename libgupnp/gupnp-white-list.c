@@ -320,7 +320,7 @@ gupnp_white_list_remove_entry (GUPnPWhiteList *white_list, gchar* entry)
 
         if (s_entry != NULL) {
                 priv->entries = g_list_remove_link (priv->entries, s_entry);
-		g_list_free_full (s_entry, g_free);
+                g_list_free_full (s_entry, g_free);
                 g_object_notify (G_OBJECT (white_list), "entries");
         }
 
