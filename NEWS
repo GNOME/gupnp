@@ -1,3 +1,18 @@
+0.20.8
+======
+
+Changes since 0.20.7:
+- Minor compilation and style fixes in the Linux CM.
+- Add gupnp_white_list_add_entryv utility function.
+- Use "port" property to set "msearch-port" property on base class.
+- Other style fixes
+
+Bugs fixed in this release:
+ - https://bugzilla.gnome.org/show_bug.cgi?id=711015
+
+All contributors to this release:
+ - Jens Georg <mail@jensge.org>
+
 0.20.7
 ======
 
