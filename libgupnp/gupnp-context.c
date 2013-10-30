@@ -892,6 +892,17 @@ host_path_handler (G_GNUC_UNUSED SoupServer        *server,
                 goto DONE;
         }
 
+        /* Always send HTTP 1.1 for device description requests
+         * Also set Connection: close header, since the request originated
+         * from a HTTP 1.0 client
+         */
+        if (soup_message_get_http_version (msg) == SOUP_HTTP_1_0) {
+                soup_message_set_http_version (msg, SOUP_HTTP_1_1);
+                soup_message_headers_append (msg->response_headers,
+                                             "Connection",
+                                             "close");
+        }
+
         user_agent = soup_message_headers_get_one (msg->request_headers,
                                                    "User-Agent");
 
