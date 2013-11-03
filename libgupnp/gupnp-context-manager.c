@@ -177,20 +177,19 @@ gupnp_context_manager_filter_context (GUPnPWhiteList *white_list,
         GList *obj;
         GList *blk;
         gboolean match;
-        GUPnPContext *context;
-        GSSDPResourceBrowser *browser;
 
         obj = manager->priv->objects;
         blk = manager->priv->blacklisted;
 
         while (obj != NULL) {
-                if (!GUPNP_IS_CONTROL_POINT (obj->data))
-                        continue;
-
                 /* If the white list is empty, treat it as disabled */
                 if (check) {
-                        /* Filter out context */
-                        context = gupnp_control_point_get_context (obj->data);
+                        GUPnPContext *context;
+
+                        g_object_get (G_OBJECT (obj->data),
+                                      "context", &context,
+                                      NULL);
+
                         match = gupnp_white_list_check_context (white_list,
                                                                 context);
                 } else {
@@ -198,8 +197,18 @@ gupnp_context_manager_filter_context (GUPnPWhiteList *white_list,
                         match = TRUE;
                 }
 
-                browser = GSSDP_RESOURCE_BROWSER (obj->data);
-                gssdp_resource_browser_set_active (browser, match);
+                if (GUPNP_IS_CONTROL_POINT (obj->data)) {
+                        GSSDPResourceBrowser *browser;
+
+                        browser = GSSDP_RESOURCE_BROWSER (obj->data);
+                        gssdp_resource_browser_set_active (browser, match);
+                } else if (GUPNP_IS_ROOT_DEVICE (obj->data)) {
+                        GSSDPResourceGroup *group;
+
+                        group = GSSDP_RESOURCE_GROUP (obj->data);
+                        gssdp_resource_group_set_available (group, match);
+                } else
+                        g_assert_not_reached ();
 
                 obj = obj->next;
         }
