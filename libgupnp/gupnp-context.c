@@ -51,6 +51,8 @@
 #include <libsoup/soup-address.h>
 #include <glib/gstdio.h>
 
+#include "gupnp-acl.h"
+#include "gupnp-acl-private.h"
 #include "gupnp-context.h"
 #include "gupnp-context-private.h"
 #include "gupnp-error.h"
@@ -59,6 +61,14 @@
 #include "http-headers.h"
 
 #define GUPNP_CONTEXT_DEFAULT_LANGUAGE "en"
+
+static void
+gupnp_acl_server_handler (SoupServer *server,
+                          SoupMessage *msg,
+                          const char *path,
+                          GHashTable *query,
+                          SoupClientContext *client,
+                          gpointer user_data);
 
 static void
 gupnp_context_initable_iface_init (gpointer g_iface,
@@ -85,6 +95,8 @@ struct _GUPnPContextPrivate {
         char        *default_language;
 
         GList       *host_path_datas;
+
+        GUPnPAcl    *acl;
 };
 
 enum {
@@ -93,7 +105,8 @@ enum {
         PROP_SERVER,
         PROP_SESSION,
         PROP_SUBSCRIPTION_TIMEOUT,
-        PROP_DEFAULT_LANGUAGE
+        PROP_DEFAULT_LANGUAGE,
+        PROP_ACL
 };
 
 typedef struct {
@@ -253,6 +266,10 @@ gupnp_context_set_property (GObject      *object,
                 gupnp_context_set_default_language (context,
                                                     g_value_get_string (value));
                 break;
+        case PROP_ACL:
+                gupnp_context_set_acl (context, g_value_get_object (value));
+
+                break;
         default:
                 G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
                 break;
@@ -291,6 +308,11 @@ gupnp_context_get_property (GObject    *object,
                 g_value_set_string (value,
                                     gupnp_context_get_default_language
                                                                    (context));
+                break;
+        case PROP_ACL:
+                g_value_set_object (value,
+                                    gupnp_context_get_acl (context));
+
                 break;
         default:
                 G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -493,6 +515,17 @@ gupnp_context_class_init (GUPnPContextClass *klass)
                                       G_PARAM_STATIC_NAME |
                                       G_PARAM_STATIC_NICK |
                                       G_PARAM_STATIC_BLURB));
+
+        g_object_class_install_property
+                (object_class,
+                 PROP_ACL,
+                 g_param_spec_object ("acl",
+                                      "Access control list",
+                                      "Access control list",
+                                      GUPNP_TYPE_ACL,
+                                      G_PARAM_CONSTRUCT |
+                                      G_PARAM_READWRITE |
+                                      G_PARAM_STATIC_STRINGS));
 }
 
 /**
@@ -1280,4 +1313,190 @@ gupnp_context_unhost_path (GUPnPContext *context,
 
         soup_server_remove_handler (server, server_path);
         host_path_data_free (path_data);
+}
+
+/**
+ * gupnp_context_get_acl:
+ * @context: A #GUPnPContext
+ *
+ * Returns:(transfer none): The access control list associated with this context or %NULL
+ * if no acl is set.
+ **/
+GUPnPAcl *
+gupnp_context_get_acl (GUPnPContext *context)
+{
+        g_return_val_if_fail (GUPNP_IS_CONTEXT (context), NULL);
+
+        return context->priv->acl;
+}
+
+/**
+ * gupnp_context_set_acl:
+ * @context: A #GUPnPContext
+ * @acl:(allow-none): The new access control list or %NULL to remove the
+ * current list.
+ **/
+void
+gupnp_context_set_acl (GUPnPContext *context, GUPnPAcl *acl)
+{
+        g_return_if_fail (GUPNP_IS_CONTEXT (context));
+
+        if (context->priv->acl != NULL) {
+                g_object_unref (context->priv->acl);
+                context->priv->acl = NULL;
+        }
+
+        if (acl != NULL)
+                context->priv->acl = g_object_ref (acl);
+
+        g_object_notify (G_OBJECT (context), "acl");
+}
+
+static void
+gupnp_acl_async_callback (GUPnPAcl *acl,
+                          GAsyncResult *res,
+                          AclAsyncHandler *data)
+{
+        gboolean allowed;
+        GError *error = NULL;
+
+        allowed = gupnp_acl_is_allowed_finish (acl, res, &error);
+        soup_server_unpause_message (data->server, data->message);
+        if (!allowed)
+                soup_message_set_status (data->message, SOUP_STATUS_FORBIDDEN);
+        else
+                data->handler->callback (data->server,
+                                         data->message,
+                                         data->path,
+                                         data->query,
+                                         data->client,
+                                         data->handler->user_data);
+
+        acl_async_handler_free (data);
+}
+
+static void
+gupnp_acl_server_handler (SoupServer *server,
+                          SoupMessage *msg,
+                          const char *path,
+                          GHashTable *query,
+                          SoupClientContext *client,
+                          gpointer user_data)
+{
+        AclServerHandler *handler = (AclServerHandler *) user_data;
+        const char *agent;
+        GUPnPDevice *device = NULL;
+
+        if (handler->service) {
+                g_object_get (handler->service,
+                              "root-device", &device,
+                              NULL);
+        }
+
+        agent = soup_message_headers_get_one (msg->request_headers,
+                                              "User-Agent");
+
+        if (gupnp_acl_can_sync (handler->context->priv->acl)) {
+                if (!gupnp_acl_is_allowed (handler->context->priv->acl,
+                                           device,
+                                           handler->service,
+                                           path,
+                                           soup_client_context_get_host (client),
+                                           agent)) {
+                        soup_message_set_status (msg, SOUP_STATUS_FORBIDDEN);
+
+                        return;
+                }
+        } else {
+                AclAsyncHandler *data;
+
+                data = acl_async_handler_new (server, msg, path, query, client, handler);
+
+                soup_server_pause_message (server, msg);
+                gupnp_acl_is_allowed_async (handler->context->priv->acl,
+                                            device,
+                                            handler->service,
+                                            path,
+                                            soup_client_context_get_host (client),
+                                            agent,
+                                            NULL,
+                                            (GAsyncReadyCallback) gupnp_acl_async_callback,
+                                            data);
+
+                return;
+        }
+
+        /* Delegate to orignal callback */
+        handler->callback (server, msg, path, query, client, handler->user_data);
+}
+
+/**
+ * gupnp_context_add_server_handler:
+ * @context: a #GUPnPContext
+ * @use_acl: %TRUE, if the path should query the GUPnPContext::acl before
+ * serving the resource, %FALSE otherwise.
+ * @path: the toplevel path for the handler.
+ * @callback: callback to invoke for requests under @path
+ * @user_data:
+ * @destroy:
+ *
+ * Add a #SoupServerCallback to the #GUPnPContext<!-- -->'s #SoupServer.
+ *
+ */
+void
+gupnp_context_add_server_handler (GUPnPContext *context,
+                                  gboolean use_acl,
+                                  const char *path,
+                                  SoupServerCallback callback,
+                                  gpointer user_data,
+                                  GDestroyNotify destroy)
+{
+        g_return_if_fail (GUPNP_IS_CONTEXT (context));
+
+        if (use_acl) {
+                AclServerHandler *handler;
+                handler = acl_server_handler_new (NULL, context, callback, user_data, destroy);
+                soup_server_add_handler (context->priv->server,
+                                         path,
+                                         gupnp_acl_server_handler,
+                                         handler,
+                                         (GDestroyNotify) acl_server_handler_free);
+        } else
+                soup_server_add_handler (context->priv->server,
+                                         path,
+                                         callback,
+                                         user_data,
+                                         destroy);
+}
+
+void
+_gupnp_context_add_server_handler_with_data (GUPnPContext *context,
+                                             const char *path,
+                                             AclServerHandler *handler)
+{
+        g_return_if_fail (GUPNP_IS_CONTEXT (context));
+
+        soup_server_add_handler (context->priv->server,
+                                 path,
+                                 gupnp_acl_server_handler,
+                                 handler,
+                                 (GDestroyNotify) acl_server_handler_free);
+}
+
+/**
+ * gupnp_context_remove_server_handler:
+ * @context: a #GUPnPContext
+ * @use_acl: %TRUE, if the path should query the GUPnPContext::acl before
+ * serving the resource, %FALSE otherwise.
+ * @path: the toplevel path for the handler.
+ *
+ * Add a #SoupServerCallback to the #GUPnPContext<!-- -->'s #SoupServer.
+ *
+ */
+void
+gupnp_context_remove_server_handler (GUPnPContext *context, const char *path)
+{
+        g_return_if_fail (GUPNP_IS_CONTEXT (context));
+
+        soup_server_remove_handler (context->priv->server, path);
 }

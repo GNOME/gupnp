@@ -48,7 +48,8 @@ libgupnpincdir = $(includedir)/gupnp-1.0/libgupnp
 
 lib_LTLIBRARIES = libgupnp-1.0.la
 
-libgupnpinc_HEADERS = gupnp-context.h			\
+libgupnpinc_HEADERS = gupnp-acl.h			\
+		      gupnp-context.h			\
 		      gupnp-context-manager.h		\
 		      gupnp-control-point.h		\
 		      gupnp-device.h			\
@@ -67,6 +68,7 @@ libgupnpinc_HEADERS = gupnp-context.h			\
 		      gupnp.h
 
 introspection_sources = $(libgupnpinc_HEADERS) \
+			gupnp-acl.c			\
 			gupnp-context.c			\
 			gupnp-context-manager.c		\
 			gupnp-control-point.c		\
@@ -106,6 +108,7 @@ libgupnp_1_0_la_SOURCES = $(introspection_sources)		\
 			  gupnp-error-private.h			\
 			  gupnp-resource-factory-private.h	\
 			  gupnp-service-introspection-private.h	\
+                          gupnp-acl-private.h                   \
 			  gupnp-types-private.h			\
 			  gvalue-util.c				\
 			  gvalue-util.h				\

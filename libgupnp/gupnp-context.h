@@ -26,6 +26,8 @@
 #include <libsoup/soup-server.h>
 #include <libsoup/soup-session.h>
 
+#include "gupnp-acl.h"
+
 G_BEGIN_DECLS
 
 GType
@@ -129,6 +131,20 @@ void
 gupnp_context_unhost_path              (GUPnPContext *context,
                                         const char   *server_path);
 
+GUPnPAcl *
+gupnp_context_get_acl                  (GUPnPContext *context);
+
+void
+gupnp_context_set_acl                  (GUPnPContext *context,
+                                        GUPnPAcl     *acl);
+
+void
+gupnp_context_add_server_handler       (GUPnPContext *context,
+                                        gboolean use_acl,
+                                        const char *path,
+                                        SoupServerCallback callback,
+                                        gpointer user_data,
+                                        GDestroyNotify destroy);
 G_END_DECLS
 
 #endif /* __GUPNP_CONTEXT_H__ */

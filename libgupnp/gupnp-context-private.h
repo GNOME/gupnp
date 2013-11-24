@@ -24,10 +24,17 @@
 
 #include <libsoup/soup.h>
 
+#include "gupnp-acl-private.h"
+
 G_BEGIN_DECLS
 
 G_GNUC_INTERNAL const char *
 _gupnp_context_get_server_url (GUPnPContext *context);
+
+G_GNUC_INTERNAL void
+_gupnp_context_add_server_handler_with_data (GUPnPContext *context,
+                                             const char *path,
+                                             AclServerHandler *data);
 
 G_END_DECLS
 

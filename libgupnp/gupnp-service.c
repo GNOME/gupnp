@@ -31,11 +31,13 @@
 #include <gmodule.h>
 #include <libsoup/soup-date.h>
 #include <string.h>
+
 #include "gupnp-service.h"
 #include "gupnp-root-device.h"
 #include "gupnp-context-private.h"
 #include "gupnp-marshal.h"
 #include "gupnp-error.h"
+#include "gupnp-acl.h"
 #include "http-headers.h"
 #include "gena-protocol.h"
 #include "xml-util.h"
@@ -1302,6 +1304,8 @@ subscription_server_handler (G_GNUC_UNUSED SoupServer        *server,
                              gpointer                         user_data)
 {
         GUPnPService *service;
+        GUPnPContext *context;
+        GUPnPAcl *acl;
         const char *callback, *nt, *sid;
 
         service = GUPNP_SERVICE (user_data);
@@ -1432,7 +1436,7 @@ gupnp_service_constructor (GType                  type,
         GObject *object;
         GUPnPServiceInfo *info;
         GUPnPContext *context;
-        SoupServer *server;
+        AclServerHandler *handler;
         char *url;
         char *path;
 
@@ -1443,7 +1447,7 @@ gupnp_service_constructor (GType                  type,
                                             n_construct_params,
                                             construct_params);
 
-        info    = GUPNP_SERVICE_INFO (object);
+        info = GUPNP_SERVICE_INFO (object);
 
         /* Get introspection and save state variable names */
         gupnp_service_info_get_introspection_async (info,
@@ -1452,21 +1456,28 @@ gupnp_service_constructor (GType                  type,
 
         /* Get server */
         context = gupnp_service_info_get_context (info);
-        server = gupnp_context_get_server (context);
 
         /* Run listener on controlURL */
         url = gupnp_service_info_get_control_url (info);
         path = path_from_url (url);
-        soup_server_add_handler (server, path,
-                                 control_server_handler, object, NULL);
+        handler = acl_server_handler_new (GUPNP_SERVICE (object),
+                                          context,
+                                          control_server_handler,
+                                          g_object_ref (object),
+                                          g_object_unref);
+        _gupnp_context_add_server_handler_with_data (context, path, handler);
         g_free (path);
         g_free (url);
 
         /* Run listener on eventSubscriptionURL */
         url = gupnp_service_info_get_event_subscription_url (info);
         path = path_from_url (url);
-        soup_server_add_handler (server, path,
-                                 subscription_server_handler, object, NULL);
+        handler = acl_server_handler_new (GUPNP_SERVICE (object),
+                                          context,
+                                          subscription_server_handler,
+                                          g_object_ref (object),
+                                          g_object_unref);
+        _gupnp_context_add_server_handler_with_data (context, path, handler);
         g_free (path);
         g_free (url);
 
@@ -1553,7 +1564,6 @@ gupnp_service_dispose (GObject *object)
         GObjectClass *object_class;
         GUPnPServiceInfo *info;
         GUPnPContext *context;
-        SoupServer *server;
         char *url;
         char *path;
 
@@ -1562,19 +1572,18 @@ gupnp_service_dispose (GObject *object)
         /* Get server */
         info = GUPNP_SERVICE_INFO (service);
         context = gupnp_service_info_get_context (info);
-        server = gupnp_context_get_server (context);
 
         /* Remove listener on controlURL */
         url = gupnp_service_info_get_control_url (info);
         path = path_from_url (url);
-        soup_server_remove_handler (server, path);
+        gupnp_context_remove_server_handler (context, path);
         g_free (path);
         g_free (url);
 
         /* Remove listener on eventSubscriptionURL */
         url = gupnp_service_info_get_event_subscription_url (info);
         path = path_from_url (url);
-        soup_server_remove_handler (server, path);
+        gupnp_context_remove_server_handler (context, path);
         g_free (path);
         g_free (url);
 

@@ -137,7 +137,7 @@ AC_ARG_ENABLE(debug,
         AS_HELP_STRING([--enable-debug], [enable debugging]),,
         enable_debug=no)
 if test "x$enable_debug" = "xyes"; then
-        CFLAGS="$CFLAGS -g -Wall -Werror"
+        CFLAGS="$CFLAGS -g -Wall -Wextra -Werror"
 fi
 
 GOBJECT_INTROSPECTION_CHECK([0.6.4])
