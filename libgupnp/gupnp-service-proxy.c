@@ -102,6 +102,7 @@ typedef struct {
 
 typedef struct {
         GUPnPServiceProxyNotifyCallback callback;
+        GDestroyNotify notify;
         gpointer user_data;
 } CallbackData;
 
@@ -136,6 +137,9 @@ gupnp_service_proxy_action_free (GUPnPServiceProxyAction *action)
 static void
 callback_data_free (CallbackData *data)
 {
+        if (data->notify)
+                data->notify (data->user_data);
+
         g_slice_free (CallbackData, data);
 }
 
@@ -1575,7 +1579,7 @@ gupnp_service_proxy_cancel_action (GUPnPServiceProxy       *proxy,
 }
 
 /**
- * gupnp_service_proxy_add_notify:
+ * gupnp_service_proxy_add_notify: (skip)
  * @proxy: A #GUPnPServiceProxy
  * @variable: The variable to add notification for
  * @type: The type of the variable
@@ -1593,6 +1597,40 @@ gupnp_service_proxy_add_notify (GUPnPServiceProxy              *proxy,
                                 GType                           type,
                                 GUPnPServiceProxyNotifyCallback callback,
                                 gpointer                        user_data)
+
+{
+        return gupnp_service_proxy_add_notify_full (proxy,
+                                                    variable,
+                                                    type,
+                                                    callback,
+                                                    user_data,
+                                                    NULL);
+}
+
+/**
+ * gupnp_service_proxy_add_notify_full:
+ * @proxy: A #GUPnPServiceProxy
+ * @variable: The variable to add notification for
+ * @type: The type of the variable
+ * @callback: (scope notified): The callback to call when @variable changes
+ * @user_data: User data for @callback
+ * @notify: (allow-none): Function to call when the notification is removed, or %NULL
+ *
+ * Sets up @callback to be called whenever a change notification for
+ * @variable is recieved.
+ *
+ * Since: 0.20.9
+ *
+ * Return value: %TRUE on success.
+ * Rename to: gupnp_service_proxy_add_notify
+ **/
+gboolean
+gupnp_service_proxy_add_notify_full (GUPnPServiceProxy              *proxy,
+                                     const char                     *variable,
+                                     GType                           type,
+                                     GUPnPServiceProxyNotifyCallback callback,
+                                     gpointer                        user_data,
+                                     GDestroyNotify                  notify)
 {
         NotifyData *data;
         CallbackData *callback_data;
@@ -1633,6 +1671,7 @@ gupnp_service_proxy_add_notify (GUPnPServiceProxy              *proxy,
 
         callback_data->callback  = callback;
         callback_data->user_data = user_data;
+        callback_data->notify    = notify;
 
         data->callbacks = g_list_append (data->callbacks, callback_data);
 
@@ -1691,8 +1730,9 @@ gupnp_service_proxy_remove_notify (GUPnPServiceProxy              *proxy,
 
                 if (callback_data->callback  == callback &&
                     callback_data->user_data == user_data) {
+
                         /* Gotcha! */
-                        g_slice_free (CallbackData, callback_data);
+                        callback_data_free (callback_data);
 
                         if (data->next_emit == l)
                                 data->next_emit = data->next_emit->next;

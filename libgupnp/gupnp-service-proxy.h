@@ -227,6 +227,14 @@ gupnp_service_proxy_add_notify     (GUPnPServiceProxy              *proxy,
                                     gpointer                        user_data);
 
 gboolean
+gupnp_service_proxy_add_notify_full (GUPnPServiceProxy              *proxy,
+                                     const char                     *variable,
+                                     GType                           type,
+                                     GUPnPServiceProxyNotifyCallback callback,
+                                     gpointer                        user_data,
+                                     GDestroyNotify                  notify);
+
+gboolean
 gupnp_service_proxy_remove_notify  (GUPnPServiceProxy              *proxy,
                                     const char                     *variable,
                                     GUPnPServiceProxyNotifyCallback callback,
