@@ -77,12 +77,18 @@ typedef struct {
         GUPnPServiceIntrospectionCallback callback;
         gpointer                          user_data;
 
+        GCancellable                     *cancellable;
+        gulong                            cancelled_id;
+
         SoupMessage                      *message;
 } GetSCPDURLData;
 
 static void
 get_scpd_url_data_free (GetSCPDURLData *data)
 {
+        if (data->cancellable)
+                g_object_unref (data->cancellable);
+
         g_slice_free (GetSCPDURLData, data);
 }
 
@@ -186,6 +192,10 @@ gupnp_service_info_dispose (GObject *object)
                         GetSCPDURLData *data;
 
                         data = info->priv->pending_gets->data;
+
+                        if (data->cancellable)
+                                g_cancellable_disconnect (data->cancellable,
+                                                          data->cancelled_id);
 
                         soup_session_cancel_message (session,
                                                      data->message,
@@ -649,6 +659,12 @@ got_scpd_url (G_GNUC_UNUSED SoupSession *session,
         } else
                 error = _gupnp_error_new_server_error (msg);
 
+        /* prevent the callback from canceling the cancellable
+         * (and so freeing data just before we do) */
+        if (data->cancellable)
+                g_cancellable_disconnect (data->cancellable,
+                                          data->cancelled_id);
+
         data->info->priv->pending_gets =
                 g_list_remove (data->info->priv->pending_gets, data);
 
@@ -659,6 +675,38 @@ got_scpd_url (G_GNUC_UNUSED SoupSession *session,
 
         if (error)
                 g_error_free (error);
+
+        get_scpd_url_data_free (data);
+}
+
+static void
+cancellable_cancelled_cb (GCancellable *cancellable,
+                          gpointer user_data)
+{
+        GUPnPServiceInfo *info;
+        GetSCPDURLData *data;
+        SoupSession *session;
+        GError *error;
+
+        data = user_data;
+        info = data->info;
+
+        session = gupnp_context_get_session (info->priv->context);
+        soup_session_cancel_message (session,
+                                     data->message,
+                                     SOUP_STATUS_CANCELLED);
+
+        info->priv->pending_gets =
+                g_list_remove (info->priv->pending_gets, data);
+
+        error = g_error_new (G_IO_ERROR,
+                             G_IO_ERROR_CANCELLED,
+                             "The call was canceled");
+
+        data->callback (data->info,
+                        NULL,
+                        error,
+                        data->user_data);
 
         get_scpd_url_data_free (data);
 }
@@ -677,6 +725,35 @@ void
 gupnp_service_info_get_introspection_async
                                 (GUPnPServiceInfo                 *info,
                                  GUPnPServiceIntrospectionCallback callback,
+                                 gpointer                          user_data)
+{
+        gupnp_service_info_get_introspection_async_full (info,
+                                                         callback,
+                                                         NULL,
+                                                         user_data);
+}
+
+/**
+ * gupnp_service_info_get_introspection_async_full:
+ * @info: A #GUPnPServiceInfo
+ * @callback: (scope async) : callback to be called when introspection object is ready.
+ * @cancellable: GCancellable that can be used to cancel the call, or %NULL.
+ * @user_data: user_data to be passed to the callback.
+ *
+ * Note that introspection object is created from the information in service
+ * description document (SCPD) provided by the service so it can not be created
+ * if the service does not provide an SCPD.
+ *
+ * If @cancellable is used to cancel the call, @callback will be called with
+ * error code G_IO_ERROR_CANCELLED.
+ *
+ * Since: 0.20.10.
+ **/
+void
+gupnp_service_info_get_introspection_async_full
+                                (GUPnPServiceInfo                 *info,
+                                 GUPnPServiceIntrospectionCallback callback,
+                                 GCancellable                     *cancellable,
                                  gpointer                          user_data)
 {
         GetSCPDURLData *data;
@@ -729,4 +806,14 @@ gupnp_service_info_get_introspection_async
                                     data->message,
                                     (SoupSessionCallback) got_scpd_url,
                                     data);
+
+        data->cancellable = cancellable;
+        if (data->cancellable) {
+                g_object_ref (cancellable);
+                data->cancelled_id = g_cancellable_connect
+                                (data->cancellable,
+                                 G_CALLBACK (cancellable_cancelled_cb),
+                                 data,
+                                 NULL);
+        }
 }
