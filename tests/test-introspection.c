@@ -30,8 +30,6 @@
 
 GMainLoop *main_loop;
 
-static GCancellable *cancellable;
-
 static gboolean async = FALSE;
 static GOptionEntry entries[] =
 {
@@ -43,13 +41,7 @@ static GOptionEntry entries[] =
 static void
 interrupt_signal_handler (G_GNUC_UNUSED int signum)
 {
-        if (g_cancellable_is_cancelled (cancellable)) {
-                g_main_loop_quit (main_loop);
-        } else {
-                g_print ("Canceling all introspection calls. "
-                         "Press ^C again to quit.\n");
-                g_cancellable_cancel (cancellable);
-        }
+        g_main_loop_quit (main_loop);
 }
 
 static void
@@ -210,10 +202,9 @@ service_proxy_available_cb (G_GNUC_UNUSED GUPnPControlPoint *cp,
         info = GUPNP_SERVICE_INFO (proxy);
 
         if (async) {
-                gupnp_service_info_get_introspection_async_full (info,
-                                                                 got_introspection,
-                                                                 cancellable,
-                                                                 NULL);
+                gupnp_service_info_get_introspection_async (info,
+                                                            got_introspection,
+                                                            NULL);
         } else {
                 introspection =
                         gupnp_service_info_get_introspection (info, &error);
@@ -278,8 +269,6 @@ main (int argc, char **argv)
 
                 return EXIT_FAILURE;
         }
-
-        cancellable = g_cancellable_new ();
 
         /* We're interested in everything */
         cp = gupnp_control_point_new (context, "ssdp:all");
