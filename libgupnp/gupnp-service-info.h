@@ -133,13 +133,6 @@ gupnp_service_info_get_introspection_async
                                GUPnPServiceIntrospectionCallback callback,
                                gpointer                          user_data);
 
-void
-gupnp_service_info_get_introspection_async_full
-                              (GUPnPServiceInfo                 *info,
-                               GUPnPServiceIntrospectionCallback callback,
-                               GCancellable                     *cancellable,
-                               gpointer                          user_data);
-
 G_END_DECLS
 
 #endif /* __GUPNP_SERVICE_INFO_H__ */
