@@ -374,7 +374,7 @@ gupnp_context_constructor (GType                  type,
 
         /* Override msearch-port property if port is set, the property exists
          * and wasn't provided otherwise */
-        if (port != 0 && msearch_port != -1 && msearch_port == 0) {
+        if (port != 0 && msearch_idx != -1 && msearch_port == 0) {
                 g_value_set_uint (construct_params[msearch_idx].value, port);
         }
 
