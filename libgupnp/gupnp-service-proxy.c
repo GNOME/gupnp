@@ -655,11 +655,13 @@ gupnp_service_proxy_send_action_hash (GUPnPServiceProxy *proxy,
         main_loop = g_main_loop_new (g_main_context_get_thread_default (),
                                      TRUE);
 
+        G_GNUC_BEGIN_IGNORE_DEPRECATIONS
         handle = gupnp_service_proxy_begin_action_hash (proxy,
                                                         action,
                                                         stop_main_loop,
                                                         main_loop,
                                                         in_hash);
+        G_GNUC_END_IGNORE_DEPRECATIONS
         if (!handle) {
                 g_main_loop_unref (main_loop);
 
