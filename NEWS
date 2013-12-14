@@ -1,3 +1,30 @@
+0.20.9
+======
+
+Changes since 0.20.8:
+
+- Enforce HTTP 1.1 for device description requests.
+- Add libuuid to Requires.private of pkg-config file.
+- Deprecate gupnp_service_proxy_{begin,send}_action_hash as they cannot
+  guarantee the argument order.
+- Add gupnp_service_info_get_introspection_async_full() that makes it possible
+  to cancel an introspcetion request using GCancellable.
+- Fix a crash when running with GSSDP < 0.14.6.
+
+Bugs fixed in this release:
+ - https://bugzilla.gnome.org/show_bug.cgi?id=704867
+ - https://bugzilla.gnome.org/show_bug.cgi?id=710491
+ - https://bugzilla.gnome.org/show_bug.cgi?id=711027
+ - https://bugzilla.gnome.org/show_bug.cgi?id=711167
+ - https://bugzilla.gnome.org/show_bug.cgi?id=720369
+ - https://bugzilla.gnome.org/show_bug.cgi?id=720372
+
+All contributors to this release:
+ - Jussi Kukkonen <jussi.kukkonen@intel.com>
+ - Jens Georg <mail@jensge.org>
+ - Philip Withnall <philip.withnall@collabora.co.uk>
+ - Parthiban Balasubramanian <p.balasubramanian@cablelabs.com>
+
 0.20.8
 ======
 
