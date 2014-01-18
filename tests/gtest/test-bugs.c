@@ -169,6 +169,12 @@ test_bgo_696762 (void)
     timeout_id = g_timeout_add_seconds (2, test_on_timeout, &(data.loop));
     g_main_loop_run (data.loop);
     g_source_remove (timeout_id);
+
+    g_main_loop_unref (data.loop);
+    g_object_unref (data.proxy);
+    g_object_unref (cp);
+    g_object_unref (rd);
+    g_object_unref (context);
 }
 
 int
