@@ -97,6 +97,7 @@ typedef struct {
         GType type;
 
         GList *callbacks;
+        GList *next_emit;
 } NotifyData;
 
 typedef struct {
@@ -1602,6 +1603,7 @@ gupnp_service_proxy_add_notify (GUPnPServiceProxy              *proxy,
 
                 data->type       = type;
                 data->callbacks  = NULL;
+                data->next_emit   = NULL;
 
                 g_hash_table_insert (proxy->priv->notify_hash,
                                      g_strdup (variable),
@@ -1627,6 +1629,9 @@ gupnp_service_proxy_add_notify (GUPnPServiceProxy              *proxy,
 
         data->callbacks = g_list_append (data->callbacks, callback_data);
 
+        if (data->next_emit == NULL)
+                data->next_emit = g_list_last (data->callbacks);
+
         return TRUE;
 }
 
@@ -1639,9 +1644,10 @@ gupnp_service_proxy_add_notify (GUPnPServiceProxy              *proxy,
  *
  * Cancels the variable change notification for @callback and @user_data.
  *
- * This function must not be called directly or indirectly from a
- * #GUPnPServiceProxyNotifyCallback associated with this service proxy, even
- * if it is for another variable.
+ * In version 20.9 and earlier this function must not be called directly
+ * or indirectly from a #GUPnPServiceProxyNotifyCallback associated with
+ * this service proxy, even if it is for another variable. In later
+ * versions such calls are allowed.
  *
  * Return value: %TRUE on success.
  **/
@@ -1680,6 +1686,9 @@ gupnp_service_proxy_remove_notify (GUPnPServiceProxy              *proxy,
                     callback_data->user_data == user_data) {
                         /* Gotcha! */
                         g_slice_free (CallbackData, callback_data);
+
+                        if (data->next_emit == l)
+                                data->next_emit = data->next_emit->next;
 
                         data->callbacks =
                                 g_list_delete_link (data->callbacks, l);
@@ -1722,11 +1731,13 @@ emit_notification (GUPnPServiceProxy *proxy,
                 return;
         }
 
-        /* Call callbacks */
-        for (l = data->callbacks; l; l = l->next) {
+        /* Call callbacks. Note that data->next_emit may change if
+         * callback calls remove_notify() or add_notify() */
+        for (l = data->callbacks; l; l = data->next_emit) {
                 CallbackData *callback_data;
 
                 callback_data = l->data;
+                data->next_emit = l->next;
 
                 callback_data->callback (proxy,
                                          (const char *) var_node->name,
