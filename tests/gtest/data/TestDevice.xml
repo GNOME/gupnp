@@ -17,5 +17,12 @@
 <eventSubURL>/TestService/Event</eventSubURL>
 </service>
 </serviceList>
+<deviceList>
+<device>
+<deviceType>urn:test-gupnp-org:device:TestSubDevice:1</deviceType>
+<friendlyName>Regression Test subdevice</friendlyName>
+<UDN>uuid:5678</UDN>
+</device>
+</deviceList>
 </device>
 </root>
