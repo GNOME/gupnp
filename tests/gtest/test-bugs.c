@@ -72,10 +72,10 @@ static void test_bgo_678701_device_class_init (TestBgo678701DeviceClass *klass) 
 static void test_bgo_678701_device_init (TestBgo678701Device *self) {}
 
 
-typedef struct _TestBgo696762Data {
+typedef struct _TestServiceProxyData {
     GMainLoop *loop;
     GUPnPServiceProxy *proxy;
-} TestBgo696762Data;
+} TestServiceProxyData;
 
 typedef struct _TestBgo678701Data {
     GMainLoop *loop;
@@ -119,17 +119,17 @@ test_bgo_696762_on_browse (G_GNUC_UNUSED GUPnPServiceProxy       *proxy,
                            G_GNUC_UNUSED GUPnPServiceProxyAction *action,
                            gpointer                               user_data)
 {
-    TestBgo696762Data *data = (TestBgo696762Data *) user_data;
+    TestServiceProxyData *data = (TestServiceProxyData *) user_data;
 
     g_main_loop_quit (data->loop);
 }
 
 static void
-test_bgo_696762_on_sp_available (G_GNUC_UNUSED GUPnPControlPoint *cp,
-                                 GUPnPServiceProxy               *proxy,
-                                 gpointer                         user_data)
+test_on_sp_available (G_GNUC_UNUSED GUPnPControlPoint *cp,
+                      GUPnPServiceProxy               *proxy,
+                      gpointer                         user_data)
 {
-    TestBgo696762Data *data = (TestBgo696762Data *) user_data;
+    TestServiceProxyData *data = (TestServiceProxyData *) user_data;
 
     data->proxy = g_object_ref (proxy);
 
@@ -146,6 +146,41 @@ test_bgo_678701_on_dp_available (G_GNUC_UNUSED GUPnPControlPoint *cp,
     data->proxy = g_object_ref (proxy);
 
     g_main_loop_quit (data->loop);
+}
+
+void
+test_bgo_690400_notify (GUPnPServiceProxy *proxy,
+                        const char *variable,
+                        GValue *value,
+                        gpointer user_data)
+{
+    TestServiceProxyData *data = (TestServiceProxyData *) user_data;
+
+    gupnp_service_proxy_remove_notify (data->proxy,
+                                       "evented_variable",
+                                       test_bgo_690400_notify,
+                                       user_data);
+}
+
+void
+test_bgo_690400_notify_too (GUPnPServiceProxy *proxy,
+                            const char *variable,
+                            GValue *value,
+                            gpointer user_data)
+{
+    TestServiceProxyData *data = (TestServiceProxyData *) user_data;
+
+    g_main_loop_quit (data->loop);
+}
+
+static void
+test_bgo_690400_query_variable (GUPnPService *service,
+                                gchar        *variable,
+                                GValue       *value,
+                                gpointer      user_data)
+{
+    g_value_init (value, G_TYPE_STRING);
+    g_value_set_string (value, "New Value");
 }
 
 static gboolean
@@ -165,7 +200,7 @@ test_bgo_696762 (void)
     GUPnPControlPoint *cp = NULL;
     guint timeout_id = 0;
     GUPnPRootDevice *rd;
-    TestBgo696762Data data = { NULL, NULL };
+    TestServiceProxyData data = { NULL, NULL };
     GUPnPServiceInfo *info = NULL;
 
     data.loop = g_main_loop_new (NULL, FALSE);
@@ -181,7 +216,7 @@ test_bgo_696762 (void)
 
     g_signal_connect (G_OBJECT (cp),
                       "service-proxy-available",
-                      G_CALLBACK (test_bgo_696762_on_sp_available),
+                      G_CALLBACK (test_on_sp_available),
                       &data);
 
 
@@ -283,6 +318,71 @@ test_bgo_678701 (void)
     g_object_unref (context);
 }
 
+/* Test that removing a notify-callback from the callback itself works
+ * https://bugzilla.gnome.org/show_bug.cgi?id=678701 */
+static void
+test_bgo_690400 (void)
+{
+    GUPnPContext *context = NULL;
+    GError *error = NULL;
+    GUPnPControlPoint *cp = NULL;
+    guint timeout_id = 0;
+    TestServiceProxyData data = { NULL, NULL };
+    GUPnPRootDevice *rd;
+    GUPnPServiceInfo *service;
+
+    data.loop = g_main_loop_new (NULL, FALSE);
+
+    context = gupnp_context_new (NULL, "lo", 0, &error);
+    g_assert (context != NULL);
+    g_assert (error == NULL);
+
+    cp = gupnp_control_point_new (context,
+                                  "urn:test-gupnp-org:service:TestService:1");
+    gssdp_resource_browser_set_active (GSSDP_RESOURCE_BROWSER (cp), TRUE);
+
+    g_signal_connect (G_OBJECT (cp),
+                      "service-proxy-available",
+                      G_CALLBACK (test_on_sp_available),
+                      &data);
+
+    rd = gupnp_root_device_new (context, "TestDevice.xml", DATA_PATH);
+    service = gupnp_device_info_get_service (GUPNP_DEVICE_INFO (rd),
+                                             "urn:test-gupnp-org:service:TestService:1");
+    g_signal_connect (service, "query-variable",
+                      G_CALLBACK (test_bgo_690400_query_variable), NULL);
+    gupnp_root_device_set_available (rd, TRUE);
+
+    timeout_id = g_timeout_add_seconds (2, test_on_timeout, &(data.loop));
+    g_main_loop_run (data.loop);
+    g_source_remove (timeout_id);
+    g_assert (data.proxy != NULL);
+
+    gupnp_service_proxy_add_notify (data.proxy,
+                                    "evented_variable",
+                                    G_TYPE_STRING,
+                                    (GUPnPServiceProxyNotifyCallback)test_bgo_690400_notify,
+                                    &data);
+    gupnp_service_proxy_add_notify (data.proxy,
+                                    "evented_variable",
+                                    G_TYPE_STRING,
+                                    (GUPnPServiceProxyNotifyCallback)test_bgo_690400_notify_too,
+                                    &data);
+
+    gupnp_service_proxy_set_subscribed (data.proxy, TRUE);
+
+    timeout_id = g_timeout_add_seconds (2, test_on_timeout, &(data.loop));
+    g_main_loop_run (data.loop);
+    g_source_remove (timeout_id);
+
+    g_main_loop_unref (data.loop);
+    g_object_unref (data.proxy);
+    g_object_unref (cp);
+    g_object_unref (rd);
+    g_object_unref (service);
+    g_object_unref (context);
+}
+
 int
 main (int argc, char *argv[]) {
 #if !GLIB_CHECK_VERSION(2,35,0)
@@ -291,6 +391,7 @@ main (int argc, char *argv[]) {
     g_test_init (&argc, &argv, NULL);
     g_test_add_func ("/bugs/696762", test_bgo_696762);
     g_test_add_func ("/bugs/678701", test_bgo_678701);
+    g_test_add_func ("/bugs/690400", test_bgo_690400);
 
     return g_test_run ();
 }

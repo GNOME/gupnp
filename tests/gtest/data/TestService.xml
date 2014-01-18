@@ -36,6 +36,10 @@
       <name>A_ARG_TYPE_Count</name>
       <dataType>ui4</dataType>
     </stateVariable>
+    <stateVariable sendEvents="yes">
+      <name>evented_variable</name>
+      <dataType>string</dataType>
+    </stateVariable>
   </serviceStateTable>
   <actionList>
     <action>
