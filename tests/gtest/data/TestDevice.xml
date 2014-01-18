@@ -1,0 +1,21 @@
+<root xmlns="urn:schemas-upnp-org:device-1-0">
+<specVersion>
+<major>1</major>
+<minor>0</minor>
+</specVersion>
+<device>
+<deviceType>urn:test-gupnp-org:device:TestDevice:1</deviceType>
+<friendlyName>GUPnP Regression Test Device</friendlyName>
+<modelURL>http://gupnp.org/</modelURL>
+<UDN>uuid:1234</UDN>
+<serviceList>
+<service>
+<serviceType>urn:test-gupnp-org:service:TestService:1</serviceType>
+<serviceId>urn:test-gupnp-org:serviceId:TestService:1</serviceId>
+<SCPDURL>/TestService.xml</SCPDURL>
+<controlURL>/TestService/Control</controlURL>
+<eventSubURL>/TestService/Event</eventSubURL>
+</service>
+</serviceList>
+</device>
+</root>

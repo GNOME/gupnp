@@ -104,7 +104,7 @@ test_bgo_696762_on_sp_available (G_GNUC_UNUSED GUPnPControlPoint *cp,
 }
 
 static gboolean
-test_bgo_696762_on_timeout (G_GNUC_UNUSED gpointer user_data)
+test_on_timeout (G_GNUC_UNUSED gpointer user_data)
 {
     g_assert_not_reached ();
 
@@ -130,7 +130,7 @@ test_bgo_696762 (void)
     g_assert (error == NULL);
 
     cp = gupnp_control_point_new (context,
-                                  "urn:test-gupnp-org:service:bgo696762:1");
+                                  "urn:test-gupnp-org:service:TestService:1");
 
     gssdp_resource_browser_set_active (GSSDP_RESOURCE_BROWSER (cp), TRUE);
 
@@ -140,16 +140,16 @@ test_bgo_696762 (void)
                       &data);
 
 
-    rd = gupnp_root_device_new (context, "TestBgo696762.xml", DATA_PATH);
+    rd = gupnp_root_device_new (context, "TestDevice.xml", DATA_PATH);
     gupnp_root_device_set_available (rd, TRUE);
     info = gupnp_device_info_get_service (GUPNP_DEVICE_INFO (rd),
-                                          "urn:test-gupnp-org:service:bgo696762:1");
+                                          "urn:test-gupnp-org:service:TestService:1");
     g_signal_connect (G_OBJECT (info),
                       "action-invoked::Browse",
                       G_CALLBACK (test_bgo_696762_on_browse_call),
                       &data);
 
-    timeout_id = g_timeout_add_seconds (2, test_bgo_696762_on_timeout, &(data.loop));
+    timeout_id = g_timeout_add_seconds (2, test_on_timeout, &(data.loop));
     g_main_loop_run (data.loop);
     g_source_remove (timeout_id);
     g_assert (data.proxy != NULL);
@@ -166,7 +166,7 @@ test_bgo_696762 (void)
                                       "SortCriteria", G_TYPE_STRING, "",
                                       NULL);
 
-    timeout_id = g_timeout_add_seconds (2, test_bgo_696762_on_timeout, &(data.loop));
+    timeout_id = g_timeout_add_seconds (2, test_on_timeout, &(data.loop));
     g_main_loop_run (data.loop);
     g_source_remove (timeout_id);
 }
