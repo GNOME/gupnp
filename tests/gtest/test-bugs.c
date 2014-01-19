@@ -191,6 +191,16 @@ test_on_timeout (G_GNUC_UNUSED gpointer user_data)
     return FALSE;
 }
 
+static void
+test_run_loop (GMainLoop *loop)
+{
+    guint timeout_id = 0;
+
+    timeout_id = g_timeout_add_seconds (2, test_on_timeout, NULL);
+    g_main_loop_run (loop);
+    g_source_remove (timeout_id);
+}
+
 /* Test if a call on a service proxy keeps argument order */
 static void
 test_bgo_696762 (void)
@@ -198,7 +208,6 @@ test_bgo_696762 (void)
     GUPnPContext *context = NULL;
     GError *error = NULL;
     GUPnPControlPoint *cp = NULL;
-    guint timeout_id = 0;
     GUPnPRootDevice *rd;
     TestServiceProxyData data = { NULL, NULL };
     GUPnPServiceInfo *info = NULL;
@@ -229,9 +238,7 @@ test_bgo_696762 (void)
                       G_CALLBACK (test_bgo_696762_on_browse_call),
                       &data);
 
-    timeout_id = g_timeout_add_seconds (2, test_on_timeout, &(data.loop));
-    g_main_loop_run (data.loop);
-    g_source_remove (timeout_id);
+    test_run_loop (data.loop);
     g_assert (data.proxy != NULL);
 
     gupnp_service_proxy_begin_action (data.proxy,
@@ -246,9 +253,7 @@ test_bgo_696762 (void)
                                       "SortCriteria", G_TYPE_STRING, "",
                                       NULL);
 
-    timeout_id = g_timeout_add_seconds (2, test_on_timeout, &(data.loop));
-    g_main_loop_run (data.loop);
-    g_source_remove (timeout_id);
+    test_run_loop (data.loop);
 
     g_main_loop_unref (data.loop);
     g_object_unref (data.proxy);
@@ -266,7 +271,6 @@ test_bgo_678701 (void)
     GUPnPContext *context = NULL;
     GError *error = NULL;
     GUPnPControlPoint *cp = NULL;
-    guint timeout_id = 0;
     TestBgo678701Data data = { NULL, NULL };
     GUPnPRootDevice *rd;
     GUPnPServiceInfo *info = NULL;
@@ -298,9 +302,7 @@ test_bgo_678701 (void)
                       G_CALLBACK (test_bgo_678701_on_dp_available),
                       &data);
 
-    timeout_id = g_timeout_add_seconds (2, test_on_timeout, &(data.loop));
-    g_main_loop_run (data.loop);
-    g_source_remove (timeout_id);
+    test_run_loop (data.loop);
     g_assert (data.proxy != NULL);
 
     info = gupnp_device_info_get_service (GUPNP_DEVICE_INFO (data.proxy),
@@ -326,7 +328,6 @@ test_bgo_690400 (void)
     GUPnPContext *context = NULL;
     GError *error = NULL;
     GUPnPControlPoint *cp = NULL;
-    guint timeout_id = 0;
     TestServiceProxyData data = { NULL, NULL };
     GUPnPRootDevice *rd;
     GUPnPServiceInfo *service;
@@ -353,9 +354,7 @@ test_bgo_690400 (void)
                       G_CALLBACK (test_bgo_690400_query_variable), NULL);
     gupnp_root_device_set_available (rd, TRUE);
 
-    timeout_id = g_timeout_add_seconds (2, test_on_timeout, &(data.loop));
-    g_main_loop_run (data.loop);
-    g_source_remove (timeout_id);
+    test_run_loop (data.loop);
     g_assert (data.proxy != NULL);
 
     gupnp_service_proxy_add_notify (data.proxy,
@@ -371,9 +370,7 @@ test_bgo_690400 (void)
 
     gupnp_service_proxy_set_subscribed (data.proxy, TRUE);
 
-    timeout_id = g_timeout_add_seconds (2, test_on_timeout, &(data.loop));
-    g_main_loop_run (data.loop);
-    g_source_remove (timeout_id);
+    test_run_loop (data.loop);
 
     g_main_loop_unref (data.loop);
     g_object_unref (data.proxy);
