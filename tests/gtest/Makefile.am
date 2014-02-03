@@ -16,4 +16,4 @@ AM_CFLAGS = \
 	    -I $(top_srcdir) \
 	    -DDATA_PATH="\"$(srcdir)/data\""
 
-EXTRA_DIST=data/random4k.bin data/ServiceBgo69762.xml data/TestBgo696762.xml
+EXTRA_DIST=data/random4k.bin data/TestService.xml data/TestDevice.xml
