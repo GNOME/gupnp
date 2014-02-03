@@ -1,3 +1,21 @@
+0.20.10
+=======
+
+Changes since 0.20.9:
+
+- Make sure ResourceFactory creates proxies with the correct GType.
+- Make it possible to unsubscribe from a service proxy during a call-back.
+- Disable managed RootDevices on WL change in addition to ControlPoints.
+
+Bugs fixed in this release:
+ - https://bugzilla.gnome.org/show_bug.cgi?id=678701
+ - https://bugzilla.gnome.org/show_bug.cgi?id=690400
+ - https://bugzilla.gnome.org/show_bug.cgi?id=711332
+
+All contributors to this release:
+ - Jussi Kukkonen <jussi.kukkonen@intel.com>
+ - Jens Georg <mail@jensge.org>
+
 0.20.9
 ======
 
