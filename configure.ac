@@ -88,6 +88,12 @@ AC_CHECK_HEADERS([sys/socket.h linux/rtnetlink.h],
 AM_CONDITIONAL([HAVE_NETLINK], [test "x$HAVE_NETLINK" = "xyes"])
 AC_SUBST(HAVE_NETLINK)
 
+AC_CHECK_HEADERS([ifaddrs.h],
+                 [ HAVE_IFADDRS_H=yes ],
+                 [ HAVE_IFADDRS_H=no ])
+AM_CONDITIONAL([HAVE_IFADDRS_H], [test "x$HAVE_IFADDRS_H" = "xyes"])
+AC_SUBST(HAVE_IFADDRS_H)
+
 AC_CHECK_HEADERS([linux/wireless.h], [], [],
                 [ #ifdef HAVE_SYS_SOCKET_H
                   #include <sys/socket.h>
@@ -112,7 +118,9 @@ fi
 USE_NETLINK=no
 AS_IF([test "x$with_context_manager" = "xlinux"],
       [AS_IF([test "x$HAVE_NETLINK" = "xno"],
-             [AC_MSG_NOTICE([No rtnetlink found, falling back to static context manager])],
+             [AS_IF([test "x$HAVE_IFADDRS" = "xyes"],
+	     AC_MSG_NOTICE([No rtnetlink found, falling back to static context manager]),
+	     AC_MSG_ERROR([No rtnetlink nor ifaddrs.h found]))],
              [USE_NETLINK=yes])
       ],[])
 

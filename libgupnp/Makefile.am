@@ -7,8 +7,12 @@ CONTEXT_MANAGER_CFLAGS =
 CONTEXT_MANAGER_LIBS = -lws2_32 -liphlpapi
 WIN32_LDFLAGS = -no-undefined
 else
+if HAVE_IFADDRS_H
 CONTEXT_MANAGER_IMPL = gupnp-unix-context-manager.c \
 					   gupnp-unix-context-manager.h
+else
+CONTEXT_MANAGER_IMPL =
+endif
 if USE_NETWORK_MANAGER
 CONTEXT_MANAGER_IMPL += gupnp-network-manager.c  \
 		        gupnp-network-manager.h
