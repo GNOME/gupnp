@@ -41,7 +41,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <glib.h>
-#ifndef G_OS_WIN32
+#ifdef G_OS_WIN32
+#include <windows.h>
+#else
 #include <sys/utsname.h>
 #endif
 #include <sys/types.h>
