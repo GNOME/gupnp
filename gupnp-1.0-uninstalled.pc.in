@@ -8,4 +8,4 @@ Description: GObject-based UPnP library
 Version: @VERSION@
 Libs: ${libdir}/libgupnp-1.0.la
 Cflags: -I${includedir}
-Requires.private: gssdp-1.0 libxml-2.0 libsoup-2.4 uuid
+Requires.private: gssdp-1.0 libxml-2.0 libsoup-2.4 @UUID_LIBS@
