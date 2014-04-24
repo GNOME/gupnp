@@ -291,6 +291,8 @@ network_device_free (NetworkInterface *device)
 
         g_hash_table_unref (device->contexts);
         device->contexts = NULL;
+
+        g_slice_free (NetworkInterface, device);
 }
 
 
