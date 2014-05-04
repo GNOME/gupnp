@@ -1396,34 +1396,36 @@ gupnp_acl_server_handler (SoupServer *server,
         agent = soup_message_headers_get_one (msg->request_headers,
                                               "User-Agent");
 
-        if (gupnp_acl_can_sync (handler->context->priv->acl)) {
-                if (!gupnp_acl_is_allowed (handler->context->priv->acl,
-                                           device,
-                                           handler->service,
-                                           path,
-                                           soup_client_context_get_host (client),
-                                           agent)) {
-                        soup_message_set_status (msg, SOUP_STATUS_FORBIDDEN);
+        if (handler->context->priv->acl != NULL) {
+                if (gupnp_acl_can_sync (handler->context->priv->acl)) {
+                        if (!gupnp_acl_is_allowed (handler->context->priv->acl,
+                                                   device,
+                                                   handler->service,
+                                                   path,
+                                                   soup_client_context_get_host (client),
+                                                   agent)) {
+                                soup_message_set_status (msg, SOUP_STATUS_FORBIDDEN);
+
+                                return;
+                        }
+                } else {
+                        AclAsyncHandler *data;
+
+                        data = acl_async_handler_new (server, msg, path, query, client, handler);
+
+                        soup_server_pause_message (server, msg);
+                        gupnp_acl_is_allowed_async (handler->context->priv->acl,
+                                                    device,
+                                                    handler->service,
+                                                    path,
+                                                    soup_client_context_get_host (client),
+                                                    agent,
+                                                    NULL,
+                                                    (GAsyncReadyCallback) gupnp_acl_async_callback,
+                                                    data);
 
                         return;
                 }
-        } else {
-                AclAsyncHandler *data;
-
-                data = acl_async_handler_new (server, msg, path, query, client, handler);
-
-                soup_server_pause_message (server, msg);
-                gupnp_acl_is_allowed_async (handler->context->priv->acl,
-                                            device,
-                                            handler->service,
-                                            path,
-                                            soup_client_context_get_host (client),
-                                            agent,
-                                            NULL,
-                                            (GAsyncReadyCallback) gupnp_acl_async_callback,
-                                            data);
-
-                return;
         }
 
         /* Delegate to orignal callback */
