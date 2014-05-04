@@ -180,9 +180,12 @@ gupnp_context_set_subscription_timeout
 gupnp_context_get_subscription_timeout
 gupnp_context_get_default_language
 gupnp_context_set_default_language
+gupnp_context_add_server_handler
 gupnp_context_host_path
 gupnp_context_host_path_for_agent
 gupnp_context_unhost_path
+gupnp_context_get_acl
+gupnp_context_set_acl
 <SUBSECTION Standard>
 GUPnPContextClass
 GUPNP_CONTEXT
@@ -472,4 +475,21 @@ GUPNP_WHITE_LIST_GET_CLASS
 GUPnPWhiteListClass
 <SUBSECTION Private>
 GUPnPWhiteListPrivate
+</SECTION>
+
+<SECTION>
+<FILE>gupnp-acl</FILE>
+<TITLE>GUPnPAcl</TITLE>
+GUPnPAcl
+GUPnPAclInterface
+gupnp_acl_can_sync
+gupnp_acl_get_type
+gupnp_acl_is_allowed
+gupnp_acl_is_allowed_async
+gupnp_acl_is_allowed_finish
+<SUBSECTION Standard>
+GUPNP_ACL
+GUPNP_ACL_GET_INTERFACE
+GUPNP_IS_ACL
+GUPNP_TYPE_ACL
 </SECTION>

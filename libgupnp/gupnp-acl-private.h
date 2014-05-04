@@ -32,6 +32,8 @@
 G_BEGIN_DECLS
 
 /**
+ * AclServerHandler:
+ *
  * Closure for the ACL server handler that adds
  * a) Some data from the original server handler such as user_data and callback
  * b) Saves information for later use to pass on to ACL such as the service and context
@@ -46,6 +48,8 @@ typedef struct _AclServerHandler
 } AclServerHandler;
 
 /**
+ * AclAsyncHandler:
+ *
  * Closure when doing an async ACL request. Stores everything passed into the server handler
  */
 typedef struct _AclAsyncHandler

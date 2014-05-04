@@ -40,7 +40,7 @@ gupnp_acl_default_init (GUPnPAclInterface *klass)
  * @address: IP address of the peer.
  * @agent: (allow-none): The User-Agent header of the peer or %NULL if not
  * unknown.
- * @returns: %TRUE if the peer is allowed, %FALSE otherwise
+ * @returns %TRUE if the peer is allowed, %FALSE otherwise
  *
  * Check whether an IP address is allowed to access this resource.
  *
@@ -139,7 +139,7 @@ gupnp_acl_is_allowed_finish (GUPnPAcl      *self,
 /**
  * gupnp_acl_can_sync:
  * @self: A #GUPnPAcl
- * @returns: %TRUE, if gupnp_acl_is_allowed_async() is supported, %FALSE
+ * @returns %TRUE, if gupnp_acl_is_allowed_async() is supported, %FALSE
  * otherwise.
  *
  * Check whether gupnp_acl_is_allowed_async() is supported.
@@ -156,15 +156,15 @@ gupnp_acl_can_sync (GUPnPAcl *self)
 
 /**
  * acl_server_handler_new:
- *
- * Allocate a new #AclServerHandler.
- *
  * @service: (allow-none): A #GUPnPContext or %NULL if unknown
  * @context: The #GUPnPContext the server handler is run on.
  * @callback: The #SoupServerCallback we're wrapping.
  * @user_data: The user_data for @callback
  * @notify: (allow-none): The #GDestroyNotify for @user_data or %NULL if none.
  * @returns: A newly allocated #AclServerHandler
+ *
+ * Allocate a new #AclServerHandler.
+ *
  */
 AclServerHandler *
 acl_server_handler_new (GUPnPService *service,
@@ -186,10 +186,10 @@ acl_server_handler_new (GUPnPService *service,
 
 /**
  * acl_server_handler_free:
+ * @handler: An #AclServerHandler instance.
  *
  * Free an #AclServerHandler previously allocated with acl_server_handler_new().
  *
- * @handler: An #AclServerHandler instance.
  */
 void
 acl_server_handler_free (AclServerHandler *handler)
@@ -205,9 +205,6 @@ acl_server_handler_free (AclServerHandler *handler)
 
 /**
  * acl_async_handler_new:
- *
- * Create a new async closure.
- *
  * @server: A #SoupServer instance.
  * @message: The #SoupMessage we want to handle.
  * @path: The path we're trying to serve.
@@ -215,6 +212,9 @@ acl_server_handler_free (AclServerHandler *handler)
  * @client: The #SoupClientContext for this request.
  * @handler: The #AclServerHandler used with this request.
  * @returns: A new instance of #AclAsyncHandler.
+ *
+ * Create a new async closure.
+ *
  */
 AclAsyncHandler *
 acl_async_handler_new (SoupServer *server,
@@ -239,10 +239,10 @@ acl_async_handler_new (SoupServer *server,
 
 /**
  * acl_async_handler_free:
+ * @handler: An instance allocated with acl_async_handler_new()
  *
  * Free an #AclAsyncHandler allocated with acl_async_handler_new().
  *
- * @handler: An instance allocated with acl_async_handler_new()
  */
 void
 acl_async_handler_free (AclAsyncHandler *handler)

@@ -1333,7 +1333,7 @@ gupnp_context_get_acl (GUPnPContext *context)
 /**
  * gupnp_context_set_acl:
  * @context: A #GUPnPContext
- * @acl:(allow-none): The new access control list or %NULL to remove the
+ * @acl: (allow-none): The new access control list or %NULL to remove the
  * current list.
  **/
 void
@@ -1439,8 +1439,8 @@ gupnp_acl_server_handler (SoupServer *server,
  * serving the resource, %FALSE otherwise.
  * @path: the toplevel path for the handler.
  * @callback: callback to invoke for requests under @path
- * @user_data:
- * @destroy:
+ * @user_data: the user_data passed to @callback
+ * @destroy: (allow-none): A #GDestroyNotify for @user_data or %NULL if none.
  *
  * Add a #SoupServerCallback to the #GUPnPContext<!-- -->'s #SoupServer.
  *
