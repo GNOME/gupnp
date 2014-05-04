@@ -1,3 +1,27 @@
+0.20.11
+=======
+
+Changes since 0.20.10:
+
+- Disable the Unix context manager on Android.
+- Fix Windows compilation.
+- Fix a memory leak in Linux context manager.
+- Fix libuuid dependencies in pkg-config files.
+- Implement a simple ACL infrastructure.
+
+
+Bugs fixed in this release:
+ - https://bugzilla.gnome.org/show_bug.cgi?id=711027
+ - https://bugzilla.gnome.org/show_bug.cgi?id=723715
+ - https://bugzilla.gnome.org/show_bug.cgi?id=727539
+ - https://bugzilla.gnome.org/show_bug.cgi?id=728889
+
+All contributors to this release:
+ - Philip Withnall <philip.withnall@collabora.co.uk>
+ - Jens Georg <mail@jensge.org>
+ - Olivier Crête <olivier.crete@collabora.com>
+ - Luciana Fujii <luciana.fujii@collabora.com>
+
 0.20.10
 =======
 
