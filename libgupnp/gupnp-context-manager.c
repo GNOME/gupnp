@@ -582,9 +582,9 @@ gupnp_context_manager_create (guint port)
 #endif
         }
 #endif /* G_OS_WIN32 */
-        impl = g_object_new (impl_type,
-                             "port", port,
-                             NULL);
+        impl = GUPNP_CONTEXT_MANAGER (g_object_new (impl_type,
+                                                    "port", port,
+                                                    NULL));
 
 #if defined(USE_NETWORK_MANAGER) || defined(USE_CONNMAN)
         g_object_unref (system_bus);
