@@ -182,14 +182,10 @@ service = gupnp_device_info_get_service
       value of the variable.
     </para>
     <para>
-      There are two approaches that clients can take to handle these signals.
-      They can either connect a single handler to #GUPnPService::action-invoked
-      or #GUPnPService::query-variable and examine the arguments to decide what
-      action to take.  Alternatively, handlers can be targetted at specific
-      actions or variables by using the <firstterm>signal detail</firstterm>
-      when connecting.  For example, this causes
-      <function>on_get_status_action</function> to be called when the
-      <function>GetStatus</function> action is invoked:
+      Handlers should be targetted at specific actions or variables by using
+      the <firstterm>signal detail</firstterm> when connecting. For example,
+      this causes <function>on_get_status_action</function> to be called when
+      the <function>GetStatus</function> action is invoked:
     </para>
     <programlisting>static void on_get_status_action (GUPnPService *service, GUPnPServiceAction *action, gpointer user_data);
 &hellip;
