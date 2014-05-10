@@ -483,11 +483,11 @@ GUPnPWhiteListPrivate
 GUPnPAcl
 GUPnPAclInterface
 gupnp_acl_can_sync
-gupnp_acl_get_type
 gupnp_acl_is_allowed
 gupnp_acl_is_allowed_async
 gupnp_acl_is_allowed_finish
 <SUBSECTION Standard>
+gupnp_acl_get_type
 GUPNP_ACL
 GUPNP_ACL_GET_INTERFACE
 GUPNP_IS_ACL

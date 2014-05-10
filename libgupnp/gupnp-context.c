@@ -516,6 +516,11 @@ gupnp_context_class_init (GUPnPContextClass *klass)
                                       G_PARAM_STATIC_NICK |
                                       G_PARAM_STATIC_BLURB));
 
+        /**
+         * GUPnPContext:acl:
+         *
+         * An access control list.
+         */
         g_object_class_install_property
                 (object_class,
                  PROP_ACL,

@@ -19,6 +19,7 @@
  * Boston, MA 02110-1301, USA.
  */
 
+#include "gupnp-acl.h"
 #include "gupnp-context.h"
 #include "gupnp-context-manager.h"
 #include "gupnp-control-point.h"

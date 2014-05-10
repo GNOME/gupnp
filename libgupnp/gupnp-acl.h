@@ -46,7 +46,25 @@ gupnp_acl_get_type (void) G_GNUC_CONST;
     (G_TYPE_INSTANCE_GET_INTERFACE ((obj), \
      GUPNP_TYPE_ACL, GUPnPAclInterface))
 
+/**
+ * GUPnPAcl:
+ *
+ * Handle to an object implementing the #GUPnPAclInterface interface.
+ */
 typedef struct _GUPnPAcl GUPnPAcl;
+
+/**
+ * GUPnPAclInterface:
+ * @parent: The parent interface.
+ * @is_allowed: Check whether access to the resource is granted.
+ * @is_allowed_async: Asynchronously check whether the access is granted.
+ * @is_allowed_finish: Conclude the @is_allowed_async operation.
+ * @can_sync: Whether the ACL can do sync queries.
+ *
+ * Implement a simple access control list for GUPnP.
+ *
+ * Since: 0.20.11
+ */
 typedef struct _GUPnPAclInterface GUPnPAclInterface;
 
 /* Forward declarations to avoid recursive includes */
@@ -79,6 +97,8 @@ struct _GUPnPAclInterface {
 
     gboolean (*can_sync)          (GUPnPAcl *self);
 
+
+    /*< private >*/
     /* future padding */
     void (* _gupnp_reserved1) (void);
     void (* _gupnp_reserved2) (void);

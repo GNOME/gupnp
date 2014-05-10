@@ -73,6 +73,7 @@
     <chapter id="api-utility">
       <title>Utility Functions</title>
       
+      <xi:include href="xml/gupnp-acl.xml"/>
       <xi:include href="xml/gupnp-context.xml"/>
       <xi:include href="xml/gupnp-context-manager.xml"/>
       <xi:include href="xml/gupnp-white-list.xml"/>

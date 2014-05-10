@@ -19,6 +19,15 @@
  * Boston, MA 02110-1301, USA.
  */
 
+/**
+ * SECTION:gupnp-acl
+ * @short_description: Object providing a simple access control list for
+ * GUPnP.
+ *
+ * #GUPnPAcl provides either synchronous or asynchronous functions to check
+ * whether a peer sould be able to access a resource or not.
+ */
+
 #include "gupnp-acl.h"
 #include "gupnp-acl-private.h"
 
