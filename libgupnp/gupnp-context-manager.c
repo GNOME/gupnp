@@ -587,7 +587,7 @@ gupnp_context_manager_create (guint port)
                                                     NULL));
 
 #if defined(USE_NETWORK_MANAGER) || defined(USE_CONNMAN)
-        g_object_unref (system_bus);
+        g_clear_object (&system_bus);
 #endif
         return impl;
 }
