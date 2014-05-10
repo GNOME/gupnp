@@ -25,7 +25,7 @@
 
 /**
  * SECTION:gupnp-context-manager
- * @short_description: Manages #GUPnPContext objects.
+ * @short_description: Manages GUPnPContext objects.
  *
  * A Utility class that takes care of creation and destruction of
  * #GUPnPContext objects for all available network interfaces as they go up

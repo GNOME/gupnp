@@ -157,11 +157,9 @@ gupnp_white_list_class_init (GUPnPWhiteListClass *klass)
                           G_PARAM_STATIC_STRINGS));
 
         /**
-         * GUPnPWhiteList:entries:
+         * GUPnPWhiteList:entries: (type GList(utf8))
          *
          * Whether this white list is active or not.
-         * Type: GList
-         * Transfer: none
          **/
         g_object_class_install_property
                 (object_class,

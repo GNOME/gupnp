@@ -69,13 +69,18 @@
       <xi:include href="xml/gupnp-root-device.xml"/>
       <xi:include href="xml/gupnp-service.xml"/>
     </chapter>
+
+    <chapter id="api-context">
+      <title>Network context handling</title>
+
+      <xi:include href="xml/gupnp-context.xml"/>
+      <xi:include href="xml/gupnp-context-manager.xml"/>
+    </chapter>
     
     <chapter id="api-utility">
       <title>Utility Functions</title>
       
       <xi:include href="xml/gupnp-acl.xml"/>
-      <xi:include href="xml/gupnp-context.xml"/>
-      <xi:include href="xml/gupnp-context-manager.xml"/>
       <xi:include href="xml/gupnp-white-list.xml"/>
       <xi:include href="xml/gupnp-resource-factory.xml"/>
       <xi:include href="xml/gupnp-xml-doc.xml"/>

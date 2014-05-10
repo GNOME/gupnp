@@ -22,3 +22,4 @@ gupnp_time_get_type
 gupnp_time_tz_get_type
 gupnp_uri_get_type
 gupnp_uuid_get_type
+gupnp_white_list_get_type

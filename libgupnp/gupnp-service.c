@@ -499,7 +499,7 @@ gupnp_service_action_get_value (GUPnPServiceAction *action,
 }
 
 /**
- * gupnp_service_action_get_gvalue:
+ * gupnp_service_action_get_gvalue: (rename-to gupnp_service_action_get_value)
  * @action: A #GUPnPServiceAction
  * @argument: The name of the argument to retrieve
  * @type: The type of argument to retrieve
@@ -510,8 +510,6 @@ gupnp_service_action_get_value (GUPnPServiceAction *action,
  *
  * Return value: (transfer full): Value as #GValue associated with @action.
  * #g_value_unset and #g_slice_free it after usage.
- *
- * Rename To: gupnp_service_action_get_value
  **/
 GValue *
 gupnp_service_action_get_gvalue (GUPnPServiceAction *action,
