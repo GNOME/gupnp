@@ -138,7 +138,7 @@ gupnp_acl_is_allowed_finish (GUPnPAcl      *self,
                              GAsyncResult  *res,
                              GError       **error)
 {
-        g_return_if_fail (GUPNP_IS_ACL (self));
+        g_return_val_if_fail (GUPNP_IS_ACL (self), FALSE);
 
         return GUPNP_ACL_GET_INTERFACE (self)->is_allowed_finish (self,
                                                                   res,
@@ -158,7 +158,7 @@ gupnp_acl_is_allowed_finish (GUPnPAcl      *self,
 gboolean
 gupnp_acl_can_sync (GUPnPAcl *self)
 {
-        g_return_if_fail (GUPNP_IS_ACL (self));
+        g_return_val_if_fail (GUPNP_IS_ACL (self), FALSE);
 
         return GUPNP_ACL_GET_INTERFACE (self)->can_sync (self);
 }
