@@ -864,10 +864,7 @@ gupnp_device_info_get_icon_url (GUPnPDeviceInfo *info,
         }
 
         /* Cleanup */
-        while (icons) {
-                icon_free (icons->data);
-                icons = g_list_delete_link (icons, icons);
-        }
+        g_list_free_full (icons, (GDestroyNotify) icon_free);
 
         return ret;
 }

@@ -1129,10 +1129,7 @@ host_path_handler (G_GNUC_UNUSED SoupServer        *server,
         g_free (path_to_open);
         g_free (local_path);
 
-        while (orig_locales) {
-                g_free (orig_locales->data);
-                orig_locales = g_list_delete_link (orig_locales, orig_locales);
-        }
+        g_list_free_full (orig_locales, g_free);
 }
 
 static UserAgent *
@@ -1181,17 +1178,8 @@ host_path_data_free (HostPathData *path_data)
         g_free (path_data->server_path);
         g_free (path_data->default_language);
 
-        while (path_data->user_agents) {
-                UserAgent *agent;
-
-                agent = path_data->user_agents->data;
-
-                user_agent_free (agent);
-
-                path_data->user_agents = g_list_delete_link (
-                                path_data->user_agents,
-                                path_data->user_agents);
-        }
+        g_list_free_full (path_data->user_agents,
+                          (GDestroyNotify) user_agent_free);
 
         g_slice_free (HostPathData, path_data);
 }

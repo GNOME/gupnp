@@ -168,11 +168,7 @@ subscription_data_free (SubscriptionData *data)
         }
        
         /* Further cleanup */
-        while (data->callbacks) {
-                g_free (data->callbacks->data);
-                data->callbacks = g_list_delete_link (data->callbacks,
-                                                      data->callbacks);
-        }
+        g_list_free_full (data->callbacks, g_free);
 
         g_free (data->sid);
 
@@ -1624,12 +1620,7 @@ gupnp_service_finalize (GObject *object)
         g_hash_table_destroy (service->priv->subscriptions);
 
         /* Free state variable list */
-        while (service->priv->state_variables) {
-                g_free (service->priv->state_variables->data);
-                service->priv->state_variables =
-                        g_list_delete_link (service->priv->state_variables,
-                                            service->priv->state_variables);
-        }
+        g_list_free_full (service->priv->state_variables, g_free);
 
         /* Free notify queue */
         while ((data = g_queue_pop_head (service->priv->notify_queue)))
