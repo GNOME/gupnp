@@ -26,6 +26,8 @@
  *
  * #GUPnPAcl provides either synchronous or asynchronous functions to check
  * whether a peer sould be able to access a resource or not.
+ *
+ * Since: 0.20.11
  */
 
 #include "gupnp-acl.h"

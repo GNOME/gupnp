@@ -423,8 +423,10 @@ gupnp_service_action_get_valist (GUPnPServiceAction *action,
  * A variant of #gupnp_service_action_get that uses #GList instead of varargs.
  *
  * Return value: (element-type GValue) (transfer full): The values as #GList of
- * #GValue. #g_list_free the returned list and #g_value_unset and #g_slice_free
+ * #GValue. g_list_free() the returned list and g_value_unset() and g_slice_free()
  * each element.
+ *
+ * Since: 0.13.3
  **/
 GList *
 gupnp_service_action_get_values (GUPnPServiceAction *action,
@@ -502,10 +504,12 @@ gupnp_service_action_get_value (GUPnPServiceAction *action,
  *
  * Retrieves the value of @argument into a GValue of type @type and returns it.
  * The method exists only and only to satify PyGI, please use
- * #gupnp_service_action_get_value and ignore this if possible.
+ * gupnp_service_action_get_value() and ignore this if possible.
  *
  * Return value: (transfer full): Value as #GValue associated with @action.
- * #g_value_unset and #g_slice_free it after usage.
+ * g_value_unset() and g_slice_free() it after usage.
+ *
+ * Since: 0.13.3
  **/
 GValue *
 gupnp_service_action_get_gvalue (GUPnPServiceAction *action,
@@ -529,6 +533,8 @@ gupnp_service_action_get_gvalue (GUPnPServiceAction *action,
  * Get the number of IN arguments from the @action and return it.
  *
  * Return value: The number of IN arguments from the @action.
+ *
+ * Since: 0.17.0
  */
 guint
 gupnp_service_action_get_argument_count (GUPnPServiceAction *action)
@@ -611,6 +617,8 @@ gupnp_service_action_set_valist (GUPnPServiceAction *action,
  * #GValues) that line up with @arg_names.
  *
  * Sets the specified action return values.
+ *
+ * Since: 0.13.3
  **/
 void
 gupnp_service_action_set_values (GUPnPServiceAction *action,
@@ -787,6 +795,8 @@ gupnp_service_action_return_error (GUPnPServiceAction *action,
  *
  * Return value: (transfer full): #SoupMessage associated with @action. Unref
  * after using it.
+ *
+ * Since: 0.13.0
  **/
 SoupMessage *
 gupnp_service_action_get_message (GUPnPServiceAction *action)

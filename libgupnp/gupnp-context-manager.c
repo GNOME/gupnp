@@ -31,6 +31,7 @@
  * #GUPnPContext objects for all available network interfaces as they go up
  * (connect) and down (disconnect), respectively.
  *
+ * Since: 0.13.0
  */
 
 #include <config.h>
@@ -508,6 +509,7 @@ gupnp_context_manager_class_init (GUPnPContextManagerClass *klass)
  * Same as gupnp_context_manager_create().
  *
  * Returns: (transfer full): A new #GUPnPContextManager object.
+ * Since: 0.13.0
  * Deprecated: 0.17.2: Use gupnp_context_manager_create().
  **/
 GUPnPContextManager *
@@ -536,6 +538,8 @@ gupnp_context_manager_new (GMainContext *main_context,
  * the implementation falls back to the basic Unix context manager instead.
  *
  * Returns: (transfer full): A new #GUPnPContextManager object.
+ *
+ * Since: 0.17.2
  **/
 GUPnPContextManager *
 gupnp_context_manager_create (guint port)
@@ -600,6 +604,8 @@ gupnp_context_manager_create (guint port)
  * Only the active control points send discovery messages.
  * This function should be called when servers are suspected to have
  * disappeared.
+ *
+ * Since: 0.20.3
  **/
 void
 gupnp_context_manager_rescan_control_points (GUPnPContextManager *manager)
@@ -631,6 +637,8 @@ gupnp_context_manager_rescan_control_points (GUPnPContextManager *manager)
  * You usually want to call this function from
  * #GUPnPContextManager::context-available handler after you create a
  * #GUPnPControlPoint object for the newly available context.
+ *
+ * Since: 0.13.0
  **/
 void
 gupnp_context_manager_manage_control_point (GUPnPContextManager *manager,
@@ -653,6 +661,8 @@ gupnp_context_manager_manage_control_point (GUPnPContextManager *manager,
  * usually want to call this function from
  * #GUPnPContextManager::context-available handler after you create a
  * #GUPnPRootDevice object for the newly available context.
+ *
+ * Since: 0.13.0
  **/
 void
 gupnp_context_manager_manage_root_device (GUPnPContextManager *manager,
@@ -671,6 +681,8 @@ gupnp_context_manager_manage_root_device (GUPnPContextManager *manager,
  *
  * Get the network port associated with this context manager.
  * Returns: The network port asssociated with this context manager.
+ *
+ * Since: 0.19.1
  */
 guint
 gupnp_context_manager_get_port (GUPnPContextManager *manager)

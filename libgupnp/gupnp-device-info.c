@@ -935,6 +935,8 @@ resource_type_match (const char *query,
  * Returns: (transfer full) (element-type utf8): a #GList of newly allocated strings or
  * %NULL if the device description doesn't contain the &lt;dlna:X_DLNADOC&gt;
  * element.
+ *
+ * Since: 0.20.4
  **/
 GList *
 gupnp_device_info_list_dlna_device_class_identifier (GUPnPDeviceInfo *info)
@@ -977,6 +979,8 @@ gupnp_device_info_list_dlna_device_class_identifier (GUPnPDeviceInfo *info)
  * Returns: (transfer full) (element-type utf8): a #GList of newly allocated strings or
  * %NULL if the device description doesn't contain the &lt;dlna:X_DLNACAP&gt;
  * element.
+ *
+ * Since: 0.13.0
  **/
 GList *
 gupnp_device_info_list_dlna_capabilities (GUPnPDeviceInfo *info)
@@ -1031,6 +1035,8 @@ gupnp_device_info_list_dlna_capabilities (GUPnPDeviceInfo *info)
  *
  * Return value: a newly allocated string or %NULL if the device
  *               description doesn't contain the given @element
+ *
+ * Since: 0.13.0
  **/
 char *
 gupnp_device_info_get_description_value (GUPnPDeviceInfo *info,

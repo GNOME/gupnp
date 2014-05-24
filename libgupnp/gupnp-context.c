@@ -498,6 +498,8 @@ gupnp_context_class_init (GUPnPContextClass *klass)
          * The content of the Content-Language header id the client
          * sends Accept-Language and no language-specific pages to serve
          * exist. The property defaults to 'en'.
+         *
+         * Since: 0.17.0
          **/
         g_object_class_install_property
                 (object_class,
@@ -516,6 +518,8 @@ gupnp_context_class_init (GUPnPContextClass *klass)
          * GUPnPContext:acl:
          *
          * An access control list.
+         *
+         * Since: 0.20.11
          */
         g_object_class_install_property
                 (object_class,
@@ -537,6 +541,8 @@ gupnp_context_class_init (GUPnPContextClass *klass)
  *
  * Return value: (transfer none): The #SoupSession used by GUPnP. Do not unref
  * this when finished.
+ *
+ * Since: 0.12.3
  **/
 SoupSession *
 gupnp_context_get_session (GUPnPContext *context)
@@ -764,6 +770,8 @@ host_path_data_set_language (HostPathData *data, const char *language)
  * is required to send a Content-Language header in return. If there are
  * no files hosted in languages which match the requested ones the
  * Content-Language header is set to this value. The default value is "en".
+ *
+ * Since: 0.17.0
  */
 void
 gupnp_context_set_default_language (GUPnPContext *context,
@@ -795,6 +803,8 @@ gupnp_context_set_default_language (GUPnPContext *context,
  *
  * Returns: (transfer none): The default content of the Content-Language
  * header.
+ *
+ * Since: 0.17.0
  */
 const char *
 gupnp_context_get_default_language (GUPnPContext *context)
@@ -1235,6 +1245,8 @@ path_compare_func (HostPathData *path_data,
  * path @server_path must already be hosted by @context.
  *
  * Return value: %TRUE on success, %FALSE otherwise.
+ *
+ * Since: 0.13.3
  **/
 gboolean
 gupnp_context_host_path_for_agent (GUPnPContext *context,
@@ -1307,6 +1319,8 @@ gupnp_context_unhost_path (GUPnPContext *context,
  *
  * Returns:(transfer none): The access control list associated with this context or %NULL
  * if no acl is set.
+ *
+ * Since: 0.20.11
  **/
 GUPnPAcl *
 gupnp_context_get_acl (GUPnPContext *context)
@@ -1321,6 +1335,8 @@ gupnp_context_get_acl (GUPnPContext *context)
  * @context: A #GUPnPContext
  * @acl: (allow-none): The new access control list or %NULL to remove the
  * current list.
+ *
+ * Since: 0.20.11
  **/
 void
 gupnp_context_set_acl (GUPnPContext *context, GUPnPAcl *acl)
@@ -1430,6 +1446,7 @@ gupnp_acl_server_handler (SoupServer *server,
  *
  * Add a #SoupServerCallback to the #GUPnPContext<!-- -->'s #SoupServer.
  *
+ * Since: 0.20.11
  */
 void
 gupnp_context_add_server_handler (GUPnPContext *context,
@@ -1480,6 +1497,7 @@ _gupnp_context_add_server_handler_with_data (GUPnPContext *context,
  *
  * Add a #SoupServerCallback to the #GUPnPContext<!-- -->'s #SoupServer.
  *
+ * Since: 0.20.11
  */
 void
 gupnp_context_remove_server_handler (GUPnPContext *context, const char *path)

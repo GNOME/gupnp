@@ -745,9 +745,9 @@ gupnp_service_info_get_introspection_async
  * if the service does not provide an SCPD.
  *
  * If @cancellable is used to cancel the call, @callback will be called with
- * error code G_IO_ERROR_CANCELLED.
+ * error code %G_IO_ERROR_CANCELLED.
  *
- * Since: 0.20.10.
+ * Since: 0.20.9.
  **/
 void
 gupnp_service_info_get_introspection_async_full

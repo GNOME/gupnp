@@ -711,6 +711,8 @@ gupnp_service_proxy_send_action_hash (GUPnPServiceProxy *proxy,
  * #gupnp_service_proxy_end_action_list.
  *
  * Return value: %TRUE if sending the action was succesful.
+ *
+ * Since: 0.13.3
  **/
 gboolean
 gupnp_service_proxy_send_action_list (GUPnPServiceProxy *proxy,
@@ -1056,8 +1058,10 @@ gupnp_service_proxy_begin_action_valist
  * in-parameter names, types and values.
  *
  * Return value: (transfer none): A #GUPnPServiceProxyAction handle. This will
- * be freed when calling #gupnp_service_proxy_cancel_action or
- * #gupnp_service_proxy_end_action_list.
+ * be freed when calling gupnp_service_proxy_cancel_action() or
+ * gupnp_service_proxy_end_action_list().
+ *
+ * Since: 0.13.3
  **/
 GUPnPServiceProxyAction *
 gupnp_service_proxy_begin_action_list
@@ -1607,7 +1611,7 @@ gupnp_service_proxy_add_notify (GUPnPServiceProxy              *proxy,
  * Sets up @callback to be called whenever a change notification for
  * @variable is recieved.
  *
- * Since: 0.20.9
+ * Since: 0.20.12
  *
  * Return value: %TRUE on success.
  **/
@@ -1677,10 +1681,10 @@ gupnp_service_proxy_add_notify_full (GUPnPServiceProxy              *proxy,
  *
  * Cancels the variable change notification for @callback and @user_data.
  *
- * In version 20.9 and earlier this function must not be called directly
- * or indirectly from a #GUPnPServiceProxyNotifyCallback associated with
- * this service proxy, even if it is for another variable. In later
- * versions such calls are allowed.
+ * Up to version 0.20.9 this function must not be called directlya or
+ * indirectly from a #GUPnPServiceProxyNotifyCallback associated with this
+ * service proxy, even if it is for another variable. In later versions such
+ * calls are allowed.
  *
  * Return value: %TRUE on success.
  **/
