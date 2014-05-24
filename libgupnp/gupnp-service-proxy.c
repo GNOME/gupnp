@@ -94,10 +94,10 @@ struct _GUPnPServiceProxyAction {
 };
 
 typedef struct {
-        GType type;
+        GType type;       /* type of the variable this notification is for */
 
-        GList *callbacks;
-        GList *next_emit;
+        GList *callbacks; /* list of CallbackData */
+        GList *next_emit; /* pointer into callbacks as which callback to call next*/
 } NotifyData;
 
 typedef struct {
@@ -378,7 +378,7 @@ gupnp_service_proxy_class_init (GUPnPServiceProxyClass *klass)
  * gupnp_service_proxy_send_action:
  * @proxy: A #GUPnPServiceProxy
  * @action: An action
- * @error: The location where to store any error, or %NULL
+ * @error: (allow-none): The location where to store any error, or %NULL
  * @...: tuples of in parameter name, in parameter type, and in parameter
  * value, followed by %NULL, and then tuples of out parameter name,
  * out parameter type, and out parameter value location, terminated with %NULL
@@ -549,7 +549,7 @@ value_free (gpointer data)
  * gupnp_service_proxy_send_action_valist:
  * @proxy: A #GUPnPServiceProxy
  * @action: An action
- * @error: The location where to store any error, or %NULL
+ * @error: (allow-none): The location where to store any error, or %NULL
  * @var_args: va_list of tuples of in parameter name, in parameter type, and in
  * parameter value, followed by %NULL, and then tuples of out parameter name,
  * out parameter type, and out parameter value location
@@ -630,7 +630,7 @@ out:
  * gupnp_service_proxy_send_action_hash:
  * @proxy: A #GUPnPServiceProxy
  * @action: An action
- * @error: The location where to store any error, or %NULL
+ * @error: (allow-none): The location where to store any error, or %NULL
  * @in_hash: (element-type utf8 GValue) (transfer none): A #GHashTable of in
  * parameter name and #GValue pairs
  * @out_hash: (inout) (element-type utf8 GValue) (transfer full): A #GHashTable
@@ -693,9 +693,9 @@ gupnp_service_proxy_send_action_hash (GUPnPServiceProxy *proxy,
 
 /**
  * gupnp_service_proxy_send_action_list:
- * @proxy: (transfer none) : A #GUPnPServiceProxy
+ * @proxy: A #GUPnPServiceProxy
  * @action: An action
- * @error: The location where to store any error, or %NULL
+ * @error: (allow-none): The location where to store any error, or %NULL
  * @in_names: (element-type utf8) (transfer none): #GList of 'in' parameter
  * names (as strings)
  * @in_values: (element-type GValue) (transfer none): #GList of values (as
@@ -1166,14 +1166,14 @@ gupnp_service_proxy_begin_action_hash
  * gupnp_service_proxy_end_action:
  * @proxy: A #GUPnPServiceProxy
  * @action: A #GUPnPServiceProxyAction handle
- * @error: The location where to store any error, or %NULL
+ * @error: (allow-none): The location where to store any error, or %NULL
  * @...: tuples of out parameter name, out parameter type, and out parameter
  * value location, terminated with %NULL. The out parameter values should be
  * freed after use
  *
  * Retrieves the result of @action. The out parameters in @Varargs will be
  * filled in, and if an error occurred, @error will be set. In case of
- * a UPnPError the error code will be the same in @error.
+ * an UPnP error the error code will be the same in @error.
  *
  * Return value: %TRUE on success.
  **/
@@ -1352,7 +1352,7 @@ read_out_parameter (const char *arg_name,
  * gupnp_service_proxy_end_action_valist:
  * @proxy: A #GUPnPServiceProxy
  * @action: A #GUPnPServiceProxyAction handle
- * @error: The location where to store any error, or %NULL
+ * @error: (allow-none): The location where to store any error, or %NULL
  * @var_args: A va_list of tuples of out parameter name, out parameter type,
  * and out parameter value location. The out parameter values should be
  * freed after use
@@ -1403,7 +1403,7 @@ gupnp_service_proxy_end_action_valist (GUPnPServiceProxy       *proxy,
  * gupnp_service_proxy_end_action_list:
  * @proxy: A #GUPnPServiceProxy
  * @action: A #GUPnPServiceProxyAction handle
- * @error: The location where to store any error, or %NULL
+ * @error: (allow-none): The location where to store any error, or %NULL
  * @out_names: (element-type utf8) (transfer none): #GList of 'out' parameter
  * names (as strings)
  * @out_types: (element-type GType) (transfer none): #GList of types (as #GType)
@@ -1596,7 +1596,7 @@ gupnp_service_proxy_add_notify (GUPnPServiceProxy              *proxy,
 }
 
 /**
- * gupnp_service_proxy_add_notify_full:
+ * gupnp_service_proxy_add_notify_full: (rename-to gupnp_service_proxy_add_notify)
  * @proxy: A #GUPnPServiceProxy
  * @variable: The variable to add notification for
  * @type: The type of the variable
@@ -1610,7 +1610,6 @@ gupnp_service_proxy_add_notify (GUPnPServiceProxy              *proxy,
  * Since: 0.20.9
  *
  * Return value: %TRUE on success.
- * Rename to: gupnp_service_proxy_add_notify
  **/
 gboolean
 gupnp_service_proxy_add_notify_full (GUPnPServiceProxy              *proxy,
