@@ -1440,11 +1440,7 @@ gupnp_service_proxy_end_action_list (GUPnPServiceProxy       *proxy,
 
         /* Check for saved error from begin_action() */
         if (action->error) {
-                if (error)
-                        *error = action->error;
-                else
-                        g_error_free (action->error);
-
+                g_propagate_error (error, action->error);
                 gupnp_service_proxy_action_free (action);
 
                 return FALSE;
@@ -1511,11 +1507,7 @@ gupnp_service_proxy_end_action_hash (GUPnPServiceProxy       *proxy,
 
         /* Check for saved error from begin_action() */
         if (action->error) {
-                if (error)
-                        *error = action->error;
-                else
-                        g_error_free (action->error);
-
+                g_propagate_error (error, action->error);
                 gupnp_service_proxy_action_free (action);
 
                 return FALSE;
