@@ -359,11 +359,7 @@ gupnp_context_finalize (GObject *object)
 
         context = GUPNP_CONTEXT (object);
 
-        if (context->priv->default_language) {
-                g_free (context->priv->default_language);
-                context->priv->default_language = NULL;
-        }
-
+        g_free (context->priv->default_language);
         g_free (context->priv->server_url);
 
         /* Call super */
@@ -754,9 +750,7 @@ host_path_data_set_language (HostPathData *data, const char *language)
 
         data->default_language = g_strdup (language);
 
-
-        if (old_language != NULL)
-                g_free (old_language);
+        g_free (old_language);
 }
 
 /**
@@ -790,8 +784,7 @@ gupnp_context_set_default_language (GUPnPContext *context,
                         (GFunc) host_path_data_set_language,
                         (gpointer) language);
 
-        if (old_language != NULL)
-                g_free (old_language);
+        g_free (old_language);
 }
 
 /**
