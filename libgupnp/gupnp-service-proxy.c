@@ -134,9 +134,16 @@ gupnp_service_proxy_action_free (GUPnPServiceProxyAction *action)
 }
 
 static void
+callback_data_free (CallbackData *data)
+{
+        g_slice_free (CallbackData, data);
+}
+
+static void
 notify_data_free (NotifyData *data)
 {
-        g_list_free (data->callbacks);
+        g_list_free_full (data->callbacks,
+                          (GDestroyNotify) callback_data_free);
 
         g_slice_free (NotifyData, data);
 }
