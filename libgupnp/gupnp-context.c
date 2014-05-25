@@ -1393,6 +1393,10 @@ gupnp_acl_server_handler (SoupServer *server,
                 g_object_get (handler->service,
                               "root-device", &device,
                               NULL);
+
+                if (device != NULL) {
+                        g_object_unref (device);
+                }
         }
 
         agent = soup_message_headers_get_one (msg->request_headers,
