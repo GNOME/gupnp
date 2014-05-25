@@ -194,9 +194,13 @@ gupnp_service_introspection_finalize (GObject *object)
                 g_list_free (introspection->priv->actions);
         }
 
+        /* Contents don't need to be freed, they were owned by priv->variables
+         */
         if (introspection->priv->variable_names)
                 g_list_free (introspection->priv->variable_names);
 
+        /* Contents don't need to be freed, they were owned by priv->actions
+         */
         if (introspection->priv->action_names)
                 g_list_free (introspection->priv->action_names);
 }
