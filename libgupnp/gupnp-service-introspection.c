@@ -162,12 +162,8 @@ gupnp_service_action_info_free (GUPnPServiceActionInfo *action_info)
         GList *iter;
 
         g_free (action_info->name);
-
-        for (iter = action_info->arguments; iter; iter = iter->next) {
-                gupnp_service_action_arg_info_free (
-                                (GUPnPServiceActionArgInfo *) iter->data);
-        }
-        g_list_free (action_info->arguments);
+        g_list_free_full (action_info->arguments,
+                          (GDestroyNotify) gupnp_service_action_arg_info_free);
         g_slice_free (GUPnPServiceActionInfo, action_info);
 }
 
