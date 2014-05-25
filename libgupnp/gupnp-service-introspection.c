@@ -95,10 +95,8 @@ gupnp_service_state_variable_info_free
                 g_value_unset (&variable->maximum);
                 g_value_unset (&variable->step);
         }
-        g_list_foreach (variable->allowed_values,
-                         (GFunc) g_free,
-                         NULL);
-        g_list_free (variable->allowed_values);
+
+        g_list_free_full (variable->allowed_values, g_free);
 
         g_slice_free (GUPnPServiceStateVariableInfo, variable);
 }
@@ -180,19 +178,11 @@ gupnp_service_introspection_finalize (GObject *object)
 
         introspection = GUPNP_SERVICE_INTROSPECTION (object);
 
-        if (introspection->priv->variables) {
-                g_list_foreach (introspection->priv->variables,
-                                (GFunc) gupnp_service_state_variable_info_free,
-                                NULL);
-                g_list_free (introspection->priv->variables);
-        }
+        g_list_free_full (introspection->priv->variables,
+                          (GDestroyNotify) gupnp_service_state_variable_info_free);
 
-        if (introspection->priv->actions) {
-                g_list_foreach (introspection->priv->actions,
-                                (GFunc) gupnp_service_action_info_free,
-                                NULL);
-                g_list_free (introspection->priv->actions);
-        }
+        g_list_free_full (introspection->priv->actions,
+                          (GDestroyNotify) gupnp_service_action_info_free);
 
         /* Contents don't need to be freed, they were owned by priv->variables
          */

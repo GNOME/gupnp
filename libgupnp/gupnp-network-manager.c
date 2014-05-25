@@ -714,12 +714,7 @@ gupnp_network_manager_dispose (GObject *object)
                 priv->manager_proxy = NULL;
         }
 
-        if (priv->nm_devices != NULL) {
-                g_list_foreach (priv->nm_devices, (GFunc) nm_device_unref,
-                    NULL);
-                g_list_free (priv->nm_devices);
-                priv->nm_devices = NULL;
-        }
+        g_list_free_full (priv->nm_devices, (GDestroyNotify) nm_device_unref);
 
         if (priv->cancellable != NULL)  {
                 g_object_unref (priv->cancellable);
