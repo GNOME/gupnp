@@ -296,6 +296,7 @@ gupnp_service_proxy_dispose (GObject *object)
 
         g_list_free_full (proxy->priv->pending_notifies,
                           (GDestroyNotify) emit_notify_data_free);
+        proxy->priv->pending_notifies = NULL;
 
         /* Call super */
         object_class = G_OBJECT_CLASS (gupnp_service_proxy_parent_class);
@@ -1865,6 +1866,7 @@ emit_notifications (gpointer user_data)
         /* Cleanup */
         g_list_free_full (proxy->priv->pending_notifies,
                           (GDestroyNotify) emit_notify_data_free);
+        proxy->priv->pending_notifies = NULL;
 
         proxy->priv->notify_idle_src = NULL;
 
