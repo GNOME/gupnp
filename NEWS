@@ -1,3 +1,36 @@
+0.20.12
+=======
+
+Changes since 0.20.11:
+
+- Several documentation fixes.
+- Fix warning from clang.
+- Prevent a critical if there's no DBus available and a DBus-based context
+  manager is used.
+- Don't try to use a DBus context manager if we don't have a system bus.
+- Use g_return_val_if_fail.
+- Fix a small leak of CallbackData in GUPnPServiceProxy.
+- Add a gupnp_service_proxy_add_notify_full variant to be nice to
+  gobject-introspection.
+- Several code cleanups.
+- Fix a reference leak in ACL.
+- Make "document" property of GUPnPDeviceInfo readable.
+- Add gupnp_service_proxy_add_raw_notify which can be used to get the raw
+  xmlDoc received through notification.
+
+Bugs fixed in this release:
+ - https://bugzilla.gnome.org/show_bug.cgi?id=701446
+ - https://bugzilla.gnome.org/show_bug.cgi?id=706123
+ - https://bugzilla.gnome.org/show_bug.cgi?id=706127
+ - https://bugzilla.gnome.org/show_bug.cgi?id=727709
+ - https://bugzilla.gnome.org/show_bug.cgi?id=729827
+ - https://bugzilla.gnome.org/show_bug.cgi?id=730359
+ - https://bugzilla.gnome.org/show_bug.cgi?id=730690
+
+All contributors to this release:
+ - Jens Georg <mail@jensge.org>
+ - Philip Withnall <philip.withnall@collabora.co.uk>
+
 0.20.11
 =======
 
