@@ -68,22 +68,22 @@ typedef struct _GUPnPAcl GUPnPAcl;
 typedef struct _GUPnPAclInterface GUPnPAclInterface;
 
 /* Forward declarations to avoid recursive includes */
-typedef struct _GUPnPDevice GUPnPDevice;
-typedef struct _GUPnPService GUPnPService;
+struct _GUPnPDevice;
+struct _GUPnPService;
 
 struct _GUPnPAclInterface {
     GTypeInterface parent;
 
     gboolean (*is_allowed) (GUPnPAcl     *self,
-                            GUPnPDevice  *device,
-                            GUPnPService *service,
+                            struct _GUPnPDevice  *device,
+                            struct _GUPnPService *service,
                             const char   *path,
                             const char   *address,
                             const char   *agent);
 
     void     (*is_allowed_async) (GUPnPAcl           *self,
-                                  GUPnPDevice        *device,
-                                  GUPnPService       *service,
+                                  struct _GUPnPDevice        *device,
+                                  struct _GUPnPService       *service,
                                   const char         *path,
                                   const char         *address,
                                   const char         *agent,
@@ -108,16 +108,16 @@ struct _GUPnPAclInterface {
 
 gboolean
 gupnp_acl_is_allowed (GUPnPAcl     *self,
-                      GUPnPDevice  *device,
-                      GUPnPService *service,
+                      struct _GUPnPDevice  *device,
+                      struct _GUPnPService *service,
                       const char   *path,
                       const char   *address,
                       const char   *agent);
 
 void
 gupnp_acl_is_allowed_async (GUPnPAcl           *self,
-                            GUPnPDevice        *device,
-                            GUPnPService       *service,
+                            struct _GUPnPDevice        *device,
+                            struct _GUPnPService       *service,
                             const char         *path,
                             const char         *address,
                             const char         *agent,

@@ -32,6 +32,7 @@
 
 #include "gupnp-acl.h"
 #include "gupnp-acl-private.h"
+#include "gupnp-device.h"
 
 G_DEFINE_INTERFACE(GUPnPAcl, gupnp_acl, G_TYPE_OBJECT)
 

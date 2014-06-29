@@ -59,6 +59,7 @@
 #include "gupnp-marshal.h"
 #include "gena-protocol.h"
 #include "http-headers.h"
+#include "gupnp-device.h"
 
 #define GUPNP_CONTEXT_DEFAULT_LANGUAGE "en"
 

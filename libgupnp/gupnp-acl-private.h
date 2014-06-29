@@ -28,6 +28,7 @@
 
 #include "gupnp-acl.h"
 #include "gupnp-context.h"
+#include "gupnp-service.h"
 
 G_BEGIN_DECLS
 
