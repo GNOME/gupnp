@@ -110,10 +110,6 @@ AM_CONDITIONAL([USE_NETWORK_MANAGER],
 AM_CONDITIONAL([USE_CONNMAN],
                [test "x$with_context_manager" = "xconnman"])
 
-if test "x$with_context_manager" = "xconnman"; then
-        PKG_CHECK_MODULES(CONNMAN, connman >= 0.80)
-fi
-
 USE_NETLINK=no
 AS_IF([test "x$with_context_manager" = "xlinux"],
       [AS_IF([test "x$HAVE_NETLINK" = "xno"],
