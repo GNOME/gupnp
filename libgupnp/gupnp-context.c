@@ -1496,11 +1496,9 @@ _gupnp_context_add_server_handler_with_data (GUPnPContext *context,
 /**
  * gupnp_context_remove_server_handler:
  * @context: a #GUPnPContext
- * @use_acl: %TRUE, if the path should query the GUPnPContext::acl before
- * serving the resource, %FALSE otherwise.
  * @path: the toplevel path for the handler.
  *
- * Add a #SoupServerCallback to the #GUPnPContext<!-- -->'s #SoupServer.
+ * Remove a #SoupServerCallback from the #GUPnPContext<!-- -->'s #SoupServer.
  *
  * Since: 0.20.11
  */

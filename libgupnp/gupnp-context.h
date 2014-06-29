@@ -145,6 +145,10 @@ gupnp_context_add_server_handler       (GUPnPContext *context,
                                         SoupServerCallback callback,
                                         gpointer user_data,
                                         GDestroyNotify destroy);
+
+void
+gupnp_context_remove_server_handler    (GUPnPContext *context,
+                                        const char *path);
 G_END_DECLS
 
 #endif /* __GUPNP_CONTEXT_H__ */
