@@ -595,7 +595,6 @@ get_actions (xmlNode *list_element)
              action_node;
              action_node = action_node->next) {
                 GUPnPServiceActionInfo *action_info;
-                GList *arguments;
                 char *name;
 
                 if (strcmp ("action", (char *) action_node->name) != 0)
@@ -606,16 +605,9 @@ get_actions (xmlNode *list_element)
                 if (!name)
                         continue;
 
-                arguments = get_action_arguments (action_node);
-                if (!arguments) {
-                        g_free (name);
-
-                        continue;
-                }
-
                 action_info = g_slice_new0 (GUPnPServiceActionInfo);
                 action_info->name = name;
-                action_info->arguments = arguments;
+                action_info->arguments = get_action_arguments (action_node);
 
                 actions = g_list_append (actions, action_info);
         }
