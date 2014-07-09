@@ -765,31 +765,36 @@ gupnp_device_info_get_icon_url (GUPnPDeviceInfo *info,
 
                         /* Filter out icons with incorrect mime type or
                          * incorrect depth. */
+                        /* Note: Meaning of 'weight' changes when no
+                         * size request is included. */
                         if (mime_type_ok && icon->weight >= 0) {
-                                if (requested_width >= 0) {
-                                        if (prefer_bigger) {
-                                                icon->weight +=
-                                                        icon->width -
-                                                        requested_width;
-                                        } else {
-                                                icon->weight +=
-                                                        requested_width -
-                                                        icon->width;
+                                if (requested_width < 0 && requested_height < 0) {
+                                        icon->weight = icon->width * icon->height;
+                                } else {
+                                        if (requested_width >= 0) {
+                                                if (prefer_bigger) {
+                                                        icon->weight +=
+                                                                icon->width -
+                                                                requested_width;
+                                                } else {
+                                                        icon->weight +=
+                                                                requested_width -
+                                                                icon->width;
+                                                }
+                                        }
+
+                                        if (requested_height >= 0) {
+                                                if (prefer_bigger) {
+                                                        icon->weight +=
+                                                                icon->height -
+                                                                requested_height;
+                                                } else {
+                                                        icon->weight +=
+                                                                requested_height -
+                                                                icon->height;
+                                                }
                                         }
                                 }
-
-                                if (requested_height >= 0) {
-                                        if (prefer_bigger) {
-                                                icon->weight +=
-                                                        icon->height -
-                                                        requested_height;
-                                        } else {
-                                                icon->weight +=
-                                                        requested_height -
-                                                        icon->height;
-                                        }
-                                }
-
                                 icons = g_list_prepend (icons, icon);
                         } else
                                 icon_free (icon);
@@ -799,15 +804,29 @@ gupnp_device_info_get_icon_url (GUPnPDeviceInfo *info,
         if (icons == NULL)
                 return NULL;
 
-        /* Find closest match */
+        /* If no size was requested, find the largest or smallest */
         closest = NULL;
-        for (l = icons; l; l = l->next) {
-                icon = l->data;
+        if (requested_height < 0 && requested_width < 0) {
+                for (l = icons; l; l = l->next) {
+                        icon = l->data;
 
-                /* Look between icons with positive weight first */
-                if (icon->weight >= 0) {
-                        if (!closest || icon->weight < closest->weight)
+                        if (!closest ||
+                            (prefer_bigger && icon->weight > closest->weight) ||
+                            (!prefer_bigger && icon->weight < closest->weight))
                                 closest = icon;
+                }
+        }
+
+        /* Find the match closest to requested size */
+        if (!closest) {
+                for (l = icons; l; l = l->next) {
+                        icon = l->data;
+
+                        /* Look between icons with positive weight first */
+                        if (icon->weight >= 0) {
+                                if (!closest || icon->weight < closest->weight)
+                                        closest = icon;
+                        }
                 }
         }
 
