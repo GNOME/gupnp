@@ -380,6 +380,67 @@ test_bgo_690400 (void)
     g_object_unref (context);
 }
 
+/* Test that correct icons are returned for various size requests.
+ * https://bugzilla.gnome.org/show_bug.cgi?id=722696 */
+static void
+test_bgo_722696 (void)
+{
+    GUPnPContext *context = NULL;
+    GError *error = NULL;
+    GUPnPRootDevice *rd;
+    char *icon;
+    int width;
+
+    context = gupnp_context_new (NULL, "lo", 0, &error);
+    g_assert (context != NULL);
+    g_assert (error == NULL);
+
+    rd = gupnp_root_device_new (context, "TestDevice.xml", DATA_PATH);
+
+    /* prefer bigger */
+    width = -1;
+    icon = gupnp_device_info_get_icon_url (GUPNP_DEVICE_INFO (rd),
+                                           NULL,
+                                           -1, -1, -1,
+                                           TRUE,
+                                           NULL, NULL, &width, NULL);
+    g_assert_cmpint (width, ==, 120);
+    g_free (icon);
+
+    /* prefer smaller */
+    width = -1;
+    icon = gupnp_device_info_get_icon_url (GUPNP_DEVICE_INFO (rd),
+                                           NULL,
+                                           -1, -1, -1,
+                                           FALSE,
+                                           NULL, NULL, &width, NULL);
+    g_assert_cmpint (width, ==, 24);
+    g_free (icon);
+
+    /* prefer width <= 119 */
+    width = -1;
+    icon = gupnp_device_info_get_icon_url (GUPNP_DEVICE_INFO (rd),
+                                           NULL,
+                                           -1, 119, -1,
+                                           FALSE,
+                                           NULL, NULL, &width, NULL);
+    g_assert_cmpint (width, ==, 48);
+    g_free (icon);
+
+    /* prefer width >= 119 */
+    width = -1;
+    icon = gupnp_device_info_get_icon_url (GUPNP_DEVICE_INFO (rd),
+                                           NULL,
+                                           -1, 119, -1,
+                                           TRUE,
+                                           NULL, NULL, &width, NULL);
+    g_assert_cmpint (width, ==, 120);
+    g_free (icon);
+
+    g_object_unref (rd);
+    g_object_unref (context);
+}
+
 int
 main (int argc, char *argv[]) {
 #if !GLIB_CHECK_VERSION(2,35,0)
@@ -389,6 +450,7 @@ main (int argc, char *argv[]) {
     g_test_add_func ("/bugs/696762", test_bgo_696762);
     g_test_add_func ("/bugs/678701", test_bgo_678701);
     g_test_add_func ("/bugs/690400", test_bgo_690400);
+    g_test_add_func ("/bugs/722696", test_bgo_722696);
 
     return g_test_run ();
 }
