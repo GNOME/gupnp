@@ -1,4 +1,8 @@
 GUPnP cheader_filename="libgupnp/gupnp.h"
+Acl
+    .is_allowed skip
+    .is_allowed_async skip
+    .is_allowed_finish skip
 ContextManager
     .main_context skip
     .new skip
