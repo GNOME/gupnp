@@ -2278,7 +2278,13 @@ subscribe (GUPnPServiceProxy *proxy)
         const char *server_url;
         char *sub_url, *delivery_url, *timeout;
 
-        context = gupnp_service_info_get_context (GUPNP_SERVICE_INFO (proxy));
+        /* Remove subscription timeout */
+        if (proxy->priv->subscription_timeout_src) {
+                g_source_destroy (proxy->priv->subscription_timeout_src);
+                proxy->priv->subscription_timeout_src = NULL;
+        }
+
+	context = gupnp_service_info_get_context (GUPNP_SERVICE_INFO (proxy));
 
         /* Create subscription message */
         sub_url = gupnp_service_info_get_event_subscription_url
