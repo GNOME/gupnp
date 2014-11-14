@@ -272,6 +272,7 @@ gupnp_root_device_constructor (GType                  type,
         GUPnPRootDevice *device;
         GUPnPContext *context;
         const char *description_path, *description_dir, *udn;
+        SoupURI *uri;
         char *desc_path, *location, *usn, *relative_location;
         unsigned int i;
         GUPnPXMLDoc *description_doc;
@@ -420,10 +421,11 @@ gupnp_root_device_constructor (GType                  type,
         gupnp_context_host_path (context, device->priv->description_dir, "");
 
         /* Generate full location */
-        location = g_strjoin (NULL,
-                              _gupnp_context_get_server_url (context),
-                              relative_location,
-                              NULL);
+        uri = _gupnp_context_get_server_uri (context);
+        soup_uri_set_path (uri, relative_location);
+        location = soup_uri_to_string (uri, FALSE);
+        soup_uri_free (uri);
+
         g_free (relative_location);
 
         /* Save the URL base, if any */

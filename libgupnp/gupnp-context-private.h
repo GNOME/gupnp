@@ -28,8 +28,8 @@
 
 G_BEGIN_DECLS
 
-G_GNUC_INTERNAL const char *
-_gupnp_context_get_server_url (GUPnPContext *context);
+G_GNUC_INTERNAL SoupURI *
+_gupnp_context_get_server_uri (GUPnPContext *context);
 
 G_GNUC_INTERNAL void
 _gupnp_context_add_server_handler_with_data (GUPnPContext *context,

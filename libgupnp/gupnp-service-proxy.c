@@ -2275,7 +2275,8 @@ subscribe (GUPnPServiceProxy *proxy)
         SoupMessage *msg;
         SoupSession *session;
         SoupServer *server;
-        const char *server_url;
+        SoupURI *uri;
+        char *uri_string;
         char *sub_url, *delivery_url, *timeout;
 
         /* Remove subscription timeout */
@@ -2321,10 +2322,13 @@ subscribe (GUPnPServiceProxy *proxy)
         }
 
         /* Add headers */
-        server_url = _gupnp_context_get_server_url (context);
-        delivery_url = g_strdup_printf ("<%s%s>",
-                                        server_url,
-                                        proxy->priv->path);
+        uri = _gupnp_context_get_server_uri (context);
+        soup_uri_set_path (uri, proxy->priv->path);
+        uri_string = soup_uri_to_string (uri, FALSE);
+        soup_uri_free (uri);
+        delivery_url = g_strdup_printf ("<%s>", uri_string);
+        g_free (uri_string);
+
         soup_message_headers_append (msg->request_headers,
                                      "Callback",
                                      delivery_url);

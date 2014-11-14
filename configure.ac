@@ -51,7 +51,7 @@ PKG_CHECK_MODULES(LIBGUPNP, glib-2.0 >= 2.28.0 \
                             gio-2.0 \
                             gmodule-2.0 \
                             gssdp-1.0 >= 0.13.0 \
-                            libsoup-2.4 >= 2.28.2 \
+                            libsoup-2.4 >= 2.48.0 \
                             libxml-2.0 \
                             $UUID_LIBS)
 PKG_CHECK_MODULES(GTHREAD, gthread-2.0)
