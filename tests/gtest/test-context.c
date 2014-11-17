@@ -149,7 +149,7 @@ test_gupnp_context_http_ranged_requests (void)
         uri = g_strdup_printf ("http://127.0.0.1:%u/random4k.bin", port);
         g_assert (uri != NULL);
 
-        session = soup_session_async_new ();
+        session = soup_session_new ();
 
         /* Corner cases: First byte */
         request_range_and_compare (file, session, loop, uri, 0, 0);

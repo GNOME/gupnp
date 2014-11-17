@@ -191,12 +191,7 @@ gupnp_context_initable_init (GInitable     *initable,
 
         context = GUPNP_CONTEXT (initable);
 
-        context->priv->session = soup_session_async_new_with_options
-                (SOUP_SESSION_IDLE_TIMEOUT,
-                 60,
-                 SOUP_SESSION_ASYNC_CONTEXT,
-                 g_main_context_get_thread_default (),
-                 NULL);
+        context->priv->session = soup_session_new ();
 
         user_agent = g_strdup_printf ("%s GUPnP/" VERSION " DLNADOC/1.50",
                                       g_get_prgname ()? : "");
@@ -212,9 +207,6 @@ gupnp_context_initable_init (GInitable     *initable,
                 soup_session_add_feature (context->priv->session,
                                           SOUP_SESSION_FEATURE (logger));
         }
-
-        soup_session_add_feature_by_type (context->priv->session,
-                                          SOUP_TYPE_CONTENT_DECODER);
 
         /* Create the server already if the port is not null*/
         if (context->priv->port != 0) {

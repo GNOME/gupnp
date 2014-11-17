@@ -126,12 +126,8 @@ gupnp_service_get_session (GUPnPService *service)
                  * order. The session from GUPnPContext may use
                  * multiple connections.
                  */
-                service->priv->session = soup_session_async_new_with_options
-                  (SOUP_SESSION_IDLE_TIMEOUT, 60,
-                   SOUP_SESSION_ASYNC_CONTEXT,
-                   g_main_context_get_thread_default (),
-                   SOUP_SESSION_MAX_CONNS_PER_HOST, 1,
-                   NULL);
+                service->priv->session = soup_session_new_with_options (SOUP_SESSION_MAX_CONNS_PER_HOST, 1,
+                                                                        NULL);
 
                 if (g_getenv ("GUPNP_DEBUG")) {
                         SoupLogger *logger;
