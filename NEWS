@@ -1,3 +1,35 @@
+0.20.13
+=======
+
+Changes since 0.20.12:
+
+- Fix cyclic includes.
+- Avoid redefinition of symbols.
+- Fix missing function declaration.
+- Don't check von connman.pc.
+- Allow actions without arguments.
+- Respect "prefer_bigger" even if there is no icon size.
+- DOAP fixes.
+- Fix VAPI generation.
+- Fix reference counting.
+- Port to new libsoup API.
+
+Bugs fixed in this release:
+ - https://bugzilla.gnome.org/show_bug.cgi?id=722696
+ - https://bugzilla.gnome.org/show_bug.cgi?id=731209
+ - https://bugzilla.gnome.org/show_bug.cgi?id=731457
+ - https://bugzilla.gnome.org/show_bug.cgi?id=733241
+ - https://bugzilla.gnome.org/show_bug.cgi?id=740267
+ - https://bugzilla.gnome.org/show_bug.cgi?id=742075
+
+All contributors to this release:
+ - Jens Georg <mail@jensge.org>
+ - Sven Neumann <neumann@teufel.de>
+ - Jussi Kukkonen <jku@goto.fi>
+ - Olav Vitters <olav@vitters.nl>
+ - Etienne Peron <etienne.peron@parrot.com>
+ - Andre Klapper <a9016009@gmx.de>
+
 0.20.12
 =======
 
