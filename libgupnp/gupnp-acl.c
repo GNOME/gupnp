@@ -206,8 +206,8 @@ acl_server_handler_new (GUPnPService *service,
 void
 acl_server_handler_free (AclServerHandler *handler)
 {
-        g_clear_pointer (&handler->service, NULL);
-        g_clear_pointer (&handler->context, NULL);
+        handler->service = NULL;
+        handler->context = NULL;
 
         if (handler->notify != NULL)
                 handler->notify (handler->user_data);

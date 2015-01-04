@@ -1463,8 +1463,8 @@ gupnp_service_constructor (GType                  type,
         handler = acl_server_handler_new (GUPNP_SERVICE (object),
                                           context,
                                           control_server_handler,
-                                          g_object_ref (object),
-                                          g_object_unref);
+                                          object,
+                                          NULL);
         _gupnp_context_add_server_handler_with_data (context, path, handler);
         g_free (path);
         g_free (url);
@@ -1475,8 +1475,8 @@ gupnp_service_constructor (GType                  type,
         handler = acl_server_handler_new (GUPNP_SERVICE (object),
                                           context,
                                           subscription_server_handler,
-                                          g_object_ref (object),
-                                          g_object_unref);
+                                          object,
+                                          NULL);
         _gupnp_context_add_server_handler_with_data (context, path, handler);
         g_free (path);
         g_free (url);
