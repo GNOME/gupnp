@@ -163,7 +163,6 @@ nm_device_unref (NMDevice *nm_device)
                 g_object_unref (nm_device->context);
         }
 
-        g_object_unref (nm_device->proxy);
         g_object_unref (nm_device->manager);
 
         g_slice_free (NMDevice, nm_device);
@@ -379,7 +378,7 @@ use_new_device (GUPnPNetworkManager *manager,
         GVariant *value;
 
         manager->priv->nm_devices = g_list_append (manager->priv->nm_devices,
-                                                   nm_device);
+                                                   nm_device_ref (nm_device));
 
         g_signal_connect (nm_device->proxy,
                           "g-signal",
@@ -433,7 +432,7 @@ device_proxy_new_cb (GObject      *source_object,
                      gpointer      user_data) {
         GUPnPNetworkManager *manager;
         GDBusProxy *device_proxy;
-        NMDevice *nm_device;
+        NMDevice *nm_device = NULL;
         NMDeviceType type;
         GVariant *value;
         GError *error;
@@ -451,14 +450,11 @@ device_proxy_new_cb (GObject      *source_object,
 
         value = g_dbus_proxy_get_cached_property (device_proxy, "DeviceType");
         if (G_UNLIKELY (value == NULL)) {
-                g_object_unref (device_proxy);
-
                 goto done;
         }
 
         if (G_UNLIKELY (!g_variant_is_of_type (value, G_VARIANT_TYPE_UINT32))) {
                 g_variant_unref (value);
-                g_object_unref (device_proxy);
 
                 goto done;
         }
@@ -485,6 +481,8 @@ device_proxy_new_cb (GObject      *source_object,
                 use_new_device (manager, nm_device);
 
 done:
+        g_clear_pointer (&nm_device, (GDestroyNotify) nm_device_unref);
+        g_clear_object (&device_proxy);
         g_object_unref (manager);
 }
 
