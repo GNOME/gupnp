@@ -441,6 +441,33 @@ test_bgo_722696 (void)
     g_object_unref (context);
 }
 
+#define TEST_BGO_743233_USN "uuid:f28e26f0-fcaa-42aa-b115-3ca12096925c::"
+
+static void
+test_bgo_743233 (void)
+{
+    GUPnPContext *context = NULL;
+    GUPnPControlPoint *cp = NULL;
+    GError *error = NULL;
+
+    context = gupnp_context_new (NULL, "lo", 0, &error);
+    g_assert (context != NULL);
+    g_assert (error == NULL);
+
+    cp = gupnp_control_point_new (context,
+                                  "usn:uuid:0dc60534-642c-478f-ae61-1d78dbe1f73d");
+    g_assert (cp != NULL);
+
+    g_test_expect_message (G_LOG_DOMAIN,
+                           G_LOG_LEVEL_WARNING,
+                           "Invalid USN: " TEST_BGO_743233_USN);
+    g_signal_emit_by_name (cp, "resource-unavailable", TEST_BGO_743233_USN);
+    g_test_assert_expected_messages ();
+
+    g_object_unref (cp);
+    g_object_unref (context);
+}
+
 int
 main (int argc, char *argv[]) {
     g_test_init (&argc, &argv, NULL);
@@ -448,6 +475,7 @@ main (int argc, char *argv[]) {
     g_test_add_func ("/bugs/678701", test_bgo_678701);
     g_test_add_func ("/bugs/690400", test_bgo_690400);
     g_test_add_func ("/bugs/722696", test_bgo_722696);
+    g_test_add_func ("/bugs/743233", test_bgo_743233);
 
     return g_test_run ();
 }
