@@ -27,6 +27,9 @@ AC_SYS_LARGEFILE
 LT_PREREQ([2.2])
 LT_INIT
 
+GUUL_CHECK_UUID([internal])
+UUID_LIBS=$GUUL_PKG
+AC_SUBST([UUID_LIBS])
 
 AC_MSG_CHECKING([operating system])
 os_win32=no
@@ -34,26 +37,21 @@ case "$target_os" in
      mingw*|cygwin*)
         os_win32=yes
         AC_MSG_RESULT(Win32)
-        UUID_LIBS=
         ;;
      darwin*)
         AC_MSG_RESULT(Darwin)
-        UUID_LIBS=
         ;;
      *)
         AC_MSG_RESULT($target_os)
-        UUID_LIBS=uuid
         ;;
 esac
-AC_SUBST([UUID_LIBS])
 
 PKG_CHECK_MODULES(LIBGUPNP, glib-2.0 >= 2.40.0 \
                             gio-2.0 \
                             gmodule-2.0 \
                             gssdp-1.0 >= 0.13.0 \
                             libsoup-2.4 >= 2.48.0 \
-                            libxml-2.0 \
-                            $UUID_LIBS)
+                            libxml-2.0)
 PKG_CHECK_MODULES(GTHREAD, gthread-2.0)
 
 AM_CONDITIONAL(OS_WIN32, test "x$os_win32" = "xyes")
@@ -64,7 +62,6 @@ if test "x$os_win32" = "xno"; then
                         [Context Manager backend to use]),,
             [with_context_manager="none"])
 else
-    LIBGUPNP_LIBS="$LIBGUPNP_LIBS -lrpcrt4"
     with_context_manager="windows"
 fi
 
@@ -181,4 +178,5 @@ echo "
     GObject-Introspection: ${found_introspection}
     VALA bindings:         ${have_vapigen}
     Context manager:       ${with_context_manager}
+    UUID Library:          ${GUUL_FLAVOR}
 "

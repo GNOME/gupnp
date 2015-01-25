@@ -41,6 +41,7 @@ endif
 AM_CFLAGS = $(LIBGUPNP_CFLAGS) \
 	    $(DBUS_GLIB_CFLAGS) \
 	    $(NETLINK_CFLAGS) \
+		$(GUUL_CFLAGS) \
 	    -I$(top_srcdir) \
 	    $(CONTEXT_MANAGER_CFLAGS)
 
@@ -115,9 +116,11 @@ libgupnp_1_0_la_SOURCES = $(introspection_sources)		\
 			  xml-util.c				\
 			  xml-util.h				\
 			  gena-protocol.h			\
+			  guul.c \
+			  guul.h \
 			  $(BUILT_SOURCES)
 
-libgupnp_1_0_la_LIBADD = $(LIBGUPNP_LIBS) $(DBUS_GLIB_LIBS) $(CONTEXT_MANAGER_LIBS)
+libgupnp_1_0_la_LIBADD = $(LIBGUPNP_LIBS) $(DBUS_GLIB_LIBS) $(CONTEXT_MANAGER_LIBS) $(GUUL_LIBS)
 
 EXTRA_DIST = gupnp-marshal.list 	   \
 	     gupnp-network-manager.c   	   \

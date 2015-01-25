@@ -43,11 +43,7 @@
 #include "xml-util.h"
 #include "gvalue-util.h"
 
-#ifdef G_OS_WIN32
-#include <rpc.h>
-#else
-#include <uuid/uuid.h>
-#endif
+#include "guul.h"
 
 #define SUBSCRIPTION_TIMEOUT 300 /* DLNA (7.2.22.1) enforced */
 
@@ -1092,30 +1088,15 @@ subscription_response (GUPnPService *service,
 static char *
 generate_sid (void)
 {
-#ifdef G_OS_WIN32
         char *ret = NULL;
-        UUID uuid;
-        RPC_STATUS stat;
-        stat = UuidCreate (&uuid);
-        if (stat == RPC_S_OK) {
-                unsigned char* uuidStr = NULL;
-                stat = UuidToString (&uuid, &uuidStr);
-                if (stat == RPC_S_OK) {
-                        ret = g_strdup_printf ("uuid:%s", uuidStr);
-                        RpcStringFree (&uuidStr);
-                }
-        }
+        char *uuid;
+
+
+        uuid = guul_get_uuid ();
+        ret = g_strdup_printf ("uuid:%s", uuid);
+        g_free (uuid);
 
         return ret;
-#else
-        uuid_t id;
-        char out[39];
-
-        uuid_generate (id);
-        uuid_unparse (id, out);
-
-        return g_strdup_printf ("uuid:%s", out);
-#endif
 }
 
 /* Subscription expired */
