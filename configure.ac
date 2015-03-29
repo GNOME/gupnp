@@ -47,7 +47,7 @@ case "$target_os" in
 esac
 AC_SUBST([UUID_LIBS])
 
-PKG_CHECK_MODULES(LIBGUPNP, glib-2.0 >= 2.28.0 \
+PKG_CHECK_MODULES(LIBGUPNP, glib-2.0 >= 2.40.0 \
                             gio-2.0 \
                             gmodule-2.0 \
                             gssdp-1.0 >= 0.13.0 \
