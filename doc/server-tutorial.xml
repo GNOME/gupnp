@@ -34,7 +34,7 @@
       the <literal>BinaryLight1</literal> device type, but if none of the
       existing device types are suitable a custom device type can be created.
     </para>
-    <programlisting><xi:include href="../../examples/BinaryLight1.xml" parse="text"/></programlisting>
+    <programlisting><xi:include href="../../examples/BinaryLight1.xml" parse="text"><xi:fallback /></xi:include></programlisting>
     <para>
       The <sgmltag>specVersion</sgmltag> tag defines what version of the UPnP
       Device Architecture the document conforms to.  At the time of writing the
@@ -82,7 +82,7 @@
       from the specification.  This is the <literal>SwitchPower1</literal>
       service description file:
     </para>
-    <programlisting><xi:include href="../../examples/SwitchPower1.xml" parse="text"/></programlisting>
+    <programlisting><xi:include href="../../examples/SwitchPower1.xml" parse="text"><xi:fallback /></xi:include></programlisting>
     <para>
       Again, the <sgmltag>specVersion</sgmltag> tag defines the UPnP version
       that is being used.  The rest of the document consists of an
