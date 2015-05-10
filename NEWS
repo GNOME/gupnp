@@ -1,3 +1,20 @@
+0.20.14
+=======
+
+Changes since 0.20.13:
+
+Added/updated dependencies:
+ GLib 2.0 >= 2.40.0
+
+- Simplify UUID handling.
+
+Bugs fixed in this release:
+ - https://bugzilla.gnome.org/show_bug.cgi?id=743072
+ - https://bugzilla.gnome.org/show_bug.cgi?id=744221
+
+All contributors to this release:
+ - Jens Georg <mail@jensge.org>
+
 0.20.13
 =======
 
