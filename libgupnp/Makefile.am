@@ -66,6 +66,7 @@ libgupnpinc_HEADERS = gupnp-acl.h			\
 		      gupnp-xml-doc.h	                \
 		      gupnp-white-list.h                \
 		      gupnp-types.h			\
+		      gupnp-uuid.h			\
 		      gupnp.h
 
 introspection_sources = $(libgupnpinc_HEADERS) \

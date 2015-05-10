@@ -1084,6 +1084,19 @@ subscription_response (GUPnPService *service,
         soup_message_set_status (msg, SOUP_STATUS_OK);
 }
 
+/**
+ * gupnp_get_uuid:
+ *
+ * Generate and return a new UUID.
+ *
+ * Returns: (transfer full): A newly generated UUID in string representation.
+ */
+char *
+gupnp_get_uuid (void)
+{
+        return guul_get_uuid ();
+}
+
 /* Generates a new SID */
 static char *
 generate_sid (void)

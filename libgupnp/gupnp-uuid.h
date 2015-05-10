@@ -1,7 +1,7 @@
 /*
- * Copyright (C) 2006, 2007 OpenedHand Ltd.
+ * Copyright (C) 2015 Jens Georg
  *
- * Author: Jorn Baayen <jorn@openedhand.com>
+ * Author: Jens Georg <mail@jensge.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -19,21 +19,14 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#include "gupnp-acl.h"
-#include "gupnp-context.h"
-#include "gupnp-context-manager.h"
-#include "gupnp-control-point.h"
-#include "gupnp-error.h"
-#include "gupnp-device.h"
-#include "gupnp-device-info.h"
-#include "gupnp-device-proxy.h"
-#include "gupnp-resource-factory.h"
-#include "gupnp-root-device.h"
-#include "gupnp-service.h"
-#include "gupnp-service-info.h"
-#include "gupnp-service-introspection.h"
-#include "gupnp-service-proxy.h"
-#include "gupnp-white-list.h"
-#include "gupnp-xml-doc.h"
-#include "gupnp-types.h"
-#include "gupnp-uuid.h"
+#ifndef __GUPNP_UUID_H__
+#define __GUPNP_UUID_H__
+
+G_BEGIN_DECLS
+
+char *
+gupnp_get_uuid ();
+
+G_END_DECLS
+
+#endif /* __GUPNP_UUID_H__ */

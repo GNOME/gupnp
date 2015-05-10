@@ -497,3 +497,9 @@ GUPNP_ACL_GET_INTERFACE
 GUPNP_IS_ACL
 GUPNP_TYPE_ACL
 </SECTION>
+
+<SECTION>
+<FILE>gupnp-misc</FILE>
+<TITLE>Utility functions</TITLE>
+gupnp_get_uuid
+</SECTION>
