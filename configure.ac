@@ -18,10 +18,17 @@ AM_MAINTAINER_MODE([enable])
 
 AM_SILENT_RULES([yes])
 
+AX_REQUIRE_DEFINED([GTK_DOC_CHECK])
+AX_REQUIRE_DEFINED([GOBJECT_INTROSPECTION_CHECK])
+AX_CHECK_ENABLE_DEBUG([yes])
+
 # Check for programs
 AC_PROG_CC
 AC_FUNC_MMAP
 AC_SYS_LARGEFILE
+
+AX_IS_RELEASE([git-directory])
+AX_COMPILER_FLAGS([WARN_CFLAGS])
 
 # Initialize libtool
 LT_PREREQ([2.2])
@@ -122,14 +129,6 @@ AC_SUBST(USE_NETLINK)
 # glib-genmarshal
 GLIB_GENMARSHAL=`pkg-config --variable=glib_genmarshal glib-2.0`
 AC_SUBST(GLIB_GENMARSHAL)
-
-# Debugging
-AC_ARG_ENABLE(debug,
-        AS_HELP_STRING([--enable-debug], [enable debugging]),,
-        enable_debug=no)
-if test "x$enable_debug" = "xyes"; then
-        CFLAGS="$CFLAGS -g -Wall -Wextra -Werror"
-fi
 
 GOBJECT_INTROSPECTION_CHECK([0.6.4])
 

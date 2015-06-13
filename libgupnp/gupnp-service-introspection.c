@@ -159,8 +159,6 @@ gupnp_service_action_arg_info_free (GUPnPServiceActionArgInfo *argument)
 static void
 gupnp_service_action_info_free (GUPnPServiceActionInfo *action_info)
 {
-        GList *iter;
-
         g_free (action_info->name);
         g_list_free_full (action_info->arguments,
                           (GDestroyNotify) gupnp_service_action_arg_info_free);

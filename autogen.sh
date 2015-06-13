@@ -1,39 +1,41 @@
-#! /bin/sh
+#!/bin/sh
 
-# Copyright (C) 2010 Zeeshan Ali (Khattak) <zeeshanak@gnome.org>.
-#
-# Author: Zeeshan Ali (Khattak) <zeeshanak@gnome.org>
-#
-# This file is part of GUPnP.
-#
-# This library is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License as published by
-# the Free Software Foundation; either version 2 of the License, or
-# (at your option) any later version.
-#
-# This library is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public License
-# along with this program; if not, write to the Free Software Foundation,
-# Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
-test -n "$srcdir" || srcdir=`dirname "$0"`
-test -n "$srcdir" || srcdir=.
 
-which gnome-autogen.sh || {
-    echo "You need to install gnome-common from the GNOME git"
-    exit 1
+# Run this to generate all the initial makefiles, etc.
+srcdir=`dirname $0`
+test -z "$srcdir" && srcdir=.
+
+(test -f $srcdir/configure.ac) || {
+        echo "**Error**: Directory "\`$srcdir\'" does not look like the top-level project directory"
+        exit 1
 }
 
-test -d $srcdir/m4 || mkdir -p $srcdir/m4
+PKG_NAME=`autoconf --trace 'AC_INIT:$1' "$srcdir/configure.ac"`
 
-# require automak 1.11 for vala support
-REQUIRED_AUTOMAKE_VERSION=1.11 \
-REQUIRED_AUTOCONF_VERSION=2.64 \
-REQUIRED_LIBTOOL_VERSION=2.2.6 \
-REQUIRED_INTLTOOL_VERSION=0.40.0 \
-REQUIRED_GTK_DOC_VERSION=1.14 \
-. gnome-autogen.sh "$@"
+if [ "$#" = 0 -a "x$NOCONFIGURE" = "x" ]; then
+        echo "**Warning**: I am going to run \`configure' with no arguments." >&2
+        echo "If you wish to pass any to it, please specify them on the" >&2
+        echo \`$0\'" command line." >&2
+        echo "" >&2
+fi
+
+set -x
+aclocal --install || exit 1
+glib-gettextize --force --copy || exit 1
+gtkdocize --copy || exit 1
+intltoolize --force --copy --automake || exit 1
+autoreconf --verbose --force --install -Wno-portability || exit 1
+set +x
+
+if [ "$NOCONFIGURE" = "" ]; then
+        set -x
+        $srcdir/configure "$@" || exit 1
+        set +x
+
+        if [ "$1" = "--help" ]; then exit 0 else
+                echo "Now type \`make\' to compile $PKG_NAME" || exit 1
+        fi
+else
+        echo "Skipping configure process."
+fi

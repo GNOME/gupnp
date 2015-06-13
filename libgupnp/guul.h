@@ -31,7 +31,7 @@ G_BEGIN_DECLS
 #ifdef GUUL_INTERNAL
 G_GNUC_INTERNAL
 #endif
-char *guul_get_uuid ();
+char *guul_get_uuid (void);
 
 G_END_DECLS
 

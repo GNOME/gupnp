@@ -321,6 +321,8 @@ http_response_set_body_gzip (SoupMessage *msg,
                         break;
                 case G_CONVERTER_FLUSHED:
                         break;
+                default:
+                        break;
                 }
 
                 if (bytes_written)

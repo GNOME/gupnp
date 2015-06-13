@@ -31,7 +31,7 @@
 
 #if defined(GUUL_PLATFORM_GENERIC) || defined(GUUL_PLATFORM_OSX)
 char *
-guul_get_uuid()
+guul_get_uuid(void)
 {
         uuid_t uuid;
         char *out;
@@ -45,7 +45,7 @@ guul_get_uuid()
 }
 #endif
 
-#if GUUL_PLATFORM_BSD
+#if defined(GUUL_PLATFORM_BSD)
 char *
 guul_get_uuid()
 {
@@ -60,7 +60,7 @@ guul_get_uuid()
 }
 #endif
 
-#ifdef GUUL_PLATFORM_WINDOWS
+#if defined(GUUL_PLATFORM_WINDOWS)
 char *
 guul_get_uuid()
 {

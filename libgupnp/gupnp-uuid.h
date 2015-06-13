@@ -25,7 +25,7 @@
 G_BEGIN_DECLS
 
 char *
-gupnp_get_uuid ();
+gupnp_get_uuid (void);
 
 G_END_DECLS
 

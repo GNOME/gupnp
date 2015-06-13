@@ -369,7 +369,8 @@ gupnp_context_constructor (GType                  type,
 {
         GObjectClass *object_class;
         guint port = 0, msearch_port = 0;
-        int i, msearch_idx = -1;
+        guint i;
+        int msearch_idx = -1;
 
         for (i = 0; i < n_construct_params; i++) {
                 const char *par_name;
@@ -575,6 +576,11 @@ gupnp_context_get_server (GUPnPContext *context)
         g_return_val_if_fail (GUPNP_IS_CONTEXT (context), NULL);
 
         if (context->priv->server == NULL) {
+                const char *ip = NULL;
+                guint port = 0;
+                GSocketAddress *addr = NULL;
+                GError *error = NULL;
+
                 context->priv->server = soup_server_new (NULL, NULL);
 
                 soup_server_add_handler (context->priv->server,
@@ -583,10 +589,9 @@ gupnp_context_get_server (GUPnPContext *context)
                                          context,
                                          NULL);
 
-                const char *ip = gssdp_client_get_host_ip (GSSDP_CLIENT (context));
-                const guint port = context->priv->port;
-                GSocketAddress *addr = g_inet_socket_address_new_from_string (ip, port);
-                GError *error = NULL;
+                ip = gssdp_client_get_host_ip (GSSDP_CLIENT (context));
+                port = context->priv->port;
+                addr = g_inet_socket_address_new_from_string (ip, port);
 
                 if (! soup_server_listen (context->priv->server,
                                           addr, (SoupServerListenOptions) 0, &error)) {
@@ -764,11 +769,13 @@ void
 gupnp_context_set_default_language (GUPnPContext *context,
                                     const char   *language)
 {
+        char *old_language = NULL;
+
         g_return_if_fail (GUPNP_IS_CONTEXT (context));
         g_return_if_fail (language != NULL);
 
 
-        char *old_language = context->priv->default_language;
+        old_language = context->priv->default_language;
 
         if ((old_language != NULL) && (!strcmp (language, old_language)))
                 return;

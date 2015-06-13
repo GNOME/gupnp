@@ -477,23 +477,23 @@ stop_main_loop (G_GNUC_UNUSED GUPnPServiceProxy       *proxy,
          \
                 while (arg_name != NULL) { \
                         GValue *value = g_new0 (GValue, 1); \
-                        gchar *error = NULL; \
+                        gchar *__error = NULL; \
                         GType type = va_arg (var_args, GType); \
          \
                         G_VALUE_COLLECT_INIT (value, \
                                               type, \
                                               var_args, \
                                               G_VALUE_NOCOPY_CONTENTS, \
-                                              &error); \
-                        if (error == NULL) { \
+                                              &__error); \
+                        if (__error == NULL) { \
                                 names = g_list_prepend (names, g_strdup (arg_name)); \
                                 values = g_list_prepend (values, value); \
                         } else { \
                                 g_warning ("Failed to collect value of type %s for %s: %s", \
                                            g_type_name (type), \
                                            arg_name, \
-                                           error); \
-                                g_free (error); \
+                                           __error); \
+                                g_free (__error); \
                         } \
                         arg_name = va_arg (var_args, const gchar *); \
                 } \
@@ -520,15 +520,15 @@ stop_main_loop (G_GNUC_UNUSED GUPnPServiceProxy       *proxy,
                                            g_type_name (type), \
                                            arg_name); \
                         } else { \
-                                gchar *error = NULL; \
+                                gchar *__error = NULL; \
          \
-                                G_VALUE_LCOPY (value, var_args, 0, &error); \
-                                if (error != NULL) { \
+                                G_VALUE_LCOPY (value, var_args, 0, &__error); \
+                                if (__error != NULL) { \
                                         g_warning ("Failed to lcopy the value of type %s for %s: %s", \
                                                    g_type_name (type), \
                                                    arg_name, \
-                                                   error); \
-                                        g_free (error); \
+                                                   __error); \
+                                        g_free (__error); \
                                 } \
                         } \
                         arg_name = va_arg (var_args, const gchar *); \

@@ -263,7 +263,7 @@ gupnp_white_list_is_empty (GUPnPWhiteList *white_list)
  * Since: 0.20.5
  **/
 gboolean
-gupnp_white_list_add_entry (GUPnPWhiteList *white_list, gchar* entry)
+gupnp_white_list_add_entry (GUPnPWhiteList *white_list, const gchar* entry)
 {
         GList *s_entry;
         GUPnPWhiteListPrivate *priv;
@@ -321,7 +321,7 @@ gupnp_white_list_add_entryv (GUPnPWhiteList *white_list, gchar **entries)
  * Since: 0.20.5
  **/
 gboolean
-gupnp_white_list_remove_entry (GUPnPWhiteList *white_list, gchar* entry)
+gupnp_white_list_remove_entry (GUPnPWhiteList *white_list, const gchar* entry)
 {
         GList *s_entry;
         GUPnPWhiteListPrivate *priv;

@@ -38,6 +38,7 @@
 #include "gupnp-marshal.h"
 #include "gupnp-error.h"
 #include "gupnp-acl.h"
+#include "gupnp-uuid.h"
 #include "http-headers.h"
 #include "gena-protocol.h"
 #include "xml-util.h"
@@ -88,6 +89,12 @@ static void
 notify_subscriber   (gpointer key,
                      gpointer value,
                      gpointer user_data);
+
+GUPnPServiceAction *
+gupnp_service_action_ref (GUPnPServiceAction *action);
+
+void
+gupnp_service_action_unref (GUPnPServiceAction *action);
 
 typedef struct {
         GUPnPService *service;
@@ -1298,8 +1305,6 @@ subscription_server_handler (G_GNUC_UNUSED SoupServer        *server,
                              gpointer                         user_data)
 {
         GUPnPService *service;
-        GUPnPContext *context;
-        GUPnPAcl *acl;
         const char *callback, *nt, *sid;
 
         service = GUPNP_SERVICE (user_data);
