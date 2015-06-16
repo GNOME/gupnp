@@ -70,7 +70,7 @@ typedef struct {
 } GUPnPNetworkManagerClass;
 
 G_GNUC_INTERNAL gboolean
-gupnp_network_manager_is_available                      ();
+gupnp_network_manager_is_available                      (void);
 
 G_END_DECLS
 

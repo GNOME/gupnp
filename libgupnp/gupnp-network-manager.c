@@ -744,7 +744,7 @@ gupnp_network_manager_class_init (GUPnPNetworkManagerClass *klass)
 }
 
 gboolean
-gupnp_network_manager_is_available ()
+gupnp_network_manager_is_available (void)
 {
         GDBusProxy *dbus_proxy;
         GVariant *ret_values;
