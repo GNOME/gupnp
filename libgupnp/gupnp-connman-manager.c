@@ -33,6 +33,8 @@
 #include "gupnp-context.h"
 #include "gupnp-marshal.h"
 
+#define SERVICE_CREATION_TIMEOUT 1000
+
 typedef enum
 {
         CM_SERVICE_STATE_ACTIVE   = 1,
@@ -49,7 +51,7 @@ typedef struct {
         guint               port;
         gchar               *iface;
         gchar               *name;
-
+        guint               timeout;
 } CMService;
 
 struct _GUPnPConnmanManagerPrivate {
@@ -147,16 +149,48 @@ service_context_delete (CMService *cm_service)
         cm_service->context = NULL;
 }
 
+static gboolean
+service_context_create_timeout (CMService *cm_service)
+{
+        cm_service->timeout = 0;
+
+        g_return_val_if_fail (cm_service->current == CM_SERVICE_STATE_ACTIVE, FALSE);
+
+        if (service_context_create (cm_service) == FALSE) {
+                cm_service->current = CM_SERVICE_STATE_INACTIVE;
+        }
+
+        return FALSE;
+}
+
+static void
+service_context_remove_creation_timeout (CMService *cm_service)
+{
+        if (cm_service->timeout) {
+                g_source_remove (cm_service->timeout);
+                cm_service->timeout = 0;
+        }
+}
+
+static void
+service_context_install_creation_timeout (CMService *cm_service)
+{
+        service_context_remove_creation_timeout (cm_service);
+
+        cm_service->timeout = g_timeout_add (SERVICE_CREATION_TIMEOUT,
+                                             (GSourceFunc) service_context_create_timeout,
+                                             cm_service);
+}
+
 static void
 service_context_update (CMService *cm_service, CMServiceState new_state)
 {
         if (cm_service->current != new_state) {
                 if (new_state == CM_SERVICE_STATE_ACTIVE) {
-                        if (service_context_create (cm_service) == FALSE)
-                                new_state = CM_SERVICE_STATE_INACTIVE;
-
-                } else if ((new_state == CM_SERVICE_STATE_INACTIVE) &&
-                           (cm_service->context != NULL)) {
+                        service_context_install_creation_timeout (cm_service);
+                } else if (new_state == CM_SERVICE_STATE_INACTIVE) {
+                        service_context_remove_creation_timeout (cm_service);
+                        if (cm_service->context != NULL)
                                 service_context_delete (cm_service);
                 }
 
@@ -246,6 +280,8 @@ cm_service_free (CMService *cm_service)
         }
 
         g_object_unref (cm_service->proxy);
+
+        service_context_remove_creation_timeout (cm_service);
 
         if (cm_service->context != NULL) {
                 g_signal_emit_by_name (cm_service->manager,
