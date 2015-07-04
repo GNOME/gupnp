@@ -21,8 +21,12 @@
 
 #include <guul.h>
 
-#if defined(GUUL_PLATFORM_GENERIC) || defined(GUUL_PLATFORM_OSX) || defined(GUUL_PLATFORM_BSD)
+#if defined(GUUL_PLATFORM_GENERIC) || defined(GUUL_PLATFORM_BSD)
 #   include <uuid.h>
+#endif
+
+#if defined(GUUL_PLATFORM_OSX)
+#   include <uuid/uuid.h>
 #endif
 
 #if defined(GUUL_PLATFORM_WINDOWS)
