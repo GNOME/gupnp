@@ -53,19 +53,23 @@ G_DEFINE_TYPE (GUPnPService,
                GUPNP_TYPE_SERVICE_INFO);
 
 struct _GUPnPServicePrivate {
-        GUPnPRootDevice *root_device;
+        GUPnPRootDevice           *root_device;
 
-        SoupSession     *session;
+        SoupSession               *session;
 
-        guint            notify_available_id;
+        guint                      notify_available_id;
 
-        GHashTable      *subscriptions;
+        GHashTable                *subscriptions;
 
-        GList           *state_variables;
+        GList                     *state_variables;
 
-        GQueue          *notify_queue;
+        GQueue                    *notify_queue;
 
-        gboolean         notify_frozen;
+        gboolean                   notify_frozen;
+
+        GUPnPServiceIntrospection *introspection;
+
+        GList                     *pending_autoconnect;
 };
 
 enum {
@@ -1381,6 +1385,26 @@ got_introspection (GUPnPServiceInfo          *info,
         gpointer data;
 
         if (introspection) {
+                /* Handle pending auto-connects */
+                service->priv->introspection  = g_object_ref (introspection);
+
+                /* _autoconnect() just calls prepend() so we reverse the list
+                 * here.
+                 */
+                service->priv->pending_autoconnect =
+                            g_list_reverse (service->priv->pending_autoconnect);
+
+                /* Re-call _autoconnect(). This will not fill
+                 * pending_autoconnect because we set the introspection member
+                 * variable before */
+                for (l = service->priv->pending_autoconnect; l; l = l->next)
+                        gupnp_service_signals_autoconnect (service,
+                                                           l->data,
+                                                           NULL);
+
+                g_list_free (service->priv->pending_autoconnect);
+                service->priv->pending_autoconnect = NULL;
+
                 state_variables =
                         gupnp_service_introspection_list_state_variables
                                 (introspection);
@@ -1636,6 +1660,11 @@ gupnp_service_finalize (GObject *object)
         if (service->priv->session) {
                 g_object_unref (service->priv->session);
                 service->priv->session = NULL;
+        }
+
+        if (service->priv->introspection) {
+                g_object_unref (service->priv->introspection);
+                service->priv->introspection = NULL;
         }
 
         /* Call super */
@@ -2232,18 +2261,22 @@ gupnp_service_signals_autoconnect (GUPnPService *service,
 
         g_return_if_fail (GUPNP_IS_SERVICE (service));
 
-        introspection = gupnp_service_info_get_introspection
-                                (GUPNP_SERVICE_INFO (service),
-                                 error);
-        if (!introspection)
+        introspection = service->priv->introspection;
+
+        if (!introspection) {
+                /* Initial introspection is not done yet, delay until we
+                 * received that */
+                service->priv->pending_autoconnect =
+                    g_list_prepend (service->priv->pending_autoconnect,
+                                    user_data);
+
                 return;
+        }
 
         /* Get a handle on the main executable -- use this to find symbols */
         module = g_module_open (NULL, 0);
         if (module == NULL) {
                 g_error ("Failed to open module: %s", g_module_error ());
-
-                g_object_unref (introspection);
 
                 return;
         }
@@ -2266,5 +2299,4 @@ gupnp_service_signals_autoconnect (GUPnPService *service,
                                           user_data);
 
         g_module_close (module);
-        g_object_unref (introspection);
 }
