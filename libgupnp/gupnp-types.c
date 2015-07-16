@@ -195,7 +195,7 @@ gupnp_data_type_to_gtype (const char *data_type)
         else if (g_ascii_strcasecmp ("bin.base64", data_type) == 0)
                 return GUPNP_TYPE_BIN_BASE64;
         else if (g_ascii_strcasecmp ("bin.hex", data_type) == 0)
-                return GUPNP_TYPE_BIN_BASE64;
+                return GUPNP_TYPE_BIN_HEX;
         else
                 return G_TYPE_INVALID;
 }
