@@ -230,11 +230,10 @@ on_service_property_signal (GDBusConnection *connection,
                 g_free (cm_service->iface);
                 g_variant_lookup (value, "Interface", "s", &cm_service->iface);
 
-                if (cm_service->context != NULL)
-                        g_object_set (G_OBJECT (cm_service->context),
-                                               "interface",
-                                               cm_service->iface,
-                                               NULL);
+                if (cm_service->context != NULL) {
+                        service_context_delete (cm_service);
+                        service_context_create (cm_service);
+                }
 
         } else if (g_strcmp0 (name, "State") == 0) {
                 state_str = g_variant_get_string (value, 0);
@@ -351,7 +350,7 @@ cm_service_update (CMService *cm_service, GVariant *dict, guint port)
                     (g_strcmp0 (state, "ready") == 0))
                         new_state = CM_SERVICE_STATE_ACTIVE;
 
-        if (is_name && (g_strcmp0 (cm_service->name, name) == 0)) {
+        if (is_name && (g_strcmp0 (cm_service->name, name) != 0)) {
                 g_free (cm_service->name);
                 cm_service->name = name;
 
@@ -362,15 +361,14 @@ cm_service_update (CMService *cm_service, GVariant *dict, guint port)
                                       NULL);
         }
 
-        if (is_iface && (g_strcmp0 (cm_service->iface, iface) == 0)) {
+        if (is_iface && (g_strcmp0 (cm_service->iface, iface) != 0)) {
                 g_free (cm_service->iface);
                 cm_service->iface = iface;
 
-                if (cm_service->context != NULL)
-                        g_object_set (G_OBJECT (cm_service->context),
-                                      "interface",
-                                      cm_service->iface,
-                                      NULL);
+                if (cm_service->context != NULL) {
+                        service_context_delete (cm_service);
+                        service_context_create (cm_service);
+                }
         }
 
         cm_service->port = port;
