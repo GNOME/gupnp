@@ -61,6 +61,7 @@ struct _GUPnPConnmanManagerPrivate {
         GHashTable *cm_services;
         guint      sig_change_id;
         GDBusConnection *system_bus;
+        GCancellable *cancellable;
 };
 
 #define CM_DBUS_CONNMAN_NAME      "net.connman"
@@ -579,7 +580,8 @@ get_services_cb (GObject      *source_object,
                                         &error);
 
         if (error != NULL) {
-                g_warning ("Error fetching service list: %s", error->message);
+                if (!g_error_matches (error, G_IO_ERROR, G_IO_ERROR_CANCELLED))
+                        g_warning ("Error fetching service list: %s", error->message);
                 g_error_free (error);
 
                 return;
@@ -668,7 +670,7 @@ init_connman_manager (GUPnPConnmanManager *manager)
                            NULL,
                            G_DBUS_CALL_FLAGS_NONE,
                            -1,
-                           NULL,
+                           priv->cancellable,
                            get_services_cb,
                            manager);
 
@@ -717,6 +719,12 @@ gupnp_connman_manager_dispose (GObject *object)
                 priv->cm_services = NULL;
         }
 
+        if (priv->cancellable != NULL)  {
+                g_cancellable_cancel (priv->cancellable);
+                g_object_unref (priv->cancellable);
+                priv->cancellable = NULL;
+        }
+
         g_clear_object (&(priv->system_bus));
 
         /* Call super */
@@ -732,6 +740,7 @@ gupnp_connman_manager_constructed (GObject *object)
 
         manager = GUPNP_CONNMAN_MANAGER (object);
 
+        manager->priv->cancellable = g_cancellable_new ();
         manager->priv->system_bus = g_bus_get_sync (G_BUS_TYPE_SYSTEM,
                                                     NULL,
                                                     NULL);
