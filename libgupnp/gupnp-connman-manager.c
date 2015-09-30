@@ -46,6 +46,7 @@ typedef struct {
         GUPnPConnmanManager *manager;
         GUPnPContext        *context;
         GDBusProxy          *proxy;
+        GCancellable        *cancellable;
         CMServiceState      current;
         guint               sig_prop_id;
         guint               port;
@@ -281,6 +282,14 @@ cm_service_free (CMService *cm_service)
 
                 g_object_unref (cm_service->proxy);
         }
+        else if (cm_service->cancellable != NULL)  {
+                g_cancellable_cancel (cm_service->cancellable);
+        }
+
+        if (cm_service->cancellable != NULL)  {
+                g_object_unref (cm_service->cancellable);
+                cm_service->cancellable = NULL;
+        }
 
         service_context_remove_creation_timeout (cm_service);
 
@@ -391,7 +400,8 @@ service_proxy_new_cb (GObject      *source_object,
         service_proxy = g_dbus_proxy_new_for_bus_finish (res, &error);
 
         if (error != NULL) {
-                g_warning ("Failed to create D-Bus proxy: %s", error->message);
+                if (!g_error_matches (error, G_IO_ERROR, G_IO_ERROR_CANCELLED))
+                        g_warning ("Failed to create D-Bus proxy: %s", error->message);
                 g_error_free (error);
 
                 return;
@@ -454,6 +464,8 @@ cm_service_add (GUPnPConnmanManager *manager,
                              g_strdup (path),
                              cm_service);
 
+        cm_service->cancellable = g_cancellable_new ();
+
         g_dbus_proxy_new_for_bus (G_BUS_TYPE_SYSTEM,
                                   G_DBUS_PROXY_FLAGS_DO_NOT_LOAD_PROPERTIES |
                                   G_DBUS_PROXY_FLAGS_DO_NOT_CONNECT_SIGNALS,
@@ -461,7 +473,7 @@ cm_service_add (GUPnPConnmanManager *manager,
                                   CM_DBUS_CONNMAN_NAME,
                                   path,
                                   CM_DBUS_SERVICE_INTERFACE,
-                                  NULL,
+                                  cm_service->cancellable,
                                   service_proxy_new_cb,
                                   manager);
 }
