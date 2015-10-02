@@ -268,17 +268,19 @@ cm_service_new (GUPnPConnmanManager *manager,
 static void
 cm_service_free (CMService *cm_service)
 {
-        GDBusConnection *cnx;
+        if (cm_service->proxy != NULL) {
+                GDBusConnection *cnx;
 
-        cnx = g_dbus_proxy_get_connection (cm_service->proxy);
+                cnx = g_dbus_proxy_get_connection (cm_service->proxy);
 
-        if (cm_service->sig_prop_id) {
-                g_dbus_connection_signal_unsubscribe (cnx,
-                                                      cm_service->sig_prop_id);
-                cm_service->sig_prop_id = 0;
+                if (cm_service->sig_prop_id) {
+                        g_dbus_connection_signal_unsubscribe (cnx,
+                                                              cm_service->sig_prop_id);
+                        cm_service->sig_prop_id = 0;
+                }
+
+                g_object_unref (cm_service->proxy);
         }
-
-        g_object_unref (cm_service->proxy);
 
         service_context_remove_creation_timeout (cm_service);
 
