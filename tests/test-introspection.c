@@ -265,9 +265,6 @@ main (int argc, char **argv)
                 return EXIT_FAILURE;
         }
 		
-#if !GLIB_CHECK_VERSION(2,35,0)
-        g_type_init ();
-#endif
 
         error = NULL;
         context = g_initable_new (GUPNP_TYPE_CONTEXT, NULL, &error, NULL);

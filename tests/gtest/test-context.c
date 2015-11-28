@@ -207,9 +207,6 @@ test_gupnp_context_http_ranged_requests (void)
 }
 
 int main (int argc, char *argv[]) {
-#if !GLIB_CHECK_VERSION(2,35,0)
-        g_type_init ();
-#endif
         g_test_init (&argc, &argv, NULL);
         g_test_add_func ("/context/http/ranged-requests",
                          test_gupnp_context_http_ranged_requests);

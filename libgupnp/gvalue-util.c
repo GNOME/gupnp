@@ -42,11 +42,7 @@ gvalue_util_set_value_from_string (GValue     *value,
                 break;
 
         case G_TYPE_CHAR:
-#if GLIB_CHECK_VERSION(2,32,0)
                 g_value_set_schar (value, *str);
-#else
-                g_value_set_char (value, *str);
-#endif
 
                 break;
 
@@ -179,11 +175,7 @@ gvalue_util_value_append_to_xml_string (const GValue *value,
                 return TRUE;
 
         case G_TYPE_CHAR:
-#if GLIB_CHECK_VERSION(2,32,0)
                 g_string_append_c (str, g_value_get_schar (value));
-#else
-                g_string_append_c (str, g_value_get_char (value));
-#endif
 
                 return TRUE;
 

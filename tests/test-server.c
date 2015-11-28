@@ -72,9 +72,6 @@ main (int argc, char **argv)
                 return EXIT_FAILURE;
         }
 
-#if !GLIB_CHECK_VERSION(2,35,0)
-        g_type_init ();
-#endif
         setlocale (LC_ALL, "");
 
         error = NULL;

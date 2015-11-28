@@ -120,10 +120,6 @@ main (int argc, char **argv)
   GUPnPContext *context;
   GUPnPControlPoint *cp;
 
-#if !GLIB_CHECK_VERSION(2,35,0)
-  g_type_init ();
-#endif
-
   optionContext = g_option_context_new ("[on|off|toggle]");
   g_option_context_add_main_entries (optionContext, entries, NULL);
   if (!g_option_context_parse (optionContext, &argc, &argv, &error))

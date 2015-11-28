@@ -250,9 +250,6 @@ main (G_GNUC_UNUSED int argc, G_GNUC_UNUSED char **argv)
         struct sigaction sig_action;
 #endif /* G_OS_WIN32 */
 
-#if !GLIB_CHECK_VERSION(2,35,0)
-        g_type_init ();
-#endif
         setlocale (LC_ALL, "");
 
         cm = gupnp_context_manager_create(0);
