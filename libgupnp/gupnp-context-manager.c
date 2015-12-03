@@ -633,7 +633,7 @@ gupnp_context_manager_rescan_control_points (GUPnPContextManager *manager)
  * @control_point: The #GUPnPControlPoint to be taken care of
  *
  * By calling this function, you are asking @manager to keep a reference to
- * @control_point until it's associated #GUPnPContext is no longer available.
+ * @control_point until its associated #GUPnPContext is no longer available.
  * You usually want to call this function from
  * #GUPnPContextManager::context-available handler after you create a
  * #GUPnPControlPoint object for the newly available context.
@@ -657,7 +657,7 @@ gupnp_context_manager_manage_control_point (GUPnPContextManager *manager,
  * @root_device: The #GUPnPRootDevice to be taken care of
  *
  * By calling this function, you are asking @manager to keep a reference to
- * @root_device when it's associated #GUPnPContext is no longer available. You
+ * @root_device when its associated #GUPnPContext is no longer available. You
  * usually want to call this function from
  * #GUPnPContextManager::context-available handler after you create a
  * #GUPnPRootDevice object for the newly available context.
