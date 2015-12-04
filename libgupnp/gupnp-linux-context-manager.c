@@ -330,8 +330,8 @@ extract_info (struct nlmsghdr *header, char **label)
         int rt_attr_len;
         struct rtattr *rt_attr;
 
-        rt_attr = IFLA_RTA (NLMSG_DATA (header));
-        rt_attr_len = IFLA_PAYLOAD (header);
+        rt_attr = IFA_RTA (NLMSG_DATA (header));
+        rt_attr_len = IFA_PAYLOAD (header);
         while (RT_ATTR_OK (rt_attr, rt_attr_len)) {
                 if (rt_attr->rta_type == IFA_LABEL) {
                         *label = g_strdup ((char *) RTA_DATA (rt_attr));
@@ -347,17 +347,18 @@ is_wireless_status_message (struct nlmsghdr *header)
 {
         int rt_attr_len;
         struct rtattr *rt_attr;
+        gboolean retval = FALSE;
 
         rt_attr = IFLA_RTA (NLMSG_DATA (header));
         rt_attr_len = IFLA_PAYLOAD (header);
         while (RT_ATTR_OK (rt_attr, rt_attr_len)) {
                 if (rt_attr->rta_type == IFLA_WIRELESS)
-                        return TRUE;
+                        return retval = TRUE;
 
                 rt_attr = RTA_NEXT (rt_attr, rt_attr_len);
         }
 
-        return FALSE;
+        return retval;
 }
 
 static void
