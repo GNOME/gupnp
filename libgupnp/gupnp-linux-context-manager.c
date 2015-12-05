@@ -104,6 +104,9 @@ struct _NetworkInterface {
         /* ESSID for wireless interfaces */
         char *essid;
 
+        /* interface id of the device */
+        int index;
+
         /* States of the interface */
         NetworkInterfaceFlags flags;
 
@@ -117,27 +120,15 @@ typedef struct _NetworkInterface NetworkInterface;
 /* Create a new network interface struct and query the device name */
 static NetworkInterface *
 network_device_new (GUPnPLinuxContextManager *manager,
+                    char                     *name,
                     int                       index)
 {
         NetworkInterface *device;
-        struct ifreq ifr;
-        int ret;
-
-        /* Query interface name */
-        memset (&ifr, 0, sizeof (struct ifreq));
-        ifr.ifr_ifindex = index;
-        ret = ioctl (manager->priv->fd, SIOCGIFNAME, &ifr);
-
-        if (ret == -1) {
-                g_warning ("Could not get interface name for index %d",
-                           index);
-
-                return NULL;
-        }
 
         device = g_slice_new0 (NetworkInterface);
         device->manager = manager;
-        device->name = g_strdup (ifr.ifr_name);
+        device->name = name;
+        device->index = index;
 
         device->contexts = g_hash_table_new_full (g_str_hash,
                                                   g_str_equal,
@@ -342,23 +333,33 @@ extract_info (struct nlmsghdr *header, char **label)
         }
 }
 
-static gboolean
-is_wireless_status_message (struct nlmsghdr *header)
+static void
+extract_link_message_info (struct nlmsghdr *header,
+                           char           **ifname,
+                           gboolean        *is_wifi)
 {
         int rt_attr_len;
         struct rtattr *rt_attr;
-        gboolean retval = FALSE;
+        *ifname = NULL;
+        *is_wifi = FALSE;
 
         rt_attr = IFLA_RTA (NLMSG_DATA (header));
         rt_attr_len = IFLA_PAYLOAD (header);
         while (RT_ATTR_OK (rt_attr, rt_attr_len)) {
-                if (rt_attr->rta_type == IFLA_WIRELESS)
-                        return retval = TRUE;
+                switch (rt_attr->rta_type)
+                {
+                case IFLA_WIRELESS:
+                        *is_wifi = TRUE;
+                        break;
+                case IFLA_IFNAME:
+                        *ifname = g_strdup ((const char *) RTA_DATA(rt_attr));
+                        break;
+                default:
+                        break;
+                }
 
                 rt_attr = RTA_NEXT (rt_attr, rt_attr_len);
         }
-
-        return retval;
 }
 
 static void
@@ -528,6 +529,7 @@ query_all_addresses (GUPnPLinuxContextManager *self)
 /* Handle status changes (up, down, new address, ...) on network interfaces */
 static void
 handle_device_status_change (GUPnPLinuxContextManager *self,
+                             char                     *name,
                              struct ifinfomsg         *ifi)
 {
         gpointer key;
@@ -546,7 +548,7 @@ handle_device_status_change (GUPnPLinuxContextManager *self,
                 return;
         }
 
-        device = network_device_new (self, ifi->ifi_index);
+        device = network_device_new (self, name, ifi->ifi_index);
         if (device) {
                 if (!INTERFACE_IS_VALID (ifi))
                         device->flags |= NETWORK_INTERFACE_IGNORE;
@@ -583,7 +585,6 @@ receive_netlink_message (GUPnPLinuxContextManager *self, GError **error)
         struct nlmsghdr *header = (struct nlmsghdr *) buf;
         struct ifinfomsg *ifi;
         struct ifaddrmsg *ifa;
-
 
         len = g_socket_receive (self->priv->netlink_socket,
                                 buf,
@@ -629,14 +630,25 @@ receive_netlink_message (GUPnPLinuxContextManager *self, GError **error)
                                 g_free (label);
                             }
                             break;
-                        case RTM_NEWLINK:
+                        case RTM_NEWLINK: {
+                                char *name = NULL;
+                                gboolean is_wireless_status_message = FALSE;
+
                                 ifi = NLMSG_DATA (header);
+                                extract_link_message_info (header,
+                                                           &name,
+                                                           &is_wireless_status_message);
 
                                 /* Check if wireless is up for chit-chat */
-                                if (is_wireless_status_message (header))
+                                if (is_wireless_status_message) {
+                                        g_free (name);
+
                                         continue;
-                                handle_device_status_change (self, ifi);
+                                }
+
+                                handle_device_status_change (self, name, ifi);
                                 break;
+                        }
                         case RTM_DELLINK:
                                 ifi = NLMSG_DATA (header);
                                 remove_device (self, ifi);
