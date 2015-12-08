@@ -56,7 +56,7 @@ esac
 PKG_CHECK_MODULES(LIBGUPNP, glib-2.0 >= 2.40.0 \
                             gio-2.0 \
                             gmodule-2.0 \
-                            gssdp-1.0 >= 0.13.0 \
+                            gssdp-1.0 >= 0.14.13 \
                             libsoup-2.4 >= 2.48.0 \
                             libxml-2.0)
 PKG_CHECK_MODULES(GTHREAD, gthread-2.0)
