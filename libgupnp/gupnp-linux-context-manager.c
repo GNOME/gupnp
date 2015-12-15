@@ -247,8 +247,9 @@ network_device_update_essid (NetworkInterface *device)
 
 static void
 network_device_create_context (NetworkInterface *device,
-                               const char *address,
-                               const char *label)
+                               const char       *address,
+                               const char       *label,
+                               const char       *mask)
 {
         guint port;
         GError *error = NULL;
@@ -272,7 +273,8 @@ network_device_create_context (NetworkInterface *device,
                                   &error,
                                   "host-ip", address,
                                   "interface", label,
-                                  "network", device->essid,
+                                  "network", device->essid ? device->essid
+                                                           : mask,
                                   "port", port,
                                   NULL);
 
@@ -372,6 +374,7 @@ static void receive_netlink_message (GUPnPLinuxContextManager  *self,
 static void create_context (GUPnPLinuxContextManager *self,
                             const char               *label,
                             const char               *address,
+                            const char               *mask,
                             struct ifaddrmsg         *ifa);
 static void remove_context (GUPnPLinuxContextManager *self,
                             const char               *address,
@@ -398,8 +401,10 @@ on_netlink_message_available (G_GNUC_UNUSED GSocket     *socket,
 static void
 extract_info (struct nlmsghdr *header,
               gboolean         dump,
+              guint8           prefixlen,
               char           **address,
-              char           **label)
+              char           **label,
+              char           **mask)
 {
         int rt_attr_len;
         struct rtattr *rt_attr;
@@ -421,6 +426,23 @@ extract_info (struct nlmsghdr *header,
                                            buf,
                                            sizeof (buf));
                                 *address = g_strdup (buf);
+                        }
+
+                        if (mask != NULL) {
+                                struct in_addr addr, *data;
+                                guint32 bitmask;
+
+                                bitmask = htonl((~0) << (32 - prefixlen));
+                                data = RTA_DATA (rt_attr);
+
+                                addr.s_addr = data->s_addr & bitmask;
+
+                                inet_ntop (AF_INET,
+                                           &addr,
+                                           buf,
+                                           sizeof (buf));
+                                *mask = g_strdup (buf);
+
                         }
                 }
                 rt_attr = RTA_NEXT (rt_attr, rt_attr_len);
@@ -460,6 +482,7 @@ static void
 create_context (GUPnPLinuxContextManager *self,
                 const char               *address,
                 const char               *label,
+                const char               *mask,
                 struct ifaddrmsg         *ifa)
 {
         NetworkInterface *device;
@@ -479,7 +502,10 @@ create_context (GUPnPLinuxContextManager *self,
         if (device->flags & NETWORK_INTERFACE_IGNORE)
                 return;
 
-        network_device_create_context (device, address, label);
+        network_device_create_context (device,
+                                       address,
+                                       label,
+                                       mask);
 }
 
 static void
@@ -728,16 +754,20 @@ receive_netlink_message (GUPnPLinuxContextManager *self, GError **error)
                             {
                                 char *label = NULL;
                                 char *address = NULL;
+                                char *mask = NULL;
 
                                 g_debug ("Received RTM_NEWADDR");
                                 ifa = NLMSG_DATA (header);
                                 extract_info (header,
                                               self->priv->dump_netlink_packets,
+                                              ifa->ifa_prefixlen,
                                               &address,
-                                              &label);
-                                create_context (self, address, label, ifa);
+                                              &label,
+                                              &mask);
+                                create_context (self, address, label, mask, ifa);
                                 g_free (label);
                                 g_free (address);
+                                g_free (mask);
                             }
                             break;
                         case RTM_DELADDR:
@@ -749,8 +779,10 @@ receive_netlink_message (GUPnPLinuxContextManager *self, GError **error)
                                 ifa = NLMSG_DATA (header);
                                 extract_info (header,
                                               self->priv->dump_netlink_packets,
+                                              ifa->ifa_prefixlen,
                                               &address,
-                                              &label);
+                                              &label,
+                                              NULL);
                                 remove_context (self, address, label, ifa);
                                 g_free (label);
                                 g_free (address);
