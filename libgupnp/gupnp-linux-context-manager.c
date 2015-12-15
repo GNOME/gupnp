@@ -263,11 +263,10 @@ network_device_create_context (NetworkInterface *device,
                 return;
         }
 
-        g_object_get (device->manager,
-                      "port", &port,
-                      NULL);
+        g_object_get (device->manager, "port", &port, NULL);
 
         network_device_update_essid (device);
+
         context = g_initable_new (GUPNP_TYPE_CONTEXT,
                                   NULL,
                                   &error,
@@ -953,8 +952,7 @@ gupnp_linux_context_manager_constructed (GObject *object)
         if (!create_netlink_socket (self, &error))
                 goto cleanup;
 
-        self->priv->bootstrap_source =
-                                g_idle_source_new ();
+        self->priv->bootstrap_source = g_idle_source_new ();
         g_source_attach (self->priv->bootstrap_source,
                          g_main_context_get_thread_default ());
         g_source_set_callback (self->priv->bootstrap_source,
