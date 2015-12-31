@@ -1,3 +1,40 @@
+0.20.15
+=======
+
+- Remove gnome-common
+- Fix issue with gupnp_service_signals_autoconnect() blocking endlessly.
+- Fix return type for BIN_HEX.
+- Update some m4 macros.
+- Fix typos in API docs.
+
+NetworkManager context manager:
+ - Fix use-after-free issue.
+ - Fix various static code analysis findings.
+
+Netlink context manager:
+ - Use proper macros for RTM_*ADDRESS messages.
+ - Use device name from netlink.
+ - Add possibility to dump received netlink packets for debugging.
+ - Fix issues with losing contexts after DHCP renew happens.
+ - Some style fixes.
+
+Added/updated dependencies:
+ - GSSDP >= 0.14.13
+
+Bugs fixed in this release:
+ - https://bugzilla.gnome.org/show_bug.cgi?id=736365
+ - https://bugzilla.gnome.org/show_bug.cgi?id=741257
+ - https://bugzilla.gnome.org/show_bug.cgi?id=750936
+ - https://bugzilla.gnome.org/show_bug.cgi?id=752490
+ - https://bugzilla.gnome.org/show_bug.cgi?id=759000
+
+All contributors to this release:
+ - Jens Georg <mail@jensge.org>
+ - Debarshi Ray <debarshir@gnome.org>
+ - Olivier Crête <olivier.crete@collabora.com>
+ - Guillaume Marquebielle <guillaume.marquebielle@parrot.com>
+ - Bastien Nocera <hadess@hadess.net>
+
 0.20.14
 =======
 
