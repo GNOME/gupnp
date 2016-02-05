@@ -81,6 +81,7 @@ enum {
 static guint signals[LAST_SIGNAL];
 
 struct _GUPnPServiceProxyAction {
+        volatile gint ref_count;
         GUPnPServiceProxy *proxy;
 
         SoupMessage *msg;
@@ -122,17 +123,47 @@ subscribe (GUPnPServiceProxy *proxy);
 static void
 unsubscribe (GUPnPServiceProxy *proxy);
 
+static GUPnPServiceProxyAction *
+gupnp_service_proxy_action_ref (GUPnPServiceProxyAction *action);
+
 static void
-gupnp_service_proxy_action_free (GUPnPServiceProxyAction *action)
+gupnp_service_proxy_action_unref (GUPnPServiceProxyAction *action);
+
+static GUPnPServiceProxyAction *
+gupnp_service_proxy_action_ref (GUPnPServiceProxyAction *action)
 {
-        action->proxy->priv->pending_actions =
-                g_list_remove (action->proxy->priv->pending_actions, action);
+        g_return_val_if_fail (action, NULL);
+        g_return_val_if_fail (action->ref_count > 0, NULL);
 
-        if (action->msg != NULL)
-                g_object_unref (action->msg);
+        g_atomic_int_inc (&action->ref_count);
 
-        g_slice_free (GUPnPServiceProxyAction, action);
+        return action;
 }
+
+static void
+gupnp_service_proxy_action_unref (GUPnPServiceProxyAction *action)
+{
+
+        g_return_if_fail (action);
+        g_return_if_fail (action->ref_count > 0);
+
+
+        if (g_atomic_int_dec_and_test (&action->ref_count)) {
+                if (action->proxy != NULL) {
+                        g_object_remove_weak_pointer (G_OBJECT (action->proxy),
+                                                      (gpointer *)&(action->proxy));
+                        action->proxy->priv->pending_actions =
+                                g_list_remove (action->proxy->priv->pending_actions, action);
+                }
+
+                if (action->msg != NULL)
+                        g_object_unref (action->msg);
+
+                g_slice_free (GUPnPServiceProxyAction, action);
+        }
+}
+
+G_DEFINE_BOXED_TYPE (GUPnPServiceProxyAction, gupnp_service_proxy_action, gupnp_service_proxy_action_ref, gupnp_service_proxy_action_unref)
 
 static void
 callback_data_free (CallbackData *data)
@@ -263,6 +294,9 @@ gupnp_service_proxy_dispose (GObject *object)
                 GUPnPServiceProxyAction *action;
 
                 action = proxy->priv->pending_actions->data;
+                proxy->priv->pending_actions =
+                        g_list_delete_link (proxy->priv->pending_actions,
+                                            proxy->priv->pending_actions);
 
                 gupnp_service_proxy_cancel_action (proxy, action);
         }
@@ -851,8 +885,10 @@ begin_action_msg (GUPnPServiceProxy              *proxy,
 
         /* Create action structure */
         ret = g_slice_new (GUPnPServiceProxyAction);
+        ret->ref_count = 1;
 
         ret->proxy = proxy;
+        g_object_add_weak_pointer (G_OBJECT (proxy), (gpointer *)&(ret->proxy));
 
         ret->callback  = callback;
         ret->user_data = user_data;
@@ -1513,7 +1549,7 @@ gupnp_service_proxy_end_action_list (GUPnPServiceProxy       *proxy,
         /* Check for saved error from begin_action() */
         if (action->error) {
                 g_propagate_error (error, action->error);
-                gupnp_service_proxy_action_free (action);
+                gupnp_service_proxy_action_unref (action);
 
                 return FALSE;
         }
@@ -1521,7 +1557,7 @@ gupnp_service_proxy_end_action_list (GUPnPServiceProxy       *proxy,
         /* Check response for errors and do initial parsing */
         response = check_action_response (proxy, action, &params, error);
         if (response == NULL) {
-                gupnp_service_proxy_action_free (action);
+                gupnp_service_proxy_action_unref (action);
 
                 return FALSE;
         }
@@ -1544,7 +1580,7 @@ gupnp_service_proxy_end_action_list (GUPnPServiceProxy       *proxy,
         *out_values = out_values_list;
 
         /* Cleanup */
-        gupnp_service_proxy_action_free (action);
+        gupnp_service_proxy_action_unref (action);
 
         xmlFreeDoc (response);
 
@@ -1603,7 +1639,7 @@ gupnp_service_proxy_end_action_hash (GUPnPServiceProxy       *proxy,
         /* Check for saved error from begin_action() */
         if (action->error) {
                 g_propagate_error (error, action->error);
-                gupnp_service_proxy_action_free (action);
+                gupnp_service_proxy_action_unref (action);
 
                 return FALSE;
         }
@@ -1611,7 +1647,7 @@ gupnp_service_proxy_end_action_hash (GUPnPServiceProxy       *proxy,
         /* Check response for errors and do initial parsing */
         response = check_action_response (proxy, action, &params, error);
         if (response == NULL) {
-                gupnp_service_proxy_action_free (action);
+                gupnp_service_proxy_action_unref (action);
 
                 return FALSE;
         }
@@ -1620,7 +1656,7 @@ gupnp_service_proxy_end_action_hash (GUPnPServiceProxy       *proxy,
         g_hash_table_foreach (hash, (GHFunc) read_out_parameter, params);
 
         /* Cleanup */
-        gupnp_service_proxy_action_free (action);
+        gupnp_service_proxy_action_unref (action);
 
         xmlFreeDoc (response);
 
@@ -1658,7 +1694,7 @@ gupnp_service_proxy_cancel_action (GUPnPServiceProxy       *proxy,
         if (action->error != NULL)
                 g_error_free (action->error);
 
-        gupnp_service_proxy_action_free (action);
+        gupnp_service_proxy_action_unref (action);
 }
 
 /**
