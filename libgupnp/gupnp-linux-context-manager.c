@@ -128,7 +128,9 @@ dump_rta_attr (struct rtattr *rt_attr)
                 case IFA_ANYCAST: label = "IFA_ANYCAST"; break;
                 case IFA_CACHEINFO: label = "IFA_CACHEINFO"; break;
                 case IFA_MULTICAST: label = "IFA_MULTICAST"; break;
+#if defined(IFA_FLAGS)
                 case IFA_FLAGS: label = "IFA_FLAGS"; break;
+#endif
                 default: label = "Unknown"; break;
         }
 
