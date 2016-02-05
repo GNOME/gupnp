@@ -151,6 +151,15 @@ gupnp_service_proxy_send_action_list (GUPnPServiceProxy *proxy,
                                       GList             *out_types,
                                       GList            **out_values);
 
+gboolean
+gupnp_service_proxy_send_action_list_gi (GUPnPServiceProxy *proxy,
+                                         const char        *action,
+                                         GList             *in_names,
+                                         GList             *in_values,
+                                         GList             *out_names,
+                                         GList             *out_types,
+                                         GList            **out_values,
+                                         GError           **error);
 
 GUPnPServiceProxyAction *
 gupnp_service_proxy_begin_action   (GUPnPServiceProxy              *proxy,
@@ -207,6 +216,22 @@ gupnp_service_proxy_end_action_list
                                    GList                   *out_names,
                                    GList                   *out_types,
                                    GList                  **out_values);
+
+gboolean
+gupnp_service_proxy_end_action_list_gi
+                                  (GUPnPServiceProxy       *proxy,
+                                   GUPnPServiceProxyAction *action,
+                                   GList                   *out_names,
+                                   GList                   *out_types,
+                                   GList                  **out_values,
+                                   GError                  **error);
+
+gboolean
+gupnp_service_proxy_end_action_hash_gi
+                                   (GUPnPServiceProxy              *proxy,
+                                    GUPnPServiceProxyAction        *action,
+                                    GHashTable                     *hash,
+                                    GError                        **error);
 
 gboolean
 gupnp_service_proxy_end_action_hash

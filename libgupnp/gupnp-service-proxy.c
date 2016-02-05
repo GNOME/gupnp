@@ -628,7 +628,7 @@ out:
 }
 
 /**
- * gupnp_service_proxy_send_action_hash:
+ * gupnp_service_proxy_send_action_hash: (skip)
  * @proxy: A #GUPnPServiceProxy
  * @action: An action
  * @error: (allow-none): The location where to store any error, or %NULL
@@ -693,7 +693,42 @@ gupnp_service_proxy_send_action_hash (GUPnPServiceProxy *proxy,
 }
 
 /**
- * gupnp_service_proxy_send_action_list:
+ * gupnp_service_proxy_send_action_list_gi: (rename-to gupnp_service_proxy_send_action_list)
+ * @proxy: (transfer none) : A #GUPnPServiceProxy
+ * @action: An action
+ * @error: The location where to store any error, or %NULL
+ * @in_names: (element-type utf8) (transfer none): #GList of 'in' parameter
+ * names (as strings)
+ * @in_values: (element-type GValue) (transfer none): #GList of values (as
+ * #GValue) that line up with @in_names
+ * @out_names: (element-type utf8) (transfer none): #GList of 'out' parameter
+ * names (as strings)
+ * @out_types: (element-type GType) (transfer none): #GList of types (as #GType)
+ * that line up with @out_names
+ * @out_values: (element-type GValue) (transfer full) (out): #GList of values
+ * (as #GValue) that line up with @out_names and @out_types.
+ *
+ * The synchronous variant of #gupnp_service_proxy_begin_action_list and
+ * #gupnp_service_proxy_end_action_list.
+ *
+ * Return value: %TRUE if sending the action was succesful.
+ *
+ **/
+gboolean
+gupnp_service_proxy_send_action_list_gi (GUPnPServiceProxy *proxy,
+                                         const char        *action,
+                                         GList             *in_names,
+                                         GList             *in_values,
+                                         GList             *out_names,
+                                         GList             *out_types,
+                                         GList            **out_values,
+                                         GError           **error)
+{
+    return gupnp_service_proxy_send_action_list (proxy, action, error, in_names, in_values, out_names, out_types, out_values);
+}
+
+/**
+ * gupnp_service_proxy_send_action_list: (skip)
  * @proxy: A #GUPnPServiceProxy
  * @action: An action
  * @error: (allow-none): The location where to store any error, or %NULL
@@ -1113,7 +1148,7 @@ gupnp_service_proxy_begin_action_list
 }
 
 /**
- * gupnp_service_proxy_begin_action_hash:
+ * gupnp_service_proxy_begin_action_hash: (skip)
  * @proxy: A #GUPnPServiceProxy
  * @action: An action
  * @callback: (scope async): The callback to call when sending the action has succeeded
@@ -1405,7 +1440,38 @@ gupnp_service_proxy_end_action_valist (GUPnPServiceProxy       *proxy,
 }
 
 /**
- * gupnp_service_proxy_end_action_list:
+ * gupnp_service_proxy_end_action_list_gi: (rename-to gupnp_service_proxy_end_action_list)
+ * @proxy: A #GUPnPServiceProxy
+ * @action: A #GUPnPServiceProxyAction handle
+ * @error: The location where to store any error, or %NULL
+ * @out_names: (element-type utf8) (transfer none): #GList of 'out' parameter
+ * names (as strings)
+ * @out_types: (element-type GType) (transfer none): #GList of types (as #GType)
+ * that line up with @out_names
+ * @out_values: (element-type GValue) (transfer full) (out): #GList of values
+ * (as #GValue) that line up with @out_names and @out_types.
+ *
+ * A variant of #gupnp_service_proxy_end_action that takes lists of
+ * out-parameter names, types and place-holders for values. The returned list
+ * in @out_values must be freed using #g_list_free and each element in it using
+ * #g_value_unset and #g_slice_free.
+ *
+ * Return value : %TRUE on success.
+ *
+ **/
+gboolean
+gupnp_service_proxy_end_action_list_gi (GUPnPServiceProxy       *proxy,
+                                        GUPnPServiceProxyAction *action,
+                                        GList                   *out_names,
+                                        GList                   *out_types,
+                                        GList                  **out_values,
+                                        GError                 **error)
+{
+    return gupnp_service_proxy_end_action_list (proxy, action, error, out_names, out_types, out_values);
+}
+
+/**
+ * gupnp_service_proxy_end_action_list: (skip)
  * @proxy: A #GUPnPServiceProxy
  * @action: A #GUPnPServiceProxyAction handle
  * @error: (allow-none): The location where to store any error, or %NULL
@@ -1422,6 +1488,7 @@ gupnp_service_proxy_end_action_valist (GUPnPServiceProxy       *proxy,
  * #g_value_unset and #g_slice_free.
  *
  * Returns: %TRUE on success.
+ *
  **/
 gboolean
 gupnp_service_proxy_end_action_list (GUPnPServiceProxy       *proxy,
@@ -1485,11 +1552,34 @@ gupnp_service_proxy_end_action_list (GUPnPServiceProxy       *proxy,
 }
 
 /**
- * gupnp_service_proxy_end_action_hash:
+ * gupnp_service_proxy_end_action_hash_gi: (rename-to gupnp_service_proxy_end_action_hash)
  * @proxy: A #GUPnPServiceProxy
  * @action: A #GUPnPServiceProxyAction handle
  * @error: The location where to store any error, or %NULL
  * @hash: (element-type utf8 GValue) (inout) (transfer none): A #GHashTable of
+ * out parameter name and initialised #GValue pairs
+ *
+ * See gupnp_service_proxy_end_action(); this version takes a #GHashTable for
+ * runtime generated parameter lists.
+ *
+ * Return value: %TRUE on success.
+ *
+ **/
+gboolean
+gupnp_service_proxy_end_action_hash_gi (GUPnPServiceProxy       *proxy,
+                                        GUPnPServiceProxyAction *action,
+                                        GHashTable              *hash,
+                                        GError                 **error)
+{
+    return gupnp_service_proxy_end_action_hash (proxy, action, error, hash);
+}
+
+/**
+ * gupnp_service_proxy_end_action_hash:
+ * @proxy: A #GUPnPServiceProxy
+ * @action: A #GUPnPServiceProxyAction handle
+ * @error: The location where to store any error, or %NULL
+ * @hash: (element-type utf8 GValue) (out caller-allocates) (transfer none): A #GHashTable of
  * out parameter name and initialised #GValue pairs
  *
  * See gupnp_service_proxy_end_action(); this version takes a #GHashTable for

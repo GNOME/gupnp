@@ -30,9 +30,12 @@ ServiceProxy
     .add_notify skip=false
     .begin_action skip=false
     .end_action_hash skip
+    .end_action_hash_gi skip
     .end_action_list skip
+    .end_action_list_gi skip
     .send_action_hash skip
     .send_action_list skip
+    .send_action_list_gi skip
 WhiteList
     .entries skip
 ControlError skip
