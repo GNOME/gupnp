@@ -16,6 +16,6 @@ gupnp-1.0.stamp: $(top_builddir)/libgupnp/GUPnP-1.0.gir \
 vapidir = $(datadir)/vala/vapi
 vapi_DATA = gupnp-1.0.vapi $(srcdir)/gupnp-1.0.deps
 CLEANFILES = gupnp-1.0.vapi gupnp-1.0.stamp
-EXTRA_DIST = gupnp-1.0.deps GUPnP-1.0.metadata gupnp-1.0-custom.vala
+EXTRA_DIST = gupnp-1.0.deps GUPnP-1.0.metadata gupnp-1.0-custom.vala gupnp-1.0.vapi gupnp-1.0.stamp
 endif
 endif
