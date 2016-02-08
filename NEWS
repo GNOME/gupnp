@@ -1,3 +1,23 @@
+0.20.16
+=======
+
+- Don't hardcode python path in gupnp-binding-tool
+- Check for IFA_FLAGS to not bind ourselves to a recent kernel version
+- Add missing m4 files
+- Fix issues with introspection
+- Make GUPnPServiceAction boxed
+- Some JavaScript examples
+- Distribute VAPI file in tarball
+
+Bugs fixed in this release:
+ - https://bugzilla.gnome.org/show_bug.cgi?id=760217
+ - https://bugzilla.gnome.org/show_bug.cgi?id=760430
+ - https://bugzilla.gnome.org/show_bug.cgi?id=761265
+
+All contributors to this release:
+ - Jens Georg <mail@jensge.org>
+ - Ting-Wei Lan <lantw@src.gnome.org>
+
 0.20.15
 =======
 
