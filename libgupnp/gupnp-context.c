@@ -905,7 +905,6 @@ update_client_cache (GUPnPContext *context,
 {
         const char *entry;
         GSSDPClient *client;
-        char *ip_address = NULL;
 
         if (user_agent == NULL)
                 return;
@@ -915,7 +914,7 @@ update_client_cache (GUPnPContext *context,
         entry = gssdp_client_guess_user_agent (client, host);
         if (!entry) {
                 gssdp_client_add_cache_entry (client,
-                                              ip_address,
+                                              host,
                                               user_agent);
         }
 }
