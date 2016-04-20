@@ -58,7 +58,7 @@ send_cmd (GUPnPServiceProxy *proxy)
   /* Set the target */
   if (!gupnp_service_proxy_send_action (proxy, "SetTarget", &error,
                                         /* IN args */
-                                        "NewTargetValue", G_TYPE_BOOLEAN, target, NULL,
+                                        "newTargetValue", G_TYPE_BOOLEAN, target, NULL,
                                         /* OUT args */
                                         NULL)) {
     goto error;

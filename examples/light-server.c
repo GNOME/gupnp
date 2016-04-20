@@ -51,7 +51,7 @@ set_target_cb (GUPnPService          *service,
 
   /* Get the new target value */
   gupnp_service_action_get (action,
-                            "NewTargetValue", G_TYPE_BOOLEAN, &target,
+                            "newTargetValue", G_TYPE_BOOLEAN, &target,
                             NULL);
 
   /* If the new target doesn't match the current status, change the status and

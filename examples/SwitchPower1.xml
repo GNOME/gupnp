@@ -9,7 +9,7 @@
       <name>SetTarget</name>
       <argumentList>
         <argument>
-          <name>NewTargetValue</name>
+          <name>newTargetValue</name>
           <relatedStateVariable>Target</relatedStateVariable>
           <direction>in</direction>
         </argument>
