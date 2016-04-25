@@ -1,3 +1,20 @@
+0.20.17
+=======
+
+- Update autogen.sh from GNOME template
+- Cache user agents by IP
+- Remove intltool
+- Use newTargetValue in light example
+
+Bugs fixed in this release:
+ - https://bugzilla.gnome.org/show_bug.cgi?id=653894
+ - https://bugzilla.gnome.org/show_bug.cgi?id=763945
+ - https://bugzilla.gnome.org/show_bug.cgi?id=764050
+
+All contributors to this release:
+ - Jens Georg <mail@jensge.org>
+ - Philip Withnall <philip@tecnocode.co.uk>
+
 0.20.16
 =======
 
