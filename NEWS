@@ -1,3 +1,15 @@
+0.20.18
+=======
+
+- Retry description URL on failure.
+
+Bugs fixed in this release:
+ - https://bugzilla.gnome.org/show_bug.cgi?id=694450
+
+All contributors to this release:
+ - Jens Georg <mail@jensge.org>
+ - Jozef Šiška <jozef.siska@streamunlimited.com>
+
 0.20.17
 =======
 
