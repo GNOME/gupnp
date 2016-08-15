@@ -1,3 +1,11 @@
+0.99.0
+======
+- Fix build on OS X
+
+All contributors to this release:
+ - Tomasz Pajor <tomek@polishgeeks.com>
+ - Jens Georg <mail@jensge.org>
+
 0.20.18
 =======
 
