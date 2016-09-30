@@ -23,11 +23,10 @@
 public class GUPnP.ServiceProxy : GUPnP.ServiceInfo {
     public bool send_action (string action, ...) throws GLib.Error;
     public bool end_action (GUPnP.ServiceProxyAction action, ...) throws GLib.Error;
-    public bool end_action_hash (GUPnP.ServiceProxyAction action, [CCode (pos=-0.9)] GLib.HashTable<string, weak GLib.Value*> hash) throws GLib.Error;
-    public bool end_action_list (GUPnP.ServiceProxyAction action, [CCode (pos=-0.9)] GLib.List<string> out_names, [CCode (pos=-0.8)] GLib.List<GLib.Type?> out_types, [CCode (pos=-0.7)] out GLib.List<weak GLib.Value*> out_values) throws GLib.Error;
+    public bool end_action_hash (GUPnP.ServiceProxyAction action, GLib.HashTable<string, weak GLib.Value*> hash) throws GLib.Error;
+    public bool end_action_list (GUPnP.ServiceProxyAction action, GLib.List<string> out_names, GLib.List<GLib.Type?> out_types, out GLib.List<weak GLib.Value*> out_values) throws GLib.Error;
 
-    public bool send_action_hash (string action, [CCode (pos=-0.9)] GLib.HashTable<string, GLib.Value?> in_hash, [CCode (pos=-0.8)] GLib.HashTable<string, weak GLib.Value*> out_hash) throws GLib.Error;
-    public bool send_action_list (string action, [CCode (pos=-0.9)] GLib.List<string> in_names, [CCode (pos=-0.8)] GLib.List<weak GLib.Value?> in_values, [CCode (pos=-0.7)] GLib.List<string> out_names, [CCode (pos=-0.6)] GLib.List<GLib.Type?> out_types, [CCode (pos=-0.5)] out GLib.List<weak GLib.Value*> out_values) throws GLib.Error;
+    public bool send_action_list (string action, GLib.List<string> in_names, GLib.List<weak GLib.Value?> in_values, GLib.List<string> out_names, GLib.List<GLib.Type?> out_types, out GLib.List<weak GLib.Value*> out_values) throws GLib.Error;
 }
 
 public interface GUPnP.Acl : GLib.Object {
