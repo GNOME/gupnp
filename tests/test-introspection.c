@@ -32,18 +32,10 @@ GMainLoop *main_loop;
 
 static GCancellable *cancellable;
 
-static gboolean async = FALSE;
-static GOptionEntry entries[] =
-{
-       { "async", 'a', 0, G_OPTION_ARG_NONE, &async,
-         "Asynchronously create intropection object", NULL },
-       { NULL }
-};
-
 static void
 interrupt_signal_handler (G_GNUC_UNUSED int signum)
 {
-        if (!async || g_cancellable_is_cancelled (cancellable)) {
+        if (g_cancellable_is_cancelled (cancellable)) {
                 g_main_loop_quit (main_loop);
         } else {
                 g_print ("Canceling all introspection calls. "
@@ -204,24 +196,13 @@ service_proxy_available_cb (G_GNUC_UNUSED GUPnPControlPoint *cp,
                             GUPnPServiceProxy               *proxy)
 {
         GUPnPServiceInfo *info;
-        GUPnPServiceIntrospection *introspection;
-        GError *error = NULL;
 
         info = GUPNP_SERVICE_INFO (proxy);
 
-        if (async) {
-                gupnp_service_info_get_introspection_async_full (info,
-                                                                 got_introspection,
-                                                                 cancellable,
-                                                                 NULL);
-        } else {
-                introspection =
-                        gupnp_service_info_get_introspection (info, &error);
-                got_introspection (info, introspection, error, NULL);
-
-                if (error)
-                        g_error_free (error);
-        }
+        gupnp_service_info_get_introspection_async_full (info,
+                                                         got_introspection,
+                                                         cancellable,
+                                                         NULL);
 }
 
 static void
@@ -244,27 +225,9 @@ main (int argc, char **argv)
         GError *error = NULL;
         GUPnPContext *context;
         GUPnPControlPoint *cp;
-        GOptionContext *option_context;
 #ifndef G_OS_WIN32
         struct sigaction sig_action;
 #endif /* G_OS_WIN32 */
-
-        option_context = g_option_context_new ("- test GUPnP introspection");
-        g_option_context_add_main_entries (option_context,
-                                           entries,
-                                           NULL);
-        g_option_context_parse (option_context,
-                                &argc,
-                                &argv,
-                                &error);
-        if (error) {
-                g_printerr ("Error parsing the commandline arguments: %s\n",
-			    error->message);
-                g_error_free (error);
-
-                return EXIT_FAILURE;
-        }
-		
 
         error = NULL;
         context = g_initable_new (GUPNP_TYPE_CONTEXT, NULL, &error, NULL);

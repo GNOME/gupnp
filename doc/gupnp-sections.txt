@@ -173,7 +173,6 @@ GUPnPRootDevicePrivate
 <TITLE>GUPnPContext</TITLE>
 GUPnPContext
 gupnp_context_new
-gupnp_context_get_host_ip
 gupnp_context_get_port
 gupnp_context_get_server
 gupnp_context_get_session
@@ -205,7 +204,6 @@ GUPnPContextPrivate
 <FILE>gupnp-context-manager</FILE>
 <TITLE>GUPnPContextManager</TITLE>
 GUPnPContextManager
-gupnp_context_manager_new
 gupnp_context_manager_create
 gupnp_context_manager_rescan_control_points
 gupnp_context_manager_manage_control_point
@@ -281,7 +279,6 @@ gupnp_service_info_get_id
 gupnp_service_info_get_scpd_url
 gupnp_service_info_get_control_url
 gupnp_service_info_get_event_subscription_url
-gupnp_service_info_get_introspection
 gupnp_service_info_get_introspection_async
 gupnp_service_info_get_introspection_async_full
 <SUBSECTION Standard>

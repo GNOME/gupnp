@@ -214,9 +214,9 @@ test_bgo_696762 (void)
 
     data.loop = g_main_loop_new (NULL, FALSE);
 
-    context = gupnp_context_new (NULL, "lo", 0, &error);
+    context = gupnp_context_new ("lo", 0, &error);
+    g_assert_no_error (error);
     g_assert (context != NULL);
-    g_assert (error == NULL);
 
     cp = gupnp_control_point_new (context,
                                   "urn:test-gupnp-org:service:TestService:1");
@@ -281,9 +281,9 @@ test_bgo_678701 (void)
 
     data.loop = g_main_loop_new (NULL, FALSE);
 
-    context = gupnp_context_new (NULL, "lo", 0, &error);
+    context = gupnp_context_new ("lo", 0, &error);
+    g_assert_no_error (error);
     g_assert (context != NULL);
-    g_assert (error == NULL);
 
     factory = gupnp_resource_factory_get_default ();
     gupnp_resource_factory_register_resource_proxy_type (factory,
@@ -338,9 +338,9 @@ test_bgo_690400 (void)
 
     data.loop = g_main_loop_new (NULL, FALSE);
 
-    context = gupnp_context_new (NULL, "lo", 0, &error);
+    context = gupnp_context_new ("lo", 0, &error);
+    g_assert_no_error (error);
     g_assert (context != NULL);
-    g_assert (error == NULL);
 
     cp = gupnp_control_point_new (context,
                                   "urn:test-gupnp-org:service:TestService:1");
@@ -397,9 +397,9 @@ test_bgo_722696 (void)
     char *icon;
     int width;
 
-    context = gupnp_context_new (NULL, "lo", 0, &error);
+    context = gupnp_context_new ("lo", 0, &error);
+    g_assert_no_error (error);
     g_assert (context != NULL);
-    g_assert (error == NULL);
 
     rd = gupnp_root_device_new (context, "TestDevice.xml", DATA_PATH, &error);
     g_assert_no_error (error);
@@ -458,9 +458,9 @@ test_bgo_743233 (void)
     GUPnPControlPoint *cp = NULL;
     GError *error = NULL;
 
-    context = gupnp_context_new (NULL, "lo", 0, &error);
+    context = gupnp_context_new ("lo", 0, &error);
+    g_assert_no_error (error);
     g_assert (context != NULL);
-    g_assert (error == NULL);
 
     cp = gupnp_control_point_new (context,
                                   "usn:uuid:0dc60534-642c-478f-ae61-1d78dbe1f73d");

@@ -75,7 +75,6 @@ struct _GUPnPContextManagerPrivate {
 
 enum {
         PROP_0,
-        PROP_MAIN_CONTEXT,
         PROP_PORT,
         PROP_WHITE_LIST
 };
@@ -313,13 +312,6 @@ gupnp_context_manager_set_property (GObject      *object,
         case PROP_PORT:
                 priv->port = g_value_get_uint (value);
                 break;
-        case PROP_MAIN_CONTEXT:
-                if (g_value_get_pointer (value) != NULL)
-                        g_warning ("GUPnPContextManager:main-context is "
-                                   "deprecated. Use "
-                                   "g_main_context_push_thread_default()"
-                                   "instead.");
-                break;
         default:
                 G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
                 break;
@@ -339,13 +331,6 @@ gupnp_context_manager_get_property (GObject    *object,
         switch (property_id) {
         case PROP_PORT:
                 g_value_set_uint (value, manager->priv->port);
-                break;
-        case PROP_MAIN_CONTEXT:
-                g_warning ("GUPnPContextManager:main-context is deprecated. "
-                           "Use g_main_context_push_thread_default()"
-                           "instead.");
-                g_value_set_pointer (value,
-                                     g_main_context_get_thread_default ());
                 break;
         case PROP_WHITE_LIST:
                 g_value_set_object (value, manager->priv->white_list);
@@ -401,27 +386,6 @@ gupnp_context_manager_class_init (GUPnPContextManagerClass *klass)
         object_class->dispose      = gupnp_context_manager_dispose;
 
         g_type_class_add_private (klass, sizeof (GUPnPContextManagerPrivate));
-
-        /**
-         * GSSDPClient:main-context:
-         *
-         * The #GMainContext to pass to created #GUPnPContext objects. Set to
-         * NULL to use the default.
-         *
-         * Deprecated: 0.17.2: Use g_main_context_push_thread_default()
-         *             instead.
-         **/
-        g_object_class_install_property
-                (object_class,
-                 PROP_MAIN_CONTEXT,
-                 g_param_spec_pointer
-                         ("main-context",
-                          "Main context",
-                          "GMainContext to pass to created GUPnPContext"
-                          " objects",
-                          G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY |
-                          G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK |
-                          G_PARAM_STATIC_BLURB));
 
         /**
          * GUPnPContextManager:port:
@@ -497,31 +461,6 @@ gupnp_context_manager_class_init (GUPnPContextManagerClass *klass)
                                          G_TYPE_NONE,
                                          1,
                                          GUPNP_TYPE_CONTEXT);
-}
-
-/**
- * gupnp_context_manager_new:
- * @main_context: (allow-none): Deprecated: 0.17.2: %NULL. If you want to use
- *                a different main context use
- *                g_main_context_push_thread_default() instead.
- * @port: Port to create contexts for, or 0 if you don't care what port is used.
- *
- * Same as gupnp_context_manager_create().
- *
- * Returns: (transfer full): A new #GUPnPContextManager object.
- * Since: 0.13.0
- * Deprecated: 0.17.2: Use gupnp_context_manager_create().
- **/
-GUPnPContextManager *
-gupnp_context_manager_new (GMainContext *main_context,
-                           guint         port)
-{
-    if (main_context)
-            g_warning ("gupnp_context_manager_new::main_context is"
-                       " deprecated. Use "
-                       " g_main_context_push_thread_default() instead");
-
-    return gupnp_context_manager_create (port);
 }
 
 #ifdef HAVE_LINUX_RTNETLINK_H

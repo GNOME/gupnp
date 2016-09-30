@@ -662,71 +662,6 @@ out:
 }
 
 /**
- * gupnp_service_proxy_send_action_hash: (skip)
- * @proxy: A #GUPnPServiceProxy
- * @action: An action
- * @error: (allow-none): The location where to store any error, or %NULL
- * @in_hash: (element-type utf8 GValue) (transfer none): A #GHashTable of in
- * parameter name and #GValue pairs
- * @out_hash: (inout) (element-type utf8 GValue) (transfer full): A #GHashTable
- * of out parameter name and initialized #GValue pairs
- *
- * See gupnp_service_proxy_send_action(); this version takes a pair of
- * #GHashTable<!-- -->s for runtime determined parameter lists.
- *
- * Do not use this function in newly written code; it cannot guarantee the
- * order of arguments and thus breaks interaction with many devices.
- *
- * Return value: %TRUE if sending the action was succesful.
- *
- * Deprecated: 0.20.9: Use gupnp_service_proxy_send_action() or
- * gupnp_service_proxy_send_action_list()
- **/
-gboolean
-gupnp_service_proxy_send_action_hash (GUPnPServiceProxy *proxy,
-                                      const char        *action,
-                                      GError           **error,
-                                      GHashTable        *in_hash,
-                                      GHashTable        *out_hash)
-{
-        GMainLoop *main_loop;
-        GUPnPServiceProxyAction *handle;
-
-        g_return_val_if_fail (GUPNP_IS_SERVICE_PROXY (proxy), FALSE);
-        g_return_val_if_fail (action, FALSE);
-
-        main_loop = g_main_loop_new (g_main_context_get_thread_default (),
-                                     TRUE);
-
-        G_GNUC_BEGIN_IGNORE_DEPRECATIONS
-        handle = gupnp_service_proxy_begin_action_hash (proxy,
-                                                        action,
-                                                        stop_main_loop,
-                                                        main_loop,
-                                                        in_hash);
-        G_GNUC_END_IGNORE_DEPRECATIONS
-        if (!handle) {
-                g_main_loop_unref (main_loop);
-
-                return FALSE;
-        }
-
-        /* Loop till we get a reply (or time out) */
-        if (g_main_loop_is_running (main_loop))
-                g_main_loop_run (main_loop);
-
-        g_main_loop_unref (main_loop);
-
-        if (!gupnp_service_proxy_end_action_hash (proxy,
-                                                  handle,
-                                                  error,
-                                                  out_hash))
-                return FALSE;
-
-        return TRUE;
-}
-
-/**
  * gupnp_service_proxy_send_action_list: (rename-to gupnp_service_proxy_send_action_list)
  * @proxy: (transfer none) : A #GUPnPServiceProxy
  * @action: An action
@@ -1140,61 +1075,6 @@ gupnp_service_proxy_begin_action_list
 
                 values = values->next;
         }
-
-        /* Finish and send off */
-        finish_action_msg (ret, action);
-
-        return ret;
-}
-
-/**
- * gupnp_service_proxy_begin_action_hash: (skip)
- * @proxy: A #GUPnPServiceProxy
- * @action: An action
- * @callback: (scope async): The callback to call when sending the action has succeeded
- * or failed
- * @user_data: User data for @callback
- * @hash: (element-type utf8 GValue): A #GHashTable of in parameter name and #GValue pairs
- *
- * See gupnp_service_proxy_begin_action(); this version takes a #GHashTable
- * for runtime generated parameter lists.
- *
- * Do not use this function in newly written code; it cannot guarantee the
- * order of arguments and thus breaks interaction with many devices.
- *
- * Return value: (transfer none): A #GUPnPServiceProxyAction handle. This will
- * be freed when calling gupnp_service_proxy_cancel_action() or
- * gupnp_service_proxy_end_action_hash().
- *
- * Deprecated: 0.20.9: Use gupnp_service_proxy_send_action() or
- * gupnp_service_proxy_send_action_list()
- *
- **/
-GUPnPServiceProxyAction *
-gupnp_service_proxy_begin_action_hash
-                                   (GUPnPServiceProxy              *proxy,
-                                    const char                     *action,
-                                    GUPnPServiceProxyActionCallback callback,
-                                    gpointer                        user_data,
-                                    GHashTable                     *hash)
-{
-        GUPnPServiceProxyAction *ret;
-
-        g_return_val_if_fail (GUPNP_IS_SERVICE_PROXY (proxy), NULL);
-        g_return_val_if_fail (action, NULL);
-        g_return_val_if_fail (callback, NULL);
-
-        /* Create message */
-        ret = begin_action_msg (proxy, action, callback, user_data);
-
-        if (ret->error) {
-                g_idle_add (action_error_idle_cb, ret);
-
-                return ret;
-        }
-
-        /* Arguments */
-        g_hash_table_foreach (hash, (GHFunc) write_in_parameter, ret->msg_str);
 
         /* Finish and send off */
         finish_action_msg (ret, action);

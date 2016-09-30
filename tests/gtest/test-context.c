@@ -134,8 +134,7 @@ test_gupnp_context_http_ranged_requests (void)
         g_assert (error == NULL);
         file_length = g_mapped_file_get_length (file);
 
-        context = gupnp_context_new (NULL,
-                                     "lo",
+        context = gupnp_context_new ("lo",
                                      0,
                                      &error);
         g_assert (context != NULL);

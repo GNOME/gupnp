@@ -149,7 +149,7 @@ main (G_GNUC_UNUSED int argc, G_GNUC_UNUSED char **argv)
   }
 
   /* Create the UPnP context */
-  context = gupnp_context_new (NULL, NULL, 0, &error);
+  context = gupnp_context_new (NULL, 0, &error);
   if (error) {
     g_printerr ("Error creating the GUPnP context: %s\n",
 		error->message);
@@ -159,7 +159,15 @@ main (G_GNUC_UNUSED int argc, G_GNUC_UNUSED char **argv)
   }
 
   /* Create root device */
-  dev = gupnp_root_device_new (context, "BinaryLight1.xml", ".");
+  dev = gupnp_root_device_new (context, "BinaryLight1.xml", ".", &error);
+  if (error != NULL) {
+    g_printerr ("Error creating the GUPnP root device: %s\n",
+                error->message);
+
+    g_error_free (error);
+
+    return EXIT_FAILURE;
+  }
   gupnp_root_device_set_available (dev, TRUE);
 
   /* Get the switch service from the root device */
@@ -171,6 +179,7 @@ main (G_GNUC_UNUSED int argc, G_GNUC_UNUSED char **argv)
     return EXIT_FAILURE;
   }
   
+
   /* Autoconnect the action and state variable handlers.  This connects
      query_target_cb and query_status_cb to the Target and Status state
      variables query callbacks, and set_target_cb, get_target_cb and

@@ -146,7 +146,7 @@ main (int argc, char **argv)
   }
 
   /* Create the UPnP context */
-  context = gupnp_context_new (NULL, NULL, 0, &error);
+  context = gupnp_context_new (NULL, 0, &error);
   if (error) {
     g_printerr ("Error creating the GUPnP context: %s\n",
 		error->message);

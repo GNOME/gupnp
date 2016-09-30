@@ -634,8 +634,6 @@ _gupnp_context_get_server_uri (GUPnPContext *context)
 
 /**
  * gupnp_context_new:
- * @main_context: (allow-none): Deprecated: 0.17.2: Always set to %NULL. If you
- * want to use a different context, use g_main_context_push_thread_default().
  * @iface: (allow-none): The network interface to use, or %NULL to
  * auto-detect.
  * @port: Port to run on, or 0 if you don't care what port is used.
@@ -647,40 +645,16 @@ _gupnp_context_get_server_uri (GUPnPContext *context)
  * Return value: A new #GUPnPContext object, or %NULL on an error
  **/
 GUPnPContext *
-gupnp_context_new (GMainContext *main_context,
-                   const char   *iface,
+gupnp_context_new (const char   *iface,
                    guint         port,
                    GError      **error)
 {
-        if (main_context)
-                g_warning ("gupnp_context_new::main_context is deprecated."
-                           " Use g_main_context_push_thread_default()"
-                           " instead");
-
         return g_initable_new (GUPNP_TYPE_CONTEXT,
                                NULL,
                                error,
                                "interface", iface,
                                "port", port,
                                NULL);
-}
-
-/**
- * gupnp_context_get_host_ip:
- * @context: A #GUPnPContext
- *
- * Get the IP address we advertise ourselves as using.
- *
- * Return value: The IP address. This string should not be freed.
- *
- * Deprecated:0.12.7: The "host-ip" property has moved to the base class
- * #GSSDPClient so newer applications should use
- * #gssdp_client_get_host_ip instead.
- **/
-const char *
-gupnp_context_get_host_ip (GUPnPContext *context)
-{
-        return gssdp_client_get_host_ip (GSSDP_CLIENT (context));
 }
 
 /**

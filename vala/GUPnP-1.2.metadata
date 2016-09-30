@@ -3,9 +3,6 @@ Acl
     .is_allowed skip
     .is_allowed_async skip
     .is_allowed_finish skip
-ContextManager
-    .main_context skip
-    .new skip
 DeviceInfo
     .get_device nullable=true
     .get_service nullable=true
@@ -21,7 +18,6 @@ ServiceAction
 ServiceInfo
     .document skip
     .element skip
-    .get_introspection nullable=true
 ServiceIntrospection
     .get_action nullable=true unowned=true
     .get_state_variable nullable=true unowned=true

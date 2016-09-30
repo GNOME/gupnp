@@ -87,7 +87,14 @@ main (int argc, char **argv)
         g_print ("Running on port %d\n", gupnp_context_get_port (context));
 
         /* Create root device */
-        dev = gupnp_root_device_new (context, "description.xml", ".");
+        dev = gupnp_root_device_new (context, "description.xml", ".", &error);
+        if (error != NULL) {
+                g_printerr ("Error creating the GUPnP root device: %s\n",
+                            error->message);
+                g_error_free (error);
+
+                return EXIT_FAILURE;
+        }
 
         /* Implement Browse action on ContentDirectory if available */
         content_dir = gupnp_device_info_get_service

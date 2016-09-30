@@ -82,13 +82,6 @@ struct _GUPnPContextManagerClass {
         void (* _gupnp_reserved4) (void);
 };
 
-
-#ifndef GUPNP_DISABLE_DEPRECATED
-GUPnPContextManager *
-gupnp_context_manager_new              (GMainContext *main_context,
-                                        guint         port);
-#endif
-
 GUPnPContextManager *
 gupnp_context_manager_create           (guint port);
 
