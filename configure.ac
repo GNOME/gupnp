@@ -1,6 +1,6 @@
 AC_PREREQ([2.64])
 AC_INIT([gupnp],
-        [1.0.0],
+        [1.1.0],
         [http://bugzilla.gnome.org/enter_bug.cgi?product=gupnp&component=gupnp],
         [gupnp],
         [http://www.gupnp.org/])
@@ -164,8 +164,8 @@ tests/gtest/Makefile
 doc/Makefile
 doc/version.xml
 vala/Makefile
-gupnp-1.0.pc
-gupnp-1.0-uninstalled.pc
+gupnp-1.2.pc
+gupnp-1.2-uninstalled.pc
 ])
 AC_OUTPUT
 

@@ -9,7 +9,7 @@ test_context_SOURCES = test-context.c
 test_bugs_SOURCES = test-bugs.c
 
 LDADD = \
-	$(top_builddir)/libgupnp/libgupnp-1.0.la \
+	$(top_builddir)/libgupnp/libgupnp-1.2.la \
 	$(LIBGUPNP_LIBS)
 AM_CFLAGS = \
 	    $(LIBGUPNP_CFLAGS) \

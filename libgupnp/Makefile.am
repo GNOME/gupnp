@@ -1,4 +1,4 @@
-LTVERSION = 4:0:0
+LTVERSION = 0:0:0
 
 if OS_WIN32
 CONTEXT_MANAGER_IMPL = gupnp-windows-context-manager.c \
@@ -46,9 +46,9 @@ AM_CFLAGS = $(LIBGUPNP_CFLAGS) \
 	    $(CONTEXT_MANAGER_CFLAGS) \
         $(WARN_CFLAGS)
 
-libgupnpincdir = $(includedir)/gupnp-1.0/libgupnp
+libgupnpincdir = $(includedir)/gupnp-1.2/libgupnp
 
-lib_LTLIBRARIES = libgupnp-1.0.la
+lib_LTLIBRARIES = libgupnp-1.2.la
 
 libgupnpinc_HEADERS = gupnp-acl.h			\
 		      gupnp-context.h			\
@@ -98,9 +98,9 @@ gupnp-marshal.h: gupnp-marshal.list
 
 BUILT_SOURCES = gupnp-marshal.c gupnp-marshal.h
 
-libgupnp_1_0_la_LDFLAGS = -version-info $(LTVERSION) $(WIN32_LDFLAGS) $(WARN_LDFLAGS)
+libgupnp_1_2_la_LDFLAGS = -version-info $(LTVERSION) $(WIN32_LDFLAGS) $(WARN_LDFLAGS)
 
-libgupnp_1_0_la_SOURCES = $(introspection_sources)		\
+libgupnp_1_2_la_SOURCES = $(introspection_sources)		\
 			  http-headers.c			\
 			  http-headers.h			\
 			  gupnp-context-private.h		\
@@ -122,7 +122,7 @@ libgupnp_1_0_la_SOURCES = $(introspection_sources)		\
 			  guul.h \
 			  $(BUILT_SOURCES)
 
-libgupnp_1_0_la_LIBADD = $(LIBGUPNP_LIBS) $(DBUS_GLIB_LIBS) $(CONTEXT_MANAGER_LIBS) $(GUUL_LIBS)
+libgupnp_1_2_la_LIBADD = $(LIBGUPNP_LIBS) $(DBUS_GLIB_LIBS) $(CONTEXT_MANAGER_LIBS) $(GUUL_LIBS)
 
 EXTRA_DIST = gupnp-marshal.list 	   \
 	     gupnp-network-manager.c   	   \
@@ -142,23 +142,23 @@ INTROSPECTION_SCANNER_ARGS = \
 			     --symbol-prefix=gupnp	\
 			     --identifier-prefix=GUPnP	\
 			     --add-include-path=$(top_srcdir) \
-			     --pkg-export=gupnp-1.0 \
+			     --pkg-export=gupnp-1.2 \
                  $(WARN_SCANNERFLAGS)
 INTROSPECTION_COMPILER_ARGS = --includedir=$(top_srcdir)
 
 if HAVE_INTROSPECTION
-GUPnP-1.0.gir: libgupnp-1.0.la
-GUPnP_1_0_gir_INCLUDES = libxml2-2.0 GObject-2.0 Soup-2.4 GSSDP-1.0
-GUPnP_1_0_gir_CFLAGS = -DGOBJECT_INTROSPECTION_SKIP $(INCLUDES) $(AM_CFLAGS)
-GUPnP_1_0_gir_LIBS = libgupnp-1.0.la
-GUPnP_1_0_gir_FILES = $(introspection_sources)
-GUPnP_1_0_gir_NAMESPACE = GUPnP
-GUPnP_1_0_gir_VERSION = 1.0
+GUPnP-1.2.gir: libgupnp-1.2.la
+GUPnP_1_2_gir_INCLUDES = libxml2-2.0 GObject-2.0 Soup-2.4 GSSDP-1.0
+GUPnP_1_2_gir_CFLAGS = -DGOBJECT_INTROSPECTION_SKIP $(INCLUDES) $(AM_CFLAGS)
+GUPnP_1_2_gir_LIBS = libgupnp-1.2.la
+GUPnP_1_2_gir_FILES = $(introspection_sources)
+GUPnP_1_2_gir_NAMESPACE = GUPnP
+GUPnP_1_2_gir_VERSION = 1.2
 
-INTROSPECTION_GIRS += GUPnP-1.0.gir
+INTROSPECTION_GIRS += GUPnP-1.2.gir
 
 girdir = $(datadir)/gir-1.0
-gir_DATA = GUPnP-1.0.gir
+gir_DATA = GUPnP-1.2.gir
 
 typelibdir = $(libdir)/girepository-1.0/
 typelib_DATA = $(gir_DATA:.gir=.typelib)
