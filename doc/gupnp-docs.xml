@@ -28,10 +28,11 @@
         to:
 
         <address>
-          The Free Software Foundation, Inc.,
-          <street>59 Temple Place</street> - Suite 330,
-          <city>Boston</city>, <state>MA</state> <postcode>02111-1307</postcode>,
-          <country>USA</country></address>
+          Free Software Foundation
+          <street>51 Franklin Street</street>, Fifth Floor
+          <city>Boston</city>, <state>MA</state> <postcode>02110-1335</postcode>,
+          <country>USA</country>
+        </address>
       </para>
     </legalnotice>
   </bookinfo>
