@@ -127,6 +127,47 @@ EXTRA_DIST = gupnp-marshal.list 	   \
 	     gupnp-windows-context-manager.c \
 	     gupnp-windows-context-manager.h
 
+enumheaders = \
+	$(srcdir)/gupnp-error.h \
+	$(srcdir)/gupnp-service-introspection.h
+
+BUILT_SOURCES = \
+	gupnp-enums.c \
+	gupnp-enums.h
+
+gupnp-enums.c: $(enumheaders) Makefile
+	$(AM_V_GEN)$(GLIB_MKENUMS) \
+		--identifier-prefix GUPnP \
+		--symbol-prefix gupnp \
+		--fhead "#include \"gupnp-enums.h\"\n\n" \
+		--fprod "/* enumerations from \"@filename@\" */\n" \
+		--fprod "#include \"@filename@\"\n" \
+		--vhead "GType\n@enum_name@_get_type (void)\n{\n" \
+		--vhead "    static GType type = 0;\n\n" \
+		--vhead "    if (!type)\n    {\n" \
+		--vhead "        static const G@Type@Value _@enum_name@_values[] = {" \
+		--vprod "            { @VALUENAME@, \"@VALUENAME@\", \"@valuenick@\" }," \
+		--vtail "            { 0, NULL, NULL }\n        };\n\n" \
+		--vtail "        type = g_@type@_register_static (\"@EnumName@\", _@enum_name@_values);\n    }\n\n" \
+		--vtail "  return type;\n}\n\n" \
+		$(enumheaders) > $@
+
+gupnp-enums.h: $(enumheaders) Makefile
+	$(AM_V_GEN)$(GLIB_MKENUMS) \
+		--identifier-prefix GUPnP \
+		--symbol-prefix gupnp \
+		--fhead "#ifndef GUPNP_ENUMS_H\n" \
+		--fhead "#define GUPNP_ENUMS_H\n\n" \
+		--fhead "#include <glib-object.h>\n\n" \
+		--fhead "G_BEGIN_DECLS\n\n" \
+		--fprod "/* enumerations from @filename@ */\n" \
+		--vhead "GType @enum_name@_get_type (void);\n" \
+		--vhead "#define GUPNP_TYPE_@ENUMSHORT@ (@enum_name@_get_type())\n" \
+		--ftail "G_END_DECLS\n\n" \
+		--ftail "#endif /* GUPNP_ENUMS_H */" \
+		$(enumheaders) > $@
+
+
 -include $(INTROSPECTION_MAKEFILE)
 INTROSPECTION_GIRS =
 INTROSPECTION_SCANNER_ARGS = \
