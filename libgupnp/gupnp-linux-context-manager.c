@@ -433,7 +433,7 @@ extract_info (struct nlmsghdr *header,
                                 struct in_addr addr, *data;
                                 guint32 bitmask;
 
-                                bitmask = htonl((~0) << (32 - prefixlen));
+                                bitmask = htonl(G_MAXUINT32 << (32 - prefixlen));
                                 data = RTA_DATA (rt_attr);
 
                                 addr.s_addr = data->s_addr & bitmask;
