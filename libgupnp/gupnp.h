@@ -19,21 +19,21 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#include "gupnp-acl.h"
-#include "gupnp-context.h"
-#include "gupnp-context-manager.h"
-#include "gupnp-control-point.h"
-#include "gupnp-error.h"
-#include "gupnp-device.h"
-#include "gupnp-device-info.h"
-#include "gupnp-device-proxy.h"
-#include "gupnp-resource-factory.h"
-#include "gupnp-root-device.h"
-#include "gupnp-service.h"
-#include "gupnp-service-info.h"
-#include "gupnp-service-introspection.h"
-#include "gupnp-service-proxy.h"
-#include "gupnp-white-list.h"
-#include "gupnp-xml-doc.h"
-#include "gupnp-types.h"
-#include "gupnp-uuid.h"
+#include <libgupnp/gupnp-acl.h>
+#include <libgupnp/gupnp-context.h>
+#include <libgupnp/gupnp-context-manager.h>
+#include <libgupnp/gupnp-control-point.h>
+#include <libgupnp/gupnp-error.h>
+#include <libgupnp/gupnp-device.h>
+#include <libgupnp/gupnp-device-info.h>
+#include <libgupnp/gupnp-device-proxy.h>
+#include <libgupnp/gupnp-resource-factory.h>
+#include <libgupnp/gupnp-root-device.h>
+#include <libgupnp/gupnp-service.h>
+#include <libgupnp/gupnp-service-info.h>
+#include <libgupnp/gupnp-service-introspection.h>
+#include <libgupnp/gupnp-service-proxy.h>
+#include <libgupnp/gupnp-white-list.h>
+#include <libgupnp/gupnp-xml-doc.h>
+#include <libgupnp/gupnp-types.h>
+#include <libgupnp/gupnp-uuid.h>

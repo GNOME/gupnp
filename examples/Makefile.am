@@ -1,4 +1,4 @@
-AM_CFLAGS = $(LIBGUPNP_CFLAGS) -I$(top_srcdir) $(GTHREAD_CFLAGS)
+AM_CFLAGS = $(LIBGUPNP_CFLAGS) -I$(top_srcdir) -I$(top_builddir) $(GTHREAD_CFLAGS)
 LDADD = $(top_builddir)/libgupnp/libgupnp-1.2.la
 
 noinst_PROGRAMS = light-server light-client
