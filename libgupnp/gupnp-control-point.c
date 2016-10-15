@@ -1036,7 +1036,7 @@ gupnp_control_point_class_init (GUPnPControlPointClass *klass)
                                                device_proxy_available),
                               NULL,
                               NULL,
-                              g_cclosure_marshal_VOID__OBJECT,
+                              NULL,
                               G_TYPE_NONE,
                               1,
                               GUPNP_TYPE_DEVICE_PROXY);
@@ -1057,7 +1057,7 @@ gupnp_control_point_class_init (GUPnPControlPointClass *klass)
                                                device_proxy_unavailable),
                               NULL,
                               NULL,
-                              g_cclosure_marshal_VOID__OBJECT,
+                              NULL,
                               G_TYPE_NONE,
                               1,
                               GUPNP_TYPE_DEVICE_PROXY);
@@ -1078,7 +1078,7 @@ gupnp_control_point_class_init (GUPnPControlPointClass *klass)
                                                service_proxy_available),
                               NULL,
                               NULL,
-                              g_cclosure_marshal_VOID__OBJECT,
+                              NULL,
                               G_TYPE_NONE,
                               1,
                               GUPNP_TYPE_SERVICE_PROXY);
@@ -1099,7 +1099,7 @@ gupnp_control_point_class_init (GUPnPControlPointClass *klass)
                                                service_proxy_unavailable),
                               NULL,
                               NULL,
-                              g_cclosure_marshal_VOID__OBJECT,
+                              NULL,
                               G_TYPE_NONE,
                               1,
                               GUPNP_TYPE_SERVICE_PROXY);

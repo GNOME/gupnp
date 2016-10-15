@@ -31,7 +31,6 @@
 
 #include "gupnp-connman-manager.h"
 #include "gupnp-context.h"
-#include "gupnp-marshal.h"
 
 #define SERVICE_CREATION_TIMEOUT 1000
 

@@ -126,10 +126,6 @@ AS_IF([test "x$with_context_manager" = "xlinux"],
 AM_CONDITIONAL(USE_NETLINK, test "x$USE_NETLINK" = "xyes")
 AC_SUBST(USE_NETLINK)
 
-# glib-genmarshal
-GLIB_GENMARSHAL=`pkg-config --variable=glib_genmarshal glib-2.0`
-AC_SUBST(GLIB_GENMARSHAL)
-
 GOBJECT_INTROSPECTION_CHECK([0.6.4])
 
 # vapigen

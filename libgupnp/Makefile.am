@@ -89,15 +89,6 @@ introspection_sources = $(libgupnpinc_HEADERS) \
 			gupnp-white-list.c		\
 			gupnp-types.c
 
-
-gupnp-marshal.c: gupnp-marshal.list
-	$(AM_V_GEN)$(GLIB_GENMARSHAL) --prefix=gupnp_marshal $(srcdir)/gupnp-marshal.list --header --body > gupnp-marshal.c
-
-gupnp-marshal.h: gupnp-marshal.list
-	$(AM_V_GEN)$(GLIB_GENMARSHAL) --prefix=gupnp_marshal $(srcdir)/gupnp-marshal.list --header > gupnp-marshal.h
-
-BUILT_SOURCES = gupnp-marshal.c gupnp-marshal.h
-
 libgupnp_1_2_la_LDFLAGS = -version-info $(LTVERSION) $(WIN32_LDFLAGS) $(WARN_LDFLAGS)
 
 libgupnp_1_2_la_SOURCES = $(introspection_sources)		\

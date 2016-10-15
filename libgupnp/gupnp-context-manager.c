@@ -44,7 +44,6 @@
 #include <glib/gstdio.h>
 
 #include "gupnp.h"
-#include "gupnp-marshal.h"
 
 #ifdef HAVE_IFADDRS_H
 #include "gupnp-unix-context-manager.h"
@@ -436,8 +435,7 @@ gupnp_context_manager_class_init (GUPnPContextManagerClass *klass)
                                             GUPNP_TYPE_CONTEXT_MANAGER,
                                             G_SIGNAL_RUN_FIRST,
                                             G_CALLBACK (on_context_available),
-                                            NULL, NULL,
-                                            g_cclosure_marshal_VOID__OBJECT,
+                                            NULL, NULL, NULL,
                                             G_TYPE_NONE,
                                             1,
                                             GUPNP_TYPE_CONTEXT);
@@ -456,8 +454,7 @@ gupnp_context_manager_class_init (GUPnPContextManagerClass *klass)
                                          GUPNP_TYPE_CONTEXT_MANAGER,
                                          G_SIGNAL_RUN_FIRST,
                                          G_CALLBACK (on_context_unavailable),
-                                         NULL, NULL,
-                                         g_cclosure_marshal_VOID__OBJECT,
+                                         NULL, NULL, NULL,
                                          G_TYPE_NONE,
                                          1,
                                          GUPNP_TYPE_CONTEXT);

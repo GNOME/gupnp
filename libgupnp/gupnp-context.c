@@ -56,7 +56,6 @@
 #include "gupnp-context.h"
 #include "gupnp-context-private.h"
 #include "gupnp-error.h"
-#include "gupnp-marshal.h"
 #include "gena-protocol.h"
 #include "http-headers.h"
 #include "gupnp-device.h"

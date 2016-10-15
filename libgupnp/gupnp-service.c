@@ -35,7 +35,6 @@
 #include "gupnp-service.h"
 #include "gupnp-root-device.h"
 #include "gupnp-context-private.h"
-#include "gupnp-marshal.h"
 #include "gupnp-error.h"
 #include "gupnp-acl.h"
 #include "gupnp-uuid.h"
@@ -1722,7 +1721,7 @@ gupnp_service_class_init (GUPnPServiceClass *klass)
                                                action_invoked),
                               NULL,
                               NULL,
-                              g_cclosure_marshal_VOID__BOXED,
+                              NULL,
                               G_TYPE_NONE,
                               1,
                               GUPNP_TYPE_SERVICE_ACTION);
@@ -1744,7 +1743,7 @@ gupnp_service_class_init (GUPnPServiceClass *klass)
                                                query_variable),
                               NULL,
                               NULL,
-                              gupnp_marshal_VOID__STRING_POINTER,
+                              NULL,
                               G_TYPE_NONE,
                               2,
                               G_TYPE_STRING,
@@ -1767,7 +1766,7 @@ gupnp_service_class_init (GUPnPServiceClass *klass)
                                                notify_failed),
                               NULL,
                               NULL,
-                              gupnp_marshal_VOID__POINTER_POINTER,
+                              NULL,
                               G_TYPE_NONE,
                               2,
                               G_TYPE_POINTER,

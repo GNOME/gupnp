@@ -36,7 +36,6 @@
 
 #include "gupnp-network-manager.h"
 #include "gupnp-context.h"
-#include "gupnp-marshal.h"
 
 #define DBUS_TYPE_G_ARRAY_OF_OBJECT_PATH \
         (dbus_g_type_get_collection ("GPtrArray", DBUS_TYPE_G_OBJECT_PATH))
