@@ -1,4 +1,4 @@
-LTVERSION = 4:0:0
+LTVERSION = 4:1:0
 
 if OS_WIN32
 CONTEXT_MANAGER_IMPL = gupnp-windows-context-manager.c \

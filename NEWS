@@ -1,3 +1,20 @@
+1.0.1
+=====
+
+- Connman CM: Various fixes
+- Linux CM: Fix compiler warning about negative shift
+- Documentation: Fix FSF address
+- Documentation: Fix references
+- Build: Update ax_append_link_flags
+
+Bugs fixed in this release:
+ - https://bugzilla.gnome.org/show_bug.cgi?id=770318
+
+All contributors to this release:
+ - Sven Neumann <neumann@teufel.de>
+ - Jens Georg <mail@jensge.org>
+ - Oliver Tappe <zooey@hirschkaefer.de>
+
 1.0.0
 =====
 
