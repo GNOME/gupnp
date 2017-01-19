@@ -289,6 +289,16 @@ gupnp_service_proxy_dispose (GObject *object)
                 proxy->priv->subscribed = FALSE;
         }
 
+        context = gupnp_service_info_get_context (GUPNP_SERVICE_INFO (proxy));
+
+        /* Remove server handler */
+        if (context) {
+            SoupServer *server;
+
+            server = gupnp_context_get_server (context);
+            soup_server_remove_handler (server, proxy->priv->path);
+        }
+
         /* Cancel pending actions */
         while (proxy->priv->pending_actions) {
                 GUPnPServiceProxyAction *action;
@@ -302,7 +312,6 @@ gupnp_service_proxy_dispose (GObject *object)
         }
 
         /* Cancel pending messages */
-        context = gupnp_service_info_get_context (GUPNP_SERVICE_INFO (proxy));
         if (context)
                 session = gupnp_context_get_session (context);
         else
