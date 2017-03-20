@@ -1,3 +1,14 @@
+1.0.2
+=====
+- Fix a potential crash of GUPnPProxy when trying to access a dangling
+  GUPnPServiceProxy pointer of a server handler.
+
+Bugs fixed in this release:
+ - https://bugzilla.gnome.org/show_bug.cgi?id=777491
+
+All contributors to this release:
+ - Sven Neumann <neumann@teufel.de>
+
 1.0.1
 =====
 
