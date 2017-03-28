@@ -333,6 +333,15 @@ gupnp_root_device_initable_init (GInitable     *initable,
                 return FALSE;
         }
 
+        uri = _gupnp_context_get_server_uri (context);
+        if (uri == NULL) {
+                g_set_error_literal (error,
+                                     GUPNP_ROOT_DEVICE_ERROR,
+                                     GUPNP_ROOT_DEVICE_ERROR_NO_NETWORK,
+                                     "Network interface is not usable");
+
+                return FALSE;
+        }
 
         if (g_path_is_absolute (device->priv->description_path))
                 desc_path = g_strdup (device->priv->description_path);
@@ -401,10 +410,8 @@ gupnp_root_device_initable_init (GInitable     *initable,
         gupnp_context_host_path (context, device->priv->description_dir, "");
 
         /* Generate full location */
-        uri = _gupnp_context_get_server_uri (context);
         soup_uri_set_path (uri, relative_location);
         location = soup_uri_to_string (uri, FALSE);
-        soup_uri_free (uri);
 
         g_free (relative_location);
 
@@ -440,6 +447,9 @@ gupnp_root_device_initable_init (GInitable     *initable,
 
  DONE:
         /* Cleanup */
+        if (uri)
+                soup_uri_free (uri);
+
         g_free (desc_path);
         g_free (location);
 

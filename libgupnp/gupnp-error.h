@@ -128,6 +128,7 @@ gupnp_rootdevice_error_quark (void) G_GNUC_CONST;
  * @GUPNP_ROOT_DEVICE_ERROR_NO_CONTEXT: No #GUPnPContext was passed to the root device.
  * @GUPNP_ROOT_DEVICE_ERROR_NO_DESCRIPTION_PATH: Device description path was missing
  * @GUPNP_ROOT_DEVICE_ERROR_NO_DESCRIPTION_FOLDER: Description folder was missing
+ * @GUPNP_ROOT_DEVICE_ERROR_NO_NETWORK: Network interface is not usable
  *
  * #GError codes used for errors during #GUPnPRootDevice creation
  */
@@ -135,6 +136,7 @@ typedef enum {
         GUPNP_ROOT_DEVICE_ERROR_NO_CONTEXT,
         GUPNP_ROOT_DEVICE_ERROR_NO_DESCRIPTION_PATH,
         GUPNP_ROOT_DEVICE_ERROR_NO_DESCRIPTION_FOLDER,
+        GUPNP_ROOT_DEVICE_ERROR_NO_NETWORK,
         GUPNP_ROOT_DEVICE_ERROR_FAIL
 } GUPnPRootdeviceError;
 
