@@ -341,6 +341,13 @@ gupnp_root_device_constructor (GType                  type,
                 return NULL;
         }
 
+        uri = _gupnp_context_get_server_uri (context);
+        if (uri == NULL) {
+                g_warning ("Network interface is not usable");
+
+                return NULL;
+        }
+
         if (g_path_is_absolute (description_path))
                 desc_path = g_strdup (description_path);
         else
@@ -421,10 +428,8 @@ gupnp_root_device_constructor (GType                  type,
         gupnp_context_host_path (context, device->priv->description_dir, "");
 
         /* Generate full location */
-        uri = _gupnp_context_get_server_uri (context);
         soup_uri_set_path (uri, relative_location);
         location = soup_uri_to_string (uri, FALSE);
-        soup_uri_free (uri);
 
         g_free (relative_location);
 
@@ -458,6 +463,9 @@ gupnp_root_device_constructor (GType                  type,
 
  DONE:
         /* Cleanup */
+        if (uri)
+                soup_uri_free (uri);
+
         g_free (desc_path);
         g_free (location);
 

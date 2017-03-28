@@ -629,7 +629,10 @@ _gupnp_context_get_server_uri (GUPnPContext *context)
         if (context->priv->server_uri == NULL)
                 context->priv->server_uri = make_server_uri (context);
 
-        return soup_uri_copy (context->priv->server_uri);
+        if (context->priv->server_uri)
+                return soup_uri_copy (context->priv->server_uri);
+
+        return NULL;
 }
 
 /**
