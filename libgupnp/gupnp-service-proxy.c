@@ -2038,6 +2038,8 @@ subscription_expire (gpointer user_data)
         /* Reset timeout ID */
         proxy->priv->subscription_timeout_src = NULL;
 
+        g_return_val_if_fail (proxy->priv->sid != NULL, FALSE);
+
         /* Send renewal message */
         context = gupnp_service_info_get_context (GUPNP_SERVICE_INFO (proxy));
 
@@ -2094,6 +2096,12 @@ subscribe_got_response (G_GNUC_UNUSED SoupSession *session,
         /* Remove from pending messages list */
         proxy->priv->pending_messages =
                 g_list_remove (proxy->priv->pending_messages, msg);
+
+        /* Remove subscription timeout */
+        if (proxy->priv->subscription_timeout_src) {
+                g_source_destroy (proxy->priv->subscription_timeout_src);
+                proxy->priv->subscription_timeout_src = NULL;
+        }
 
         /* Check whether the subscription is still wanted */
         if (!proxy->priv->subscribed)
