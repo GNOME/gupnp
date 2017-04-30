@@ -929,7 +929,7 @@ host_path_handler (G_GNUC_UNUSED SoupServer        *server,
                    SoupMessage                     *msg,
                    const char                      *path,
                    G_GNUC_UNUSED GHashTable        *query,
-                   G_GNUC_UNUSED SoupClientContext *client,
+                   SoupClientContext               *client_ctx,
                    gpointer                         user_data)
 {
         char *local_path, *path_to_open;
@@ -940,6 +940,7 @@ host_path_handler (G_GNUC_UNUSED SoupServer        *server,
         GError *error;
         HostPathData *host_path_data;
         const char *user_agent;
+        const char *host;
 
         orig_locales = NULL;
         locales      = NULL;
@@ -967,9 +968,25 @@ host_path_handler (G_GNUC_UNUSED SoupServer        *server,
 
         user_agent = soup_message_headers_get_one (msg->request_headers,
                                                    "User-Agent");
-        update_client_cache (host_path_data->context,
-                             soup_client_context_get_host (client),
-                             user_agent);
+        host = soup_client_context_get_host (client_ctx);
+
+        /* If there was no User-Agent in the request, try to guess from the
+         * discovery message and put it into the response headers for further
+         * processing. Otherwise use the agent to populate the cache.
+         */
+        if (user_agent == NULL) {
+                GSSDPClient *client = GSSDP_CLIENT (host_path_data->context);
+
+                user_agent = gssdp_client_guess_user_agent (client, host);
+
+                if (user_agent != NULL) {
+                        soup_message_headers_append (msg->response_headers,
+                                                     "User-Agent",
+                                                     user_agent);
+                }
+        } else {
+                update_client_cache (host_path_data->context, host, user_agent);
+        }
 
         /* Construct base local path */
         local_path = construct_local_path (path, user_agent, host_path_data);
