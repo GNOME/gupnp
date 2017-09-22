@@ -328,12 +328,12 @@ network_device_up (NetworkInterface *device)
 static void
 network_device_down (NetworkInterface *device)
 {
-        if (!device->flags & NETWORK_INTERFACE_UP)
+        if (!(device->flags & NETWORK_INTERFACE_UP))
                 return;
 
         device->flags &= ~NETWORK_INTERFACE_UP;
 
-        if (device->contexts)
+        if (device->contexts != NULL)
                 g_hash_table_foreach (device->contexts,
                                       context_signal_down,
                                       device->manager);
