@@ -163,7 +163,10 @@ gupnp_service_proxy_action_unref (GUPnPServiceProxyAction *action)
         }
 }
 
-G_DEFINE_BOXED_TYPE (GUPnPServiceProxyAction, gupnp_service_proxy_action, gupnp_service_proxy_action_ref, gupnp_service_proxy_action_unref)
+G_DEFINE_BOXED_TYPE (GUPnPServiceProxyAction,
+                     gupnp_service_proxy_action,
+                     gupnp_service_proxy_action_ref,
+                     gupnp_service_proxy_action_unref)
 
 static void
 callback_data_free (CallbackData *data)

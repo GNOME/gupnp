@@ -1000,7 +1000,7 @@ control_server_handler (SoupServer                      *server,
         action->doc            = gupnp_xml_doc_new(doc);
         action->node           = action_node;
         action->response_str   = new_action_response_str (action_name,
-                                                        soap_action);
+                                                          soap_action);
         action->context        = g_object_ref (context);
         action->argument_count = 0;
 
