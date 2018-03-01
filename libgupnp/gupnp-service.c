@@ -837,6 +837,7 @@ new_action_response_str (const char   *action_name,
         g_string_append (str, "Response xmlns:u=");
 
         if (service_type != NULL) {
+                g_string_append_c (str, '"');
                 g_string_append (str, service_type);
                 g_string_append_c (str, '"');
         } else {
@@ -966,6 +967,9 @@ control_server_handler (SoupServer                      *server,
         /* This memory is libsoup-owned so we can do this */
         *action_name = '\0';
         action_name += 1;
+
+        if (*soap_action == '"')
+                soap_action += 1;
 
         /* This memory is libsoup-owned so we can do this */
         end = strrchr (action_name, '"');
