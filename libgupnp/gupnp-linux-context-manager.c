@@ -233,7 +233,7 @@ network_device_update_essid (NetworkInterface *device)
         /* Query essid */
         memset (&iwr, 0, sizeof (struct iwreq));
         memset (essid, 0, IW_ESSID_MAX_SIZE + 1);
-        strncpy (iwr.ifr_name, device->name, IFNAMSIZ);
+        strncpy (iwr.ifr_name, device->name, IFNAMSIZ - 1);
         iwr.u.essid.pointer = (caddr_t) essid;
         iwr.u.essid.length = IW_ESSID_MAX_SIZE;
         ret = ioctl (device->manager->priv->fd, SIOCGIWESSID, &iwr);
