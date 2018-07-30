@@ -1,3 +1,22 @@
+1.0.3
+=====
+- Avoid a crash in gupnp_root_device_constructor
+- Propagage User-Agent from Cache
+- Fix potential issue with boolean vs. bitwise evaluation
+- Fix a crash in GUPnPServiceProxy::subscription_expire
+- Accept broken Action header without the "
+- Fix issue with strcpy destination buffer size in linux context manager
+
+Bugs fixed in this release:
+ - https://bugzilla.gnome.org/show_bug.cgi?id=780640
+ - https://bugzilla.gnome.org/show_bug.cgi?id=780715
+ - https://bugzilla.gnome.org/show_bug.cgi?id=793955
+
+All contributors to this release:
+ - Jens Georg <mail@jensge.org>
+ - Sven Neumann <neumann@teufel.de>
+ - Bastien Nocera <hadess@hadess.net>
+
 1.0.2
 =====
 - Fix a potential crash of GUPnPProxy when trying to access a dangling
