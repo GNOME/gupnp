@@ -20,10 +20,6 @@
 #ifndef __GUUL_H
 #define __GUUL_H
 
-#ifdef HAVE_CONFIG_H
-#   include <config.h>
-#endif
-
 #include <glib.h>
 
 G_BEGIN_DECLS

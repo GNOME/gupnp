@@ -1,4 +1,3 @@
-GUPnP cheader_filename="libgupnp/gupnp.h"
 Acl
     .is_allowed skip
     .is_allowed_async skip

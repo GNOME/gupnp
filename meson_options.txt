@@ -1,0 +1,5 @@
+option('context_manager', type : 'combo', choices : ['linux', 'network-manager', 'connman', 'system'], value : 'system', description: 'Which context manager to use for detecting network interfaces')
+option('introspection', type : 'boolean', value : 'true', description : 'Enable / disable the GObject-Introspection integration')
+option('vapi', type : 'boolean', value : 'true', description : ' Enable / disable VALA API file generation (needs -Dintrospection=true)')
+option('gtk_doc', type : 'boolean', value : 'false', description : 'Enable generation of the API documentation (needs GTK-Doc)')
+option('examples', type : 'boolean', value : 'true', description : 'Enable / disable building the examples')

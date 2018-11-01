@@ -1,0 +1,26 @@
+/*** BEGIN file-header ***/
+#ifndef GUPNP_ENUMS_H
+#define GUPNP_ENUMS_H
+
+#include <glib-object.h>
+
+G_BEGIN_DECLS
+
+/*** END file-header ***/
+
+/*** BEGIN file-production ***/
+/* enumerations from @basename@ */
+
+/*** END file-production ***/
+
+/*** BEGIN enumeration-production ***/
+GType @enum_name@_get_type (void);
+#define GUPNP_TYPE_@ENUMSHORT@ (@enum_name@_get_type())
+
+/*** END enumeration-production ***/
+
+/*** BEGIN file-tail ***/
+G_END_DECLS
+
+#endif /* GUPNP_ENUMS_H */
+/*** END file-tail ***/
