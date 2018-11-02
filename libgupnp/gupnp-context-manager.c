@@ -34,6 +34,8 @@
  * Since: 0.13.0
  */
 
+#define G_LOG_DOMAIN "gupnp-context-manager"
+
 #include <config.h>
 #include <errno.h>
 #include <string.h>
@@ -534,6 +536,9 @@ gupnp_context_manager_create (guint port)
 #endif
         }
 #endif /* G_OS_WIN32 */
+
+        g_debug ("Using context manager implementation %s",
+                 g_type_name (impl_type));
         impl = GUPNP_CONTEXT_MANAGER (g_object_new (impl_type,
                                                     "port", port,
                                                     NULL));
