@@ -55,6 +55,8 @@
 #include "gupnp-network-manager.h"
 #elif defined(USE_CONNMAN)
 #include "gupnp-connman-manager.h"
+#elif defined(USE_NETLINK)
+#include "gupnp-linux-context-manager.h"
 #endif
 
 struct _GUPnPContextManagerPrivate {
