@@ -36,6 +36,18 @@
 #include "gupnp-xml-doc.h"
 #include "gupnp-error.h"
 
+/**
+ * GUPnPXMLDoc:
+ * @doc: Pointer to the document.
+ *
+ * Reference-counting wrapper for libxml's #xmlDoc
+ */
+struct _GUPnPXMLDoc {
+        GObject parent;
+        /*< public >*/
+        xmlDoc *doc;
+};
+
 G_DEFINE_TYPE (GUPnPXMLDoc,
                gupnp_xml_doc,
                G_TYPE_OBJECT);
@@ -129,4 +141,9 @@ gupnp_xml_doc_new_from_path (const char *path,
         }
 
         return gupnp_xml_doc_new (doc);
+}
+
+const xmlDoc *
+gupnp_xml_doc_get_doc (GUPnPXMLDoc *doc) {
+    return doc->doc;
 }

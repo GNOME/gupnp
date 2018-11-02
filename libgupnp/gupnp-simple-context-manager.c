@@ -36,15 +36,16 @@
 #include "gupnp-simple-context-manager.h"
 #include "gupnp-context.h"
 
-G_DEFINE_ABSTRACT_TYPE (GUPnPSimpleContextManager,
-                        gupnp_simple_context_manager,
-                        GUPNP_TYPE_CONTEXT_MANAGER);
-
 struct _GUPnPSimpleContextManagerPrivate {
         GList *contexts; /* List of GUPnPContext instances */
 
         GSource *idle_context_creation_src;
 };
+typedef struct _GUPnPSimpleContextManagerPrivate GUPnPSimpleContextManagerPrivate;
+
+G_DEFINE_ABSTRACT_TYPE_WITH_PRIVATE (GUPnPSimpleContextManager,
+                                     gupnp_simple_context_manager,
+                                     GUPNP_TYPE_CONTEXT_MANAGER);
 
 static GList*
 gupnp_simple_context_manager_get_interfaces (GUPnPSimpleContextManager *manager)
@@ -60,10 +61,12 @@ create_and_signal_context (const char                *interface,
                            GUPnPSimpleContextManager *manager)
 {
         GUPnPContext *context;
+        GUPnPSimpleContextManagerPrivate *priv;
         guint port;
 
         GError *error;
 
+        priv = gupnp_simple_context_manager_get_instance_private (manager);
         g_object_get (manager,
                       "port", &port,
                       NULL);
@@ -92,7 +95,7 @@ create_and_signal_context (const char                *interface,
                                "context-available",
                                context);
 
-        manager->priv->contexts = g_list_append (manager->priv->contexts,
+        priv->contexts = g_list_append (priv->contexts,
                                                  context);
 }
 
@@ -104,10 +107,13 @@ create_contexts (gpointer data)
 {
         GUPnPSimpleContextManager *manager = (GUPnPSimpleContextManager *) data;
         GList *ifaces;
+        GUPnPSimpleContextManagerPrivate *priv;
 
-        manager->priv->idle_context_creation_src = NULL;
+        priv = gupnp_simple_context_manager_get_instance_private (manager);
 
-        if (manager->priv->contexts != NULL)
+        priv->idle_context_creation_src = NULL;
+
+        if (priv->contexts != NULL)
                return FALSE;
 
         ifaces = gupnp_simple_context_manager_get_interfaces (manager);
@@ -123,47 +129,48 @@ create_contexts (gpointer data)
 static void
 destroy_contexts (GUPnPSimpleContextManager *manager)
 {
-        while (manager->priv->contexts) {
+        GUPnPSimpleContextManagerPrivate *priv;
+
+        priv = gupnp_simple_context_manager_get_instance_private (manager);
+        while (priv->contexts) {
                 GUPnPContext *context;
 
-                context = GUPNP_CONTEXT (manager->priv->contexts->data);
+                context = GUPNP_CONTEXT (priv->contexts->data);
 
                 g_signal_emit_by_name (manager,
                                        "context-unavailable",
                                        context);
                 g_object_unref (context);
 
-                manager->priv->contexts = g_list_delete_link
-                                        (manager->priv->contexts,
-                                         manager->priv->contexts);
+                priv->contexts = g_list_delete_link (priv->contexts,
+                                                     priv->contexts);
         }
 }
 
 static void
 schedule_contexts_creation (GUPnPSimpleContextManager *manager)
 {
-        manager->priv->idle_context_creation_src = NULL;
+        GUPnPSimpleContextManagerPrivate *priv;
+
+        priv = gupnp_simple_context_manager_get_instance_private (manager);
+        priv->idle_context_creation_src = NULL;
 
         /* Create contexts in mainloop so that is happens after user has hooked
          * to the "context-available" signal.
          */
-        manager->priv->idle_context_creation_src = g_idle_source_new ();
-        g_source_attach (manager->priv->idle_context_creation_src,
+        priv->idle_context_creation_src = g_idle_source_new ();
+        g_source_attach (priv->idle_context_creation_src,
                          g_main_context_get_thread_default ());
-        g_source_set_callback (manager->priv->idle_context_creation_src,
+        g_source_set_callback (priv->idle_context_creation_src,
                                create_contexts,
                                manager,
                                NULL);
-        g_source_unref (manager->priv->idle_context_creation_src);
+        g_source_unref (priv->idle_context_creation_src);
 }
 
 static void
 gupnp_simple_context_manager_init (GUPnPSimpleContextManager *manager)
 {
-        manager->priv =
-                G_TYPE_INSTANCE_GET_PRIVATE (manager,
-                                             GUPNP_TYPE_SIMPLE_CONTEXT_MANAGER,
-                                             GUPnPSimpleContextManagerPrivate);
 }
 
 static void
@@ -186,14 +193,16 @@ gupnp_simple_context_manager_dispose (GObject *object)
 {
         GUPnPSimpleContextManager *manager;
         GObjectClass *object_class;
+        GUPnPSimpleContextManagerPrivate *priv;
 
         manager = GUPNP_SIMPLE_CONTEXT_MANAGER (object);
+        priv = gupnp_simple_context_manager_get_instance_private (manager);
 
         destroy_contexts (manager);
 
-        if (manager->priv->idle_context_creation_src) {
-                g_source_destroy (manager->priv->idle_context_creation_src);
-                manager->priv->idle_context_creation_src = NULL;
+        if (priv->idle_context_creation_src) {
+                g_source_destroy (priv->idle_context_creation_src);
+                priv->idle_context_creation_src = NULL;
         }
 
 
@@ -211,7 +220,4 @@ gupnp_simple_context_manager_class_init (GUPnPSimpleContextManagerClass *klass)
 
         object_class->constructed  = gupnp_simple_context_manager_constructed;
         object_class->dispose      = gupnp_simple_context_manager_dispose;
-
-        g_type_class_add_private (klass,
-                                  sizeof (GUPnPSimpleContextManagerPrivate));
 }

@@ -44,10 +44,6 @@
 #include "http-headers.h"
 #include "gvalue-util.h"
 
-G_DEFINE_TYPE (GUPnPServiceProxy,
-               gupnp_service_proxy,
-               GUPNP_TYPE_SERVICE_INFO);
-
 struct _GUPnPServiceProxyPrivate {
         gboolean subscribed;
 
@@ -67,6 +63,11 @@ struct _GUPnPServiceProxyPrivate {
         GList *pending_notifies; /* Pending notifications to be sent (xmlDoc) */
         GSource *notify_idle_src; /* Idle handler src of notification emiter */
 };
+typedef struct _GUPnPServiceProxyPrivate GUPnPServiceProxyPrivate;
+
+G_DEFINE_TYPE_WITH_PRIVATE (GUPnPServiceProxy,
+                            gupnp_service_proxy,
+                            GUPNP_TYPE_SERVICE_INFO);
 
 enum {
         PROP_0,
@@ -129,6 +130,18 @@ gupnp_service_proxy_action_ref (GUPnPServiceProxyAction *action);
 static void
 gupnp_service_proxy_action_unref (GUPnPServiceProxyAction *action);
 
+static void
+gupnp_service_proxy_remove_action (GUPnPServiceProxy       *proxy,
+                                   GUPnPServiceProxyAction *action)
+{
+        GUPnPServiceProxyPrivate *priv;
+
+        priv = gupnp_service_proxy_get_instance_private (proxy);
+
+        priv->pending_actions = g_list_remove (priv->pending_actions,
+                                               action);
+}
+
 static GUPnPServiceProxyAction *
 gupnp_service_proxy_action_ref (GUPnPServiceProxyAction *action)
 {
@@ -152,8 +165,7 @@ gupnp_service_proxy_action_unref (GUPnPServiceProxyAction *action)
                 if (action->proxy != NULL) {
                         g_object_remove_weak_pointer (G_OBJECT (action->proxy),
                                                       (gpointer *)&(action->proxy));
-                        action->proxy->priv->pending_actions =
-                                g_list_remove (action->proxy->priv->pending_actions, action);
+                        gupnp_service_proxy_remove_action (action->proxy, action);
                 }
 
                 if (action->msg != NULL)
@@ -216,17 +228,15 @@ static void
 gupnp_service_proxy_init (GUPnPServiceProxy *proxy)
 {
         static int proxy_counter = 0;
-
-        proxy->priv = G_TYPE_INSTANCE_GET_PRIVATE (proxy,
-                                                   GUPNP_TYPE_SERVICE_PROXY,
-                                                   GUPnPServiceProxyPrivate);
+        GUPnPServiceProxyPrivate *priv;
 
         /* Generate unique path */
-        proxy->priv->path = g_strdup_printf ("/ServiceProxy%d", proxy_counter);
+        priv = gupnp_service_proxy_get_instance_private (proxy);
+        priv->path = g_strdup_printf ("/ServiceProxy%d", proxy_counter);
         proxy_counter++;
 
         /* Set up notify hash */
-        proxy->priv->notify_hash =
+        priv->notify_hash =
                 g_hash_table_new_full (g_str_hash,
                                        g_str_equal,
                                        g_free,
@@ -261,13 +271,14 @@ gupnp_service_proxy_get_property (GObject    *object,
                                   GParamSpec *pspec)
 {
         GUPnPServiceProxy *proxy;
+        GUPnPServiceProxyPrivate *priv;
 
         proxy = GUPNP_SERVICE_PROXY (object);
+        priv = gupnp_service_proxy_get_instance_private (proxy);
 
         switch (property_id) {
         case PROP_SUBSCRIBED:
-                g_value_set_boolean (value,
-                                     proxy->priv->subscribed);
+                g_value_set_boolean (value, priv->subscribed);
                 break;
         default:
                 G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -279,17 +290,19 @@ static void
 gupnp_service_proxy_dispose (GObject *object)
 {
         GUPnPServiceProxy *proxy;
+        GUPnPServiceProxyPrivate *priv;
         GObjectClass *object_class;
         GUPnPContext *context;
         SoupSession *session;
 
         proxy = GUPNP_SERVICE_PROXY (object);
+        priv = gupnp_service_proxy_get_instance_private (proxy);
 
         /* Unsubscribe */
-        if (proxy->priv->subscribed) {
+        if (priv->subscribed) {
                 unsubscribe (proxy);
 
-                proxy->priv->subscribed = FALSE;
+                priv->subscribed = FALSE;
         }
 
         context = gupnp_service_info_get_context (GUPNP_SERVICE_INFO (proxy));
@@ -299,17 +312,17 @@ gupnp_service_proxy_dispose (GObject *object)
             SoupServer *server;
 
             server = gupnp_context_get_server (context);
-            soup_server_remove_handler (server, proxy->priv->path);
+            soup_server_remove_handler (server, priv->path);
         }
 
         /* Cancel pending actions */
-        while (proxy->priv->pending_actions) {
+        while (priv->pending_actions) {
                 GUPnPServiceProxyAction *action;
 
-                action = proxy->priv->pending_actions->data;
-                proxy->priv->pending_actions =
-                        g_list_delete_link (proxy->priv->pending_actions,
-                                            proxy->priv->pending_actions);
+                action = priv->pending_actions->data;
+                priv->pending_actions =
+                        g_list_delete_link (priv->pending_actions,
+                                            priv->pending_actions);
 
                 gupnp_service_proxy_cancel_action (proxy, action);
         }
@@ -320,29 +333,29 @@ gupnp_service_proxy_dispose (GObject *object)
         else
                 session = NULL; /* Not the first time dispose is called. */
 
-        while (proxy->priv->pending_messages) {
+        while (priv->pending_messages) {
                 SoupMessage *msg;
 
-                msg = proxy->priv->pending_messages->data;
+                msg = priv->pending_messages->data;
 
                 soup_session_cancel_message (session,
                                              msg,
                                              SOUP_STATUS_CANCELLED);
 
-                proxy->priv->pending_messages =
-                        g_list_delete_link (proxy->priv->pending_messages,
-                                            proxy->priv->pending_messages);
+                priv->pending_messages =
+                        g_list_delete_link (priv->pending_messages,
+                                            priv->pending_messages);
         }
 
         /* Cancel pending notifications */
-        if (proxy->priv->notify_idle_src) {
-                g_source_destroy (proxy->priv->notify_idle_src);
-                proxy->priv->notify_idle_src = NULL;
+        if (priv->notify_idle_src) {
+                g_source_destroy (priv->notify_idle_src);
+                priv->notify_idle_src = NULL;
         }
 
-        g_list_free_full (proxy->priv->pending_notifies,
+        g_list_free_full (priv->pending_notifies,
                           (GDestroyNotify) emit_notify_data_free);
-        proxy->priv->pending_notifies = NULL;
+        priv->pending_notifies = NULL;
 
         /* Call super */
         object_class = G_OBJECT_CLASS (gupnp_service_proxy_parent_class);
@@ -353,13 +366,15 @@ static void
 gupnp_service_proxy_finalize (GObject *object)
 {
         GUPnPServiceProxy *proxy;
+        GUPnPServiceProxyPrivate *priv;
         GObjectClass *object_class;
 
         proxy = GUPNP_SERVICE_PROXY (object);
+        priv = gupnp_service_proxy_get_instance_private (proxy);
 
-        g_free (proxy->priv->path);
+        g_free (priv->path);
 
-        g_hash_table_destroy (proxy->priv->notify_hash);
+        g_hash_table_destroy (priv->notify_hash);
 
         /* Call super */
         object_class = G_OBJECT_CLASS (gupnp_service_proxy_parent_class);
@@ -377,8 +392,6 @@ gupnp_service_proxy_class_init (GUPnPServiceProxyClass *klass)
         object_class->get_property = gupnp_service_proxy_get_property;
         object_class->dispose      = gupnp_service_proxy_dispose;
         object_class->finalize     = gupnp_service_proxy_finalize;
-
-        g_type_class_add_private (klass, sizeof (GUPnPServiceProxyPrivate));
 
         /**
          * GUPnPServiceProxy:subscribed:
@@ -791,8 +804,11 @@ begin_action_msg (GUPnPServiceProxy              *proxy,
                   gpointer                        user_data)
 {
         GUPnPServiceProxyAction *ret;
+        GUPnPServiceProxyPrivate *priv;
         char *control_url, *full_action;
         const char *service_type;
+
+        priv = gupnp_service_proxy_get_instance_private (proxy);
 
         /* Create action structure */
         ret = g_slice_new (GUPnPServiceProxyAction);
@@ -808,8 +824,7 @@ begin_action_msg (GUPnPServiceProxy              *proxy,
 
         ret->error = NULL;
 
-        proxy->priv->pending_actions =
-                g_list_prepend (proxy->priv->pending_actions, ret);
+        priv->pending_actions = g_list_prepend (priv->pending_actions, ret);
 
         /* Make sure we have a service type */
         service_type = gupnp_service_info_get_service_type
@@ -1556,14 +1571,17 @@ gupnp_service_proxy_add_notify_full (GUPnPServiceProxy              *proxy,
 {
         NotifyData *data;
         CallbackData *callback_data;
+        GUPnPServiceProxyPrivate *priv;
 
         g_return_val_if_fail (GUPNP_IS_SERVICE_PROXY (proxy), FALSE);
         g_return_val_if_fail (variable, FALSE);
         g_return_val_if_fail (type, FALSE);
         g_return_val_if_fail (callback, FALSE);
 
+        priv = gupnp_service_proxy_get_instance_private (proxy);
+
         /* See if we already have notifications set up for this variable */
-        data = g_hash_table_lookup (proxy->priv->notify_hash, variable);
+        data = g_hash_table_lookup (priv->notify_hash, variable);
         if (data == NULL) {
                 /* No, create one */
                 data = g_slice_new (NotifyData);
@@ -1572,7 +1590,7 @@ gupnp_service_proxy_add_notify_full (GUPnPServiceProxy              *proxy,
                 data->callbacks  = NULL;
                 data->next_emit   = NULL;
 
-                g_hash_table_insert (proxy->priv->notify_hash,
+                g_hash_table_insert (priv->notify_hash,
                                      g_strdup (variable),
                                      data);
         } else {
@@ -1659,13 +1677,16 @@ gupnp_service_proxy_remove_notify (GUPnPServiceProxy              *proxy,
         NotifyData *data;
         gboolean found;
         GList *l;
+        GUPnPServiceProxyPrivate *priv;
 
         g_return_val_if_fail (GUPNP_IS_SERVICE_PROXY (proxy), FALSE);
         g_return_val_if_fail (variable, FALSE);
         g_return_val_if_fail (callback, FALSE);
 
+        priv = gupnp_service_proxy_get_instance_private (proxy);
+
         /* Look up NotifyData for variable */
-        data = g_hash_table_lookup (proxy->priv->notify_hash, variable);
+        data = g_hash_table_lookup (priv->notify_hash, variable);
         if (data == NULL) {
                 g_warning ("No notifications found for variable %s",
                            variable);
@@ -1694,7 +1715,7 @@ gupnp_service_proxy_remove_notify (GUPnPServiceProxy              *proxy,
                                 g_list_delete_link (data->callbacks, l);
                         if (data->callbacks == NULL) {
                                 /* No callbacks left: Remove from hash */
-                                g_hash_table_remove (proxy->priv->notify_hash,
+                                g_hash_table_remove (priv->notify_hash,
                                                      variable);
                         }
 
@@ -1742,8 +1763,11 @@ emit_notification (GUPnPServiceProxy *proxy,
         NotifyData *data;
         GValue value = {0, };
         GList *l;
+        GUPnPServiceProxyPrivate *priv;
 
-        data = g_hash_table_lookup (proxy->priv->notify_hash, var_node->name);
+        priv = gupnp_service_proxy_get_instance_private (proxy);
+
+        data = g_hash_table_lookup (priv->notify_hash, var_node->name);
         if (data == NULL)
                 return;
 
@@ -1780,6 +1804,7 @@ emit_notifications_for_doc (GUPnPServiceProxy *proxy,
 {
         NotifyData *data = NULL;
         xmlNode *node;
+        GUPnPServiceProxyPrivate *priv;
 
         node = xmlDocGetRootElement (doc);
 
@@ -1800,7 +1825,8 @@ emit_notifications_for_doc (GUPnPServiceProxy *proxy,
                 }
         }
 
-        data = g_hash_table_lookup (proxy->priv->notify_hash, "*");
+        priv = gupnp_service_proxy_get_instance_private (proxy);
+        data = g_hash_table_lookup (priv->notify_hash, "*");
         if (data != NULL) {
                 GValue value = {0, };
                 GList *it = NULL;
@@ -1826,25 +1852,27 @@ static gboolean
 emit_notifications (gpointer user_data)
 {
         GUPnPServiceProxy *proxy = user_data;
+        GUPnPServiceProxyPrivate *priv;
         GList *pending_notify;
         gboolean resubscribe = FALSE;
 
         g_assert (user_data);
 
-        if (proxy->priv->sid == NULL)
+        priv = gupnp_service_proxy_get_instance_private (proxy);
+        if (priv->sid == NULL)
                 /* No SID */
-                if (G_LIKELY (proxy->priv->subscribed))
+                if (G_LIKELY (priv->subscribed))
                         /* subscription in progress, delay emision! */
                         return TRUE;
 
-        for (pending_notify = proxy->priv->pending_notifies;
+        for (pending_notify = priv->pending_notifies;
              pending_notify != NULL;
              pending_notify = pending_notify->next) {
                 EmitNotifyData *emit_notify_data;
 
                 emit_notify_data = pending_notify->data;
 
-                if (emit_notify_data->seq > proxy->priv->seq) {
+                if (emit_notify_data->seq > priv->seq) {
                         /* Error procedure on missed event according to
                          * UDA 1.0, section 4.2, §5:
                          * Re-subscribe to get a new SID and SEQ */
@@ -1857,25 +1885,25 @@ emit_notifications (gpointer user_data)
                 /* UDA 1.0, section 4.2, §3: To prevent overflow, SEQ is set to
                  * 1, NOT 0, when encountering G_MAXUINT32. SEQ == 0 always
                  * indicates the initial event message. */
-                if (proxy->priv->seq < G_MAXUINT32)
-                        proxy->priv->seq++;
+                if (priv->seq < G_MAXUINT32)
+                        priv->seq++;
                 else
-                        proxy->priv->seq = 1;
+                        priv->seq = 1;
 
-                if (G_LIKELY (proxy->priv->sid != NULL &&
+                if (G_LIKELY (priv->sid != NULL &&
                               strcmp (emit_notify_data->sid,
-                                      proxy->priv->sid) == 0))
+                                      priv->sid) == 0))
                         /* Our SID, entertain! */
                         emit_notifications_for_doc (proxy,
                                                     emit_notify_data->doc);
         }
 
         /* Cleanup */
-        g_list_free_full (proxy->priv->pending_notifies,
+        g_list_free_full (priv->pending_notifies,
                           (GDestroyNotify) emit_notify_data_free);
-        proxy->priv->pending_notifies = NULL;
+        priv->pending_notifies = NULL;
 
-        proxy->priv->notify_idle_src = NULL;
+        priv->notify_idle_src = NULL;
 
         if (resubscribe) {
                 unsubscribe (proxy);
@@ -1898,6 +1926,7 @@ server_handler (G_GNUC_UNUSED SoupServer        *soup_server,
                 gpointer                         user_data)
 {
         GUPnPServiceProxy *proxy;
+        GUPnPServiceProxyPrivate *priv;
         const char *hdr, *nt, *nts;
         guint32 seq;
         guint64 seq_parsed;
@@ -1991,17 +2020,18 @@ server_handler (G_GNUC_UNUSED SoupServer        *soup_server,
          */
         emit_notify_data = emit_notify_data_new (hdr, seq, doc);
 
-        proxy->priv->pending_notifies =
-                g_list_append (proxy->priv->pending_notifies, emit_notify_data);
-        if (!proxy->priv->notify_idle_src) {
-                proxy->priv->notify_idle_src = g_idle_source_new();
-                g_source_set_callback (proxy->priv->notify_idle_src,
+        priv = gupnp_service_proxy_get_instance_private (proxy);
+        priv->pending_notifies =
+                g_list_append (priv->pending_notifies, emit_notify_data);
+        if (!priv->notify_idle_src) {
+                priv->notify_idle_src = g_idle_source_new();
+                g_source_set_callback (priv->notify_idle_src,
                                        emit_notifications,
                                        proxy, NULL);
-                g_source_attach (proxy->priv->notify_idle_src,
+                g_source_attach (priv->notify_idle_src,
                                  g_main_context_get_thread_default ());
 
-                g_source_unref (proxy->priv->notify_idle_src);
+                g_source_unref (priv->notify_idle_src);
         }
 
         /* Everything went OK */
@@ -2031,17 +2061,19 @@ static gboolean
 subscription_expire (gpointer user_data)
 {
         GUPnPServiceProxy *proxy;
+        GUPnPServiceProxyPrivate *priv;
         GUPnPContext *context;
         SoupMessage *msg;
         SoupSession *session;
         char *sub_url, *timeout;
 
         proxy = GUPNP_SERVICE_PROXY (user_data);
+        priv = gupnp_service_proxy_get_instance_private (proxy);
 
         /* Reset timeout ID */
-        proxy->priv->subscription_timeout_src = NULL;
+        priv->subscription_timeout_src = NULL;
 
-        g_return_val_if_fail (proxy->priv->sid != NULL, FALSE);
+        g_return_val_if_fail (priv->sid != NULL, FALSE);
 
         /* Send renewal message */
         context = gupnp_service_info_get_context (GUPNP_SERVICE_INFO (proxy));
@@ -2059,7 +2091,7 @@ subscription_expire (gpointer user_data)
         /* Add headers */
         soup_message_headers_append (msg->request_headers,
                                     "SID",
-                                    proxy->priv->sid);
+                                    priv->sid);
 
         timeout = make_timeout_header (context);
         soup_message_headers_append (msg->request_headers,
@@ -2068,8 +2100,8 @@ subscription_expire (gpointer user_data)
         g_free (timeout);
 
         /* And send it off */
-        proxy->priv->pending_messages =
-                g_list_prepend (proxy->priv->pending_messages, msg);
+        priv->pending_messages =
+                g_list_prepend (priv->pending_messages, msg);
 
         session = gupnp_context_get_session (context);
 
@@ -2091,28 +2123,29 @@ subscribe_got_response (G_GNUC_UNUSED SoupSession *session,
                         GUPnPServiceProxy         *proxy)
 {
         GError *error;
+        GUPnPServiceProxyPrivate *priv;
 
         /* Cancelled? */
         if (msg->status_code == SOUP_STATUS_CANCELLED)
                 return;
 
         /* Remove from pending messages list */
-        proxy->priv->pending_messages =
-                g_list_remove (proxy->priv->pending_messages, msg);
+        priv = gupnp_service_proxy_get_instance_private (proxy);
+        priv->pending_messages = g_list_remove (priv->pending_messages, msg);
 
         /* Remove subscription timeout */
-        if (proxy->priv->subscription_timeout_src) {
-                g_source_destroy (proxy->priv->subscription_timeout_src);
-                proxy->priv->subscription_timeout_src = NULL;
+        if (priv->subscription_timeout_src) {
+                g_source_destroy (priv->subscription_timeout_src);
+                priv->subscription_timeout_src = NULL;
         }
 
         /* Check whether the subscription is still wanted */
-        if (!proxy->priv->subscribed)
+        if (!priv->subscribed)
                 return;
 
         /* Reset SID */
-        g_free (proxy->priv->sid);
-        proxy->priv->sid = NULL;
+        g_free (priv->sid);
+        priv->sid = NULL;
 
         /* Check message status */
         if (SOUP_STATUS_IS_SUCCESSFUL (msg->status_code)) {
@@ -2132,7 +2165,7 @@ subscribe_got_response (G_GNUC_UNUSED SoupSession *session,
                         goto hdr_err;
                 }
 
-                proxy->priv->sid = g_strdup (hdr);
+                priv->sid = g_strdup (hdr);
 
                 /* Figure out when the subscription times out */
                 hdr = soup_message_headers_get_one (msg->response_headers,
@@ -2160,16 +2193,16 @@ subscribe_got_response (G_GNUC_UNUSED SoupSession *session,
                         timeout = g_random_int_range (1, timeout / 2);
 
                         /* Add actual timeout */
-                        proxy->priv->subscription_timeout_src =
+                        priv->subscription_timeout_src =
                                 g_timeout_source_new_seconds (timeout);
                         g_source_set_callback
-                                (proxy->priv->subscription_timeout_src,
+                                (priv->subscription_timeout_src,
                                  subscription_expire,
                                  proxy, NULL);
-                        g_source_attach (proxy->priv->subscription_timeout_src,
+                        g_source_attach (priv->subscription_timeout_src,
                                          g_main_context_get_thread_default ());
 
-                        g_source_unref (proxy->priv->subscription_timeout_src);
+                        g_source_unref (priv->subscription_timeout_src);
                 }
         } else {
                 GUPnPContext *context;
@@ -2187,9 +2220,9 @@ hdr_err:
                                         (GUPNP_SERVICE_INFO (proxy));
 
                 server = gupnp_context_get_server (context);
-                soup_server_remove_handler (server, proxy->priv->path);
+                soup_server_remove_handler (server, priv->path);
 
-                proxy->priv->subscribed = FALSE;
+                priv->subscribed = FALSE;
 
                 g_object_notify (G_OBJECT (proxy), "subscribed");
 
@@ -2210,6 +2243,7 @@ static void
 subscribe (GUPnPServiceProxy *proxy)
 {
         GUPnPContext *context;
+        GUPnPServiceProxyPrivate *priv;
         SoupMessage *msg;
         SoupSession *session;
         SoupServer *server;
@@ -2218,9 +2252,10 @@ subscribe (GUPnPServiceProxy *proxy)
         char *sub_url, *delivery_url, *timeout;
 
         /* Remove subscription timeout */
-        if (proxy->priv->subscription_timeout_src) {
-                g_source_destroy (proxy->priv->subscription_timeout_src);
-                proxy->priv->subscription_timeout_src = NULL;
+        priv = gupnp_service_proxy_get_instance_private (proxy);
+        if (priv->subscription_timeout_src) {
+                g_source_destroy (priv->subscription_timeout_src);
+                priv->subscription_timeout_src = NULL;
         }
 
 	context = gupnp_service_info_get_context (GUPNP_SERVICE_INFO (proxy));
@@ -2240,7 +2275,7 @@ subscribe (GUPnPServiceProxy *proxy)
                 GError *error;
 
                 /* Subscription failed. */
-                proxy->priv->subscribed = FALSE;
+                priv->subscribed = FALSE;
 
                 g_object_notify (G_OBJECT (proxy), "subscribed");
 
@@ -2261,7 +2296,7 @@ subscribe (GUPnPServiceProxy *proxy)
 
         /* Add headers */
         uri = _gupnp_context_get_server_uri (context);
-        soup_uri_set_path (uri, proxy->priv->path);
+        soup_uri_set_path (uri, priv->path);
         uri_string = soup_uri_to_string (uri, FALSE);
         soup_uri_free (uri);
         delivery_url = g_strdup_printf ("<%s>", uri_string);
@@ -2286,14 +2321,14 @@ subscribe (GUPnPServiceProxy *proxy)
         server = gupnp_context_get_server (context);
 
         soup_server_add_handler (server,
-                                 proxy->priv->path,
+                                 priv->path,
                                  server_handler,
                                  proxy,
                                  NULL);
 
         /* And send our subscription message off */
-        proxy->priv->pending_messages =
-                g_list_prepend (proxy->priv->pending_messages, msg);
+        priv->pending_messages =
+                g_list_prepend (priv->pending_messages, msg);
 
         session = gupnp_context_get_session (context);
 
@@ -2311,16 +2346,18 @@ static void
 unsubscribe (GUPnPServiceProxy *proxy)
 {
         GUPnPContext *context;
+        GUPnPServiceProxyPrivate *priv;
         SoupSession *session;
         SoupServer *server;
 
         context = gupnp_service_info_get_context (GUPNP_SERVICE_INFO (proxy));
+        priv = gupnp_service_proxy_get_instance_private (proxy);
 
         /* Remove server handler */
         server = gupnp_context_get_server (context);
-        soup_server_remove_handler (server, proxy->priv->path);
+        soup_server_remove_handler (server, priv->path);
 
-        if (proxy->priv->sid != NULL) {
+        if (priv->sid != NULL) {
                 SoupMessage *msg;
                 char *sub_url;
 
@@ -2336,7 +2373,7 @@ unsubscribe (GUPnPServiceProxy *proxy)
                         /* Add headers */
                         soup_message_headers_append (msg->request_headers,
                                                      "SID",
-                                                     proxy->priv->sid);
+                                                     priv->sid);
 
                         /* And queue it */
                         session = gupnp_context_get_session (context);
@@ -2345,17 +2382,17 @@ unsubscribe (GUPnPServiceProxy *proxy)
                 }
 
                 /* Reset SID */
-                g_free (proxy->priv->sid);
-                proxy->priv->sid = NULL;
+                g_free (priv->sid);
+                priv->sid = NULL;
 
                 /* Reset sequence number */
-                proxy->priv->seq = 0;
+                priv->seq = 0;
         }
 
         /* Remove subscription timeout */
-        if (proxy->priv->subscription_timeout_src) {
-                g_source_destroy (proxy->priv->subscription_timeout_src);
-                proxy->priv->subscription_timeout_src = NULL;
+        if (priv->subscription_timeout_src) {
+                g_source_destroy (priv->subscription_timeout_src);
+                priv->subscription_timeout_src = NULL;
         }
 }
 
@@ -2375,12 +2412,15 @@ void
 gupnp_service_proxy_set_subscribed (GUPnPServiceProxy *proxy,
                                     gboolean           subscribed)
 {
+        GUPnPServiceProxyPrivate *priv;
+
         g_return_if_fail (GUPNP_IS_SERVICE_PROXY (proxy));
 
-        if (proxy->priv->subscribed == subscribed)
+        priv = gupnp_service_proxy_get_instance_private (proxy);
+        if (priv->subscribed == subscribed)
                 return;
 
-        proxy->priv->subscribed = subscribed;
+        priv->subscribed = subscribed;
 
         if (subscribed)
                 subscribe (proxy);
@@ -2401,7 +2441,11 @@ gupnp_service_proxy_set_subscribed (GUPnPServiceProxy *proxy,
 gboolean
 gupnp_service_proxy_get_subscribed (GUPnPServiceProxy *proxy)
 {
+        GUPnPServiceProxyPrivate *priv;
+
         g_return_val_if_fail (GUPNP_IS_SERVICE_PROXY (proxy), FALSE);
 
-        return proxy->priv->subscribed;
+        priv = gupnp_service_proxy_get_instance_private (proxy);
+
+        return priv->subscribed;
 }

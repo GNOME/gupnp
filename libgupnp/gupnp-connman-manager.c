@@ -63,6 +63,12 @@ struct _GUPnPConnmanManagerPrivate {
         GCancellable *cancellable;
 };
 
+typedef struct _GUPnPConnmanManagerPrivate GUPnPConnmanManagerPrivate;
+
+struct _GUPnPConnmanManager {
+        GUPnPContextManager             parent;
+};
+
 #define CM_DBUS_CONNMAN_NAME      "net.connman"
 #define CM_DBUS_MANAGER_PATH      "/"
 #define CM_DBUS_MANAGER_INTERFACE "net.connman.Manager"
@@ -74,9 +80,9 @@ struct _GUPnPConnmanManagerPrivate {
 
 #define LOOPBACK_IFACE "lo"
 
-G_DEFINE_TYPE (GUPnPConnmanManager,
-               gupnp_connman_manager,
-               GUPNP_TYPE_CONTEXT_MANAGER);
+G_DEFINE_TYPE_WITH_PRIVATE (GUPnPConnmanManager,
+                            gupnp_connman_manager,
+                            GUPNP_TYPE_CONTEXT_MANAGER);
 
 static gboolean
 loopback_context_create (gpointer data)
@@ -85,9 +91,11 @@ loopback_context_create (gpointer data)
         GUPnPContext        *context;
         GError              *error = NULL;
         guint               port;
+        GUPnPConnmanManagerPrivate *priv;
 
         manager = GUPNP_CONNMAN_MANAGER (data);
-        manager->priv->idle_context_creation_src = NULL;
+        priv = gupnp_connman_manager_get_instance_private (manager);
+        priv->idle_context_creation_src = NULL;
 
         g_object_get (manager, "port", &port, NULL);
 
@@ -462,6 +470,7 @@ service_proxy_new_cb (GObject      *source_object,
                       gpointer     user_data)
 {
         GUPnPConnmanManager *manager;
+        GUPnPConnmanManagerPrivate *priv;
         GDBusProxy          *service_proxy;
         GError              *error = NULL;
         CMService           *cm_service;
@@ -478,8 +487,9 @@ service_proxy_new_cb (GObject      *source_object,
         }
 
         manager = GUPNP_CONNMAN_MANAGER (user_data);
+        priv = gupnp_connman_manager_get_instance_private (manager);
         path = g_dbus_proxy_get_object_path (service_proxy);
-        cm_service = g_hash_table_lookup (manager->priv->cm_services, path);
+        cm_service = g_hash_table_lookup (priv->cm_services, path);
 
         if (cm_service == NULL) {
 		g_object_unref (service_proxy);
@@ -503,9 +513,11 @@ cm_service_add (GUPnPConnmanManager *manager,
         gchar          *iface;
         gchar          *name;
         gchar          *state;
+        GUPnPConnmanManagerPrivate *priv;
 
         iface   = NULL;
         name    = NULL;
+        priv = gupnp_connman_manager_get_instance_private (manager);
 
         g_variant_lookup (dict, "Name", "s", &name);
 
@@ -530,7 +542,7 @@ cm_service_add (GUPnPConnmanManager *manager,
         cm_service->port    = port;
         cm_service->current = new_state;
 
-        g_hash_table_insert (manager->priv->cm_services,
+        g_hash_table_insert (priv->cm_services,
                              g_strdup (path),
                              cm_service);
 
@@ -557,7 +569,9 @@ services_array_add (GUPnPConnmanManager *manager, GVariant *data)
         GVariantIter iter;
         GVariantIter dict_iter;
         guint        port;
+        GUPnPConnmanManagerPrivate *priv;
 
+        priv = gupnp_connman_manager_get_instance_private (manager);
         g_object_get (manager, "port", &port, NULL);
         g_variant_iter_init (&iter, data);
 
@@ -572,7 +586,7 @@ services_array_add (GUPnPConnmanManager *manager, GVariant *data)
                 if (g_variant_iter_init (&dict_iter, dict) == 0)
                         continue;
 
-                cm_service = g_hash_table_lookup (manager->priv->cm_services,
+                cm_service = g_hash_table_lookup (priv->cm_services,
                                                   path);
 
                 if (cm_service == NULL)
@@ -590,7 +604,7 @@ services_array_remove (GUPnPConnmanManager *manager, GVariant *data)
         char                       *path;
         GVariantIter               iter;
 
-        priv = manager->priv;
+        priv = gupnp_connman_manager_get_instance_private (manager);
         g_variant_iter_init (&iter, data);
 
         while (g_variant_iter_next (&iter, "&o", &path)) {
@@ -681,20 +695,23 @@ get_services_cb (GObject      *source_object,
 static void
 schedule_loopback_context_creation (GUPnPConnmanManager *manager)
 {
+        GUPnPConnmanManagerPrivate *priv;
+
         /* Create contexts in mainloop so that it happens after user has hooked
          * to the "context-available" signal.
          */
-        manager->priv->idle_context_creation_src = g_idle_source_new ();
+        priv = gupnp_connman_manager_get_instance_private (manager);
+        priv->idle_context_creation_src = g_idle_source_new ();
 
-        g_source_attach (manager->priv->idle_context_creation_src,
+        g_source_attach (priv->idle_context_creation_src,
                          g_main_context_get_thread_default ());
 
-        g_source_set_callback (manager->priv->idle_context_creation_src,
+        g_source_set_callback (priv->idle_context_creation_src,
                                loopback_context_create,
                                manager,
                                NULL);
 
-        g_source_unref (manager->priv->idle_context_creation_src);
+        g_source_unref (priv->idle_context_creation_src);
 }
 
 static void
@@ -704,7 +721,7 @@ init_connman_manager (GUPnPConnmanManager *manager)
         GError                     *error = NULL;
         GDBusConnection            *connection;
 
-        priv = manager->priv;
+        priv = gupnp_connman_manager_get_instance_private (manager);
 
         priv->manager_proxy = g_dbus_proxy_new_for_bus_sync (
                                 G_BUS_TYPE_SYSTEM,
@@ -765,7 +782,7 @@ gupnp_connman_manager_dispose (GObject *object)
         GDBusConnection            *cnx;
 
         manager = GUPNP_CONNMAN_MANAGER (object);
-        priv = manager->priv;
+        priv = gupnp_connman_manager_get_instance_private (manager);
         cnx = g_dbus_proxy_get_connection (priv->manager_proxy);
 
         if (priv->sig_change_id) {
@@ -806,11 +823,13 @@ gupnp_connman_manager_constructed (GObject *object)
 {
         GUPnPConnmanManager *manager;
         GObjectClass        *object_class;
+        GUPnPConnmanManagerPrivate *priv;
 
         manager = GUPNP_CONNMAN_MANAGER (object);
+        priv = gupnp_connman_manager_get_instance_private (manager);
 
-        manager->priv->cancellable = g_cancellable_new ();
-        manager->priv->system_bus = g_bus_get_sync (G_BUS_TYPE_SYSTEM,
+        priv->cancellable = g_cancellable_new ();
+        priv->system_bus = g_bus_get_sync (G_BUS_TYPE_SYSTEM,
                                                     NULL,
                                                     NULL);
 
@@ -829,12 +848,11 @@ gupnp_connman_manager_constructed (GObject *object)
 static void
 gupnp_connman_manager_init (GUPnPConnmanManager *manager)
 {
-        manager->priv = G_TYPE_INSTANCE_GET_PRIVATE (
-                                                manager,
-                                                GUPNP_TYPE_CONNMAN_MANAGER,
-                                                GUPnPConnmanManagerPrivate);
+        GUPnPConnmanManagerPrivate *priv;
 
-        manager->priv->cm_services = g_hash_table_new_full (
+        priv = gupnp_connman_manager_get_instance_private (manager);
+
+        priv->cm_services = g_hash_table_new_full (
                                         g_str_hash,
                                         g_str_equal,
                                         (GDestroyNotify) g_free,
@@ -850,8 +868,6 @@ gupnp_connman_manager_class_init (GUPnPConnmanManagerClass *klass)
 
         object_class->constructed  = gupnp_connman_manager_constructed;
         object_class->dispose      = gupnp_connman_manager_dispose;
-
-        g_type_class_add_private (klass, sizeof (GUPnPConnmanManagerPrivate));
 }
 
 gboolean

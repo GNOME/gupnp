@@ -28,47 +28,16 @@
 G_BEGIN_DECLS
 
 GType
-gupnp_service_proxy_get_type (void) G_GNUC_CONST;
-
-GType
 gupnp_service_proxy_action_get_type (void) G_GNUC_CONST;
 
 #define GUPNP_TYPE_SERVICE_PROXY \
                 (gupnp_service_proxy_get_type ())
-#define GUPNP_SERVICE_PROXY(obj) \
-                (G_TYPE_CHECK_INSTANCE_CAST ((obj), \
-                 GUPNP_TYPE_SERVICE_PROXY, \
-                 GUPnPServiceProxy))
-#define GUPNP_SERVICE_PROXY_CLASS(obj) \
-                (G_TYPE_CHECK_CLASS_CAST ((obj), \
-                 GUPNP_TYPE_SERVICE_PROXY, \
-                 GUPnPServiceProxyClass))
-#define GUPNP_IS_SERVICE_PROXY(obj) \
-                (G_TYPE_CHECK_INSTANCE_TYPE ((obj), \
-                 GUPNP_TYPE_SERVICE_PROXY))
-#define GUPNP_IS_SERVICE_PROXY_CLASS(obj) \
-                (G_TYPE_CHECK_CLASS_TYPE ((obj), \
-                 GUPNP_TYPE_SERVICE_PROXY))
-#define GUPNP_SERVICE_PROXY_GET_CLASS(obj) \
-                (G_TYPE_INSTANCE_GET_CLASS ((obj), \
-                 GUPNP_TYPE_SERVICE_PROXY, \
-                 GUPnPServiceProxyClass))
 
-typedef struct _GUPnPServiceProxyPrivate GUPnPServiceProxyPrivate;
-typedef struct _GUPnPServiceProxy GUPnPServiceProxy;
-typedef struct _GUPnPServiceProxyClass GUPnPServiceProxyClass;
-
-/**
- * GUPnPServiceProxy:
- *
- * This struct contains private data only, and should be accessed using the
- * functions below.
- */
-struct _GUPnPServiceProxy {
-        GUPnPServiceInfo parent;
-
-        GUPnPServiceProxyPrivate *priv;
-};
+G_DECLARE_DERIVABLE_TYPE (GUPnPServiceProxy,
+                          gupnp_service_proxy,
+                          GUPNP,
+                          SERVICE_PROXY,
+                          GUPnPServiceInfo)
 
 struct _GUPnPServiceProxyClass {
         GUPnPServiceInfoClass parent_class;

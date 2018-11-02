@@ -28,23 +28,8 @@
 
 G_BEGIN_DECLS
 
-GType
-gupnp_acl_get_type (void) G_GNUC_CONST;
-
 #define GUPNP_TYPE_ACL (gupnp_acl_get_type())
-
-#define GUPNP_ACL(obj)                  \
-    (G_TYPE_CHECK_INSTANCE_CAST ((obj), \
-     GUPNP_TYPE_ACL,                    \
-     GUPnPAcl))
-
-#define GUPNP_IS_ACL(obj)               \
-    (G_TYPE_CHECK_INSTANCE_TYPE ((obj),  \
-     GUPNP_TYPE_ACL))
-
-#define GUPNP_ACL_GET_INTERFACE(obj)      \
-    (G_TYPE_INSTANCE_GET_INTERFACE ((obj), \
-     GUPNP_TYPE_ACL, GUPnPAclInterface))
+G_DECLARE_INTERFACE (GUPnPAcl, gupnp_acl, GUPNP, ACL, GObject)
 
 /**
  * GUPnPAcl:

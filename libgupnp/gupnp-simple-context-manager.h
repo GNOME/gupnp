@@ -34,34 +34,15 @@ gupnp_simple_context_manager_get_type (void) G_GNUC_CONST;
 
 #define GUPNP_TYPE_SIMPLE_CONTEXT_MANAGER \
                 (gupnp_simple_context_manager_get_type ())
-#define GUPNP_SIMPLE_CONTEXT_MANAGER(obj) \
-                (G_TYPE_CHECK_INSTANCE_CAST ((obj), \
-                 GUPNP_TYPE_SIMPLE_CONTEXT_MANAGER, \
-                 GUPnPSimpleContextManager))
-#define GUPNP_SIMPLE_CONTEXT_MANAGER_CLASS(obj) \
-                (G_TYPE_CHECK_CLASS_CAST ((obj), \
-                 GUPNP_TYPE_SIMPLE_CONTEXT_MANAGER, \
-                 GUPnPSimpleContextManagerClass))
-#define GUPNP_IS_SIMPLE_CONTEXT_MANAGER(obj) \
-                (G_TYPE_CHECK_INSTANCE_TYPE ((obj), \
-                 GUPNP_TYPE_SIMPLE_CONTEXT_MANAGER))
-#define GUPNP_IS_SIMPLE_CONTEXT_MANAGER_CLASS(obj) \
-                (G_TYPE_CHECK_CLASS_TYPE ((obj), \
-                 GUPNP_TYPE_SIMPLE_CONTEXT_MANAGER))
-#define GUPNP_SIMPLE_CONTEXT_MANAGER_GET_CLASS(obj) \
-                (G_TYPE_INSTANCE_GET_CLASS ((obj), \
-                 GUPNP_TYPE_SIMPLE_CONTEXT_MANAGER, \
-                 GUPnPSimpleContextManagerClass))
 
-typedef struct _GUPnPSimpleContextManagerPrivate GUPnPSimpleContextManagerPrivate;
+G_GNUC_INTERNAL
+G_DECLARE_DERIVABLE_TYPE (GUPnPSimpleContextManager,
+                          gupnp_simple_context_manager,
+                          GUPNP,
+                          SIMPLE_CONTEXT_MANAGER,
+                          GUPnPContextManager)
 
-typedef struct {
-        GUPnPContextManager parent;
-
-        GUPnPSimpleContextManagerPrivate *priv;
-} GUPnPSimpleContextManager;
-
-typedef struct {
+struct _GUPnPSimpleContextManagerClass {
         GUPnPContextManagerClass parent_class;
 
         /* vfuncs */
@@ -71,7 +52,7 @@ typedef struct {
         void (* _gupnp_reserved2) (void);
         void (* _gupnp_reserved3) (void);
         void (* _gupnp_reserved4) (void);
-} GUPnPSimpleContextManagerClass;
+};
 
 G_END_DECLS
 

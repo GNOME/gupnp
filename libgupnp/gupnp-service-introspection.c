@@ -55,9 +55,9 @@
 
 #define MAX_FIXED_14_4 99999999999999.9999
 
-G_DEFINE_TYPE (GUPnPServiceIntrospection,
-               gupnp_service_introspection,
-               G_TYPE_OBJECT);
+struct _GUPnPServiceIntrospection {
+        GObject parent;
+};
 
 struct _GUPnPServiceIntrospectionPrivate {
         GList *variables;
@@ -68,6 +68,12 @@ struct _GUPnPServiceIntrospectionPrivate {
         GList *variable_names;
 };
 
+typedef struct _GUPnPServiceIntrospectionPrivate
+                GUPnPServiceIntrospectionPrivate;
+
+G_DEFINE_TYPE_WITH_PRIVATE (GUPnPServiceIntrospection,
+                            gupnp_service_introspection,
+                            G_TYPE_OBJECT);
 enum {
         PROP_0,
         PROP_SCPD
@@ -104,10 +110,6 @@ gupnp_service_state_variable_info_free
 static void
 gupnp_service_introspection_init (GUPnPServiceIntrospection *introspection)
 {
-        introspection->priv =
-                G_TYPE_INSTANCE_GET_PRIVATE (introspection,
-                                             GUPNP_TYPE_SERVICE_INTROSPECTION,
-                                             GUPnPServiceIntrospectionPrivate);
 }
 
 static void
@@ -169,24 +171,26 @@ static void
 gupnp_service_introspection_finalize (GObject *object)
 {
         GUPnPServiceIntrospection *introspection;
+        GUPnPServiceIntrospectionPrivate *priv;
 
         introspection = GUPNP_SERVICE_INTROSPECTION (object);
+        priv = gupnp_service_introspection_get_instance_private (introspection);
 
-        g_list_free_full (introspection->priv->variables,
+        g_list_free_full (priv->variables,
                           (GDestroyNotify) gupnp_service_state_variable_info_free);
 
-        g_list_free_full (introspection->priv->actions,
+        g_list_free_full (priv->actions,
                           (GDestroyNotify) gupnp_service_action_info_free);
 
         /* Contents don't need to be freed, they were owned by priv->variables
          */
-        if (introspection->priv->variable_names)
-                g_list_free (introspection->priv->variable_names);
+        if (priv->variable_names)
+                g_list_free (priv->variable_names);
 
         /* Contents don't need to be freed, they were owned by priv->actions
          */
-        if (introspection->priv->action_names)
-                g_list_free (introspection->priv->action_names);
+        if (priv->action_names)
+                g_list_free (priv->action_names);
 }
 
 static void
@@ -198,9 +202,6 @@ gupnp_service_introspection_class_init (GUPnPServiceIntrospectionClass *klass)
 
         object_class->set_property = gupnp_service_introspection_set_property;
         object_class->finalize     = gupnp_service_introspection_finalize;
-
-        g_type_class_add_private (klass,
-                                  sizeof (GUPnPServiceIntrospectionPrivate));
 
         /**
          * GUPnPServiceIntrospection:scpd:
@@ -664,8 +665,11 @@ construct_introspection_info (GUPnPServiceIntrospection *introspection,
                               xmlDoc                    *scpd)
 {
         xmlNode *element;
+        GUPnPServiceIntrospectionPrivate *priv;
 
         g_return_if_fail (scpd != NULL);
+
+        priv = gupnp_service_introspection_get_instance_private (introspection);
 
         /* Get actionList element */
         element = xml_util_get_element ((xmlNode *) scpd,
@@ -673,7 +677,7 @@ construct_introspection_info (GUPnPServiceIntrospection *introspection,
                                         "actionList",
                                         NULL);
         if (element)
-                introspection->priv->actions = get_actions (element);
+                priv->actions = get_actions (element);
 
         /* Get serviceStateTable element */
         element = xml_util_get_element ((xmlNode *) scpd,
@@ -681,7 +685,7 @@ construct_introspection_info (GUPnPServiceIntrospection *introspection,
                                         "serviceStateTable",
                                         NULL);
         if (element)
-                introspection->priv->variables = get_state_variables (element);
+                priv->variables = get_state_variables (element);
 }
 
 static void
@@ -718,6 +722,7 @@ GUPnPServiceIntrospection *
 gupnp_service_introspection_new (xmlDoc *scpd)
 {
         GUPnPServiceIntrospection *introspection;
+        GUPnPServiceIntrospectionPrivate *priv;
 
         g_return_val_if_fail (scpd != NULL, NULL);
 
@@ -725,8 +730,10 @@ gupnp_service_introspection_new (xmlDoc *scpd)
                                       "scpd", scpd,
                                       NULL);
 
-        if (introspection->priv->actions == NULL &&
-            introspection->priv->variables == NULL) {
+        priv = gupnp_service_introspection_get_instance_private (introspection);
+
+        if (priv->actions == NULL &&
+            priv->variables == NULL) {
                 g_object_unref (introspection);
                 introspection = NULL;
         }
@@ -747,16 +754,20 @@ const GList *
 gupnp_service_introspection_list_action_names
                         (GUPnPServiceIntrospection *introspection)
 {
-        if (introspection->priv->actions == NULL)
+        GUPnPServiceIntrospectionPrivate *priv;
+
+        priv = gupnp_service_introspection_get_instance_private (introspection);
+
+        if (priv->actions == NULL)
                 return NULL;
 
-        if (introspection->priv->action_names == NULL) {
-                g_list_foreach (introspection->priv->actions,
+        if (priv->action_names == NULL) {
+                g_list_foreach (priv->actions,
                                 collect_action_names,
-                                &introspection->priv->action_names);
+                                &priv->action_names);
         }
 
-        return introspection->priv->action_names;
+        return priv->action_names;
 }
 
 /**
@@ -774,7 +785,11 @@ const GList *
 gupnp_service_introspection_list_actions
                         (GUPnPServiceIntrospection *introspection)
 {
-        return introspection->priv->actions;
+        GUPnPServiceIntrospectionPrivate *priv;
+
+        priv = gupnp_service_introspection_get_instance_private (introspection);
+
+        return priv->actions;
 }
 
 /**
@@ -793,7 +808,11 @@ const GList *
 gupnp_service_introspection_list_state_variables
                         (GUPnPServiceIntrospection *introspection)
 {
-        return introspection->priv->variables;
+        GUPnPServiceIntrospectionPrivate *priv;
+
+        priv = gupnp_service_introspection_get_instance_private (introspection);
+
+        return priv->variables;
 }
 
 /**
@@ -809,16 +828,20 @@ const GList *
 gupnp_service_introspection_list_state_variable_names
                         (GUPnPServiceIntrospection *introspection)
 {
-        if (introspection->priv->variables == NULL)
+        GUPnPServiceIntrospectionPrivate *priv;
+
+        priv = gupnp_service_introspection_get_instance_private (introspection);
+
+        if (priv->variables == NULL)
                 return NULL;
 
-        if (introspection->priv->variable_names == NULL) {
-                g_list_foreach (introspection->priv->variables,
+        if (priv->variable_names == NULL) {
+                g_list_foreach (priv->variables,
                                 collect_variable_names,
-                                &introspection->priv->variable_names);
+                                &priv->variable_names);
         }
 
-        return introspection->priv->variable_names;
+        return priv->variable_names;
 }
 
 static gint
@@ -844,12 +867,15 @@ gupnp_service_introspection_get_state_variable
                          const gchar               *variable_name)
 {
         GList *variable_node;
+        GUPnPServiceIntrospectionPrivate *priv;
 
-        if (introspection->priv->variables == NULL)
+        priv = gupnp_service_introspection_get_instance_private (introspection);
+
+        if (priv->variables == NULL)
                 return NULL;
 
         variable_node = g_list_find_custom (
-                                introspection->priv->variables,
+                                priv->variables,
                                 (gpointer) variable_name,
                                 (GCompareFunc) state_variable_search_func);
         if (variable_node == NULL)
@@ -881,14 +907,16 @@ gupnp_service_introspection_get_action
                          const gchar               *action_name)
 {
         GList *action_node;
+        GUPnPServiceIntrospectionPrivate *priv;
 
-        if (introspection->priv->variables == NULL)
+        priv = gupnp_service_introspection_get_instance_private (introspection);
+
+        if (priv->variables == NULL)
                 return NULL;
 
-        action_node = g_list_find_custom (
-                                introspection->priv->actions,
-                                (gpointer) action_name,
-                                (GCompareFunc) action_search_func);
+        action_node = g_list_find_custom (priv->actions,
+                                          (gpointer) action_name,
+                                          (GCompareFunc) action_search_func);
         if (action_node == NULL)
                 return NULL;
 

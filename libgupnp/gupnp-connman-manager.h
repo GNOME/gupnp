@@ -29,42 +29,14 @@
 
 G_BEGIN_DECLS
 
-G_GNUC_INTERNAL GType
-gupnp_connman_manager_get_type (void) G_GNUC_CONST;
-
 #define GUPNP_TYPE_CONNMAN_MANAGER \
                 (gupnp_connman_manager_get_type ())
-#define GUPNP_CONNMAN_MANAGER(obj) \
-                (G_TYPE_CHECK_INSTANCE_CAST ((obj), \
-                 GUPNP_TYPE_CONNMAN_MANAGER, \
-                 GUPnPConnmanManager))
-#define GUPNP_CONNMAN_MANAGER_CLASS(obj) \
-                (G_TYPE_CHECK_CLASS_CAST ((obj), \
-                 GUPNP_TYPE_CONNMAN_MANAGER, \
-                 GUPnPConnmanManagerClass))
-#define GUPNP_IS_CONNMAN_MANAGER(obj) \
-                (G_TYPE_CHECK_INSTANCE_TYPE ((obj), \
-                 GUPNP_TYPE_CONNMAN_MANAGER))
-#define GUPNP_IS_CONNMAN_MANAGER_CLASS(obj) \
-                (G_TYPE_CHECK_CLASS_TYPE ((obj), \
-                 GUPNP_TYPE_CONNMAN_MANAGER))
-#define GUPNP_CONNMAN_MANAGER_GET_CLASS(obj) \
-                (G_TYPE_INSTANCE_GET_CLASS ((obj), \
-                 GUPNP_TYPE_CONNMAN_MANAGER, \
-                 GUPnPConnmanManagerClass))
 
-typedef struct _GUPnPConnmanManagerPrivate GUPnPConnmanManagerPrivate;
-
-typedef struct {
-        GUPnPContextManager             parent;
-        GUPnPConnmanManagerPrivate      *priv;
-
-} GUPnPConnmanManager;
-
-typedef struct {
-        GUPnPContextManagerClass parent_class;
-
-} GUPnPConnmanManagerClass;
+G_DECLARE_FINAL_TYPE (GUPnPConnmanManager,
+                      gupnp_connman_manager,
+                      GUPNP,
+                      CONNMAN_MANAGER,
+                      GUPnPContextManager)
 
 G_GNUC_INTERNAL gboolean
 gupnp_connman_manager_is_available      (void);

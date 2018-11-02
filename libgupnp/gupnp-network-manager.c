@@ -51,9 +51,26 @@
 #define DBUS_PATH_DBUS "/org/freedesktop/DBus"
 #define DBUS_INTERFACE_DBUS "org.freedesktop.DBus"
 
-G_DEFINE_TYPE (GUPnPNetworkManager,
-               gupnp_network_manager,
-               GUPNP_TYPE_CONTEXT_MANAGER);
+struct _GUPnPNetworkManager {
+        GUPnPContextManager parent;
+};
+
+struct _GUPnPNetworkManagerPrivate {
+        GDBusProxy *manager_proxy;
+
+        GSource *idle_context_creation_src;
+
+        GList *nm_devices;
+
+        GCancellable *cancellable;
+
+        GDBusConnection *system_bus;
+};
+typedef struct _GUPnPNetworkManagerPrivate GUPnPNetworkManagerPrivate;
+
+G_DEFINE_TYPE_WITH_PRIVATE (GUPnPNetworkManager,
+                            gupnp_network_manager,
+                            GUPNP_TYPE_CONTEXT_MANAGER);
 
 typedef enum
 {
@@ -106,18 +123,6 @@ typedef struct
         GDBusProxy *wifi_proxy;
         GDBusProxy *ap_proxy;
 } NMDevice;
-
-struct _GUPnPNetworkManagerPrivate {
-        GDBusProxy *manager_proxy;
-
-        GSource *idle_context_creation_src;
-
-        GList *nm_devices;
-
-        GCancellable *cancellable;
-
-        GDBusConnection *system_bus;
-};
 
 static NMDevice *
 nm_device_new (GUPnPNetworkManager *manager,
@@ -174,8 +179,11 @@ create_loopback_context (gpointer data)
         GUPnPContext *context;
         guint port;
         GError *error = NULL;
+        GUPnPNetworkManagerPrivate *priv;
 
-        manager->priv->idle_context_creation_src = NULL;
+        priv = gupnp_network_manager_get_instance_private (manager);
+
+        priv->idle_context_creation_src = NULL;
 
         g_object_get (manager,
                       "port", &port,
@@ -295,6 +303,7 @@ on_wifi_device_activated (NMDevice *nm_device)
 {
         GVariant *value;
         const char *ap_path;
+        GUPnPNetworkManagerPrivate *priv;
 
         value = g_dbus_proxy_get_cached_property (nm_device->wifi_proxy,
                                                   "ActiveAccessPoint");
@@ -308,6 +317,7 @@ on_wifi_device_activated (NMDevice *nm_device)
                 return;
         }
 
+        priv = gupnp_network_manager_get_instance_private (nm_device->manager);
         ap_path = g_variant_get_string (value, NULL);
         if (G_UNLIKELY (ap_path == NULL))
                 create_context_for_device (nm_device);
@@ -318,7 +328,7 @@ on_wifi_device_activated (NMDevice *nm_device)
                                           DBUS_SERVICE_NM,
                                           ap_path,
                                           AP_INTERFACE,
-                                          nm_device->manager->priv->cancellable,
+                                          priv->cancellable,
                                           ap_proxy_new_cb,
                                           nm_device_ref (nm_device));
 	}
@@ -376,9 +386,12 @@ use_new_device (GUPnPNetworkManager *manager,
 {
         NMDeviceState state;
         GVariant *value;
+        GUPnPNetworkManagerPrivate *priv;
 
-        manager->priv->nm_devices = g_list_append (manager->priv->nm_devices,
-                                                   nm_device_ref (nm_device));
+        priv = gupnp_network_manager_get_instance_private (manager);
+
+        priv->nm_devices = g_list_append (priv->nm_devices,
+                                          nm_device_ref (nm_device));
 
         g_signal_connect (nm_device->proxy,
                           "g-signal",
@@ -439,6 +452,7 @@ device_proxy_new_cb (GObject      *source_object,
         NMDeviceType type;
         GVariant *value;
         GError *error;
+        GUPnPNetworkManagerPrivate *priv;
 
         error = NULL;
 
@@ -467,6 +481,7 @@ device_proxy_new_cb (GObject      *source_object,
         type = g_variant_get_uint32 (value);
         g_variant_unref (value);
 
+        priv = gupnp_network_manager_get_instance_private (manager);
         nm_device = nm_device_new (manager, device_proxy);
 
         if (type == NM_DEVICE_TYPE_WIFI) {
@@ -479,7 +494,7 @@ device_proxy_new_cb (GObject      *source_object,
                                           DBUS_SERVICE_NM,
                                           path,
                                           WIFI_INTERFACE,
-                                          manager->priv->cancellable,
+                                          priv->cancellable,
                                           wifi_proxy_new_cb,
                                           nm_device_ref (nm_device));
         } else
@@ -510,8 +525,10 @@ on_manager_signal (GDBusProxy *proxy,
                    gpointer    user_data)
 {
         GUPnPNetworkManager *manager;
+        GUPnPNetworkManagerPrivate *priv;
 
         manager = GUPNP_NETWORK_MANAGER (user_data);
+        priv = gupnp_network_manager_get_instance_private (manager);
 
         if (g_strcmp0 (signal_name, "DeviceAdded") == 0) {
                 char *device_path = NULL;
@@ -527,7 +544,7 @@ on_manager_signal (GDBusProxy *proxy,
                                           DBUS_SERVICE_NM,
                                           device_path,
                                           DEVICE_INTERFACE,
-                                          manager->priv->cancellable,
+                                          priv->cancellable,
                                           device_proxy_new_cb,
                                           manager);
                 g_free (device_path);
@@ -541,12 +558,12 @@ on_manager_signal (GDBusProxy *proxy,
                 if (G_UNLIKELY (device_path == NULL))
                         return;
 
-                priv = manager->priv;
+                priv = gupnp_network_manager_get_instance_private (manager);
 
                 device_node = g_list_find_custom (
-                                priv->nm_devices,
-                                device_path,
-                                (GCompareFunc) compare_device_path);
+                                            priv->nm_devices,
+                                            device_path,
+                                            (GCompareFunc) compare_device_path);
                 if (G_UNLIKELY (device_node == NULL)) {
                         g_free (device_path);
 
@@ -571,6 +588,7 @@ get_devices_cb (GObject      *source_object,
         GVariantIter *device_iter;
         char* device_path;
         GError *error = NULL;
+        GUPnPNetworkManagerPrivate *priv;
 
         ret = g_dbus_proxy_call_finish (G_DBUS_PROXY (source_object),
                                         res,
@@ -585,6 +603,7 @@ get_devices_cb (GObject      *source_object,
         }
 
         manager = GUPNP_NETWORK_MANAGER (user_data);
+        priv = gupnp_network_manager_get_instance_private (manager);
 
         g_variant_get_child (ret, 0, "ao", &device_iter);
         while (g_variant_iter_loop (device_iter, "o", &device_path))
@@ -594,7 +613,7 @@ get_devices_cb (GObject      *source_object,
                                           DBUS_SERVICE_NM,
                                           device_path,
                                           DEVICE_INTERFACE,
-                                          manager->priv->cancellable,
+                                          priv->cancellable,
                                           device_proxy_new_cb,
                                           user_data);
         g_variant_iter_free (device_iter);
@@ -605,17 +624,21 @@ get_devices_cb (GObject      *source_object,
 static void
 schedule_loopback_context_creation (GUPnPNetworkManager *manager)
 {
+        GUPnPNetworkManagerPrivate *priv;
+
         /* Create contexts in mainloop so that is happens after user has hooked
          * to the "context-available" signal.
          */
-        manager->priv->idle_context_creation_src = g_idle_source_new ();
-        g_source_attach (manager->priv->idle_context_creation_src,
+        priv = gupnp_network_manager_get_instance_private (manager);
+
+        priv->idle_context_creation_src = g_idle_source_new ();
+        g_source_attach (priv->idle_context_creation_src,
                          g_main_context_get_thread_default ());
-        g_source_set_callback (manager->priv->idle_context_creation_src,
+        g_source_set_callback (priv->idle_context_creation_src,
                                create_loopback_context,
                                manager,
                                NULL);
-        g_source_unref (manager->priv->idle_context_creation_src);
+        g_source_unref (priv->idle_context_creation_src);
 }
 
 static void
@@ -624,7 +647,7 @@ init_network_manager (GUPnPNetworkManager *manager)
         GUPnPNetworkManagerPrivate *priv;
         GError *error;
 
-        priv = manager->priv;
+        priv = gupnp_network_manager_get_instance_private (manager);
 
         error = NULL;
         priv->manager_proxy = g_dbus_proxy_new_for_bus_sync (
@@ -663,10 +686,6 @@ init_network_manager (GUPnPNetworkManager *manager)
 static void
 gupnp_network_manager_init (GUPnPNetworkManager *manager)
 {
-        manager->priv =
-                G_TYPE_INSTANCE_GET_PRIVATE (manager,
-                                             GUPNP_TYPE_NETWORK_MANAGER,
-                                             GUPnPNetworkManagerPrivate);
 }
 
 static void
@@ -677,7 +696,7 @@ gupnp_network_manager_constructed (GObject *object)
         GObjectClass *object_class;
 
         manager = GUPNP_NETWORK_MANAGER (object);
-        priv = manager->priv;
+        priv = gupnp_network_manager_get_instance_private (manager);
 
         priv->cancellable = g_cancellable_new ();
         priv->nm_devices = NULL;
@@ -702,11 +721,11 @@ gupnp_network_manager_dispose (GObject *object)
         GObjectClass *object_class;
 
         manager = GUPNP_NETWORK_MANAGER (object);
-        priv = manager->priv;
+        priv = gupnp_network_manager_get_instance_private (manager);
 
-        if (manager->priv->idle_context_creation_src) {
-                g_source_destroy (manager->priv->idle_context_creation_src);
-                manager->priv->idle_context_creation_src = NULL;
+        if (priv->idle_context_creation_src) {
+                g_source_destroy (priv->idle_context_creation_src);
+                priv->idle_context_creation_src = NULL;
         }
 
         if (priv->manager_proxy != NULL) {
@@ -738,8 +757,6 @@ gupnp_network_manager_class_init (GUPnPNetworkManagerClass *klass)
 
         object_class->constructed  = gupnp_network_manager_constructed;
         object_class->dispose      = gupnp_network_manager_dispose;
-
-        g_type_class_add_private (klass, sizeof (GUPnPNetworkManagerPrivate));
 }
 
 gboolean

@@ -28,45 +28,13 @@
 
 G_BEGIN_DECLS
 
-GType
-gupnp_resource_factory_get_type (void) G_GNUC_CONST;
-
 #define GUPNP_TYPE_RESOURCE_FACTORY \
                 (gupnp_resource_factory_get_type ())
-#define GUPNP_RESOURCE_FACTORY(obj) \
-                (G_TYPE_CHECK_INSTANCE_CAST ((obj), \
-                 GUPNP_TYPE_RESOURCE_FACTORY, \
-                 GUPnPResourceFactory))
-#define GUPNP_RESOURCE_FACTORY_CLASS(obj) \
-                (G_TYPE_CHECK_CLASS_CAST ((obj), \
-                 GUPNP_TYPE_RESOURCE_FACTORY, \
-                 GUPnPResourceFactoryClass))
-#define GUPNP_IS_RESOURCE_FACTORY(obj) \
-                (G_TYPE_CHECK_INSTANCE_TYPE ((obj), \
-                 GUPNP_TYPE_RESOURCE_FACTORY))
-#define GUPNP_IS_RESOURCE_FACTORY_CLASS(obj) \
-                (G_TYPE_CHECK_CLASS_TYPE ((obj), \
-                 GUPNP_TYPE_RESOURCE_FACTORY))
-#define GUPNP_RESOURCE_FACTORY_GET_CLASS(obj) \
-                (G_TYPE_INSTANCE_GET_CLASS ((obj), \
-                 GUPNP_TYPE_RESOURCE_FACTORY, \
-                 GUPnPResourceFactoryClass))
-
-typedef struct _GUPnPResourceFactoryPrivate GUPnPResourceFactoryPrivate;
-typedef struct _GUPnPResourceFactory GUPnPResourceFactory;
-typedef struct _GUPnPResourceFactoryClass GUPnPResourceFactoryClass;
-
-/**
- * GUPnPResourceFactory:
- *
- * This struct contains private data only, and should be accessed using the
- * functions below.
- */
-struct _GUPnPResourceFactory {
-        GObject parent;
-
-        GUPnPResourceFactoryPrivate *priv;
-};
+G_DECLARE_DERIVABLE_TYPE (GUPnPResourceFactory,
+                          gupnp_resource_factory,
+                          GUPNP,
+                          RESOURCE_FACTORY,
+                          GObject)
 
 struct _GUPnPResourceFactoryClass {
         GObjectClass parent_class;

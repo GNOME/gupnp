@@ -39,55 +39,55 @@
 #include "gupnp-resource-factory-private.h"
 #include "gupnp-root-device.h"
 
-G_DEFINE_TYPE (GUPnPResourceFactory,
-               gupnp_resource_factory,
-               G_TYPE_OBJECT);
-
 struct _GUPnPResourceFactoryPrivate {
         GHashTable *resource_type_hash;
         GHashTable *proxy_type_hash;
 };
+typedef struct _GUPnPResourceFactoryPrivate GUPnPResourceFactoryPrivate;
+
+G_DEFINE_TYPE_WITH_PRIVATE (GUPnPResourceFactory,
+                            gupnp_resource_factory,
+                            G_TYPE_OBJECT);
+
 
 static void
 gupnp_resource_factory_init (GUPnPResourceFactory *factory)
 {
-        factory->priv =
-                G_TYPE_INSTANCE_GET_PRIVATE (factory,
-                                             GUPNP_TYPE_RESOURCE_FACTORY,
-                                             GUPnPResourceFactoryPrivate);
+        GUPnPResourceFactoryPrivate *priv;
 
-        factory->priv->resource_type_hash =
-                        g_hash_table_new_full (g_str_hash,
-                                               g_str_equal,
-                                               g_free,
-                                               NULL);
-        factory->priv->proxy_type_hash =
-                        g_hash_table_new_full (g_str_hash,
-                                               g_str_equal,
-                                               g_free,
-                                               NULL);
+        priv = gupnp_resource_factory_get_instance_private (factory);
+        priv->resource_type_hash = g_hash_table_new_full (g_str_hash,
+                                                          g_str_equal,
+                                                          g_free,
+                                                          NULL);
+        priv->proxy_type_hash = g_hash_table_new_full (g_str_hash,
+                                                       g_str_equal,
+                                                       g_free,
+                                                       NULL);
 }
 
-static void
+    static void
 gupnp_resource_factory_finalize (GObject *object)
 {
-        GUPnPResourceFactory *self;
-        GObjectClass *object_class;
+    GUPnPResourceFactory *self;
+    GObjectClass *object_class;
+    GUPnPResourceFactoryPrivate *priv;
 
-        self = GUPNP_RESOURCE_FACTORY (object);
+    self = GUPNP_RESOURCE_FACTORY (object);
+    priv = gupnp_resource_factory_get_instance_private (self);
 
-        if (self->priv->resource_type_hash) {
-                g_hash_table_destroy (self->priv->resource_type_hash);
-                self->priv->resource_type_hash = NULL;
-        }
+    if (priv->resource_type_hash) {
+        g_hash_table_destroy (priv->resource_type_hash);
+        priv->resource_type_hash = NULL;
+    }
 
-        if (self->priv->proxy_type_hash) {
-                g_hash_table_destroy (self->priv->proxy_type_hash);
-                self->priv->proxy_type_hash = NULL;
-        }
+    if (priv->proxy_type_hash) {
+        g_hash_table_destroy (priv->proxy_type_hash);
+        priv->proxy_type_hash = NULL;
+    }
 
-        object_class = G_OBJECT_CLASS (gupnp_resource_factory_parent_class);
-        object_class->finalize (object);
+    object_class = G_OBJECT_CLASS (gupnp_resource_factory_parent_class);
+    object_class->finalize (object);
 }
 
 static void
@@ -98,8 +98,6 @@ gupnp_resource_factory_class_init (GUPnPResourceFactoryClass *klass)
         object_class = G_OBJECT_CLASS (klass);
 
         object_class->finalize = gupnp_resource_factory_finalize;
-
-        g_type_class_add_private (klass, sizeof (GUPnPResourceFactoryPrivate));
 }
 
 /**
@@ -164,6 +162,7 @@ gupnp_resource_factory_create_device_proxy
         GUPnPDeviceProxy *proxy;
         char             *upnp_type;
         GType             proxy_type = GUPNP_TYPE_DEVICE_PROXY;
+        GUPnPResourceFactoryPrivate *priv;
 
         g_return_val_if_fail (GUPNP_IS_RESOURCE_FACTORY (factory), NULL);
         g_return_val_if_fail (GUPNP_IS_CONTEXT (context), NULL);
@@ -172,12 +171,14 @@ gupnp_resource_factory_create_device_proxy
         g_return_val_if_fail (location != NULL, NULL);
         g_return_val_if_fail (url_base != NULL, NULL);
 
+        priv = gupnp_resource_factory_get_instance_private (factory);
+
         upnp_type = xml_util_get_child_element_content_glib (element,
                                                              "deviceType");
         if (upnp_type) {
                 gpointer value;
 
-                value = g_hash_table_lookup (factory->priv->proxy_type_hash,
+                value = g_hash_table_lookup (priv->proxy_type_hash,
                                              upnp_type);
                 if (value)
                         proxy_type = GPOINTER_TO_SIZE (value);
@@ -229,6 +230,7 @@ gupnp_resource_factory_create_service_proxy
         char              *type_from_xml = NULL;
         GUPnPServiceProxy *proxy;
         GType              proxy_type = GUPNP_TYPE_SERVICE_PROXY;
+        GUPnPResourceFactoryPrivate *priv;
 
         g_return_val_if_fail (GUPNP_IS_RESOURCE_FACTORY (factory), NULL);
         g_return_val_if_fail (GUPNP_IS_CONTEXT (context), NULL);
@@ -236,6 +238,8 @@ gupnp_resource_factory_create_service_proxy
         g_return_val_if_fail (element != NULL, NULL);
         g_return_val_if_fail (location != NULL, NULL);
         g_return_val_if_fail (url_base != NULL, NULL);
+
+        priv = gupnp_resource_factory_get_instance_private (factory);
 
         if (!service_type) {
                 type_from_xml =
@@ -247,7 +251,7 @@ gupnp_resource_factory_create_service_proxy
         if (service_type) {
                 gpointer value;
 
-                value = g_hash_table_lookup (factory->priv->proxy_type_hash,
+                value = g_hash_table_lookup (priv->proxy_type_hash,
                                              service_type);
                 if (value)
                         proxy_type = GPOINTER_TO_SIZE (value);
@@ -296,6 +300,7 @@ gupnp_resource_factory_create_device
         GUPnPDevice *device;
         char        *upnp_type;
         GType        device_type = GUPNP_TYPE_DEVICE;
+        GUPnPResourceFactoryPrivate *priv;
 
         g_return_val_if_fail (GUPNP_IS_RESOURCE_FACTORY (factory), NULL);
         g_return_val_if_fail (GUPNP_IS_CONTEXT (context), NULL);
@@ -303,12 +308,14 @@ gupnp_resource_factory_create_device
         g_return_val_if_fail (element != NULL, NULL);
         g_return_val_if_fail (url_base != NULL, NULL);
 
+        priv = gupnp_resource_factory_get_instance_private (factory);
+
         upnp_type = xml_util_get_child_element_content_glib (element,
                                                              "deviceType");
         if (upnp_type) {
                 gpointer value;
 
-                value = g_hash_table_lookup (factory->priv->resource_type_hash,
+                value = g_hash_table_lookup (priv->resource_type_hash,
                                              upnp_type);
                 if (value)
                         device_type = GPOINTER_TO_SIZE (value);
@@ -357,6 +364,7 @@ gupnp_resource_factory_create_service
         GUPnPService *service;
         char         *upnp_type;
         GType         service_type = GUPNP_TYPE_SERVICE;
+        GUPnPResourceFactoryPrivate *priv;
 
         g_return_val_if_fail (GUPNP_IS_RESOURCE_FACTORY (factory), NULL);
         g_return_val_if_fail (GUPNP_IS_CONTEXT (context), NULL);
@@ -365,12 +373,14 @@ gupnp_resource_factory_create_service
         g_return_val_if_fail (location != NULL, NULL);
         g_return_val_if_fail (url_base != NULL, NULL);
 
+        priv = gupnp_resource_factory_get_instance_private (factory);
+
         upnp_type = xml_util_get_child_element_content_glib (element,
                                                              "serviceType");
         if (upnp_type) {
                 gpointer value;
 
-                value = g_hash_table_lookup (factory->priv->resource_type_hash,
+                value = g_hash_table_lookup (priv->resource_type_hash,
                                              upnp_type);
                 if (value)
                         service_type = GPOINTER_TO_SIZE (value);
@@ -408,7 +418,11 @@ gupnp_resource_factory_register_resource_type (GUPnPResourceFactory *factory,
                                                const char           *upnp_type,
                                                GType                 type)
 {
-        g_hash_table_insert (factory->priv->resource_type_hash,
+        GUPnPResourceFactoryPrivate *priv;
+
+        priv = gupnp_resource_factory_get_instance_private (factory);
+
+        g_hash_table_insert (priv->resource_type_hash,
                              g_strdup (upnp_type),
                              GSIZE_TO_POINTER (type));
 }
@@ -428,7 +442,11 @@ gupnp_resource_factory_unregister_resource_type
                                 (GUPnPResourceFactory *factory,
                                  const char           *upnp_type)
 {
-        return g_hash_table_remove (factory->priv->resource_type_hash,
+        GUPnPResourceFactoryPrivate *priv;
+
+        priv = gupnp_resource_factory_get_instance_private (factory);
+
+        return g_hash_table_remove (priv->resource_type_hash,
                                     upnp_type);
 }
 
@@ -451,7 +469,11 @@ gupnp_resource_factory_register_resource_proxy_type
                                  const char           *upnp_type,
                                  GType                 type)
 {
-        g_hash_table_insert (factory->priv->proxy_type_hash,
+        GUPnPResourceFactoryPrivate *priv;
+
+        priv = gupnp_resource_factory_get_instance_private (factory);
+
+        g_hash_table_insert (priv->proxy_type_hash,
                              g_strdup (upnp_type),
                              GSIZE_TO_POINTER (type));
 }
@@ -472,5 +494,9 @@ gupnp_resource_factory_unregister_resource_proxy_type
                                 (GUPnPResourceFactory *factory,
                                  const char           *upnp_type)
 {
-        return g_hash_table_remove (factory->priv->proxy_type_hash, upnp_type);
+        GUPnPResourceFactoryPrivate *priv;
+
+        priv = gupnp_resource_factory_get_instance_private (factory);
+
+        return g_hash_table_remove (priv->proxy_type_hash, upnp_type);
 }

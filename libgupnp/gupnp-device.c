@@ -36,13 +36,15 @@
 #include "gupnp-resource-factory-private.h"
 #include "xml-util.h"
 
-G_DEFINE_TYPE (GUPnPDevice,
-               gupnp_device,
-               GUPNP_TYPE_DEVICE_INFO);
-
 struct _GUPnPDevicePrivate {
         GUPnPRootDevice *root_device;
 };
+typedef struct _GUPnPDevicePrivate GUPnPDevicePrivate;
+
+G_DEFINE_TYPE_WITH_PRIVATE (GUPnPDevice,
+                            gupnp_device,
+                            GUPNP_TYPE_DEVICE_INFO);
+
 
 enum {
         PROP_0,
@@ -54,6 +56,7 @@ gupnp_device_get_device (GUPnPDeviceInfo *info,
                          xmlNode         *element)
 {
         GUPnPDevice          *device;
+        GUPnPDevicePrivate   *priv;
         GUPnPResourceFactory *factory;
         GUPnPContext         *context;
         GUPnPDevice          *root_device;
@@ -61,9 +64,10 @@ gupnp_device_get_device (GUPnPDeviceInfo *info,
         const SoupURI        *url_base;
 
         device = GUPNP_DEVICE (info);
+        priv = gupnp_device_get_instance_private (device);
 
         root_device = GUPNP_IS_ROOT_DEVICE (device) ? device :
-                      GUPNP_DEVICE (device->priv->root_device);
+                      GUPNP_DEVICE (priv->root_device);
         if (root_device == NULL) {
                 g_warning ("Root device not found.");
 
@@ -91,6 +95,7 @@ gupnp_device_get_service (GUPnPDeviceInfo *info,
                           xmlNode         *element)
 {
         GUPnPDevice          *device;
+        GUPnPDevicePrivate   *priv;
         GUPnPService         *service;
         GUPnPResourceFactory *factory;
         GUPnPContext         *context;
@@ -99,9 +104,10 @@ gupnp_device_get_service (GUPnPDeviceInfo *info,
         const SoupURI        *url_base;
 
         device = GUPNP_DEVICE (info);
+        priv = gupnp_device_get_instance_private (device);
 
         root_device = GUPNP_IS_ROOT_DEVICE (device) ? device :
-                      GUPNP_DEVICE (device->priv->root_device);
+                      GUPNP_DEVICE (priv->root_device);
         if (root_device == NULL) {
                 g_warning ("Root device not found.");
 
@@ -132,19 +138,21 @@ gupnp_device_set_property (GObject      *object,
                            GParamSpec   *pspec)
 {
         GUPnPDevice *device;
+        GUPnPDevicePrivate   *priv;
 
         device = GUPNP_DEVICE (object);
+        priv = gupnp_device_get_instance_private (device);
 
         switch (property_id) {
         case PROP_ROOT_DEVICE:
-                device->priv->root_device = g_value_get_object (value);
+                priv->root_device = g_value_get_object (value);
 
                 /* This can be NULL in which case *this* is the root device */
-                if (device->priv->root_device) {
-                        GUPnPRootDevice **dev = &(device->priv->root_device);
+                if (priv->root_device) {
+                        GUPnPRootDevice **dev = &(priv->root_device);
 
                         g_object_add_weak_pointer
-                                (G_OBJECT (device->priv->root_device),
+                                (G_OBJECT (priv->root_device),
                                  (gpointer *) dev);
                 }
 
@@ -162,12 +170,14 @@ gupnp_device_get_property (GObject    *object,
                            GParamSpec *pspec)
 {
         GUPnPDevice *device;
+        GUPnPDevicePrivate   *priv;
 
         device = GUPNP_DEVICE (object);
+        priv = gupnp_device_get_instance_private (device);
 
         switch (property_id) {
         case PROP_ROOT_DEVICE:
-                g_value_set_object (value, device->priv->root_device);
+                g_value_set_object (value, priv->root_device);
                 break;
         default:
                 G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -180,17 +190,19 @@ gupnp_device_dispose (GObject *object)
 {
         GUPnPDevice *device;
         GObjectClass *object_class;
+        GUPnPDevicePrivate   *priv;
 
         device = GUPNP_DEVICE (object);
+        priv = gupnp_device_get_instance_private (device);
 
-        if (device->priv->root_device) {
-                GUPnPRootDevice **dev = &(device->priv->root_device);
+        if (priv->root_device) {
+                GUPnPRootDevice **dev = &(priv->root_device);
 
                 g_object_remove_weak_pointer
-                        (G_OBJECT (device->priv->root_device),
+                        (G_OBJECT (priv->root_device),
                          (gpointer *) dev);
 
-                device->priv->root_device = NULL;
+                priv->root_device = NULL;
         }
 
         /* Call super */
@@ -201,9 +213,6 @@ gupnp_device_dispose (GObject *object)
 static void
 gupnp_device_init (GUPnPDevice *device)
 {
-        device->priv = G_TYPE_INSTANCE_GET_PRIVATE (device,
-                                                    GUPNP_TYPE_DEVICE,
-                                                    GUPnPDevicePrivate);
 }
 
 static void
@@ -222,8 +231,6 @@ gupnp_device_class_init (GUPnPDeviceClass *klass)
 
         info_class->get_device  = gupnp_device_get_device;
         info_class->get_service = gupnp_device_get_service;
-
-        g_type_class_add_private (klass, sizeof (GUPnPDevicePrivate));
 
         /**
          * GUPnPDevice:root-device:

@@ -35,14 +35,15 @@
 
 #include "gupnp-white-list.h"
 
-G_DEFINE_TYPE (GUPnPWhiteList,
-               gupnp_white_list,
-               G_TYPE_OBJECT);
-
 struct _GUPnPWhiteListPrivate {
         gboolean enabled;
         GList *entries;
 };
+typedef struct _GUPnPWhiteListPrivate GUPnPWhiteListPrivate;
+
+G_DEFINE_TYPE_WITH_PRIVATE (GUPnPWhiteList,
+                            gupnp_white_list,
+                            G_TYPE_OBJECT);
 
 enum {
         PROP_0,
@@ -59,11 +60,11 @@ enum {
 static void
 gupnp_white_list_init (GUPnPWhiteList *list)
 {
-        list->priv = G_TYPE_INSTANCE_GET_PRIVATE (list,
-                                                  GUPNP_TYPE_WHITE_LIST,
-                                                  GUPnPWhiteListPrivate);
+        GUPnPWhiteListPrivate *priv;
 
-        list->priv->entries = NULL;
+        priv = gupnp_white_list_get_instance_private (list);
+
+        priv->entries = NULL;
 }
 
 static void
@@ -73,15 +74,17 @@ gupnp_white_list_set_property (GObject      *object,
                                GParamSpec   *pspec)
 {
         GUPnPWhiteList *list;
+        GUPnPWhiteListPrivate *priv;
 
         list = GUPNP_WHITE_LIST (object);
+        priv = gupnp_white_list_get_instance_private (list);
 
         switch (property_id) {
         case PROP_ENABLED:
-                list->priv->enabled = g_value_get_boolean (value);
+                priv->enabled = g_value_get_boolean (value);
                 break;
         case PROP_ENTRIES:
-                list->priv->entries = g_value_get_pointer (value);
+                priv->entries = g_value_get_pointer (value);
                 break;
         default:
                 G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -96,15 +99,17 @@ gupnp_white_list_get_property (GObject    *object,
                                GParamSpec *pspec)
 {
         GUPnPWhiteList *list;
+        GUPnPWhiteListPrivate *priv;
 
         list = GUPNP_WHITE_LIST (object);
+        priv = gupnp_white_list_get_instance_private (list);
 
         switch (property_id) {
         case PROP_ENABLED:
-                g_value_set_boolean (value, list->priv->enabled);
+                g_value_set_boolean (value, priv->enabled);
                 break;
         case PROP_ENTRIES:
-                g_value_set_pointer (value, list->priv->entries);
+                g_value_set_pointer (value, priv->entries);
                 break;
         default:
                 G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -117,11 +122,13 @@ gupnp_white_list_class_finalize (GObject *object)
 {
         GUPnPWhiteList *list;
         GObjectClass *object_class;
+        GUPnPWhiteListPrivate *priv;
 
         list = GUPNP_WHITE_LIST (object);
+        priv = gupnp_white_list_get_instance_private (list);
 
-        g_list_free_full (list->priv->entries, g_free);
-        list->priv->entries = NULL;
+        g_list_free_full (priv->entries, g_free);
+        priv->entries = NULL;
 
         /* Call super */
         object_class = G_OBJECT_CLASS (gupnp_white_list_parent_class);
@@ -138,8 +145,6 @@ gupnp_white_list_class_init (GUPnPWhiteListClass *klass)
         object_class->set_property = gupnp_white_list_set_property;
         object_class->get_property = gupnp_white_list_get_property;
         object_class->finalize     = gupnp_white_list_class_finalize;
-
-        g_type_class_add_private (klass, sizeof (GUPnPWhiteListPrivate));
 
         /**
          * GUPnPWhiteList:enabled:
@@ -207,9 +212,12 @@ gupnp_white_list_new (void)
 void
 gupnp_white_list_set_enabled (GUPnPWhiteList *white_list, gboolean enable)
 {
+        GUPnPWhiteListPrivate *priv;
+
         g_return_if_fail (GUPNP_IS_WHITE_LIST (white_list));
 
-        white_list->priv->enabled = enable;
+        priv = gupnp_white_list_get_instance_private (white_list);
+        priv->enabled = enable;
         g_object_notify (G_OBJECT (white_list), "enabled");
 }
 
@@ -226,9 +234,13 @@ gupnp_white_list_set_enabled (GUPnPWhiteList *white_list, gboolean enable)
 gboolean
 gupnp_white_list_get_enabled (GUPnPWhiteList *white_list)
 {
+        GUPnPWhiteListPrivate *priv;
+
         g_return_val_if_fail (GUPNP_IS_WHITE_LIST (white_list), FALSE);
 
-        return white_list->priv->enabled;
+        priv = gupnp_white_list_get_instance_private (white_list);
+
+        return priv->enabled;
 }
 
 /**
@@ -244,9 +256,13 @@ gupnp_white_list_get_enabled (GUPnPWhiteList *white_list)
 gboolean
 gupnp_white_list_is_empty (GUPnPWhiteList *white_list)
 {
+        GUPnPWhiteListPrivate *priv;
+
         g_return_val_if_fail (GUPNP_IS_WHITE_LIST (white_list), TRUE);
 
-        return (white_list->priv->entries == NULL);
+        priv = gupnp_white_list_get_instance_private (white_list);
+
+        return (priv->entries == NULL);
 }
 
 /**
@@ -271,9 +287,10 @@ gupnp_white_list_add_entry (GUPnPWhiteList *white_list, const gchar* entry)
         g_return_val_if_fail (GUPNP_IS_WHITE_LIST (white_list), FALSE);
         g_return_val_if_fail ((entry != NULL), FALSE);
 
-        priv = white_list->priv;
+        priv = gupnp_white_list_get_instance_private (white_list);
 
-        s_entry = g_list_find_custom (priv->entries, entry,
+        s_entry = g_list_find_custom (priv->entries,
+                                      entry,
                                       (GCompareFunc) g_ascii_strcasecmp);
 
         if (s_entry == NULL) {
@@ -329,9 +346,10 @@ gupnp_white_list_remove_entry (GUPnPWhiteList *white_list, const gchar* entry)
         g_return_val_if_fail (GUPNP_IS_WHITE_LIST (white_list), FALSE);
         g_return_val_if_fail ((entry != NULL), FALSE);
 
-        priv = white_list->priv;
+        priv = gupnp_white_list_get_instance_private (white_list);
 
-        s_entry = g_list_find_custom (priv->entries, entry,
+        s_entry = g_list_find_custom (priv->entries,
+                                      entry,
                                       (GCompareFunc) g_ascii_strcasecmp);
 
         if (s_entry != NULL) {
@@ -358,9 +376,13 @@ gupnp_white_list_remove_entry (GUPnPWhiteList *white_list, const gchar* entry)
 GList *
 gupnp_white_list_get_entries (GUPnPWhiteList *white_list)
 {
+        GUPnPWhiteListPrivate *priv;
+
         g_return_val_if_fail (GUPNP_IS_WHITE_LIST (white_list), NULL);
 
-        return white_list->priv->entries;
+        priv = gupnp_white_list_get_instance_private (white_list);
+
+        return priv->entries;
 }
 
 /**
@@ -380,7 +402,7 @@ gupnp_white_list_clear (GUPnPWhiteList *white_list)
 
         g_return_if_fail (GUPNP_IS_WHITE_LIST(white_list));
 
-        priv = white_list->priv;
+        priv = gupnp_white_list_get_instance_private (white_list);
         g_list_free_full (priv->entries, g_free);
         priv->entries = NULL;
         g_object_notify (G_OBJECT (white_list), "entries");
@@ -411,17 +433,19 @@ gupnp_white_list_check_context (GUPnPWhiteList *white_list,
         const char *host_ip;
         const char *network;
         gboolean match = FALSE;
+        GUPnPWhiteListPrivate *priv;
 
         g_return_val_if_fail (GUPNP_IS_WHITE_LIST (white_list), FALSE);
         g_return_val_if_fail (GUPNP_IS_CONTEXT (context), FALSE);
 
         client = GSSDP_CLIENT (context);
+        priv = gupnp_white_list_get_instance_private (white_list);
 
         interface = gssdp_client_get_interface (client);
         host_ip = gssdp_client_get_host_ip (client);
         network = gssdp_client_get_network (client);
 
-        l = white_list->priv->entries;
+        l = priv->entries;
 
         while (l && !match) {
                 match = (interface && !strcmp (l->data, interface)) ||

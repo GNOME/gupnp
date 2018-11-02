@@ -32,45 +32,14 @@
 
 G_BEGIN_DECLS
 
-GType
-gupnp_context_manager_get_type (void) G_GNUC_CONST;
-
 #define GUPNP_TYPE_CONTEXT_MANAGER \
                 (gupnp_context_manager_get_type ())
-#define GUPNP_CONTEXT_MANAGER(obj) \
-                (G_TYPE_CHECK_INSTANCE_CAST ((obj), \
-                 GUPNP_TYPE_CONTEXT_MANAGER, \
-                 GUPnPContextManager))
-#define GUPNP_CONTEXT_MANAGER_CLASS(obj) \
-                (G_TYPE_CHECK_CLASS_CAST ((obj), \
-                 GUPNP_TYPE_CONTEXT_MANAGER, \
-                 GUPnPContextManagerClass))
-#define GUPNP_IS_CONTEXT_MANAGER(obj) \
-                (G_TYPE_CHECK_INSTANCE_TYPE ((obj), \
-                 GUPNP_TYPE_CONTEXT_MANAGER))
-#define GUPNP_IS_CONTEXT_MANAGER_CLASS(obj) \
-                (G_TYPE_CHECK_CLASS_TYPE ((obj), \
-                 GUPNP_TYPE_CONTEXT_MANAGER))
-#define GUPNP_CONTEXT_MANAGER_GET_CLASS(obj) \
-                (G_TYPE_INSTANCE_GET_CLASS ((obj), \
-                 GUPNP_TYPE_CONTEXT_MANAGER, \
-                 GUPnPContextManagerClass))
 
-typedef struct _GUPnPContextManagerPrivate GUPnPContextManagerPrivate;
-typedef struct _GUPnPContextManager GUPnPContextManager;
-typedef struct _GUPnPContextManagerClass GUPnPContextManagerClass;
-
-/**
- * GUPnPContextManager:
- *
- * This struct contains private data only, and should be accessed using the
- * functions below.
- */
-struct _GUPnPContextManager {
-        GObject parent;
-
-        GUPnPContextManagerPrivate *priv;
-};
+G_DECLARE_DERIVABLE_TYPE (GUPnPContextManager,
+                          gupnp_context_manager,
+                          GUPNP,
+                          CONTEXT_MANAGER,
+                          GObject)
 
 struct _GUPnPContextManagerClass {
         GObjectClass parent_class;

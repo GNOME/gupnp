@@ -26,45 +26,14 @@
 
 G_BEGIN_DECLS
 
-GType
-gupnp_device_proxy_get_type (void) G_GNUC_CONST;
-
 #define GUPNP_TYPE_DEVICE_PROXY \
                 (gupnp_device_proxy_get_type ())
-#define GUPNP_DEVICE_PROXY(obj) \
-                (G_TYPE_CHECK_INSTANCE_CAST ((obj), \
-                 GUPNP_TYPE_DEVICE_PROXY, \
-                 GUPnPDeviceProxy))
-#define GUPNP_DEVICE_PROXY_CLASS(obj) \
-                (G_TYPE_CHECK_CLASS_CAST ((obj), \
-                 GUPNP_TYPE_DEVICE_PROXY, \
-                 GUPnPDeviceProxyClass))
-#define GUPNP_IS_DEVICE_PROXY(obj) \
-                (G_TYPE_CHECK_INSTANCE_TYPE ((obj), \
-                 GUPNP_TYPE_DEVICE_PROXY))
-#define GUPNP_IS_DEVICE_PROXY_CLASS(obj) \
-                (G_TYPE_CHECK_CLASS_TYPE ((obj), \
-                 GUPNP_TYPE_DEVICE_PROXY))
-#define GUPNP_DEVICE_PROXY_GET_CLASS(obj) \
-                (G_TYPE_INSTANCE_GET_CLASS ((obj), \
-                 GUPNP_TYPE_DEVICE_PROXY, \
-                 GUPnPDeviceProxyClass))
 
-typedef struct _GUPnPDeviceProxyPrivate GUPnPDeviceProxyPrivate;
-typedef struct _GUPnPDeviceProxy GUPnPDeviceProxy;
-typedef struct _GUPnPDeviceProxyClass GUPnPDeviceProxyClass;
-
-/**
- * GUPnPDeviceProxy:
- *
- * This struct contains private data only, and should be accessed using the
- * functions below.
- */
-struct _GUPnPDeviceProxy {
-        GUPnPDeviceInfo parent;
-
-        GUPnPDeviceProxyPrivate *priv;
-};
+G_DECLARE_DERIVABLE_TYPE (GUPnPDeviceProxy,
+                          gupnp_device_proxy,
+                          GUPNP,
+                          DEVICE_PROXY,
+                          GUPnPDeviceInfo)
 
 struct _GUPnPDeviceProxyClass {
         GUPnPDeviceInfoClass parent_class;

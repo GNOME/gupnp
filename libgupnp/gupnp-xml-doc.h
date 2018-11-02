@@ -30,48 +30,14 @@
 
 G_BEGIN_DECLS
 
-GType
-gupnp_xml_doc_get_type (void) G_GNUC_CONST;
-
 #define GUPNP_TYPE_XML_DOC \
                 (gupnp_xml_doc_get_type ())
-#define GUPNP_XML_DOC(obj) \
-                (G_TYPE_CHECK_INSTANCE_CAST ((obj), \
-                 GUPNP_TYPE_XML_DOC, \
-                 GUPnPXMLDoc))
-#define GUPNP_XML_DOC_CLASS(obj) \
-                (G_TYPE_CHECK_CLASS_CAST ((obj), \
-                 GUPNP_TYPE_XML_DOC, \
-                 GUPnPXMLDocClass))
-#define GUPNP_IS_XML_DOC(obj) \
-                (G_TYPE_CHECK_INSTANCE_TYPE ((obj), \
-                 GUPNP_TYPE_XML_DOC))
-#define GUPNP_IS_XML_DOC_CLASS(obj) \
-                (G_TYPE_CHECK_CLASS_TYPE ((obj), \
-                 GUPNP_TYPE_XML_DOC))
-#define GUPNP_XML_DOC_GET_CLASS(obj) \
-                (G_TYPE_INSTANCE_GET_CLASS ((obj), \
-                 GUPNP_TYPE_XML_DOC, \
-                 GUPnPXMLDocClass))
 
-typedef struct _GUPnPXMLDoc GUPnPXMLDoc;
-typedef struct _GUPnPXMLDocClass GUPnPXMLDocClass;
-
-/**
- * GUPnPXMLDoc:
- * @doc: Pointer to the document.
- *
- * Reference-counting wrapper for libxml's #xmlDoc
- */
-struct _GUPnPXMLDoc {
-        GObject parent;
-        /*< public >*/
-        xmlDoc *doc;
-};
-
-struct _GUPnPXMLDocClass {
-        GObjectClass parent_class;
-};
+G_DECLARE_FINAL_TYPE (GUPnPXMLDoc,
+                      gupnp_xml_doc,
+                      GUPNP,
+                      XML_DOC,
+                      GObject)
 
 GUPnPXMLDoc *
 gupnp_xml_doc_new                       (xmlDoc         *xml_doc);
@@ -79,6 +45,9 @@ gupnp_xml_doc_new                       (xmlDoc         *xml_doc);
 GUPnPXMLDoc *
 gupnp_xml_doc_new_from_path             (const char     *path,
                                          GError        **error);
+
+const xmlDoc *
+gupnp_xml_doc_get_doc                   (GUPnPXMLDoc    *xml_doc);
 
 G_END_DECLS
 

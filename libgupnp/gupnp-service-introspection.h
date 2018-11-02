@@ -28,29 +28,14 @@
 
 G_BEGIN_DECLS
 
-GType
-gupnp_service_introspection_get_type (void) G_GNUC_CONST;
-
 #define GUPNP_TYPE_SERVICE_INTROSPECTION \
                 (gupnp_service_introspection_get_type ())
-#define GUPNP_SERVICE_INTROSPECTION(obj) \
-                (G_TYPE_CHECK_INSTANCE_CAST ((obj), \
-                 GUPNP_TYPE_SERVICE_INTROSPECTION, \
-                 GUPnPServiceIntrospection))
-#define GUPNP_SERVICE_INTROSPECTION_CLASS(obj) \
-                (G_TYPE_CHECK_CLASS_CAST ((obj), \
-                 GUPNP_TYPE_SERVICE_INTROSPECTION, \
-                 GUPnPServiceIntrospectionClass))
-#define GUPNP_IS_SERVICE_INTROSPECTION(obj) \
-                (G_TYPE_CHECK_INSTANCE_TYPE ((obj), \
-                 GUPNP_TYPE_SERVICE_INTROSPECTION))
-#define GUPNP_IS_SERVICE_INTROSPECTION_CLASS(obj) \
-                (G_TYPE_CHECK_CLASS_TYPE ((obj), \
-                 GUPNP_TYPE_SERVICE_INTROSPECTION))
-#define GUPNP_SERVICE_INTROSPECTION_GET_CLASS(obj) \
-                (G_TYPE_INSTANCE_GET_CLASS ((obj), \
-                 GUPNP_TYPE_SERVICE_INTROSPECTION, \
-                 GUPnPServiceIntrospectionClass))
+
+G_DECLARE_FINAL_TYPE (GUPnPServiceIntrospection,
+                      gupnp_service_introspection,
+                      GUPNP,
+                      SERVICE_INTROSPECTION,
+                      GObject)
 
 /**
  * GUPnPServiceActionArgDirection:
@@ -127,28 +112,6 @@ typedef struct {
         GList   *allowed_values;
 } GUPnPServiceStateVariableInfo;
 
-typedef struct _GUPnPServiceIntrospectionPrivate
-                GUPnPServiceIntrospectionPrivate;
-typedef struct _GUPnPServiceIntrospection
-                GUPnPServiceIntrospection;
-typedef struct _GUPnPServiceIntrospectionClass
-                GUPnPServiceIntrospectionClass;
-
-/**
- * GUPnPServiceIntrospection:
- *
- * This struct contains private data only, and should be accessed using the
- * functions below.
- */
-struct _GUPnPServiceIntrospection {
-        GObject parent;
-
-        GUPnPServiceIntrospectionPrivate *priv;
-};
-
-struct _GUPnPServiceIntrospectionClass {
-        GObjectClass parent_class;
-};
 
 const GList *
 gupnp_service_introspection_list_action_names

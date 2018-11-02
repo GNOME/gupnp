@@ -30,45 +30,10 @@
 
 G_BEGIN_DECLS
 
-GType
-gupnp_context_get_type (void) G_GNUC_CONST;
-
 #define GUPNP_TYPE_CONTEXT \
                 (gupnp_context_get_type ())
-#define GUPNP_CONTEXT(obj) \
-                (G_TYPE_CHECK_INSTANCE_CAST ((obj), \
-                 GUPNP_TYPE_CONTEXT, \
-                 GUPnPContext))
-#define GUPNP_CONTEXT_CLASS(obj) \
-                (G_TYPE_CHECK_CLASS_CAST ((obj), \
-                 GUPNP_TYPE_CONTEXT, \
-                 GUPnPContextClass))
-#define GUPNP_IS_CONTEXT(obj) \
-                (G_TYPE_CHECK_INSTANCE_TYPE ((obj), \
-                 GUPNP_TYPE_CONTEXT))
-#define GUPNP_IS_CONTEXT_CLASS(obj) \
-                (G_TYPE_CHECK_CLASS_TYPE ((obj), \
-                 GUPNP_TYPE_CONTEXT))
-#define GUPNP_CONTEXT_GET_CLASS(obj) \
-                (G_TYPE_INSTANCE_GET_CLASS ((obj), \
-                 GUPNP_TYPE_CONTEXT, \
-                 GUPnPContextClass))
 
-typedef struct _GUPnPContextPrivate GUPnPContextPrivate;
-typedef struct _GUPnPContext GUPnPContext;
-typedef struct _GUPnPContextClass GUPnPContextClass;
-
-/**
- * GUPnPContext:
- *
- * This struct contains private data only, and should be accessed using the
- * functions below.
- */
-struct _GUPnPContext {
-        GSSDPClient parent;
-
-        GUPnPContextPrivate *priv;
-};
+G_DECLARE_DERIVABLE_TYPE (GUPnPContext, gupnp_context, GUPNP, CONTEXT, GSSDPClient)
 
 struct _GUPnPContextClass {
         GSSDPClientClass parent_class;

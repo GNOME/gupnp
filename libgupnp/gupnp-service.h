@@ -28,29 +28,14 @@
 
 G_BEGIN_DECLS
 
-GType
-gupnp_service_get_type (void) G_GNUC_CONST;
-
 #define GUPNP_TYPE_SERVICE \
                 (gupnp_service_get_type ())
-#define GUPNP_SERVICE(obj) \
-                (G_TYPE_CHECK_INSTANCE_CAST ((obj), \
-                 GUPNP_TYPE_SERVICE, \
-                 GUPnPService))
-#define GUPNP_SERVICE_CLASS(obj) \
-                (G_TYPE_CHECK_CLASS_CAST ((obj), \
-                 GUPNP_TYPE_SERVICE, \
-                 GUPnPServiceClass))
-#define GUPNP_IS_SERVICE(obj) \
-                (G_TYPE_CHECK_INSTANCE_TYPE ((obj), \
-                 GUPNP_TYPE_SERVICE))
-#define GUPNP_IS_SERVICE_CLASS(obj) \
-                (G_TYPE_CHECK_CLASS_TYPE ((obj), \
-                 GUPNP_TYPE_SERVICE))
-#define GUPNP_SERVICE_GET_CLASS(obj) \
-                (G_TYPE_INSTANCE_GET_CLASS ((obj), \
-                 GUPNP_TYPE_SERVICE, \
-                 GUPnPServiceClass))
+
+G_DECLARE_DERIVABLE_TYPE (GUPnPService,
+                          gupnp_service,
+                          GUPNP,
+                          SERVICE,
+                          GUPnPServiceInfo)
 
 /**
  * GUPnPServiceAction:
@@ -63,22 +48,6 @@ GType
 gupnp_service_action_get_type (void) G_GNUC_CONST;
 
 #define GUPNP_TYPE_SERVICE_ACTION (gupnp_service_action_get_type ())
-
-typedef struct _GUPnPServicePrivate GUPnPServicePrivate;
-typedef struct _GUPnPService GUPnPService;
-typedef struct _GUPnPServiceClass GUPnPServiceClass;
-
-/**
- * GUPnPService:
- *
- * This struct contains private data only, and should be accessed using the
- * functions below.
- */
-struct _GUPnPService {
-        GUPnPServiceInfo parent;
-
-        GUPnPServicePrivate *priv;
-};
 
 struct _GUPnPServiceClass {
         GUPnPServiceInfoClass parent_class;

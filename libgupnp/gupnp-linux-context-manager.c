@@ -60,10 +60,6 @@
 #include "gupnp-linux-context-manager.h"
 #include "gupnp-context.h"
 
-G_DEFINE_TYPE (GUPnPLinuxContextManager,
-               gupnp_linux_context_manager,
-               GUPNP_TYPE_CONTEXT_MANAGER);
-
 struct _GUPnPLinuxContextManagerPrivate {
         /* Socket used for IOCTL calls */
         int fd;
@@ -86,6 +82,16 @@ struct _GUPnPLinuxContextManagerPrivate {
 
         gboolean dump_netlink_packets;
 };
+typedef struct _GUPnPLinuxContextManagerPrivate GUPnPLinuxContextManagerPrivate;
+
+
+struct _GUPnPLinuxContextManager {
+        GUPnPContextManager parent;
+};
+
+G_DEFINE_TYPE_WITH_PRIVATE (GUPnPLinuxContextManager,
+                            gupnp_linux_context_manager,
+                            GUPNP_TYPE_CONTEXT_MANAGER);
 
 typedef enum {
         /* Interface is up */
@@ -220,6 +226,16 @@ network_device_new (GUPnPLinuxContextManager *manager,
         return device;
 }
 
+static int
+get_ioctl_fd (GUPnPLinuxContextManager *self)
+{
+    GUPnPLinuxContextManagerPrivate *priv;
+
+    priv = gupnp_linux_context_manager_get_instance_private (self);
+
+    return priv->fd;
+}
+
 /* Try to update the ESSID of a network interface. */
 static void
 network_device_update_essid (NetworkInterface *device)
@@ -236,7 +252,7 @@ network_device_update_essid (NetworkInterface *device)
         strncpy (iwr.ifr_name, device->name, IFNAMSIZ - 1);
         iwr.u.essid.pointer = (caddr_t) essid;
         iwr.u.essid.length = IW_ESSID_MAX_SIZE;
-        ret = ioctl (device->manager->priv->fd, SIOCGIWESSID, &iwr);
+        ret = ioctl (get_ioctl_fd (device->manager), SIOCGIWESSID, &iwr);
 
         if ((ret == 0 && essid[0] != '\0') &&
             (!device->essid || strcmp (device->essid, essid)))
@@ -487,8 +503,10 @@ create_context (GUPnPLinuxContextManager *self,
                 struct ifaddrmsg         *ifa)
 {
         NetworkInterface *device;
+        GUPnPLinuxContextManagerPrivate *priv;
 
-        device = g_hash_table_lookup (self->priv->interfaces,
+        priv = gupnp_linux_context_manager_get_instance_private (self);
+        device = g_hash_table_lookup (priv->interfaces,
                                       GINT_TO_POINTER (ifa->ifa_index));
 
         if (!device) {
@@ -517,8 +535,10 @@ remove_context (GUPnPLinuxContextManager *self,
 {
         NetworkInterface *device;
         GUPnPContext *context;
+        GUPnPLinuxContextManagerPrivate *priv;
 
-        device = g_hash_table_lookup (self->priv->interfaces,
+        priv = gupnp_linux_context_manager_get_instance_private (self);
+        device = g_hash_table_lookup (priv->interfaces,
                                       GINT_TO_POINTER (ifa->ifa_index));
 
         if (!device) {
@@ -556,24 +576,27 @@ remove_context (GUPnPLinuxContextManager *self,
 static gboolean
 on_bootstrap (GUPnPLinuxContextManager *self)
 {
-        if (self->priv->nl_seq == 0) {
+        GUPnPLinuxContextManagerPrivate *priv;
+
+        priv = gupnp_linux_context_manager_get_instance_private (self);
+        if (priv->nl_seq == 0) {
                 query_all_network_interfaces (self);
 
                 return TRUE;
-        } else if (self->priv->nl_seq == 1) {
+        } else if (priv->nl_seq == 1) {
                 query_all_addresses (self);
 
                 return TRUE;
         } else {
-                self->priv->netlink_socket_source = g_socket_create_source
-                                                (self->priv->netlink_socket,
+                priv->netlink_socket_source = g_socket_create_source
+                                                (priv->netlink_socket,
                                                  G_IO_IN | G_IO_PRI,
                                                  NULL);
 
-                g_source_attach (self->priv->netlink_socket_source,
+                g_source_attach (priv->netlink_socket_source,
                                  g_main_context_get_thread_default ());
 
-                g_source_set_callback (self->priv->netlink_socket_source,
+                g_source_set_callback (priv->netlink_socket_source,
                                        (GSourceFunc)
                                        on_netlink_message_available,
                                        self,
@@ -598,6 +621,9 @@ send_netlink_request (GUPnPLinuxContextManager *self,
         struct msghdr msg;
         struct iovec io;
         int fd;
+        GUPnPLinuxContextManagerPrivate *priv;
+
+        priv = gupnp_linux_context_manager_get_instance_private (self);
 
         memset (&req, 0, sizeof (req));
         memset (&dest, 0, sizeof (dest));
@@ -605,7 +631,7 @@ send_netlink_request (GUPnPLinuxContextManager *self,
 
         dest.nl_family = AF_NETLINK;
         req.hdr.nlmsg_len = NLMSG_LENGTH (sizeof (struct rtgenmsg));
-        req.hdr.nlmsg_seq = self->priv->nl_seq++;
+        req.hdr.nlmsg_seq = priv->nl_seq++;
         req.hdr.nlmsg_type = netlink_message;
         req.hdr.nlmsg_flags = NLM_F_REQUEST | flags;
         req.gen.rtgen_family = AF_INET;
@@ -618,7 +644,7 @@ send_netlink_request (GUPnPLinuxContextManager *self,
         msg.msg_name = &dest;
         msg.msg_namelen = sizeof (dest);
 
-        fd = g_socket_get_fd (self->priv->netlink_socket);
+        fd = g_socket_get_fd (priv->netlink_socket);
         if (sendmsg (fd, (struct msghdr *) &msg, 0) < 0)
                 g_warning ("Could not send netlink message: %s",
                            strerror (errno));
@@ -665,9 +691,12 @@ handle_device_status_change (GUPnPLinuxContextManager *self,
 {
         gpointer key;
         NetworkInterface *device;
+        GUPnPLinuxContextManagerPrivate *priv;
+
+        priv = gupnp_linux_context_manager_get_instance_private (self);
 
         key = GINT_TO_POINTER (ifi->ifi_index);
-        device = g_hash_table_lookup (self->priv->interfaces,
+        device = g_hash_table_lookup (priv->interfaces,
                                       key);
 
         if (device != NULL) {
@@ -686,7 +715,7 @@ handle_device_status_change (GUPnPLinuxContextManager *self,
                 if (ifi->ifi_flags & IFF_UP)
                         device->flags |= NETWORK_INTERFACE_UP;
 
-                g_hash_table_insert (self->priv->interfaces,
+                g_hash_table_insert (priv->interfaces,
                                      key,
                                      device);
         }
@@ -696,7 +725,11 @@ static void
 remove_device (GUPnPLinuxContextManager *self,
                struct ifinfomsg         *ifi)
 {
-        g_hash_table_remove (self->priv->interfaces,
+        GUPnPLinuxContextManagerPrivate *priv;
+
+        priv = gupnp_linux_context_manager_get_instance_private (self);
+
+        g_hash_table_remove (priv->interfaces,
                              GINT_TO_POINTER (ifi->ifi_index));
 }
 
@@ -715,8 +748,11 @@ receive_netlink_message (GUPnPLinuxContextManager *self, GError **error)
         struct nlmsghdr *header = (struct nlmsghdr *) buf;
         struct ifinfomsg *ifi;
         struct ifaddrmsg *ifa;
+        GUPnPLinuxContextManagerPrivate *priv;
 
-        len = g_socket_receive (self->priv->netlink_socket,
+        priv = gupnp_linux_context_manager_get_instance_private (self);
+
+        len = g_socket_receive (priv->netlink_socket,
                                 buf,
                                 sizeof (buf),
                                 NULL,
@@ -730,7 +766,7 @@ receive_netlink_message (GUPnPLinuxContextManager *self, GError **error)
                 return;
         }
 
-        if (self->priv->dump_netlink_packets) {
+        if (priv->dump_netlink_packets) {
                 GString *hexdump = NULL;
 
                 /* We should have at most len / 16 + 1 lines with 74 characters each */
@@ -760,7 +796,7 @@ receive_netlink_message (GUPnPLinuxContextManager *self, GError **error)
                                 g_debug ("Received RTM_NEWADDR");
                                 ifa = NLMSG_DATA (header);
                                 extract_info (header,
-                                              self->priv->dump_netlink_packets,
+                                              priv->dump_netlink_packets,
                                               ifa->ifa_prefixlen,
                                               &address,
                                               &label,
@@ -779,7 +815,7 @@ receive_netlink_message (GUPnPLinuxContextManager *self, GError **error)
                                 g_debug ("Received RTM_DELADDR");
                                 ifa = NLMSG_DATA (header);
                                 extract_info (header,
-                                              self->priv->dump_netlink_packets,
+                                              priv->dump_netlink_packets,
                                               ifa->ifa_prefixlen,
                                               &address,
                                               &label,
@@ -827,10 +863,14 @@ receive_netlink_message (GUPnPLinuxContextManager *self, GError **error)
 static gboolean
 create_ioctl_socket (GUPnPLinuxContextManager *self, GError **error)
 {
-        self->priv->fd = socket (AF_INET, SOCK_DGRAM, 0);
+        GUPnPLinuxContextManagerPrivate *priv;
 
-        if (self->priv->fd < 0) {
-                self->priv->fd = 0;
+        priv = gupnp_linux_context_manager_get_instance_private (self);
+
+        priv->fd = socket (AF_INET, SOCK_DGRAM, 0);
+
+        if (priv->fd < 0) {
+                priv->fd = 0;
 
                 g_set_error_literal (error,
                                      G_IO_ERROR,
@@ -851,6 +891,9 @@ create_netlink_socket (GUPnPLinuxContextManager *self, GError **error)
         int fd, status;
         GSocket *sock;
         GError *inner_error;
+        GUPnPLinuxContextManagerPrivate *priv;
+
+        priv = gupnp_linux_context_manager_get_instance_private (self);
 
         inner_error = NULL;
 
@@ -892,7 +935,7 @@ create_netlink_socket (GUPnPLinuxContextManager *self, GError **error)
 
         g_socket_set_blocking (sock, FALSE);
 
-        self->priv->netlink_socket = sock;
+        priv->netlink_socket = sock;
 
         return TRUE;
 }
@@ -919,14 +962,13 @@ gupnp_linux_context_manager_is_available (void)
 static void
 gupnp_linux_context_manager_init (GUPnPLinuxContextManager *self)
 {
-        self->priv =
-                G_TYPE_INSTANCE_GET_PRIVATE (self,
-                                             GUPNP_TYPE_LINUX_CONTEXT_MANAGER,
-                                             GUPnPLinuxContextManagerPrivate);
+        GUPnPLinuxContextManagerPrivate *priv;
 
-        self->priv->nl_seq = 0;
+        priv = gupnp_linux_context_manager_get_instance_private (self);
 
-        self->priv->interfaces =
+        priv->nl_seq = 0;
+
+        priv->interfaces =
                 g_hash_table_new_full (g_direct_hash,
                                        g_direct_equal,
                                        NULL,
@@ -941,11 +983,13 @@ gupnp_linux_context_manager_constructed (GObject *object)
         GUPnPLinuxContextManager *self;
         GError *error = NULL;
         const char *env_var = NULL;
+        GUPnPLinuxContextManagerPrivate *priv;
 
         self = GUPNP_LINUX_CONTEXT_MANAGER (object);
+        priv = gupnp_linux_context_manager_get_instance_private (self);
 
         env_var = g_getenv ("GUPNP_DEBUG_NETLINK");
-        self->priv->dump_netlink_packets = (env_var != NULL) &&
+        priv->dump_netlink_packets = (env_var != NULL) &&
                 strstr (env_var, "1") != NULL;
 
         if (!create_ioctl_socket (self, &error))
@@ -954,17 +998,17 @@ gupnp_linux_context_manager_constructed (GObject *object)
         if (!create_netlink_socket (self, &error))
                 goto cleanup;
 
-        self->priv->bootstrap_source = g_idle_source_new ();
-        g_source_attach (self->priv->bootstrap_source,
+        priv->bootstrap_source = g_idle_source_new ();
+        g_source_attach (priv->bootstrap_source,
                          g_main_context_get_thread_default ());
-        g_source_set_callback (self->priv->bootstrap_source,
+        g_source_set_callback (priv->bootstrap_source,
                                (GSourceFunc) on_bootstrap,
                                self,
                                NULL);
 cleanup:
         if (error) {
-                if (self->priv->fd > 0)
-                        close (self->priv->fd);
+                if (priv->fd > 0)
+                        close (priv->fd);
 
                 g_warning ("Failed to setup Linux context manager: %s",
                            error->message);
@@ -983,34 +1027,36 @@ gupnp_linux_context_manager_dispose (GObject *object)
 {
         GUPnPLinuxContextManager *self;
         GObjectClass *parent_class;
+        GUPnPLinuxContextManagerPrivate *priv;
 
         self = GUPNP_LINUX_CONTEXT_MANAGER (object);
+        priv = gupnp_linux_context_manager_get_instance_private (self);
 
-        if (self->priv->bootstrap_source != NULL) {
-                g_source_destroy (self->priv->bootstrap_source);
-                g_source_unref (self->priv->bootstrap_source);
-                self->priv->bootstrap_source = NULL;
+        if (priv->bootstrap_source != NULL) {
+                g_source_destroy (priv->bootstrap_source);
+                g_source_unref (priv->bootstrap_source);
+                priv->bootstrap_source = NULL;
         }
 
-        if (self->priv->netlink_socket_source != NULL) {
-               g_source_destroy (self->priv->netlink_socket_source);
-               g_source_unref (self->priv->netlink_socket_source);
-               self->priv->netlink_socket_source = NULL;
+        if (priv->netlink_socket_source != NULL) {
+               g_source_destroy (priv->netlink_socket_source);
+               g_source_unref (priv->netlink_socket_source);
+               priv->netlink_socket_source = NULL;
         }
 
-        if (self->priv->netlink_socket != NULL) {
-                g_object_unref (self->priv->netlink_socket);
-                self->priv->netlink_socket = NULL;
+        if (priv->netlink_socket != NULL) {
+                g_object_unref (priv->netlink_socket);
+                priv->netlink_socket = NULL;
         }
 
-        if (self->priv->fd != 0) {
-                close (self->priv->fd);
-                self->priv->fd = 0;
+        if (priv->fd != 0) {
+                close (priv->fd);
+                priv->fd = 0;
         }
 
-        if (self->priv->interfaces) {
-                g_hash_table_destroy (self->priv->interfaces);
-                self->priv->interfaces = NULL;
+        if (priv->interfaces) {
+                g_hash_table_destroy (priv->interfaces);
+                priv->interfaces = NULL;
         }
 
         /* Chain-up */
@@ -1027,7 +1073,4 @@ gupnp_linux_context_manager_class_init (GUPnPLinuxContextManagerClass *klass)
 
         object_class->constructed = gupnp_linux_context_manager_constructed;
         object_class->dispose     = gupnp_linux_context_manager_dispose;
-
-        g_type_class_add_private (klass,
-                                  sizeof (GUPnPLinuxContextManagerPrivate));
 }

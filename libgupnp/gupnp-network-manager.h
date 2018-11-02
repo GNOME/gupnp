@@ -27,47 +27,14 @@
 
 G_BEGIN_DECLS
 
-G_GNUC_INTERNAL GType
-gupnp_network_manager_get_type (void) G_GNUC_CONST;
-
 #define GUPNP_TYPE_NETWORK_MANAGER \
                 (gupnp_network_manager_get_type ())
-#define GUPNP_NETWORK_MANAGER(obj) \
-                (G_TYPE_CHECK_INSTANCE_CAST ((obj), \
-                 GUPNP_TYPE_NETWORK_MANAGER, \
-                 GUPnPNetworkManager))
-#define GUPNP_NETWORK_MANAGER_CLASS(obj) \
-                (G_TYPE_CHECK_CLASS_CAST ((obj), \
-                 GUPNP_TYPE_NETWORK_MANAGER, \
-                 GUPnPNetworkManagerClass))
-#define GUPNP_IS_NETWORK_MANAGER(obj) \
-                (G_TYPE_CHECK_INSTANCE_TYPE ((obj), \
-                 GUPNP_TYPE_NETWORK_MANAGER))
-#define GUPNP_IS_NETWORK_MANAGER_CLASS(obj) \
-                (G_TYPE_CHECK_CLASS_TYPE ((obj), \
-                 GUPNP_TYPE_NETWORK_MANAGER))
-#define GUPNP_NETWORK_MANAGER_GET_CLASS(obj) \
-                (G_TYPE_INSTANCE_GET_CLASS ((obj), \
-                 GUPNP_TYPE_NETWORK_MANAGER, \
-                 GUPnPNetworkManagerClass))
 
-typedef struct _GUPnPNetworkManagerPrivate GUPnPNetworkManagerPrivate;
-
-typedef struct {
-        GUPnPContextManager parent;
-
-        GUPnPNetworkManagerPrivate *priv;
-} GUPnPNetworkManager;
-
-typedef struct {
-        GUPnPContextManagerClass parent_class;
-
-        /* future padding */
-        void (* _gupnp_reserved1) (void);
-        void (* _gupnp_reserved2) (void);
-        void (* _gupnp_reserved3) (void);
-        void (* _gupnp_reserved4) (void);
-} GUPnPNetworkManagerClass;
+G_DECLARE_FINAL_TYPE (GUPnPNetworkManager,
+                      gupnp_network_manager,
+                      GUPNP,
+                      NETWORK_MANAGER,
+                      GUPnPContextManager)
 
 G_GNUC_INTERNAL gboolean
 gupnp_network_manager_is_available                      (void);

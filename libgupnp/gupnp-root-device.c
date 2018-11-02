@@ -45,14 +45,6 @@ gupnp_root_device_initable_init (GInitable     *initable,
                                  GCancellable  *cancellable,
                                  GError       **error);
 
-G_DEFINE_TYPE_EXTENDED (GUPnPRootDevice,
-                        gupnp_root_device,
-                        GUPNP_TYPE_DEVICE,
-                        0,
-                        G_IMPLEMENT_INTERFACE
-                                (G_TYPE_INITABLE,
-                                 gupnp_root_device_initable_iface_init));
-
 struct _GUPnPRootDevicePrivate {
         GUPnPXMLDoc *description_doc;
 
@@ -62,6 +54,16 @@ struct _GUPnPRootDevicePrivate {
         char  *description_dir;
         char  *relative_location;
 };
+typedef struct _GUPnPRootDevicePrivate GUPnPRootDevicePrivate;
+
+G_DEFINE_TYPE_EXTENDED (GUPnPRootDevice,
+                        gupnp_root_device,
+                        GUPNP_TYPE_DEVICE,
+                        0,
+                        G_ADD_PRIVATE(GUPnPRootDevice)
+                        G_IMPLEMENT_INTERFACE
+                                (G_TYPE_INITABLE,
+                                 gupnp_root_device_initable_iface_init));
 
 enum {
         PROP_0,
@@ -75,14 +77,16 @@ static void
 gupnp_root_device_finalize (GObject *object)
 {
         GUPnPRootDevice *device;
+        GUPnPRootDevicePrivate *priv;
         GObjectClass *object_class;
 
         device = GUPNP_ROOT_DEVICE (object);
+        priv = gupnp_root_device_get_instance_private (device);
 
-        g_clear_object (&device->priv->description_doc);
-        g_free (device->priv->description_path);
-        g_free (device->priv->description_dir);
-        g_free (device->priv->relative_location);
+        g_clear_object (&priv->description_doc);
+        g_free (priv->description_path);
+        g_free (priv->description_dir);
+        g_free (priv->relative_location);
 
         /* Call super */
         object_class = G_OBJECT_CLASS (gupnp_root_device_parent_class);
@@ -93,13 +97,15 @@ static void
 gupnp_root_device_dispose (GObject *object)
 {
         GUPnPRootDevice *device;
+        GUPnPRootDevicePrivate *priv;
         GObjectClass *object_class;
 
         device = GUPNP_ROOT_DEVICE (object);
+        priv = gupnp_root_device_get_instance_private (device);
 
-        if (device->priv->group) {
-                g_object_unref (device->priv->group);
-                device->priv->group = NULL;
+        if (priv->group) {
+                g_object_unref (priv->group);
+                priv->group = NULL;
         }
 
         /* Call super */
@@ -110,9 +116,6 @@ gupnp_root_device_dispose (GObject *object)
 static void
 gupnp_root_device_init (GUPnPRootDevice *device)
 {
-        device->priv = G_TYPE_INSTANCE_GET_PRIVATE (device,
-                                                    GUPNP_TYPE_ROOT_DEVICE,
-                                                    GUPnPRootDevicePrivate);
 }
 
 static void
@@ -130,18 +133,20 @@ gupnp_root_device_set_property (GObject      *object,
                                 GParamSpec   *pspec)
 {
         GUPnPRootDevice *device;
+        GUPnPRootDevicePrivate *priv;
 
         device = GUPNP_ROOT_DEVICE (object);
+        priv = gupnp_root_device_get_instance_private (device);
 
         switch (property_id) {
         case PROP_DESCRIPTION_DOC:
-                device->priv->description_doc = g_value_dup_object (value);
+                priv->description_doc = g_value_dup_object (value);
                 break;
         case PROP_DESCRIPTION_PATH:
-                device->priv->description_path = g_value_dup_string (value);
+                priv->description_path = g_value_dup_string (value);
                 break;
         case PROP_DESCRIPTION_DIR:
-                device->priv->description_dir = g_value_dup_string (value);
+                priv->description_dir = g_value_dup_string (value);
                 break;
         case PROP_AVAILABLE:
                 gupnp_root_device_set_available
@@ -160,17 +165,19 @@ gupnp_root_device_get_property (GObject    *object,
                                 GParamSpec *pspec)
 {
         GUPnPRootDevice *device;
+        GUPnPRootDevicePrivate *priv;
 
         device = GUPNP_ROOT_DEVICE (object);
+        priv = gupnp_root_device_get_instance_private (device);
 
         switch (property_id) {
         case PROP_DESCRIPTION_PATH:
                 g_value_set_string (value,
-                                    device->priv->description_path);
+                                    priv->description_path);
                 break;
         case PROP_DESCRIPTION_DIR:
                 g_value_set_string (value,
-                                    device->priv->description_dir);
+                                    priv->description_dir);
                 break;
         case PROP_AVAILABLE:
                 g_value_set_boolean (value,
@@ -297,8 +304,10 @@ gupnp_root_device_initable_init (GInitable     *initable,
         xmlNode *root_element, *element;
         SoupURI *url_base;
         gboolean result = FALSE;
+        GUPnPRootDevicePrivate *priv;
 
         device = GUPNP_ROOT_DEVICE (initable);
+        priv = gupnp_root_device_get_instance_private (device);
 
         location = NULL;
 
@@ -315,7 +324,7 @@ gupnp_root_device_initable_init (GInitable     *initable,
                 return FALSE;
         }
 
-        if (device->priv->description_path == NULL) {
+        if (priv->description_path == NULL) {
                 g_set_error_literal (error,
                                      GUPNP_ROOT_DEVICE_ERROR,
                                      GUPNP_ROOT_DEVICE_ERROR_NO_DESCRIPTION_PATH,
@@ -324,7 +333,7 @@ gupnp_root_device_initable_init (GInitable     *initable,
                 return FALSE;
         }
 
-        if (device->priv->description_dir == NULL) {
+        if (priv->description_dir == NULL) {
                 g_set_error_literal (error,
                                      GUPNP_ROOT_DEVICE_ERROR,
                                      GUPNP_ROOT_DEVICE_ERROR_NO_DESCRIPTION_FOLDER,
@@ -343,18 +352,18 @@ gupnp_root_device_initable_init (GInitable     *initable,
                 return FALSE;
         }
 
-        if (g_path_is_absolute (device->priv->description_path))
-                desc_path = g_strdup (device->priv->description_path);
+        if (g_path_is_absolute (priv->description_path))
+                desc_path = g_strdup (priv->description_path);
         else
-                desc_path = g_build_filename (device->priv->description_dir,
-                                              device->priv->description_path,
+                desc_path = g_build_filename (priv->description_dir,
+                                              priv->description_path,
                                               NULL);
 
         /* Check whether we have a parsed description document */
-        if (device->priv->description_doc == NULL) {
+        if (priv->description_doc == NULL) {
                 /* We don't, so load and parse it */
-                device->priv->description_doc = load_and_parse (desc_path);
-                if (device->priv->description_doc == NULL) {
+                priv->description_doc = load_and_parse (desc_path);
+                if (priv->description_doc == NULL) {
                         g_set_error_literal (error,
                                              GUPNP_XML_ERROR,
                                              GUPNP_XML_ERROR_PARSE,
@@ -365,7 +374,8 @@ gupnp_root_device_initable_init (GInitable     *initable,
         }
 
         /* Find correct element */
-        root_element = xml_util_get_element ((xmlNode *) device->priv->description_doc->doc,
+        root_element = xml_util_get_element ((xmlNode *)
+                                             gupnp_xml_doc_get_doc (priv->description_doc),
                                              "root",
                                              NULL);
         if (!root_element) {
@@ -396,18 +406,18 @@ gupnp_root_device_initable_init (GInitable     *initable,
         /* Generate location relative to HTTP root */
         udn = gupnp_device_info_get_udn (GUPNP_DEVICE_INFO (device));
         if (udn && strstr (udn, "uuid:") == udn)
-                device->priv->relative_location = g_strdup_printf ("%s.xml", udn + 5);
+                priv->relative_location = g_strdup_printf ("%s.xml", udn + 5);
         else
-                device->priv->relative_location = g_strdup_printf ("RootDevice%p.xml", device);
+                priv->relative_location = g_strdup_printf ("RootDevice%p.xml", device);
 
         relative_location = g_strjoin (NULL,
                                        "/",
-                                       device->priv->relative_location,
+                                       priv->relative_location,
                                        NULL);
 
         /* Host the description file and dir */
         gupnp_context_host_path (context, desc_path, relative_location);
-        gupnp_context_host_path (context, device->priv->description_dir, "");
+        gupnp_context_host_path (context, priv->description_dir, "");
 
         /* Generate full location */
         soup_uri_set_path (uri, relative_location);
@@ -431,17 +441,17 @@ gupnp_root_device_initable_init (GInitable     *initable,
         soup_uri_free (url_base);
 
         /* Create resource group */
-        device->priv->group = gssdp_resource_group_new (GSSDP_CLIENT (context));
+        priv->group = gssdp_resource_group_new (GSSDP_CLIENT (context));
 
         /* Add services and devices to resource group */
         usn = g_strdup_printf ("%s::upnp:rootdevice", (const char *) udn);
-        gssdp_resource_group_add_resource_simple (device->priv->group,
+        gssdp_resource_group_add_resource_simple (priv->group,
                                                   "upnp:rootdevice",
                                                   usn,
                                                   location);
         g_free (usn);
 
-        fill_resource_group (element, location, device->priv->group);
+        fill_resource_group (element, location, priv->group);
 
         result = TRUE;
 
@@ -467,8 +477,6 @@ gupnp_root_device_class_init (GUPnPRootDeviceClass *klass)
         object_class->get_property = gupnp_root_device_get_property;
         object_class->dispose      = gupnp_root_device_dispose;
         object_class->finalize     = gupnp_root_device_finalize;
-
-        g_type_class_add_private (klass, sizeof (GUPnPRootDevicePrivate));
 
         /**
          * GUPnPRootDevice:description-doc:
@@ -632,10 +640,13 @@ void
 gupnp_root_device_set_available (GUPnPRootDevice *root_device,
                                  gboolean         available)
 {
+        GUPnPRootDevicePrivate *priv;
+
         g_return_if_fail (GUPNP_IS_ROOT_DEVICE (root_device));
 
-        gssdp_resource_group_set_available (root_device->priv->group,
-                                            available);
+        priv = gupnp_root_device_get_instance_private (root_device);
+
+        gssdp_resource_group_set_available (priv->group, available);
 
         g_object_notify (G_OBJECT (root_device), "available");
 }
@@ -651,9 +662,13 @@ gupnp_root_device_set_available (GUPnPRootDevice *root_device,
 gboolean
 gupnp_root_device_get_available (GUPnPRootDevice *root_device)
 {
+        GUPnPRootDevicePrivate *priv;
+
         g_return_val_if_fail (GUPNP_IS_ROOT_DEVICE (root_device), FALSE);
 
-        return gssdp_resource_group_get_available (root_device->priv->group);
+        priv = gupnp_root_device_get_instance_private (root_device);
+
+        return gssdp_resource_group_get_available (priv->group);
 }
 
 /**
@@ -667,9 +682,13 @@ gupnp_root_device_get_available (GUPnPRootDevice *root_device)
 const char *
 gupnp_root_device_get_relative_location (GUPnPRootDevice *root_device)
 {
+        GUPnPRootDevicePrivate *priv;
+
         g_return_val_if_fail (GUPNP_IS_ROOT_DEVICE (root_device), NULL);
 
-        return root_device->priv->relative_location;
+        priv = gupnp_root_device_get_instance_private (root_device);
+
+        return priv->relative_location;
 }
 
 /**
@@ -683,9 +702,13 @@ gupnp_root_device_get_relative_location (GUPnPRootDevice *root_device)
 const char *
 gupnp_root_device_get_description_path (GUPnPRootDevice *root_device)
 {
+        GUPnPRootDevicePrivate *priv;
+
         g_return_val_if_fail (GUPNP_IS_ROOT_DEVICE (root_device), NULL);
 
-        return root_device->priv->description_path;
+        priv = gupnp_root_device_get_instance_private (root_device);
+
+        return priv->description_path;
 }
 
 /**
@@ -700,9 +723,13 @@ gupnp_root_device_get_description_path (GUPnPRootDevice *root_device)
 const char *
 gupnp_root_device_get_description_dir (GUPnPRootDevice *root_device)
 {
+        GUPnPRootDevicePrivate *priv;
+
         g_return_val_if_fail (GUPNP_IS_ROOT_DEVICE (root_device), NULL);
 
-        return root_device->priv->description_dir;
+        priv = gupnp_root_device_get_instance_private (root_device);
+
+        return priv->description_dir;
 }
 
 /**
@@ -718,7 +745,11 @@ gupnp_root_device_get_description_dir (GUPnPRootDevice *root_device)
 GSSDPResourceGroup *
 gupnp_root_device_get_ssdp_resource_group (GUPnPRootDevice *root_device)
 {
+        GUPnPRootDevicePrivate *priv;
+
         g_return_val_if_fail (GUPNP_IS_ROOT_DEVICE (root_device), NULL);
 
-        return root_device->priv->group;
+        priv = gupnp_root_device_get_instance_private (root_device);
+
+        return priv->group;
 }

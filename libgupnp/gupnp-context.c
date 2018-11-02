@@ -74,15 +74,6 @@ static void
 gupnp_context_initable_iface_init (gpointer g_iface,
                                    gpointer iface_data);
 
-
-G_DEFINE_TYPE_EXTENDED (GUPnPContext,
-                        gupnp_context,
-                        GSSDP_TYPE_CLIENT,
-                        0,
-                        G_IMPLEMENT_INTERFACE
-                                (G_TYPE_INITABLE,
-                                 gupnp_context_initable_iface_init));
-
 struct _GUPnPContextPrivate {
         guint        port;
 
@@ -98,6 +89,16 @@ struct _GUPnPContextPrivate {
 
         GUPnPAcl    *acl;
 };
+typedef struct _GUPnPContextPrivate GUPnPContextPrivate;
+
+G_DEFINE_TYPE_EXTENDED (GUPnPContext,
+                        gupnp_context,
+                        GSSDP_TYPE_CLIENT,
+                        0,
+                        G_ADD_PRIVATE(GUPnPContext)
+                        G_IMPLEMENT_INTERFACE
+                                (G_TYPE_INITABLE,
+                                 gupnp_context_initable_iface_init));
 
 enum {
         PROP_0,
@@ -162,11 +163,6 @@ gupnp_context_init (GUPnPContext *context)
 {
         char *server_id;
 
-        context->priv =
-                G_TYPE_INSTANCE_GET_PRIVATE (context,
-                                             GUPNP_TYPE_CONTEXT,
-                                             GUPnPContextPrivate);
-
         server_id = make_server_id ();
         gssdp_client_set_server_id (GSSDP_CLIENT (context), server_id);
         g_free (server_id);
@@ -180,6 +176,7 @@ gupnp_context_initable_init (GInitable     *initable,
         char *user_agent;
         GError *inner_error = NULL;
         GUPnPContext *context;
+        GUPnPContextPrivate *priv;
 
         if (!initable_parent_iface->init(initable,
                                          cancellable,
@@ -190,12 +187,13 @@ gupnp_context_initable_init (GInitable     *initable,
         }
 
         context = GUPNP_CONTEXT (initable);
+        priv = gupnp_context_get_instance_private (context);
 
-        context->priv->session = soup_session_new ();
+        priv->session = soup_session_new ();
 
         user_agent = g_strdup_printf ("%s GUPnP/" VERSION " DLNADOC/1.50",
                                       g_get_prgname ()? : "");
-        g_object_set (context->priv->session,
+        g_object_set (priv->session,
                       SOUP_SESSION_USER_AGENT,
                       user_agent,
                       NULL);
@@ -204,23 +202,23 @@ gupnp_context_initable_init (GInitable     *initable,
         if (g_getenv ("GUPNP_DEBUG")) {
                 SoupLogger *logger;
                 logger = soup_logger_new (SOUP_LOGGER_LOG_BODY, -1);
-                soup_session_add_feature (context->priv->session,
+                soup_session_add_feature (priv->session,
                                           SOUP_SESSION_FEATURE (logger));
         }
 
         /* Create the server already if the port is not null*/
-        if (context->priv->port != 0) {
+        if (priv->port != 0) {
                 gupnp_context_get_server (context);
 
-                if (context->priv->server == NULL) {
-                        g_object_unref (context->priv->session);
-                        context->priv->session = NULL;
+                if (priv->server == NULL) {
+                        g_object_unref (priv->session);
+                        priv->session = NULL;
 
                         g_set_error (error,
                                      GUPNP_SERVER_ERROR,
                                      GUPNP_SERVER_ERROR_OTHER,
                                      "Could not create HTTP server on port %d",
-                                     context->priv->port);
+                                     priv->port);
 
                         return FALSE;
                 }
@@ -245,15 +243,17 @@ gupnp_context_set_property (GObject      *object,
                             GParamSpec   *pspec)
 {
         GUPnPContext *context;
+        GUPnPContextPrivate *priv;
 
         context = GUPNP_CONTEXT (object);
+        priv = gupnp_context_get_instance_private (context);
 
         switch (property_id) {
         case PROP_PORT:
-                context->priv->port = g_value_get_uint (value);
+                priv->port = g_value_get_uint (value);
                 break;
         case PROP_SUBSCRIPTION_TIMEOUT:
-                context->priv->subscription_timeout = g_value_get_uint (value);
+                priv->subscription_timeout = g_value_get_uint (value);
                 break;
         case PROP_DEFAULT_LANGUAGE:
                 gupnp_context_set_default_language (context,
@@ -317,26 +317,28 @@ static void
 gupnp_context_dispose (GObject *object)
 {
         GUPnPContext *context;
+        GUPnPContextPrivate *priv;
         GObjectClass *object_class;
 
         context = GUPNP_CONTEXT (object);
+        priv = gupnp_context_get_instance_private (context);
 
-        if (context->priv->session) {
-                g_object_unref (context->priv->session);
-                context->priv->session = NULL;
+        if (priv->session) {
+                g_object_unref (priv->session);
+                priv->session = NULL;
         }
 
-        while (context->priv->host_path_datas) {
+        while (priv->host_path_datas) {
                 HostPathData *data;
 
-                data = (HostPathData *) context->priv->host_path_datas->data;
+                data = (HostPathData *) priv->host_path_datas->data;
 
                 gupnp_context_unhost_path (context, data->server_path);
         }
 
-        if (context->priv->server) {
-                g_object_unref (context->priv->server);
-                context->priv->server = NULL;
+        if (priv->server) {
+                g_object_unref (priv->server);
+                priv->server = NULL;
         }
 
         /* Call super */
@@ -348,14 +350,16 @@ static void
 gupnp_context_finalize (GObject *object)
 {
         GUPnPContext *context;
+        GUPnPContextPrivate *priv;
         GObjectClass *object_class;
 
         context = GUPNP_CONTEXT (object);
+        priv = gupnp_context_get_instance_private (context);
 
-        g_free (context->priv->default_language);
+        g_free (priv->default_language);
 
-        if (context->priv->server_uri)
-                soup_uri_free (context->priv->server_uri);
+        if (priv->server_uri)
+                soup_uri_free (priv->server_uri);
 
         /* Call super */
         object_class = G_OBJECT_CLASS (gupnp_context_parent_class);
@@ -412,8 +416,6 @@ gupnp_context_class_init (GUPnPContextClass *klass)
         object_class->dispose      = gupnp_context_dispose;
         object_class->finalize     = gupnp_context_finalize;
         object_class->constructor  = gupnp_context_constructor;
-
-        g_type_class_add_private (klass, sizeof (GUPnPContextPrivate));
 
         /**
          * GUPnPContext:port:
@@ -543,9 +545,13 @@ gupnp_context_class_init (GUPnPContextClass *klass)
 SoupSession *
 gupnp_context_get_session (GUPnPContext *context)
 {
+        GUPnPContextPrivate *priv;
+
         g_return_val_if_fail (GUPNP_IS_CONTEXT (context), NULL);
 
-        return context->priv->session;
+        priv = gupnp_context_get_instance_private (context);
+
+        return priv->session;
 }
 
 /*
@@ -573,27 +579,30 @@ default_server_handler (G_GNUC_UNUSED SoupServer        *server,
 SoupServer *
 gupnp_context_get_server (GUPnPContext *context)
 {
-        g_return_val_if_fail (GUPNP_IS_CONTEXT (context), NULL);
+        GUPnPContextPrivate *priv;
 
-        if (context->priv->server == NULL) {
+        g_return_val_if_fail (GUPNP_IS_CONTEXT (context), NULL);
+        priv = gupnp_context_get_instance_private (context);
+
+        if (priv->server == NULL) {
                 const char *ip = NULL;
                 guint port = 0;
                 GSocketAddress *addr = NULL;
                 GError *error = NULL;
 
-                context->priv->server = soup_server_new (NULL, NULL);
+                priv->server = soup_server_new (NULL, NULL);
 
-                soup_server_add_handler (context->priv->server,
+                soup_server_add_handler (priv->server,
                                          NULL,
                                          default_server_handler,
                                          context,
                                          NULL);
 
                 ip = gssdp_client_get_host_ip (GSSDP_CLIENT (context));
-                port = context->priv->port;
+                port = priv->port;
                 addr = g_inet_socket_address_new_from_string (ip, port);
 
-                if (! soup_server_listen (context->priv->server,
+                if (! soup_server_listen (priv->server,
                                           addr, (SoupServerListenOptions) 0, &error)) {
                         g_warning ("GUPnPContext: Unable to listen on %s:%u %s", ip, port, error->message);
                         g_error_free (error);
@@ -602,7 +611,7 @@ gupnp_context_get_server (GUPnPContext *context)
                 g_object_unref (addr);
         }
 
-        return context->priv->server;
+        return priv->server;
 }
 
 /*
@@ -625,11 +634,14 @@ make_server_uri (GUPnPContext *context)
 SoupURI *
 _gupnp_context_get_server_uri (GUPnPContext *context)
 {
-        if (context->priv->server_uri == NULL)
-                context->priv->server_uri = make_server_uri (context);
+        GUPnPContextPrivate *priv;
 
-        if (context->priv->server_uri)
-                return soup_uri_copy (context->priv->server_uri);
+        priv = gupnp_context_get_instance_private (context);
+        if (priv->server_uri == NULL)
+                priv->server_uri = make_server_uri (context);
+
+        if (priv->server_uri)
+                return soup_uri_copy (priv->server_uri);
 
         return NULL;
 }
@@ -670,12 +682,15 @@ gupnp_context_new (const char   *iface,
 guint
 gupnp_context_get_port (GUPnPContext *context)
 {
+        GUPnPContextPrivate *priv;
+
         g_return_val_if_fail (GUPNP_IS_CONTEXT (context), 0);
+        priv = gupnp_context_get_instance_private (context);
 
-        if (context->priv->server_uri == NULL)
-                context->priv->server_uri = make_server_uri (context);
+        if (priv->server_uri == NULL)
+                priv->server_uri = make_server_uri (context);
 
-        return soup_uri_get_port (context->priv->server_uri);
+        return soup_uri_get_port (priv->server_uri);
 }
 
 /**
@@ -691,9 +706,12 @@ void
 gupnp_context_set_subscription_timeout (GUPnPContext *context,
                                         guint         timeout)
 {
-        g_return_if_fail (GUPNP_IS_CONTEXT (context));
+        GUPnPContextPrivate *priv;
 
-        context->priv->subscription_timeout = timeout;
+        g_return_if_fail (GUPNP_IS_CONTEXT (context));
+        priv = gupnp_context_get_instance_private (context);
+
+        priv->subscription_timeout = timeout;
 
         g_object_notify (G_OBJECT (context), "subscription-timeout");
 }
@@ -710,9 +728,13 @@ gupnp_context_set_subscription_timeout (GUPnPContext *context,
 guint
 gupnp_context_get_subscription_timeout (GUPnPContext *context)
 {
+        GUPnPContextPrivate *priv;
+
         g_return_val_if_fail (GUPNP_IS_CONTEXT (context), 0);
 
-        return context->priv->subscription_timeout;
+        priv = gupnp_context_get_instance_private (context);
+
+        return priv->subscription_timeout;
 }
 
 static void
@@ -746,20 +768,22 @@ void
 gupnp_context_set_default_language (GUPnPContext *context,
                                     const char   *language)
 {
+        GUPnPContextPrivate *priv;
         char *old_language = NULL;
 
         g_return_if_fail (GUPNP_IS_CONTEXT (context));
         g_return_if_fail (language != NULL);
+        priv = gupnp_context_get_instance_private (context);
 
 
-        old_language = context->priv->default_language;
+        old_language = priv->default_language;
 
         if ((old_language != NULL) && (!strcmp (language, old_language)))
                 return;
 
-        context->priv->default_language = g_strdup (language);
+        priv->default_language = g_strdup (language);
 
-        g_list_foreach (context->priv->host_path_datas,
+        g_list_foreach (priv->host_path_datas,
                         (GFunc) host_path_data_set_language,
                         (gpointer) language);
 
@@ -780,9 +804,13 @@ gupnp_context_set_default_language (GUPnPContext *context,
 const char *
 gupnp_context_get_default_language (GUPnPContext *context)
 {
+        GUPnPContextPrivate *priv;
+
         g_return_val_if_fail (GUPNP_IS_CONTEXT (context), NULL);
 
-        return context->priv->default_language;
+        priv = gupnp_context_get_instance_private (context);
+
+        return priv->default_language;
 }
 
 /* Construct a local path from @requested path, removing the last slash
@@ -1218,16 +1246,19 @@ gupnp_context_host_path (GUPnPContext *context,
 {
         SoupServer *server;
         HostPathData *path_data;
+        GUPnPContextPrivate *priv;
 
         g_return_if_fail (GUPNP_IS_CONTEXT (context));
         g_return_if_fail (local_path != NULL);
         g_return_if_fail (server_path != NULL);
 
+        priv = gupnp_context_get_instance_private (context);
+
         server = gupnp_context_get_server (context);
 
         path_data = host_path_data_new (local_path,
                                         server_path,
-                                        context->priv->default_language,
+                                        priv->default_language,
                                         context);
 
         soup_server_add_handler (server,
@@ -1236,8 +1267,8 @@ gupnp_context_host_path (GUPnPContext *context,
                                  path_data,
                                  NULL);
 
-        context->priv->host_path_datas =
-                g_list_append (context->priv->host_path_datas,
+        priv->host_path_datas =
+                g_list_append (priv->host_path_datas,
                                path_data);
 }
 
@@ -1269,6 +1300,7 @@ gupnp_context_host_path_for_agent (GUPnPContext *context,
                                    const char   *server_path,
                                    GRegex       *user_agent)
 {
+        GUPnPContextPrivate *priv;
         GList *node;
 
         g_return_val_if_fail (GUPNP_IS_CONTEXT (context), FALSE);
@@ -1276,7 +1308,8 @@ gupnp_context_host_path_for_agent (GUPnPContext *context,
         g_return_val_if_fail (server_path != NULL, FALSE);
         g_return_val_if_fail (user_agent != NULL, FALSE);
 
-        node = g_list_find_custom (context->priv->host_path_datas,
+        priv = gupnp_context_get_instance_private (context);
+        node = g_list_find_custom (priv->host_path_datas,
                                    server_path,
                                    (GCompareFunc) path_compare_func);
         if (node != NULL) {
@@ -1307,21 +1340,23 @@ gupnp_context_unhost_path (GUPnPContext *context,
 {
         SoupServer *server;
         HostPathData *path_data;
+        GUPnPContextPrivate *priv;
         GList *node;
 
         g_return_if_fail (GUPNP_IS_CONTEXT (context));
         g_return_if_fail (server_path != NULL);
 
+        priv = gupnp_context_get_instance_private (context);
         server = gupnp_context_get_server (context);
 
-        node = g_list_find_custom (context->priv->host_path_datas,
+        node = g_list_find_custom (priv->host_path_datas,
                                    server_path,
                                    (GCompareFunc) path_compare_func);
         g_return_if_fail (node != NULL);
 
         path_data = (HostPathData *) node->data;
-        context->priv->host_path_datas = g_list_delete_link (
-                        context->priv->host_path_datas,
+        priv->host_path_datas = g_list_delete_link (
+                        priv->host_path_datas,
                         node);
 
         soup_server_remove_handler (server, server_path);
@@ -1340,9 +1375,12 @@ gupnp_context_unhost_path (GUPnPContext *context,
 GUPnPAcl *
 gupnp_context_get_acl (GUPnPContext *context)
 {
+        GUPnPContextPrivate *priv;
+
         g_return_val_if_fail (GUPNP_IS_CONTEXT (context), NULL);
 
-        return context->priv->acl;
+        priv = gupnp_context_get_instance_private (context);
+        return priv->acl;
 }
 
 /**
@@ -1356,15 +1394,18 @@ gupnp_context_get_acl (GUPnPContext *context)
 void
 gupnp_context_set_acl (GUPnPContext *context, GUPnPAcl *acl)
 {
+        GUPnPContextPrivate *priv;
+
         g_return_if_fail (GUPNP_IS_CONTEXT (context));
 
-        if (context->priv->acl != NULL) {
-                g_object_unref (context->priv->acl);
-                context->priv->acl = NULL;
+        priv = gupnp_context_get_instance_private (context);
+        if (priv->acl != NULL) {
+                g_object_unref (priv->acl);
+                priv->acl = NULL;
         }
 
         if (acl != NULL)
-                context->priv->acl = g_object_ref (acl);
+                priv->acl = g_object_ref (acl);
 
         g_object_notify (G_OBJECT (context), "acl");
 }
@@ -1404,7 +1445,9 @@ gupnp_acl_server_handler (SoupServer *server,
         const char *agent;
         const char *host;
         GUPnPDevice *device = NULL;
+        GUPnPContextPrivate *priv;
 
+        priv = gupnp_context_get_instance_private (handler->context);
         host = soup_client_context_get_host (client);
 
         if (handler->service) {
@@ -1425,9 +1468,9 @@ gupnp_acl_server_handler (SoupServer *server,
                                  host);
         }
 
-        if (handler->context->priv->acl != NULL) {
-                if (gupnp_acl_can_sync (handler->context->priv->acl)) {
-                        if (!gupnp_acl_is_allowed (handler->context->priv->acl,
+        if (priv->acl != NULL) {
+                if (gupnp_acl_can_sync (priv->acl)) {
+                        if (!gupnp_acl_is_allowed (priv->acl,
                                                    device,
                                                    handler->service,
                                                    path,
@@ -1443,7 +1486,7 @@ gupnp_acl_server_handler (SoupServer *server,
                         data = acl_async_handler_new (server, msg, path, query, client, handler);
 
                         soup_server_pause_message (server, msg);
-                        gupnp_acl_is_allowed_async (handler->context->priv->acl,
+                        gupnp_acl_is_allowed_async (priv->acl,
                                                     device,
                                                     handler->service,
                                                     path,
@@ -1483,18 +1526,21 @@ gupnp_context_add_server_handler (GUPnPContext *context,
                                   gpointer user_data,
                                   GDestroyNotify destroy)
 {
+        GUPnPContextPrivate *priv;
+
         g_return_if_fail (GUPNP_IS_CONTEXT (context));
 
+        priv = gupnp_context_get_instance_private (context);
         if (use_acl) {
                 AclServerHandler *handler;
                 handler = acl_server_handler_new (NULL, context, callback, user_data, destroy);
-                soup_server_add_handler (context->priv->server,
+                soup_server_add_handler (priv->server,
                                          path,
                                          gupnp_acl_server_handler,
                                          handler,
                                          (GDestroyNotify) acl_server_handler_free);
         } else
-                soup_server_add_handler (context->priv->server,
+                soup_server_add_handler (priv->server,
                                          path,
                                          callback,
                                          user_data,
@@ -1506,9 +1552,12 @@ _gupnp_context_add_server_handler_with_data (GUPnPContext *context,
                                              const char *path,
                                              AclServerHandler *handler)
 {
+        GUPnPContextPrivate *priv;
+
         g_return_if_fail (GUPNP_IS_CONTEXT (context));
 
-        soup_server_add_handler (context->priv->server,
+        priv = gupnp_context_get_instance_private (context);
+        soup_server_add_handler (priv->server,
                                  path,
                                  gupnp_acl_server_handler,
                                  handler,
@@ -1527,7 +1576,10 @@ _gupnp_context_add_server_handler_with_data (GUPnPContext *context,
 void
 gupnp_context_remove_server_handler (GUPnPContext *context, const char *path)
 {
+        GUPnPContextPrivate *priv;
+
         g_return_if_fail (GUPNP_IS_CONTEXT (context));
 
-        soup_server_remove_handler (context->priv->server, path);
+        priv = gupnp_context_get_instance_private (context);
+        soup_server_remove_handler (priv->server, path);
 }

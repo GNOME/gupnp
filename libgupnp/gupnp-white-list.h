@@ -27,45 +27,14 @@
 
 G_BEGIN_DECLS
 
-GType
-gupnp_white_list_get_type (void) G_GNUC_CONST;
-
 #define GUPNP_TYPE_WHITE_LIST \
                 (gupnp_white_list_get_type ())
-#define GUPNP_WHITE_LIST(obj) \
-                (G_TYPE_CHECK_INSTANCE_CAST ((obj), \
-                 GUPNP_TYPE_WHITE_LIST, \
-                 GUPnPWhiteList))
-#define GUPNP_WHITE_LIST_CLASS(obj) \
-                (G_TYPE_CHECK_CLASS_CAST ((obj), \
-                 GUPNP_TYPE_WHITE_LIST, \
-                 GUPnPWhiteListClass))
-#define GUPNP_IS_WHITE_LIST(obj) \
-                (G_TYPE_CHECK_INSTANCE_TYPE ((obj), \
-                 GUPNP_TYPE_WHITE_LIST))
-#define GUPNP_IS_WHITE_LIST_CLASS(obj) \
-                (G_TYPE_CHECK_CLASS_TYPE ((obj), \
-                 GUPNP_TYPE_WHITE_LIST))
-#define GUPNP_WHITE_LIST_GET_CLASS(obj) \
-                (G_TYPE_INSTANCE_GET_CLASS ((obj), \
-                 GUPNP_TYPE_WHITE_LIST, \
-                 GUPnPWhiteListClass))
 
-typedef struct _GUPnPWhiteListPrivate GUPnPWhiteListPrivate;
-typedef struct _GUPnPWhiteList GUPnPWhiteList;
-typedef struct _GUPnPWhiteListClass GUPnPWhiteListClass;
-
-/**
- * GUPnPWhiteList:
- *
- * This struct contains private data only, and should be accessed using the
- * functions below.
- */
-struct _GUPnPWhiteList {
-        GObject parent;
-
-        GUPnPWhiteListPrivate *priv;
-};
+G_DECLARE_DERIVABLE_TYPE (GUPnPWhiteList,
+                          gupnp_white_list,
+                          GUPNP,
+                          WHITE_LIST,
+                          GObject)
 
 struct _GUPnPWhiteListClass {
         GObjectClass parent_class;

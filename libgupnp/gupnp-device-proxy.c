@@ -38,6 +38,7 @@ G_DEFINE_TYPE (GUPnPDeviceProxy,
                gupnp_device_proxy,
                GUPNP_TYPE_DEVICE_INFO);
 
+
 static GUPnPDeviceInfo *
 gupnp_device_proxy_get_device (GUPnPDeviceInfo *info,
                                xmlNode         *element)

@@ -33,45 +33,15 @@
 
 G_BEGIN_DECLS
 
-GType
-gupnp_root_device_get_type (void) G_GNUC_CONST;
-
 #define GUPNP_TYPE_ROOT_DEVICE \
                 (gupnp_root_device_get_type ())
-#define GUPNP_ROOT_DEVICE(obj) \
-                (G_TYPE_CHECK_INSTANCE_CAST ((obj), \
-                 GUPNP_TYPE_ROOT_DEVICE, \
-                 GUPnPRootDevice))
-#define GUPNP_ROOT_DEVICE_CLASS(obj) \
-                (G_TYPE_CHECK_CLASS_CAST ((obj), \
-                 GUPNP_TYPE_ROOT_DEVICE, \
-                 GUPnPRootDeviceClass))
-#define GUPNP_IS_ROOT_DEVICE(obj) \
-                (G_TYPE_CHECK_INSTANCE_TYPE ((obj), \
-                 GUPNP_TYPE_ROOT_DEVICE))
-#define GUPNP_IS_ROOT_DEVICE_CLASS(obj) \
-                (G_TYPE_CHECK_CLASS_TYPE ((obj), \
-                 GUPNP_TYPE_ROOT_DEVICE))
-#define GUPNP_ROOT_DEVICE_GET_CLASS(obj) \
-                (G_TYPE_INSTANCE_GET_CLASS ((obj), \
-                 GUPNP_TYPE_ROOT_DEVICE, \
-                 GUPnPRootDeviceClass))
 
-typedef struct _GUPnPRootDevicePrivate GUPnPRootDevicePrivate;
-typedef struct _GUPnPRootDevice GUPnPRootDevice;
-typedef struct _GUPnPRootDeviceClass GUPnPRootDeviceClass;
+G_DECLARE_DERIVABLE_TYPE (GUPnPRootDevice,
+                          gupnp_root_device,
+                          GUPNP,
+                          ROOT_DEVICE,
+                          GUPnPDevice)
 
-/**
- * GUPnPRootDevice:
- *
- * This struct contains private data only, and should be accessed using the
- * functions below.
- */
-struct _GUPnPRootDevice {
-        GUPnPDevice parent;
-
-        GUPnPRootDevicePrivate *priv;
-};
 
 struct _GUPnPRootDeviceClass {
         GUPnPDeviceClass parent_class;

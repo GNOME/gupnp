@@ -57,10 +57,6 @@
 #include "gupnp-connman-manager.h"
 #endif
 
-G_DEFINE_ABSTRACT_TYPE (GUPnPContextManager,
-                        gupnp_context_manager,
-                        G_TYPE_OBJECT);
-
 struct _GUPnPContextManagerPrivate {
         guint              port;
 
@@ -71,6 +67,11 @@ struct _GUPnPContextManagerPrivate {
 
         GUPnPWhiteList *white_list;
 };
+typedef struct _GUPnPContextManagerPrivate GUPnPContextManagerPrivate;
+
+G_DEFINE_ABSTRACT_TYPE_WITH_PRIVATE (GUPnPContextManager,
+                                     gupnp_context_manager,
+                                     G_TYPE_OBJECT);
 
 enum {
         PROP_0,
@@ -92,8 +93,11 @@ on_context_available (GUPnPContextManager    *manager,
                       G_GNUC_UNUSED gpointer *user_data)
 {
         GUPnPWhiteList *white_list;
+        GUPnPContextManagerPrivate *priv;
 
-        white_list = manager->priv->white_list;
+        priv = gupnp_context_manager_get_instance_private (manager);
+
+        white_list = priv->white_list;
 
         /* Try to catch the notification, only if the white list
          * is enabled, not empty and the context doesn't match */
@@ -108,9 +112,8 @@ on_context_available (GUPnPContextManager    *manager,
                 g_object_set (context, "active", FALSE, NULL);
 
                 /* Save it in case we need to re-enable it */
-                manager->priv->blacklisted = g_list_prepend (
-                                                manager->priv->blacklisted,
-                                                g_object_ref (context));
+                priv->blacklisted = g_list_prepend (priv->blacklisted,
+                                                    g_object_ref (context));
         }
 }
 
@@ -121,12 +124,15 @@ on_context_unavailable (GUPnPContextManager    *manager,
 {
         GList *l;
         GList *black;
+        GUPnPContextManagerPrivate *priv;
+
+        priv = gupnp_context_manager_get_instance_private (manager);
 
         /* Make sure we don't send anything on now unavailable network */
         g_object_set (context, "active", FALSE, NULL);
 
         /* Unref all associated objects */
-        l = manager->priv->objects;
+        l = priv->objects;
 
         while (l) {
                 GUPnPContext *obj_context = NULL;
@@ -150,22 +156,22 @@ on_context_unavailable (GUPnPContextManager    *manager,
 
                         g_object_unref (l->data);
 
-                        manager->priv->objects =
-                                g_list_delete_link (manager->priv->objects, l);
+                        priv->objects = g_list_delete_link (priv->objects,
+                                                            l);
                         l = next;
                 } else {
                         l = l->next;
                 }
         }
 
-        black = g_list_find (manager->priv->blacklisted, context);
+        black = g_list_find (priv->blacklisted, context);
 
         if (black != NULL) {
                 g_signal_stop_emission_by_name (manager, "context-unavailable");
 
                 g_object_unref (black->data);
-                manager->priv->blacklisted =
-                        g_list_delete_link (manager->priv->blacklisted, black);
+                priv->blacklisted = g_list_delete_link (priv->blacklisted,
+                                                        black);
         }
 }
 
@@ -178,9 +184,12 @@ gupnp_context_manager_filter_context (GUPnPWhiteList *white_list,
         GList *obj;
         GList *blk;
         gboolean match;
+        GUPnPContextManagerPrivate *priv;
 
-        obj = manager->priv->objects;
-        blk = manager->priv->blacklisted;
+        priv = gupnp_context_manager_get_instance_private (manager);
+
+        obj = priv->objects;
+        blk = priv->blacklisted;
 
         while (obj != NULL) {
                 /* If the white list is empty, treat it as disabled */
@@ -235,9 +244,8 @@ gupnp_context_manager_filter_context (GUPnPWhiteList *white_list,
                 g_signal_emit_by_name (manager, "context-available", blk->data);
 
                 g_object_unref (blk->data);
-                manager->priv->blacklisted = g_list_delete_link (
-                                                manager->priv->blacklisted,
-                                                blk);
+                priv->blacklisted = g_list_delete_link (priv->blacklisted,
+                                                        blk);
                 blk = next;
         }
 }
@@ -281,17 +289,16 @@ on_white_list_enabled_cb (GUPnPWhiteList *white_list,
 static void
 gupnp_context_manager_init (GUPnPContextManager *manager)
 {
-        manager->priv =
-                G_TYPE_INSTANCE_GET_PRIVATE (manager,
-                                             GUPNP_TYPE_CONTEXT_MANAGER,
-                                             GUPnPContextManagerPrivate);
+        GUPnPContextManagerPrivate *priv;
 
-        manager->priv->white_list = gupnp_white_list_new ();
+        priv = gupnp_context_manager_get_instance_private (manager);
 
-        g_signal_connect_after (manager->priv->white_list, "notify::entries",
+        priv->white_list = gupnp_white_list_new ();
+
+        g_signal_connect_after (priv->white_list, "notify::entries",
                                 G_CALLBACK (on_white_list_change_cb), manager);
 
-        g_signal_connect_after (manager->priv->white_list, "notify::enabled",
+        g_signal_connect_after (priv->white_list, "notify::enabled",
                                 G_CALLBACK (on_white_list_enabled_cb), manager);
 }
 
@@ -305,7 +312,7 @@ gupnp_context_manager_set_property (GObject      *object,
         GUPnPContextManagerPrivate *priv;
 
         manager = GUPNP_CONTEXT_MANAGER (object);
-        priv = manager->priv;
+        priv = gupnp_context_manager_get_instance_private (manager);
 
         switch (property_id) {
         case PROP_PORT:
@@ -324,15 +331,17 @@ gupnp_context_manager_get_property (GObject    *object,
                                     GParamSpec *pspec)
 {
         GUPnPContextManager *manager;
+        GUPnPContextManagerPrivate *priv;
 
         manager = GUPNP_CONTEXT_MANAGER (object);
+        priv = gupnp_context_manager_get_instance_private (manager);
 
         switch (property_id) {
         case PROP_PORT:
-                g_value_set_uint (value, manager->priv->port);
+                g_value_set_uint (value, priv->port);
                 break;
         case PROP_WHITE_LIST:
-                g_value_set_object (value, manager->priv->white_list);
+                g_value_set_object (value, priv->white_list);
                 break;
         default:
                 G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -346,9 +355,12 @@ gupnp_context_manager_dispose (GObject *object)
         GUPnPContextManager *manager;
         GUPnPWhiteList *wl;
         GObjectClass *object_class;
+        GUPnPContextManagerPrivate *priv;
 
         manager = GUPNP_CONTEXT_MANAGER (object);
-        wl = manager->priv->white_list;
+        priv = gupnp_context_manager_get_instance_private (manager);
+
+        wl = priv->white_list;
 
         g_signal_handlers_disconnect_by_func (wl,
                                               on_white_list_enabled_cb,
@@ -358,14 +370,14 @@ gupnp_context_manager_dispose (GObject *object)
                                               on_white_list_change_cb,
                                               NULL);
 
-        g_list_free_full (manager->priv->objects, g_object_unref);
-        manager->priv->objects = NULL;
-        g_list_free_full (manager->priv->blacklisted, g_object_unref);
-        manager->priv->blacklisted = NULL;
+        g_list_free_full (priv->objects, g_object_unref);
+        priv->objects = NULL;
+        g_list_free_full (priv->blacklisted, g_object_unref);
+        priv->blacklisted = NULL;
 
         if (wl) {
                 g_object_unref (wl);
-                manager->priv->white_list = NULL;
+                priv->white_list = NULL;
         }
 
         /* Call super */
@@ -383,8 +395,6 @@ gupnp_context_manager_class_init (GUPnPContextManagerClass *klass)
         object_class->set_property = gupnp_context_manager_set_property;
         object_class->get_property = gupnp_context_manager_get_property;
         object_class->dispose      = gupnp_context_manager_dispose;
-
-        g_type_class_add_private (klass, sizeof (GUPnPContextManagerPrivate));
 
         /**
          * GUPnPContextManager:port:
@@ -547,10 +557,12 @@ void
 gupnp_context_manager_rescan_control_points (GUPnPContextManager *manager)
 {
         GList *l;
+        GUPnPContextManagerPrivate *priv;
 
         g_return_if_fail (GUPNP_IS_CONTEXT_MANAGER (manager));
 
-        l = manager->priv->objects;
+        priv = gupnp_context_manager_get_instance_private (manager);
+        l = priv->objects;
 
         while (l) {
                 if (GUPNP_IS_CONTROL_POINT (l->data)) {
@@ -580,10 +592,13 @@ void
 gupnp_context_manager_manage_control_point (GUPnPContextManager *manager,
                                             GUPnPControlPoint   *control_point)
 {
+        GUPnPContextManagerPrivate *priv;
+
         g_return_if_fail (GUPNP_IS_CONTEXT_MANAGER (manager));
         g_return_if_fail (GUPNP_IS_CONTROL_POINT (control_point));
 
-        manager->priv->objects = g_list_append (manager->priv->objects,
+        priv = gupnp_context_manager_get_instance_private (manager);
+        priv->objects = g_list_append (priv->objects,
                                                 g_object_ref (control_point));
 }
 
@@ -604,11 +619,14 @@ void
 gupnp_context_manager_manage_root_device (GUPnPContextManager *manager,
                                           GUPnPRootDevice     *root_device)
 {
+        GUPnPContextManagerPrivate *priv;
+
         g_return_if_fail (GUPNP_IS_CONTEXT_MANAGER (manager));
         g_return_if_fail (GUPNP_IS_ROOT_DEVICE (root_device));
 
-        manager->priv->objects = g_list_append (manager->priv->objects,
-                                                g_object_ref (root_device));
+        priv = gupnp_context_manager_get_instance_private (manager);
+        priv->objects = g_list_append (priv->objects,
+                                       g_object_ref (root_device));
 }
 
 /**
@@ -623,9 +641,13 @@ gupnp_context_manager_manage_root_device (GUPnPContextManager *manager,
 guint
 gupnp_context_manager_get_port (GUPnPContextManager *manager)
 {
+        GUPnPContextManagerPrivate *priv;
+
         g_return_val_if_fail (GUPNP_IS_CONTEXT_MANAGER (manager), 0);
 
-        return manager->priv->port;
+        priv = gupnp_context_manager_get_instance_private (manager);
+
+        return priv->port;
 }
 
 /**
@@ -640,7 +662,11 @@ gupnp_context_manager_get_port (GUPnPContextManager *manager)
 GUPnPWhiteList *
 gupnp_context_manager_get_white_list (GUPnPContextManager *manager)
 {
+        GUPnPContextManagerPrivate *priv;
+
         g_return_val_if_fail (GUPNP_IS_CONTEXT_MANAGER (manager), NULL);
 
-        return manager->priv->white_list;
+        priv = gupnp_context_manager_get_instance_private (manager);
+
+        return priv->white_list;
 }

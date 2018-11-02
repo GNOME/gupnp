@@ -31,45 +31,14 @@
 
 G_BEGIN_DECLS
 
-GType
-gupnp_control_point_get_type (void) G_GNUC_CONST;
-
 #define GUPNP_TYPE_CONTROL_POINT \
                 (gupnp_control_point_get_type ())
-#define GUPNP_CONTROL_POINT(obj) \
-                (G_TYPE_CHECK_INSTANCE_CAST ((obj), \
-                 GUPNP_TYPE_CONTROL_POINT, \
-                 GUPnPControlPoint))
-#define GUPNP_CONTROL_POINT_CLASS(obj) \
-                (G_TYPE_CHECK_CLASS_CAST ((obj), \
-                 GUPNP_TYPE_CONTROL_POINT, \
-                 GUPnPControlPointClass))
-#define GUPNP_IS_CONTROL_POINT(obj) \
-                (G_TYPE_CHECK_INSTANCE_TYPE ((obj), \
-                 GUPNP_TYPE_CONTROL_POINT))
-#define GUPNP_IS_CONTROL_POINT_CLASS(obj) \
-                (G_TYPE_CHECK_CLASS_TYPE ((obj), \
-                 GUPNP_TYPE_CONTROL_POINT))
-#define GUPNP_CONTROL_POINT_GET_CLASS(obj) \
-                (G_TYPE_INSTANCE_GET_CLASS ((obj), \
-                 GUPNP_TYPE_CONTROL_POINT, \
-                 GUPnPControlPointClass))
 
-typedef struct _GUPnPControlPointPrivate GUPnPControlPointPrivate;
-typedef struct _GUPnPControlPoint GUPnPControlPoint;
-typedef struct _GUPnPControlPointClass GUPnPControlPointClass;
-
-/**
- * GUPnPControlPoint:
- *
- * This struct contains private data only, and should be accessed using the
- * functions below.
- */
-struct _GUPnPControlPoint {
-        GSSDPResourceBrowser parent;
-
-        GUPnPControlPointPrivate *priv;
-};
+G_DECLARE_DERIVABLE_TYPE (GUPnPControlPoint,
+                          gupnp_control_point,
+                          GUPNP,
+                          CONTROL_POINT,
+                          GSSDPResourceBrowser)
 
 struct _GUPnPControlPointClass {
         GSSDPResourceBrowserClass parent_class;

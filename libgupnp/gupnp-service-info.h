@@ -31,45 +31,14 @@
 
 G_BEGIN_DECLS
 
-GType
-gupnp_service_info_get_type (void) G_GNUC_CONST;
-
 #define GUPNP_TYPE_SERVICE_INFO \
                 (gupnp_service_info_get_type ())
-#define GUPNP_SERVICE_INFO(obj) \
-                (G_TYPE_CHECK_INSTANCE_CAST ((obj), \
-                 GUPNP_TYPE_SERVICE_INFO, \
-                 GUPnPServiceInfo))
-#define GUPNP_SERVICE_INFO_CLASS(obj) \
-                (G_TYPE_CHECK_CLASS_CAST ((obj), \
-                 GUPNP_TYPE_SERVICE_INFO, \
-                 GUPnPServiceInfoClass))
-#define GUPNP_IS_SERVICE_INFO(obj) \
-                (G_TYPE_CHECK_INSTANCE_TYPE ((obj), \
-                 GUPNP_TYPE_SERVICE_INFO))
-#define GUPNP_IS_SERVICE_INFO_CLASS(obj) \
-                (G_TYPE_CHECK_CLASS_TYPE ((obj), \
-                 GUPNP_TYPE_SERVICE_INFO))
-#define GUPNP_SERVICE_INFO_GET_CLASS(obj) \
-                (G_TYPE_INSTANCE_GET_CLASS ((obj), \
-                 GUPNP_TYPE_SERVICE_INFO, \
-                 GUPnPServiceInfoClass))
 
-typedef struct _GUPnPServiceInfoPrivate GUPnPServiceInfoPrivate;
-typedef struct _GUPnPServiceInfo GUPnPServiceInfo;
-typedef struct _GUPnPServiceInfoClass GUPnPServiceInfoClass;
-
-/**
- * GUPnPServiceInfo:
- *
- * This struct contains private data only, and should be accessed using the
- * functions below.
- */
-struct _GUPnPServiceInfo {
-        GObject parent;
-
-        GUPnPServiceInfoPrivate *priv;
-};
+G_DECLARE_DERIVABLE_TYPE (GUPnPServiceInfo,
+                          gupnp_service_info,
+                          GUPNP,
+                          SERVICE_INFO,
+                          GObject)
 
 struct _GUPnPServiceInfoClass {
         GObjectClass parent_class;

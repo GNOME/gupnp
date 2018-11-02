@@ -47,9 +47,6 @@
 
 #define SUBSCRIPTION_TIMEOUT 300 /* DLNA (7.2.22.1) enforced */
 
-G_DEFINE_TYPE (GUPnPService,
-               gupnp_service,
-               GUPNP_TYPE_SERVICE_INFO);
 
 struct _GUPnPServicePrivate {
         GUPnPRootDevice           *root_device;
@@ -70,6 +67,11 @@ struct _GUPnPServicePrivate {
 
         GList                     *pending_autoconnect;
 };
+typedef struct _GUPnPServicePrivate GUPnPServicePrivate;
+
+G_DEFINE_TYPE_WITH_PRIVATE (GUPnPService,
+                            gupnp_service,
+                            GUPNP_TYPE_SERVICE_INFO);
 
 enum {
         PROP_0,
@@ -120,31 +122,45 @@ subscription_data_can_delete (SubscriptionData *data) {
     return data->initial_state_sent && data->to_delete;
 }
 
+
 static void
 send_initial_state (SubscriptionData *data);
+
+static void
+gupnp_service_remove_subscription (GUPnPService *service,
+                                   const char *sid)
+{
+        GUPnPServicePrivate *priv;
+
+        priv = gupnp_service_get_instance_private (service);
+
+        g_hash_table_remove (priv->subscriptions, sid);
+}
 
 static SoupSession *
 gupnp_service_get_session (GUPnPService *service)
 {
-        if (! service->priv->session) {
+        GUPnPServicePrivate *priv;
+
+        priv = gupnp_service_get_instance_private (service);
+        if (!priv->session) {
                 /* Create a dedicated session for this service to
                  * ensure that notifications are sent in the proper
                  * order. The session from GUPnPContext may use
                  * multiple connections.
                  */
-                service->priv->session = soup_session_new_with_options (SOUP_SESSION_MAX_CONNS_PER_HOST, 1,
+                priv->session = soup_session_new_with_options (SOUP_SESSION_MAX_CONNS_PER_HOST, 1,
                                                                         NULL);
 
                 if (g_getenv ("GUPNP_DEBUG")) {
                         SoupLogger *logger;
                         logger = soup_logger_new (SOUP_LOGGER_LOG_BODY, -1);
-                        soup_session_add_feature (
-                                        service->priv->session,
-                                        SOUP_SESSION_FEATURE (logger));
+                        soup_session_add_feature (priv->session,
+                                                  SOUP_SESSION_FEATURE (logger));
                 }
         }
 
-        return service->priv->session;
+        return priv->session;
 }
 
 static void
@@ -809,17 +825,17 @@ gupnp_service_action_get_message (GUPnPServiceAction *action)
 static void
 gupnp_service_init (GUPnPService *service)
 {
-        service->priv = G_TYPE_INSTANCE_GET_PRIVATE (service,
-                                                     GUPNP_TYPE_SERVICE,
-                                                     GUPnPServicePrivate);
+        GUPnPServicePrivate *priv;
 
-        service->priv->subscriptions =
+        priv = gupnp_service_get_instance_private (service);
+
+        priv->subscriptions =
                 g_hash_table_new_full (g_str_hash,
                                        g_str_equal,
                                        NULL,
                                        (GDestroyNotify) subscription_data_free);
 
-        service->priv->notify_queue = g_queue_new ();
+        priv->notify_queue = g_queue_new ();
 }
 
 /* Generate a new action response node for @action_name */
@@ -1120,7 +1136,7 @@ generate_sid (void)
 
 
         uuid = guul_get_uuid ();
-        ret = g_strdup_printf ("uuid:%s", uuid);
+        ret = g_strconcat ("uuid:", uuid, NULL);
         g_free (uuid);
 
         return ret;
@@ -1134,7 +1150,7 @@ subscription_timeout (gpointer user_data)
 
         data = user_data;
 
-        g_hash_table_remove (data->service->priv->subscriptions, data->sid);
+        gupnp_service_remove_subscription (data->service, data->sid);
 
         return FALSE;
 }
@@ -1145,11 +1161,14 @@ send_initial_state (SubscriptionData *data)
         GQueue *queue;
         char *mem;
         GList *l;
+        GUPnPServicePrivate *priv;
+
+        priv = gupnp_service_get_instance_private (data->service);
 
         /* Send initial event message */
         queue = g_queue_new ();
 
-        for (l = data->service->priv->state_variables; l; l = l->next) {
+        for (l = priv->state_variables; l; l = l->next) {
                 NotifyData *ndata;
 
                 ndata = g_slice_new0 (NotifyData);
@@ -1189,6 +1208,9 @@ subscribe (GUPnPService *service,
 {
         SubscriptionData *data;
         char *start, *end, *uri;
+        GUPnPServicePrivate *priv;
+
+        priv = gupnp_service_get_instance_private (service);
 
         data = g_slice_new0 (SubscriptionData);
 
@@ -1236,7 +1258,7 @@ subscribe (GUPnPService *service,
         g_source_unref (data->timeout_src);
 
         /* Add to hash */
-        g_hash_table_insert (service->priv->subscriptions,
+        g_hash_table_insert (priv->subscriptions,
                              data->sid,
                              data);
 
@@ -1253,8 +1275,11 @@ resubscribe (GUPnPService *service,
              const char   *sid)
 {
         SubscriptionData *data;
+        GUPnPServicePrivate *priv;
 
-        data = g_hash_table_lookup (service->priv->subscriptions, sid);
+        priv = gupnp_service_get_instance_private (service);
+
+        data = g_hash_table_lookup (priv->subscriptions, sid);
         if (!data) {
                 soup_message_set_status (msg, SOUP_STATUS_PRECONDITION_FAILED);
 
@@ -1289,11 +1314,14 @@ unsubscribe (GUPnPService *service,
              const char   *sid)
 {
         SubscriptionData *data;
+        GUPnPServicePrivate *priv;
 
-        data = g_hash_table_lookup (service->priv->subscriptions, sid);
+        priv = gupnp_service_get_instance_private (service);
+
+        data = g_hash_table_lookup (priv->subscriptions, sid);
         if (data) {
                 if (data->initial_state_sent)
-                        g_hash_table_remove (service->priv->subscriptions,
+                        g_hash_table_remove (priv->subscriptions,
                                              sid);
                 else
                         data->to_delete = TRUE;
@@ -1386,27 +1414,30 @@ got_introspection (GUPnPServiceInfo          *info,
         const GList *state_variables, *l;
         GHashTableIter iter;
         gpointer data;
+        GUPnPServicePrivate *priv;
+
+        priv = gupnp_service_get_instance_private (service);
 
         if (introspection) {
                 /* Handle pending auto-connects */
-                service->priv->introspection  = g_object_ref (introspection);
+                priv->introspection  = g_object_ref (introspection);
 
                 /* _autoconnect() just calls prepend() so we reverse the list
                  * here.
                  */
-                service->priv->pending_autoconnect =
-                            g_list_reverse (service->priv->pending_autoconnect);
+                priv->pending_autoconnect =
+                            g_list_reverse (priv->pending_autoconnect);
 
                 /* Re-call _autoconnect(). This will not fill
                  * pending_autoconnect because we set the introspection member
                  * variable before */
-                for (l = service->priv->pending_autoconnect; l; l = l->next)
+                for (l = priv->pending_autoconnect; l; l = l->next)
                         gupnp_service_signals_autoconnect (service,
                                                            l->data,
                                                            NULL);
 
-                g_list_free (service->priv->pending_autoconnect);
-                service->priv->pending_autoconnect = NULL;
+                g_list_free (priv->pending_autoconnect);
+                priv->pending_autoconnect = NULL;
 
                 state_variables =
                         gupnp_service_introspection_list_state_variables
@@ -1420,8 +1451,8 @@ got_introspection (GUPnPServiceInfo          *info,
                         if (!variable->send_events)
                                 continue;
 
-                        service->priv->state_variables =
-                                g_list_prepend (service->priv->state_variables,
+                        priv->state_variables =
+                                g_list_prepend (priv->state_variables,
                                                 g_strdup (variable->name));
                 }
 
@@ -1431,7 +1462,7 @@ got_introspection (GUPnPServiceInfo          *info,
                            "The initial event message will not be sent.",
                            error ? error->message : "No error");
 
-        g_hash_table_iter_init (&iter, service->priv->subscriptions);
+        g_hash_table_iter_init (&iter, priv->subscriptions);
 
         while (g_hash_table_iter_next (&iter, NULL, &data)) {
                 send_initial_state ((SubscriptionData *) data);
@@ -1517,12 +1548,14 @@ notify_available_cb (GObject                  *object,
                      gpointer                  user_data)
 {
         GUPnPService *service;
+        GUPnPServicePrivate *priv;
 
         service = GUPNP_SERVICE (user_data);
+        priv = gupnp_service_get_instance_private (service);
 
         if (!gupnp_root_device_get_available (GUPNP_ROOT_DEVICE (object))) {
                 /* Root device now unavailable: Purge subscriptions */
-                g_hash_table_remove_all (service->priv->subscriptions);
+                g_hash_table_remove_all (priv->subscriptions);
         }
 }
 
@@ -1533,22 +1566,23 @@ gupnp_service_set_property (GObject      *object,
                             GParamSpec   *pspec)
 {
         GUPnPService *service;
+        GUPnPServicePrivate *priv;
 
         service = GUPNP_SERVICE (object);
+        priv = gupnp_service_get_instance_private (service);
 
         switch (property_id) {
         case PROP_ROOT_DEVICE: {
                 GUPnPRootDevice **dev;
 
-                service->priv->root_device = g_value_get_object (value);
-                dev = &(service->priv->root_device);
+                priv->root_device = g_value_get_object (value);
+                dev = &(priv->root_device);
 
-                g_object_add_weak_pointer
-                        (G_OBJECT (service->priv->root_device),
-                         (gpointer *) dev);
+                g_object_add_weak_pointer (G_OBJECT (priv->root_device),
+                                           (gpointer *) dev);
 
-                service->priv->notify_available_id =
-                        g_signal_connect_object (service->priv->root_device,
+                priv->notify_available_id =
+                        g_signal_connect_object (priv->root_device,
                                                  "notify::available",
                                                  G_CALLBACK
                                                         (notify_available_cb),
@@ -1570,12 +1604,14 @@ gupnp_service_get_property (GObject    *object,
                             GParamSpec *pspec)
 {
         GUPnPService *service;
+        GUPnPServicePrivate *priv;
 
         service = GUPNP_SERVICE (object);
+        priv = gupnp_service_get_instance_private (service);
 
         switch (property_id) {
         case PROP_ROOT_DEVICE:
-                g_value_set_object (value, service->priv->root_device);
+                g_value_set_object (value, priv->root_device);
                 break;
         default:
                 G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -1587,6 +1623,7 @@ static void
 gupnp_service_dispose (GObject *object)
 {
         GUPnPService *service;
+        GUPnPServicePrivate *priv;
         GObjectClass *object_class;
         GUPnPServiceInfo *info;
         GUPnPContext *context;
@@ -1594,6 +1631,7 @@ gupnp_service_dispose (GObject *object)
         char *path;
 
         service = GUPNP_SERVICE (object);
+        priv = gupnp_service_get_instance_private (service);
 
         /* Get server */
         info = GUPNP_SERVICE_INFO (service);
@@ -1613,26 +1651,25 @@ gupnp_service_dispose (GObject *object)
         g_free (path);
         g_free (url);
 
-        if (service->priv->root_device) {
-                GUPnPRootDevice **dev = &(service->priv->root_device);
+        if (priv->root_device) {
+                GUPnPRootDevice **dev = &(priv->root_device);
 
                 if (g_signal_handler_is_connected
-                        (service->priv->root_device,
-                         service->priv->notify_available_id)) {
+                        (priv->root_device,
+                         priv->notify_available_id)) {
                         g_signal_handler_disconnect
-                                (service->priv->root_device,
-                                 service->priv->notify_available_id);
+                                (priv->root_device,
+                                 priv->notify_available_id);
                 }
 
-                g_object_remove_weak_pointer
-                        (G_OBJECT (service->priv->root_device),
-                         (gpointer *) dev);
+                g_object_remove_weak_pointer (G_OBJECT (priv->root_device),
+                                              (gpointer *) dev);
 
-                service->priv->root_device = NULL;
+                priv->root_device = NULL;
         }
 
         /* Cancel pending messages */
-        g_hash_table_remove_all (service->priv->subscriptions);
+        g_hash_table_remove_all (priv->subscriptions);
 
         /* Call super */
         object_class = G_OBJECT_CLASS (gupnp_service_parent_class);
@@ -1643,31 +1680,33 @@ static void
 gupnp_service_finalize (GObject *object)
 {
         GUPnPService *service;
+        GUPnPServicePrivate *priv;
         GObjectClass *object_class;
         NotifyData *data;
 
         service = GUPNP_SERVICE (object);
+        priv = gupnp_service_get_instance_private (service);
 
         /* Free subscription hash */
-        g_hash_table_destroy (service->priv->subscriptions);
+        g_hash_table_destroy (priv->subscriptions);
 
         /* Free state variable list */
-        g_list_free_full (service->priv->state_variables, g_free);
+        g_list_free_full (priv->state_variables, g_free);
 
         /* Free notify queue */
-        while ((data = g_queue_pop_head (service->priv->notify_queue)))
+        while ((data = g_queue_pop_head (priv->notify_queue)))
                 notify_data_free (data);
 
-        g_queue_free (service->priv->notify_queue);
+        g_queue_free (priv->notify_queue);
 
-        if (service->priv->session) {
-                g_object_unref (service->priv->session);
-                service->priv->session = NULL;
+        if (priv->session) {
+                g_object_unref (priv->session);
+                priv->session = NULL;
         }
 
-        if (service->priv->introspection) {
-                g_object_unref (service->priv->introspection);
-                service->priv->introspection = NULL;
+        if (priv->introspection) {
+                g_object_unref (priv->introspection);
+                priv->introspection = NULL;
         }
 
         /* Call super */
@@ -1687,8 +1726,6 @@ gupnp_service_class_init (GUPnPServiceClass *klass)
         object_class->constructor  = gupnp_service_constructor;
         object_class->dispose      = gupnp_service_dispose;
         object_class->finalize     = gupnp_service_finalize;
-
-        g_type_class_add_private (klass, sizeof (GUPnPServicePrivate));
 
         /**
          * GUPnPService:root-device:
@@ -1869,8 +1906,7 @@ notify_got_response (G_GNUC_UNUSED SoupSession *session,
 
         } else if (msg->status_code == SOUP_STATUS_PRECONDITION_FAILED) {
                 /* Precondition failed: Cancel subscription */
-                g_hash_table_remove (data->service->priv->subscriptions,
-                                     data->sid);
+                gupnp_service_remove_subscription (data->service, data->sid);
 
         } else {
                 /* Other failure: Try next callback or signal failure. */
@@ -2022,12 +2058,15 @@ static void
 flush_notifications (GUPnPService *service)
 {
         char *mem;
+        GUPnPServicePrivate *priv;
+
+        priv = gupnp_service_get_instance_private (service);
 
         /* Create property set */
-        mem = create_property_set (service->priv->notify_queue);
+        mem = create_property_set (priv->notify_queue);
 
         /* And send it off */
-        g_hash_table_foreach (service->priv->subscriptions,
+        g_hash_table_foreach (priv->subscriptions,
                               notify_subscriber,
                               mem);
 
@@ -2049,10 +2088,13 @@ gupnp_service_notify_value (GUPnPService *service,
                             const GValue *value)
 {
         NotifyData *data;
+        GUPnPServicePrivate *priv;
 
         g_return_if_fail (GUPNP_IS_SERVICE (service));
         g_return_if_fail (variable != NULL);
         g_return_if_fail (G_IS_VALUE (value));
+
+        priv = gupnp_service_get_instance_private (service);
 
         /* Queue */
         data = g_slice_new0 (NotifyData);
@@ -2062,10 +2104,10 @@ gupnp_service_notify_value (GUPnPService *service,
         g_value_init (&data->value, G_VALUE_TYPE (value));
         g_value_copy (value, &data->value);
 
-        g_queue_push_tail (service->priv->notify_queue, data);
+        g_queue_push_tail (priv->notify_queue, data);
 
         /* And flush, if not frozen */
-        if (!service->priv->notify_frozen)
+        if (!priv->notify_frozen)
                 flush_notifications (service);
 }
 
@@ -2079,9 +2121,13 @@ gupnp_service_notify_value (GUPnPService *service,
 void
 gupnp_service_freeze_notify (GUPnPService *service)
 {
+        GUPnPServicePrivate *priv;
+
         g_return_if_fail (GUPNP_IS_SERVICE (service));
 
-        service->priv->notify_frozen = TRUE;
+        priv = gupnp_service_get_instance_private (service);
+
+        priv->notify_frozen = TRUE;
 }
 
 /**
@@ -2093,11 +2139,15 @@ gupnp_service_freeze_notify (GUPnPService *service)
 void
 gupnp_service_thaw_notify (GUPnPService *service)
 {
+        GUPnPServicePrivate *priv;
+
         g_return_if_fail (GUPNP_IS_SERVICE (service));
 
-        service->priv->notify_frozen = FALSE;
+        priv = gupnp_service_get_instance_private (service);
 
-        if (g_queue_get_length (service->priv->notify_queue) == 0)
+        priv->notify_frozen = FALSE;
+
+        if (g_queue_get_length (priv->notify_queue) == 0)
                 return; /* Empty notify queue */
 
         flush_notifications (service);
@@ -2261,16 +2311,19 @@ gupnp_service_signals_autoconnect (GUPnPService *service,
         GUPnPServiceIntrospection *introspection;
         const GList               *names;
         GModule                   *module;
+        GUPnPServicePrivate       *priv;
 
         g_return_if_fail (GUPNP_IS_SERVICE (service));
 
-        introspection = service->priv->introspection;
+        priv = gupnp_service_get_instance_private (service);
+
+        introspection = priv->introspection;
 
         if (!introspection) {
                 /* Initial introspection is not done yet, delay until we
                  * received that */
-                service->priv->pending_autoconnect =
-                    g_list_prepend (service->priv->pending_autoconnect,
+                priv->pending_autoconnect =
+                    g_list_prepend (priv->pending_autoconnect,
                                     user_data);
 
                 return;

@@ -42,10 +42,6 @@
 #define GUPNP_MAX_DESCRIPTION_DOWNLOAD_RETRIES 4
 #define GUPNP_INITIAL_DESCRIPTION_RETRY_TIMEOUT 5
 
-G_DEFINE_TYPE (GUPnPControlPoint,
-               gupnp_control_point,
-               GSSDP_TYPE_RESOURCE_BROWSER);
-
 struct _GUPnPControlPointPrivate {
         GUPnPResourceFactory *factory;
 
@@ -56,6 +52,11 @@ struct _GUPnPControlPointPrivate {
 
         GList *pending_gets;
 };
+typedef struct _GUPnPControlPointPrivate GUPnPControlPointPrivate;
+
+G_DEFINE_TYPE_WITH_PRIVATE (GUPnPControlPoint,
+                            gupnp_control_point,
+                            GSSDP_TYPE_RESOURCE_BROWSER);
 
 enum {
         PROP_0,
@@ -86,11 +87,13 @@ typedef struct {
 } GetDescriptionURLData;
 
 static void
+gupnp_control_point_remove_pending_get (GUPnPControlPoint     *control_point,
+                                        GetDescriptionURLData *data);
+
+static void
 get_description_url_data_free (GetDescriptionURLData *data)
 {
-        data->control_point->priv->pending_gets =
-                g_list_remove (data->control_point->priv->pending_gets, data);
-
+        gupnp_control_point_remove_pending_get (data->control_point, data);
         if (data->message) {
                 GUPnPContext *context;
                 SoupSession *session;
@@ -121,7 +124,11 @@ find_get_description_url_data (GUPnPControlPoint *control_point,
                                const char        *udn,
                                const char        *service_type)
 {
-        GList *l = control_point->priv->pending_gets;
+        GList *l;
+        GUPnPControlPointPrivate *priv;
+
+        priv = gupnp_control_point_get_instance_private (control_point);
+        l = priv->pending_gets;
 
         while (l) {
                 GetDescriptionURLData *data = l->data;
@@ -139,23 +146,20 @@ find_get_description_url_data (GUPnPControlPoint *control_point,
 static void
 gupnp_control_point_init (GUPnPControlPoint *control_point)
 {
-        control_point->priv =
-                G_TYPE_INSTANCE_GET_PRIVATE (control_point,
-                                             GUPNP_TYPE_CONTROL_POINT,
-                                             GUPnPControlPointPrivate);
+        GUPnPControlPointPrivate *priv;
 
-        control_point->priv->doc_cache =
-                g_hash_table_new_full (g_str_hash,
-                                       g_str_equal,
-                                       g_free,
-                                       NULL);
+        priv = gupnp_control_point_get_instance_private (control_point);
+        priv->doc_cache = g_hash_table_new_full (g_str_hash,
+                                                 g_str_equal,
+                                                 g_free,
+                                                 NULL);
 }
 
 /* Return TRUE if value == user_data */
 static gboolean
 find_doc (G_GNUC_UNUSED gpointer key,
           gpointer               value,
-          G_GNUC_UNUSED gpointer user_data)
+          gpointer               user_data)
 {
         return (value == user_data);
 }
@@ -166,10 +170,12 @@ doc_finalized (gpointer user_data,
                GObject *where_the_object_was)
 {
         GUPnPControlPoint *control_point;
+        GUPnPControlPointPrivate *priv;
 
         control_point = GUPNP_CONTROL_POINT (user_data);
+        priv = gupnp_control_point_get_instance_private (control_point);
 
-        g_hash_table_foreach_remove (control_point->priv->doc_cache,
+        g_hash_table_foreach_remove (priv->doc_cache,
                                      find_doc,
                                      where_the_object_was);
 }
@@ -189,27 +195,29 @@ gupnp_control_point_dispose (GObject *object)
         GUPnPControlPoint *control_point;
         GSSDPResourceBrowser *browser;
         GObjectClass *object_class;
+        GUPnPControlPointPrivate *priv;
 
         control_point = GUPNP_CONTROL_POINT (object);
+        priv = gupnp_control_point_get_instance_private (control_point);
         browser = GSSDP_RESOURCE_BROWSER (control_point);
 
         gssdp_resource_browser_set_active (browser, FALSE);
 
-        if (control_point->priv->factory) {
-                g_object_unref (control_point->priv->factory);
-                control_point->priv->factory = NULL;
+        if (priv->factory) {
+                g_object_unref (priv->factory);
+                priv->factory = NULL;
         }
 
         /* Cancel any pending description file GETs */
-        while (control_point->priv->pending_gets) {
+        while (priv->pending_gets) {
                 GetDescriptionURLData *data;
 
-                data = control_point->priv->pending_gets->data;
+                data = priv->pending_gets->data;
                 get_description_url_data_free (data);
         }
 
         /* Release weak references on remaining cached documents */
-        g_hash_table_foreach (control_point->priv->doc_cache,
+        g_hash_table_foreach (priv->doc_cache,
                               weak_unref_doc,
                               control_point);
 
@@ -223,10 +231,12 @@ gupnp_control_point_finalize (GObject *object)
 {
         GUPnPControlPoint *control_point;
         GObjectClass *object_class;
+        GUPnPControlPointPrivate *priv;
 
         control_point = GUPNP_CONTROL_POINT (object);
+        priv = gupnp_control_point_get_instance_private (control_point);
 
-        g_hash_table_destroy (control_point->priv->doc_cache);
+        g_hash_table_destroy (priv->doc_cache);
 
         /* Call super */
         object_class = G_OBJECT_CLASS (gupnp_control_point_parent_class);
@@ -239,8 +249,10 @@ find_service_node (GUPnPControlPoint *control_point,
                    const char        *service_type)
 {
         GList *l;
+        GUPnPControlPointPrivate *priv;
 
-        l = control_point->priv->services;
+        priv = gupnp_control_point_get_instance_private (control_point);
+        l = priv->services;
 
         while (l) {
                 GUPnPServiceInfo *info;
@@ -263,8 +275,10 @@ find_device_node (GUPnPControlPoint *control_point,
                   const char        *udn)
 {
         GList *l;
+        GUPnPControlPointPrivate *priv;
 
-        l = control_point->priv->devices;
+        priv = gupnp_control_point_get_instance_private (control_point);
+        l = priv->devices;
 
         while (l) {
                 GUPnPDeviceInfo *info;
@@ -292,11 +306,13 @@ create_and_report_service_proxy (GUPnPControlPoint  *control_point,
         GUPnPServiceProxy *proxy;
         GUPnPResourceFactory *factory;
         GUPnPContext *context;
+        GUPnPControlPointPrivate *priv;
 
         if (find_service_node (control_point, udn, service_type) != NULL)
                 /* We already have a proxy for this service */
                 return;
 
+        priv = gupnp_control_point_get_instance_private (control_point);
         factory = gupnp_control_point_get_resource_factory (control_point);
         context = gupnp_control_point_get_context (control_point);
 
@@ -310,9 +326,7 @@ create_and_report_service_proxy (GUPnPControlPoint  *control_point,
                                                              description_url,
                                                              url_base);
 
-        control_point->priv->services =
-                                g_list_prepend (control_point->priv->services,
-                                                proxy);
+        priv->services = g_list_prepend (priv->services, proxy);
 
         g_signal_emit (control_point,
                        signals[SERVICE_PROXY_AVAILABLE],
@@ -331,11 +345,13 @@ create_and_report_device_proxy (GUPnPControlPoint  *control_point,
         GUPnPDeviceProxy *proxy;
         GUPnPResourceFactory *factory;
         GUPnPContext *context;
+        GUPnPControlPointPrivate *priv;
 
         if (find_device_node (control_point, udn) != NULL)
                 /* We already have a proxy for this device */
                 return;
 
+        priv = gupnp_control_point_get_instance_private (control_point);
         factory = gupnp_control_point_get_resource_factory (control_point);
         context = gupnp_control_point_get_context (control_point);
 
@@ -347,9 +363,7 @@ create_and_report_device_proxy (GUPnPControlPoint  *control_point,
                                                             description_url,
                                                             url_base);
 
-        control_point->priv->devices = g_list_prepend
-                                                (control_point->priv->devices,
-                                                 proxy);
+        priv->devices = g_list_prepend (priv->devices, proxy);
 
         g_signal_emit (control_point,
                        signals[DEVICE_PROXY_AVAILABLE],
@@ -531,7 +545,8 @@ description_loaded (GUPnPControlPoint *control_point,
         SoupURI *url_base;
 
         /* Save the URL base, if any */
-        element = xml_util_get_element ((xmlNode *) doc->doc,
+        element = xml_util_get_element ((xmlNode *)
+                                        gupnp_xml_doc_get_doc (doc),
                                         "root",
                                         NULL);
         if (element == NULL) {
@@ -575,16 +590,17 @@ got_description_url (SoupSession           *session,
                      GetDescriptionURLData *data)
 {
         GUPnPXMLDoc *doc;
+        GUPnPControlPointPrivate *priv;
 
         if (msg->status_code == SOUP_STATUS_CANCELLED)
                 return;
 
         data->message = NULL;
+        priv = gupnp_control_point_get_instance_private (data->control_point);
 
         /* Now, make sure again this document is not already cached. If it is,
          * we re-use the cached one. */
-        doc = g_hash_table_lookup (data->control_point->priv->doc_cache,
-                                   data->description_url);
+        doc = g_hash_table_lookup (priv->doc_cache, data->description_url);
         if (doc) {
                 /* Doc was cached */
                 description_loaded (data->control_point,
@@ -615,10 +631,9 @@ got_description_url (SoupSession           *session,
                                             data->description_url);
 
                         /* Insert into document cache */
-                        g_hash_table_insert
-                                          (data->control_point->priv->doc_cache,
-                                           g_strdup (data->description_url),
-                                           doc);
+                        g_hash_table_insert (priv->doc_cache,
+                                             g_strdup (data->description_url),
+                                             doc);
 
                         /* Make sure the document is removed from the cache
                          * once finalized. */
@@ -677,8 +692,10 @@ load_description (GUPnPControlPoint *control_point,
                   guint              timeout)
 {
         GUPnPXMLDoc *doc;
+        GUPnPControlPointPrivate *priv;
 
-        doc = g_hash_table_lookup (control_point->priv->doc_cache,
+        priv = gupnp_control_point_get_instance_private (control_point);
+        doc = g_hash_table_lookup (priv->doc_cache,
                                    description_url);
         if (doc) {
                 /* Doc was cached */
@@ -721,9 +738,8 @@ load_description (GUPnPControlPoint *control_point,
                 data->description_url = g_strdup (description_url);
                 data->timeout_source  = NULL;
 
-                control_point->priv->pending_gets =
-                        g_list_prepend (control_point->priv->pending_gets,
-                                        data);
+                priv->pending_gets = g_list_prepend (priv->pending_gets,
+                                                     data);
 
                 soup_session_queue_message (session,
                                             data->message,
@@ -874,8 +890,10 @@ gupnp_control_point_resource_unavailable
         GUPnPControlPoint *control_point;
         char *udn, *service_type;
         GetDescriptionURLData *get_data;
+        GUPnPControlPointPrivate *priv;
 
         control_point = GUPNP_CONTROL_POINT (resource_browser);
+        priv = gupnp_control_point_get_instance_private (control_point);
 
         /* Parse USN */
         if (!parse_usn (usn, &udn, &service_type))
@@ -891,9 +909,8 @@ gupnp_control_point_resource_unavailable
                         /* Remove proxy */
                         proxy = GUPNP_SERVICE_PROXY (l->data);
 
-                        control_point->priv->services =
-                                g_list_delete_link
-                                        (control_point->priv->services, l);
+                        priv->services = g_list_delete_link (priv->services,
+                                                             l);
 
                         g_signal_emit (control_point,
                                        signals[SERVICE_PROXY_UNAVAILABLE],
@@ -911,9 +928,8 @@ gupnp_control_point_resource_unavailable
                         /* Remove proxy */
                         proxy = GUPNP_DEVICE_PROXY (l->data);
 
-                        control_point->priv->devices =
-                                 g_list_delete_link
-                                        (control_point->priv->devices, l);
+                        priv->devices = g_list_delete_link (priv->devices,
+                                                            l);
 
                         g_signal_emit (control_point,
                                        signals[DEVICE_PROXY_UNAVAILABLE],
@@ -945,12 +961,14 @@ gupnp_control_point_set_property (GObject      *object,
                                   GParamSpec   *pspec)
 {
         GUPnPControlPoint *control_point;
+        GUPnPControlPointPrivate *priv;
 
         control_point = GUPNP_CONTROL_POINT (object);
+        priv = gupnp_control_point_get_instance_private (control_point);
 
         switch (property_id) {
         case PROP_RESOURCE_FACTORY:
-                control_point->priv->factory = 
+                priv->factory =
                         GUPNP_RESOURCE_FACTORY (g_value_dup_object (value));
                 break;
         default:
@@ -981,6 +999,17 @@ gupnp_control_point_get_property (GObject    *object,
 }
 
 static void
+gupnp_control_point_remove_pending_get (GUPnPControlPoint     *control_point,
+                                        GetDescriptionURLData *data)
+{
+        GUPnPControlPointPrivate *priv;
+
+        priv = gupnp_control_point_get_instance_private (control_point);
+        priv->pending_gets = g_list_remove (priv->pending_gets, data);
+}
+
+
+static void
 gupnp_control_point_class_init (GUPnPControlPointClass *klass)
 {
         GObjectClass *object_class;
@@ -999,8 +1028,6 @@ gupnp_control_point_class_init (GUPnPControlPointClass *klass)
                 gupnp_control_point_resource_available;
         browser_class->resource_unavailable =
                 gupnp_control_point_resource_unavailable;
-
-        g_type_class_add_private (klass, sizeof (GUPnPControlPointPrivate));
 
         /**
          * GUPnPControlPoint:resource-factory:
@@ -1197,9 +1224,13 @@ gupnp_control_point_get_context (GUPnPControlPoint *control_point)
 const GList *
 gupnp_control_point_list_device_proxies (GUPnPControlPoint *control_point)
 {
+        GUPnPControlPointPrivate *priv;
+
         g_return_val_if_fail (GUPNP_IS_CONTROL_POINT (control_point), NULL);
 
-        return (const GList *) control_point->priv->devices;
+        priv = gupnp_control_point_get_instance_private (control_point);
+
+        return (const GList *) priv->devices;
 }
 
 /**
@@ -1215,9 +1246,13 @@ gupnp_control_point_list_device_proxies (GUPnPControlPoint *control_point)
 const GList *
 gupnp_control_point_list_service_proxies (GUPnPControlPoint *control_point)
 {
+        GUPnPControlPointPrivate *priv;
+
         g_return_val_if_fail (GUPNP_IS_CONTROL_POINT (control_point), NULL);
 
-        return (const GList *) control_point->priv->services;
+        priv = gupnp_control_point_get_instance_private (control_point);
+
+        return (const GList *) priv->services;
 }
 
 /**
@@ -1231,10 +1266,15 @@ gupnp_control_point_list_service_proxies (GUPnPControlPoint *control_point)
 GUPnPResourceFactory *
 gupnp_control_point_get_resource_factory (GUPnPControlPoint *control_point)
 {
+        GUPnPControlPointPrivate *priv;
+
         g_return_val_if_fail (GUPNP_IS_CONTROL_POINT (control_point), NULL);
 
-        if (control_point->priv->factory)
-                  return control_point->priv->factory;
+        priv = gupnp_control_point_get_instance_private (control_point);
+
+        if (priv->factory)
+                  return priv->factory;
 
         return gupnp_resource_factory_get_default ();
 }
+

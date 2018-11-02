@@ -68,12 +68,12 @@ gupnp_acl_is_allowed (GUPnPAcl     *self,
 {
         g_return_val_if_fail (GUPNP_IS_ACL (self), FALSE);
 
-        return GUPNP_ACL_GET_INTERFACE (self)->is_allowed (self,
-                                                           device,
-                                                           service,
-                                                           path,
-                                                           address,
-                                                           agent);
+        return GUPNP_ACL_GET_IFACE (self)->is_allowed (self,
+                                                       device,
+                                                       service,
+                                                       path,
+                                                       address,
+                                                       agent);
 }
 
 /**
@@ -115,15 +115,15 @@ gupnp_acl_is_allowed_async (GUPnPAcl           *self,
 {
         g_return_if_fail (GUPNP_IS_ACL (self));
 
-        GUPNP_ACL_GET_INTERFACE (self)->is_allowed_async (self,
-                                                          device,
-                                                          service,
-                                                          path,
-                                                          address,
-                                                          agent,
-                                                          cancellable,
-                                                          callback,
-                                                          user_data);
+        GUPNP_ACL_GET_IFACE (self)->is_allowed_async (self,
+                                                      device,
+                                                      service,
+                                                      path,
+                                                      address,
+                                                      agent,
+                                                      cancellable,
+                                                      callback,
+                                                      user_data);
 }
 
 /**
@@ -143,9 +143,9 @@ gupnp_acl_is_allowed_finish (GUPnPAcl      *self,
 {
         g_return_val_if_fail (GUPNP_IS_ACL (self), FALSE);
 
-        return GUPNP_ACL_GET_INTERFACE (self)->is_allowed_finish (self,
-                                                                  res,
-                                                                  error);
+        return GUPNP_ACL_GET_IFACE (self)->is_allowed_finish (self,
+                                                              res,
+                                                              error);
 }
 
 /**
@@ -163,7 +163,7 @@ gupnp_acl_can_sync (GUPnPAcl *self)
 {
         g_return_val_if_fail (GUPNP_IS_ACL (self), FALSE);
 
-        return GUPNP_ACL_GET_INTERFACE (self)->can_sync (self);
+        return GUPNP_ACL_GET_IFACE (self)->can_sync (self);
 }
 
 /**

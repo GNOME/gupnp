@@ -49,6 +49,10 @@
 #include "gupnp-unix-context-manager.h"
 #include "gupnp-context.h"
 
+struct _GUPnPUnixContextManager {
+        GUPnPSimpleContextManager parent;
+};
+
 G_DEFINE_TYPE (GUPnPUnixContextManager,
                gupnp_unix_context_manager,
                GUPNP_TYPE_SIMPLE_CONTEXT_MANAGER);

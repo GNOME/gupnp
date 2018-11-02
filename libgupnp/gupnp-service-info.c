@@ -39,10 +39,6 @@
 #include "http-headers.h"
 #include "xml-util.h"
 
-G_DEFINE_ABSTRACT_TYPE (GUPnPServiceInfo,
-                        gupnp_service_info,
-                        G_TYPE_OBJECT);
-
 struct _GUPnPServiceInfoPrivate {
         GUPnPContext *context;
 
@@ -59,6 +55,12 @@ struct _GUPnPServiceInfoPrivate {
         /* For async downloads */
         GList *pending_gets;
 };
+
+typedef struct _GUPnPServiceInfoPrivate GUPnPServiceInfoPrivate;
+
+G_DEFINE_ABSTRACT_TYPE_WITH_PRIVATE (GUPnPServiceInfo,
+                                     gupnp_service_info,
+                                     G_TYPE_OBJECT);
 
 enum {
         PROP_0,
@@ -95,9 +97,6 @@ get_scpd_url_data_free (GetSCPDURLData *data)
 static void
 gupnp_service_info_init (GUPnPServiceInfo *info)
 {
-        info->priv = G_TYPE_INSTANCE_GET_PRIVATE (info,
-                                                  GUPNP_TYPE_SERVICE_INFO,
-                                                  GUPnPServiceInfoPrivate);
 }
 
 static void
@@ -107,30 +106,32 @@ gupnp_service_info_set_property (GObject      *object,
                                  GParamSpec   *pspec)
 {
         GUPnPServiceInfo *info;
+        GUPnPServiceInfoPrivate *priv;
 
         info = GUPNP_SERVICE_INFO (object);
+        priv = gupnp_service_info_get_instance_private (info);
 
         switch (property_id) {
         case PROP_CONTEXT:
-                info->priv->context = g_object_ref (g_value_get_object (value));
+                priv->context = g_object_ref (g_value_get_object (value));
                 break;
         case PROP_LOCATION:
-                info->priv->location = g_value_dup_string (value);
+                priv->location = g_value_dup_string (value);
                 break;
         case PROP_UDN:
-                info->priv->udn = g_value_dup_string (value);
+                priv->udn = g_value_dup_string (value);
                 break;
         case PROP_SERVICE_TYPE:
-                info->priv->service_type = g_value_dup_string (value);
+                priv->service_type = g_value_dup_string (value);
                 break;
         case PROP_URL_BASE:
-                info->priv->url_base = g_value_dup_boxed (value);
+                priv->url_base = g_value_dup_boxed (value);
                 break;
         case PROP_DOCUMENT:
-                info->priv->doc = g_value_dup_object (value);
+                priv->doc = g_value_dup_object (value);
                 break;
         case PROP_ELEMENT:
-                info->priv->element = g_value_get_pointer (value);
+                priv->element = g_value_get_pointer (value);
                 break;
         default:
                 G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -145,29 +146,27 @@ gupnp_service_info_get_property (GObject    *object,
                                  GParamSpec *pspec)
 {
         GUPnPServiceInfo *info;
+        GUPnPServiceInfoPrivate *priv;
 
         info = GUPNP_SERVICE_INFO (object);
+        priv = gupnp_service_info_get_instance_private (info);
 
         switch (property_id) {
         case PROP_CONTEXT:
-                g_value_set_object (value,
-                                    info->priv->context);
+                g_value_set_object (value, priv->context);
                 break;
         case PROP_LOCATION:
-                g_value_set_string (value,
-                                    info->priv->location);
+                g_value_set_string (value, priv->location);
                 break;
         case PROP_UDN:
-                g_value_set_string (value,
-                                    info->priv->udn);
+                g_value_set_string (value, priv->udn);
                 break;
         case PROP_SERVICE_TYPE:
                 g_value_set_string (value,
                                     gupnp_service_info_get_service_type (info));
                 break;
         case PROP_URL_BASE:
-                g_value_set_boxed (value,
-                                   info->priv->url_base);
+                g_value_set_boxed (value, priv->url_base);
                 break;
         default:
                 G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -179,19 +178,21 @@ static void
 gupnp_service_info_dispose (GObject *object)
 {
         GUPnPServiceInfo *info;
+        GUPnPServiceInfoPrivate *priv;
 
         info = GUPNP_SERVICE_INFO (object);
+        priv = gupnp_service_info_get_instance_private (info);
 
         /* Cancel any pending SCPD GETs */
-        if (info->priv->context) {
+        if (priv->context) {
                 SoupSession *session;
 
-                session = gupnp_context_get_session (info->priv->context);
+                session = gupnp_context_get_session (priv->context);
 
-                while (info->priv->pending_gets) {
+                while (priv->pending_gets) {
                         GetSCPDURLData *data;
 
-                        data = info->priv->pending_gets->data;
+                        data = priv->pending_gets->data;
 
                         if (data->cancellable)
                                 g_cancellable_disconnect (data->cancellable,
@@ -203,19 +204,19 @@ gupnp_service_info_dispose (GObject *object)
 
                         get_scpd_url_data_free (data);
 
-                        info->priv->pending_gets =
-                                g_list_delete_link (info->priv->pending_gets,
-                                                    info->priv->pending_gets);
+                        priv->pending_gets =
+                                g_list_delete_link (priv->pending_gets,
+                                                    priv->pending_gets);
                 }
 
                 /* Unref context */
-                g_object_unref (info->priv->context);
-                info->priv->context = NULL;
+                g_object_unref (priv->context);
+                priv->context = NULL;
         }
 
-        if (info->priv->doc) {
-                g_object_unref (info->priv->doc);
-                info->priv->doc = NULL;
+        if (priv->doc) {
+                g_object_unref (priv->doc);
+                priv->doc = NULL;
         }
 
         G_OBJECT_CLASS (gupnp_service_info_parent_class)->dispose (object);
@@ -225,14 +226,16 @@ static void
 gupnp_service_info_finalize (GObject *object)
 {
         GUPnPServiceInfo *info;
+        GUPnPServiceInfoPrivate *priv;
 
         info = GUPNP_SERVICE_INFO (object);
+        priv = gupnp_service_info_get_instance_private (info);
 
-        g_free (info->priv->location);
-        g_free (info->priv->udn);
-        g_free (info->priv->service_type);
+        g_free (priv->location);
+        g_free (priv->udn);
+        g_free (priv->service_type);
 
-        soup_uri_free (info->priv->url_base);
+        soup_uri_free (priv->url_base);
 
         G_OBJECT_CLASS (gupnp_service_info_parent_class)->finalize (object);
 }
@@ -248,8 +251,6 @@ gupnp_service_info_class_init (GUPnPServiceInfoClass *klass)
         object_class->get_property = gupnp_service_info_get_property;
         object_class->dispose      = gupnp_service_info_dispose;
         object_class->finalize     = gupnp_service_info_finalize;
-
-        g_type_class_add_private (klass, sizeof (GUPnPServiceInfoPrivate));
 
         /**
          * GUPnPServiceInfo:context:
@@ -395,9 +396,13 @@ gupnp_service_info_class_init (GUPnPServiceInfoClass *klass)
 GUPnPContext *
 gupnp_service_info_get_context (GUPnPServiceInfo *info)
 {
+        GUPnPServiceInfoPrivate *priv;
+
         g_return_val_if_fail (GUPNP_IS_SERVICE_INFO (info), NULL);
 
-        return info->priv->context;
+        priv = gupnp_service_info_get_instance_private (info);
+
+        return priv->context;
 }
 
 /**
@@ -411,9 +416,13 @@ gupnp_service_info_get_context (GUPnPServiceInfo *info)
 const char *
 gupnp_service_info_get_location (GUPnPServiceInfo *info)
 {
+        GUPnPServiceInfoPrivate *priv;
+
         g_return_val_if_fail (GUPNP_IS_SERVICE_INFO (info), NULL);
 
-        return info->priv->location;
+        priv = gupnp_service_info_get_instance_private (info);
+
+        return priv->location;
 }
 
 /**
@@ -427,9 +436,13 @@ gupnp_service_info_get_location (GUPnPServiceInfo *info)
 const SoupURI *
 gupnp_service_info_get_url_base (GUPnPServiceInfo *info)
 {
+        GUPnPServiceInfoPrivate *priv;
+
         g_return_val_if_fail (GUPNP_IS_SERVICE_INFO (info), NULL);
 
-        return info->priv->url_base;
+        priv = gupnp_service_info_get_instance_private (info);
+
+        return priv->url_base;
 }
 
 /**
@@ -443,9 +456,13 @@ gupnp_service_info_get_url_base (GUPnPServiceInfo *info)
 const char *
 gupnp_service_info_get_udn (GUPnPServiceInfo *info)
 {
+        GUPnPServiceInfoPrivate *priv;
+
         g_return_val_if_fail (GUPNP_IS_SERVICE_INFO (info), NULL);
 
-        return info->priv->udn;
+        priv = gupnp_service_info_get_instance_private (info);
+
+        return priv->udn;
 }
 
 /**
@@ -459,15 +476,19 @@ gupnp_service_info_get_udn (GUPnPServiceInfo *info)
 const char *
 gupnp_service_info_get_service_type (GUPnPServiceInfo *info)
 {
+        GUPnPServiceInfoPrivate *priv;
+
         g_return_val_if_fail (GUPNP_IS_SERVICE_INFO (info), NULL);
 
-        if (!info->priv->service_type) {
-                info->priv->service_type =
+        priv = gupnp_service_info_get_instance_private (info);
+
+        if (!priv->service_type) {
+                priv->service_type =
                         xml_util_get_child_element_content_glib
-                                (info->priv->element, "serviceType");
+                                (priv->element, "serviceType");
         }
 
-        return info->priv->service_type;
+        return priv->service_type;
 }
 
 /**
@@ -481,9 +502,13 @@ gupnp_service_info_get_service_type (GUPnPServiceInfo *info)
 char *
 gupnp_service_info_get_id (GUPnPServiceInfo *info)
 {
+        GUPnPServiceInfoPrivate *priv;
+
         g_return_val_if_fail (GUPNP_IS_SERVICE_INFO (info), NULL);
 
-        return xml_util_get_child_element_content_glib (info->priv->element,
+        priv = gupnp_service_info_get_instance_private (info);
+
+        return xml_util_get_child_element_content_glib (priv->element,
                                                         "serviceId");
 }
 
@@ -498,11 +523,15 @@ gupnp_service_info_get_id (GUPnPServiceInfo *info)
 char *
 gupnp_service_info_get_scpd_url (GUPnPServiceInfo *info)
 {
+        GUPnPServiceInfoPrivate *priv;
+
         g_return_val_if_fail (GUPNP_IS_SERVICE_INFO (info), NULL);
 
-        return xml_util_get_child_element_content_url (info->priv->element,
+        priv = gupnp_service_info_get_instance_private (info);
+
+        return xml_util_get_child_element_content_url (priv->element,
                                                        "SCPDURL",
-                                                       info->priv->url_base);
+                                                       priv->url_base);
 }
 
 /**
@@ -516,11 +545,15 @@ gupnp_service_info_get_scpd_url (GUPnPServiceInfo *info)
 char *
 gupnp_service_info_get_control_url (GUPnPServiceInfo *info)
 {
+        GUPnPServiceInfoPrivate *priv;
+
         g_return_val_if_fail (GUPNP_IS_SERVICE_INFO (info), NULL);
 
-        return xml_util_get_child_element_content_url (info->priv->element,
+        priv = gupnp_service_info_get_instance_private (info);
+
+        return xml_util_get_child_element_content_url (priv->element,
                                                        "controlURL",
-                                                       info->priv->url_base);
+                                                       priv->url_base);
 }
 
 /**
@@ -534,11 +567,15 @@ gupnp_service_info_get_control_url (GUPnPServiceInfo *info)
 char *
 gupnp_service_info_get_event_subscription_url (GUPnPServiceInfo *info)
 {
+        GUPnPServiceInfoPrivate *priv;
+
         g_return_val_if_fail (GUPNP_IS_SERVICE_INFO (info), NULL);
 
-        return xml_util_get_child_element_content_url (info->priv->element,
+        priv = gupnp_service_info_get_instance_private (info);
+
+        return xml_util_get_child_element_content_url (priv->element,
                                                        "eventSubURL",
-                                                       info->priv->url_base);
+                                                       priv->url_base);
 }
 
 /*
@@ -551,6 +588,7 @@ got_scpd_url (G_GNUC_UNUSED SoupSession *session,
 {
         GUPnPServiceIntrospection *introspection;
         GError *error;
+        GUPnPServiceInfoPrivate *priv;
 
         introspection = NULL;
         error = NULL;
@@ -584,8 +622,8 @@ got_scpd_url (G_GNUC_UNUSED SoupSession *session,
                 g_cancellable_disconnect (data->cancellable,
                                           data->cancelled_id);
 
-        data->info->priv->pending_gets =
-                g_list_remove (data->info->priv->pending_gets, data);
+        priv = gupnp_service_info_get_instance_private (data->info);
+        priv->pending_gets = g_list_remove (priv->pending_gets, data);
 
         data->callback (data->info,
                         introspection,
@@ -606,17 +644,19 @@ cancellable_cancelled_cb (GCancellable *cancellable,
         GetSCPDURLData *data;
         SoupSession *session;
         GError *error;
+        GUPnPServiceInfoPrivate *priv;
 
         data = user_data;
         info = data->info;
 
-        session = gupnp_context_get_session (info->priv->context);
+        priv = gupnp_service_info_get_instance_private (info);
+
+        session = gupnp_context_get_session (priv->context);
         soup_session_cancel_message (session,
                                      data->message,
                                      SOUP_STATUS_CANCELLED);
 
-        info->priv->pending_gets =
-                g_list_remove (info->priv->pending_gets, data);
+        priv->pending_gets = g_list_remove (priv->pending_gets, data);
 
         error = g_error_new (G_IO_ERROR,
                              G_IO_ERROR_CANCELLED,
@@ -678,6 +718,7 @@ gupnp_service_info_get_introspection_async_full
         GetSCPDURLData *data;
         char *scpd_url;
         SoupSession *session;
+        GUPnPServiceInfoPrivate *priv;
 
         g_return_if_fail (GUPNP_IS_SERVICE_INFO (info));
         g_return_if_fail (callback != NULL);
@@ -715,11 +756,10 @@ gupnp_service_info_get_introspection_async_full
         data->user_data = user_data;
 
         /* Send off the message */
-        info->priv->pending_gets =
-                g_list_prepend (info->priv->pending_gets,
-                                data);
+        priv = gupnp_service_info_get_instance_private (info);
+        priv->pending_gets = g_list_prepend (priv->pending_gets, data);
 
-        session = gupnp_context_get_session (info->priv->context);
+        session = gupnp_context_get_session (priv->context);
 
         soup_session_queue_message (session,
                                     data->message,
