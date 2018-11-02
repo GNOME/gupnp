@@ -640,7 +640,7 @@ send_netlink_request (GUPnPLinuxContextManager *self,
         req.hdr.nlmsg_seq = priv->nl_seq++;
         req.hdr.nlmsg_type = netlink_message;
         req.hdr.nlmsg_flags = NLM_F_REQUEST | flags;
-        req.gen.rtgen_family = AF_UNSPEC;
+        req.gen.rtgen_family = gupnp_context_manager_get_socket_family (GUPNP_CONTEXT_MANAGER (self));
 
         io.iov_base = &req;
         io.iov_len = req.hdr.nlmsg_len;
@@ -933,7 +933,14 @@ create_netlink_socket (GUPnPLinuxContextManager *self, GError **error)
         memset (&sa, 0, sizeof (sa));
         sa.nl_family = AF_NETLINK;
         /* Listen for interface changes and IP address changes */
-        sa.nl_groups = RTMGRP_LINK | RTMGRP_IPV4_IFADDR;
+        sa.nl_groups = RTMGRP_LINK;
+        if (gupnp_context_manager_get_socket_family (GUPNP_CONTEXT_MANAGER (self)) == G_SOCKET_FAMILY_INVALID) {
+                sa.nl_groups = RTMGRP_IPV6_IFADDR | RTMGRP_IPV4_IFADDR;
+        } else if (gupnp_context_manager_get_socket_family (GUPNP_CONTEXT_MANAGER (self)) == G_SOCKET_FAMILY_IPV4) {
+                sa.nl_groups = RTMGRP_IPV4_IFADDR;
+        } else if (gupnp_context_manager_get_socket_family (GUPNP_CONTEXT_MANAGER (self)) == G_SOCKET_FAMILY_IPV6) {
+                sa.nl_groups = RTMGRP_IPV6_IFADDR;
+        }
 
         status = bind (fd, (struct sockaddr *) &sa, sizeof (sa));
         if (status == -1) {
