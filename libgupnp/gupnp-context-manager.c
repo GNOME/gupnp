@@ -63,6 +63,7 @@
 
 struct _GUPnPContextManagerPrivate {
         guint              port;
+        GSocketFamily      family;
 
         GUPnPContextManager *impl;
 
@@ -80,6 +81,7 @@ G_DEFINE_ABSTRACT_TYPE_WITH_PRIVATE (GUPnPContextManager,
 enum {
         PROP_0,
         PROP_PORT,
+        PROP_SOCKET_FAMILY,
         PROP_WHITE_LIST
 };
 
@@ -322,6 +324,9 @@ gupnp_context_manager_set_property (GObject      *object,
         case PROP_PORT:
                 priv->port = g_value_get_uint (value);
                 break;
+        case PROP_SOCKET_FAMILY:
+                priv->family = g_value_get_enum (value);
+                break;
         default:
                 G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
                 break;
@@ -343,6 +348,9 @@ gupnp_context_manager_get_property (GObject    *object,
         switch (property_id) {
         case PROP_PORT:
                 g_value_set_uint (value, priv->port);
+                break;
+        case PROP_SOCKET_FAMILY:
+                g_value_set_enum (value, priv->family);
                 break;
         case PROP_WHITE_LIST:
                 g_value_set_object (value, priv->white_list);
@@ -418,6 +426,26 @@ gupnp_context_manager_class_init (GUPnPContextManagerClass *klass)
                                     G_PARAM_STATIC_NAME |
                                     G_PARAM_STATIC_NICK |
                                     G_PARAM_STATIC_BLURB));
+        /**
+         * GUPnPContextManager:family:
+         *
+         * The socket family to create contexts for. Use %G_SOCKET_FAMILY_INVALID
+         * for any or %G_SOCKET_FAMILY_IPV4 for IPv4 contexts or
+         * %G_SOCKET_FAMILY_IPV6 for IPv6 contexts
+         *
+         * Since: 1.1.0
+         **/
+        g_object_class_install_property
+                (object_class,
+                 PROP_SOCKET_FAMILY,
+                 g_param_spec_enum ("family",
+                                    "Address family",
+                                    "Address family to create contexts for",
+                                    G_TYPE_SOCKET_FAMILY,
+                                    G_SOCKET_FAMILY_INVALID,
+                                    G_PARAM_READWRITE |
+                                    G_PARAM_CONSTRUCT_ONLY |
+                                    G_PARAM_STATIC_STRINGS));
 
          /**
          * GUPnPContextManager:white-list:
@@ -487,12 +515,34 @@ gupnp_context_manager_class_init (GUPnPContextManagerClass *klass)
  * NetworkManager - on its availability during runtime. If it is not available,
  * the implementation falls back to the basic Unix context manager instead.
  *
+ * Equivalent to calling #gupnp_context_manager_create_full (%G_SOCKET_FAMILY_IPV4, port);
+ *
  * Returns: (transfer full): A new #GUPnPContextManager object.
  *
  * Since: 0.17.2
  **/
 GUPnPContextManager *
 gupnp_context_manager_create (guint port)
+{
+        return gupnp_context_manager_create_full (G_SOCKET_FAMILY_IPV4, port);
+}
+
+/**
+ * gupnp_context_manager_create_full:
+ * @family: GSocketFamily to create the context for
+ * @port: Port to create contexts for, or 0 if you don't care what port is used.
+ *
+ * Factory-method to create a new #GUPnPContextManager. The final type of the
+ * #GUPnPContextManager depends on the compile-time selection or - in case of
+ * NetworkManager - on its availability during runtime. If it is not available,
+ * the implementation falls back to the basic Unix context manager instead.
+ *
+ * Returns: (transfer full): A new #GUPnPContextManager object.
+ *
+ * Since: 1.1.0
+ **/
+GUPnPContextManager *
+gupnp_context_manager_create_full (GSocketFamily family, guint port)
 {
 #if defined(USE_NETWORK_MANAGER) || defined (USE_CONNMAN)
         GDBusConnection *system_bus;
@@ -676,4 +726,17 @@ gupnp_context_manager_get_white_list (GUPnPContextManager *manager)
         priv = gupnp_context_manager_get_instance_private (manager);
 
         return priv->white_list;
+}
+
+GSocketFamily
+gupnp_context_manager_get_socket_family (GUPnPContextManager *manager)
+{
+        GUPnPContextManagerPrivate *priv;
+
+        g_return_val_if_fail (GUPNP_IS_CONTEXT_MANAGER (manager),
+                              G_SOCKET_FAMILY_INVALID);
+
+        priv = gupnp_context_manager_get_instance_private (manager);
+
+        return priv->family;
 }

@@ -52,27 +52,34 @@ struct _GUPnPContextManagerClass {
 };
 
 GUPnPContextManager *
-gupnp_context_manager_create           (guint port);
+gupnp_context_manager_create            (guint port);
+
+GUPnPContextManager *
+gupnp_context_manager_create_full       (GSocketFamily   family,
+                                         guint           port);
 
 void
 gupnp_context_manager_rescan_control_points
-                                       (GUPnPContextManager *manager);
+                                        (GUPnPContextManager *manager);
 
 void
 gupnp_context_manager_manage_control_point
-                                       (GUPnPContextManager     *manager,
-                                        GUPnPControlPoint       *control_point);
+                                        (GUPnPContextManager     *manager,
+                                         GUPnPControlPoint       *control_point);
 
 void
 gupnp_context_manager_manage_root_device
-                                       (GUPnPContextManager     *manager,
-                                        GUPnPRootDevice         *root_device);
+                                        (GUPnPContextManager     *manager,
+                                         GUPnPRootDevice         *root_device);
 
 guint
-gupnp_context_manager_get_port         (GUPnPContextManager *manager);
+gupnp_context_manager_get_port          (GUPnPContextManager *manager);
 
 GUPnPWhiteList *
-gupnp_context_manager_get_white_list   (GUPnPContextManager *manager);
+gupnp_context_manager_get_white_list    (GUPnPContextManager *manager);
+
+GSocketFamily
+gupnp_context_manager_get_socket_family (GUPnPContextManager *manager);
 
 G_END_DECLS
 
