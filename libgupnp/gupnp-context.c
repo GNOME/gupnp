@@ -586,8 +586,8 @@ gupnp_context_get_server (GUPnPContext *context)
 
         if (priv->server == NULL) {
                 const char *ip = NULL;
-                guint port = 0;
                 GSocketAddress *addr = NULL;
+                GInetAddress *inet_addr = NULL;
                 GError *error = NULL;
 
                 priv->server = soup_server_new (NULL, NULL);
@@ -599,12 +599,26 @@ gupnp_context_get_server (GUPnPContext *context)
                                          NULL);
 
                 ip = gssdp_client_get_host_ip (GSSDP_CLIENT (context));
-                port = priv->port;
-                addr = g_inet_socket_address_new_from_string (ip, port);
+                inet_addr = gssdp_client_get_address (GSSDP_CLIENT (context));
+                if (g_inet_address_get_family (inet_addr) == G_SOCKET_FAMILY_IPV6 &&
+                    g_inet_address_get_is_link_local (inet_addr)) {
+                        guint scope;
+
+                        scope = gssdp_client_get_index (GSSDP_CLIENT (context));
+                        addr = g_object_new (G_TYPE_INET_SOCKET_ADDRESS,
+                                             "address", inet_addr,
+                                             "port", priv->port,
+                                             "scope-id", scope,
+                                             NULL);
+                } else {
+                        addr = g_inet_socket_address_new (inet_addr,
+                                                          priv->port);
+                }
+                g_object_unref (inet_addr);
 
                 if (! soup_server_listen (priv->server,
                                           addr, (SoupServerListenOptions) 0, &error)) {
-                        g_warning ("GUPnPContext: Unable to listen on %s:%u %s", ip, port, error->message);
+                        g_warning ("GUPnPContext: Unable to listen on %s:%u %s", ip, priv->port, error->message);
                         g_error_free (error);
                 }
 
