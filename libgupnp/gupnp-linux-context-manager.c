@@ -105,7 +105,7 @@ typedef enum {
 } NetworkInterfaceFlags;
 
 static void
-dump_rta_attr (struct rtattr *rt_attr)
+dump_rta_attr (sa_family_t family, struct rtattr *rt_attr)
 {
         const char *data = NULL;
         const char *label = NULL;
@@ -115,7 +115,7 @@ dump_rta_attr (struct rtattr *rt_attr)
                         rt_attr->rta_type == IFA_LOCAL ||
                         rt_attr->rta_type == IFA_BROADCAST ||
                         rt_attr->rta_type == IFA_ANYCAST) {
-                data = inet_ntop (AF_INET,
+                data = inet_ntop (family,
                                 RTA_DATA (rt_attr),
                                 buf,
                                 sizeof (buf));
@@ -418,6 +418,7 @@ on_netlink_message_available (G_GNUC_UNUSED GSocket     *socket,
 static void
 extract_info (struct nlmsghdr *header,
               gboolean         dump,
+              sa_family_t      family,
               guint8           prefixlen,
               char           **address,
               char           **label,
@@ -431,18 +432,23 @@ extract_info (struct nlmsghdr *header,
         rt_attr_len = IFA_PAYLOAD (header);
         while (RT_ATTR_OK (rt_attr, rt_attr_len)) {
                 if (dump) {
-                        dump_rta_attr (rt_attr);
+                        dump_rta_attr (family, rt_attr);
                 }
 
                 if (rt_attr->rta_type == IFA_LABEL) {
                         *label = g_strdup ((char *) RTA_DATA (rt_attr));
-                } else if (rt_attr->rta_type == IFA_LOCAL) {
+                } else if (rt_attr->rta_type == IFA_ADDRESS) {
                         if (address != NULL) {
-                                inet_ntop (AF_INET,
+                                const char *result = NULL;
+                                result = inet_ntop (family,
                                            RTA_DATA (rt_attr),
                                            buf,
                                            sizeof (buf));
-                                *address = g_strdup (buf);
+                                if (result == NULL) {
+                                    g_critical ("Failed ntop: %m");
+                                } else {
+                                    *address = g_strdup (result);
+                                }
                         }
 
                         if (mask != NULL) {
@@ -634,7 +640,7 @@ send_netlink_request (GUPnPLinuxContextManager *self,
         req.hdr.nlmsg_seq = priv->nl_seq++;
         req.hdr.nlmsg_type = netlink_message;
         req.hdr.nlmsg_flags = NLM_F_REQUEST | flags;
-        req.gen.rtgen_family = AF_INET;
+        req.gen.rtgen_family = AF_UNSPEC;
 
         io.iov_base = &req;
         io.iov_len = req.hdr.nlmsg_len;
@@ -675,7 +681,7 @@ query_all_addresses (GUPnPLinuxContextManager *self)
         g_debug ("Bootstrap: Querying all addresses");
         send_netlink_request (self,
                               RTM_GETADDR,
-                              NLM_F_ROOT | NLM_F_MATCH | NLM_F_ACK);
+                              NLM_F_DUMP);
 }
 
 /* Ignore non-multicast device, except loop-back and P-t-P devices */
@@ -795,13 +801,22 @@ receive_netlink_message (GUPnPLinuxContextManager *self, GError **error)
 
                                 g_debug ("Received RTM_NEWADDR");
                                 ifa = NLMSG_DATA (header);
+                                if (ifa->ifa_family == AF_INET6 &&
+                                        (ifa->ifa_scope != RT_SCOPE_SITE &&
+                                         ifa->ifa_scope != RT_SCOPE_LINK &&
+                                         ifa->ifa_scope != RT_SCOPE_HOST))
+                                        break;
+
                                 extract_info (header,
                                               priv->dump_netlink_packets,
+                                              ifa->ifa_family,
                                               ifa->ifa_prefixlen,
                                               &address,
                                               &label,
                                               &mask);
-                                create_context (self, address, label, mask, ifa);
+
+                                if (address != NULL)
+                                        create_context (self, address, label, mask, ifa);
                                 g_free (label);
                                 g_free (address);
                                 g_free (mask);
@@ -814,13 +829,22 @@ receive_netlink_message (GUPnPLinuxContextManager *self, GError **error)
 
                                 g_debug ("Received RTM_DELADDR");
                                 ifa = NLMSG_DATA (header);
+
+                                if (ifa->ifa_family == AF_INET6 &&
+                                        (ifa->ifa_scope != RT_SCOPE_SITE &&
+                                         ifa->ifa_scope != RT_SCOPE_LINK &&
+                                         ifa->ifa_scope != RT_SCOPE_HOST))
+                                        break;
+
                                 extract_info (header,
                                               priv->dump_netlink_packets,
+                                              ifa->ifa_family,
                                               ifa->ifa_prefixlen,
                                               &address,
                                               &label,
                                               NULL);
-                                remove_context (self, address, label, ifa);
+                                if (address != NULL)
+                                        remove_context (self, address, label, ifa);
                                 g_free (label);
                                 g_free (address);
                             }
