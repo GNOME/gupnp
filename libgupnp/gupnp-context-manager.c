@@ -526,7 +526,7 @@ gupnp_context_manager_create (guint port)
                 else
                     impl_type = GUPNP_TYPE_UNIX_CONTEXT_MANAGER;
 #else
-		impl_type = GUPNP_TYPE_LINUX_CONTEXT_MANAGER;
+                impl_type = GUPNP_TYPE_LINUX_CONTEXT_MANAGER;
 
 #endif
 #elif defined (HAVE_IFADDRS_H)
