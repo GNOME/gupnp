@@ -21,7 +21,7 @@ if netlink_available
     context_manager_impl += 'gupnp-linux-context-manager.c'
 endif
 
-if get_option('context_manager') == 'linux'
+if get_option('context_manager') == 'linux' or (netlink_available and get_option('context_manager') == 'system')
     context_manager_args += '-DUSE_NETLINK'
 endif
 
