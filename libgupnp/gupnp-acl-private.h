@@ -19,8 +19,8 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GUPNP_ACL_PRIVATE_H__
-#define __GUPNP_ACL_PRIVATE_H__
+#ifndef GUPNP_ACL_PRIVATE_H
+#define GUPNP_ACL_PRIVATE_H
 
 #include <glib.h>
 #include <glib-object.h>

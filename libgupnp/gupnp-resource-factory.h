@@ -21,8 +21,8 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GUPNP_RESOURCE_FACTORY_H__
-#define __GUPNP_RESOURCE_FACTORY_H__
+#ifndef GUPNP_RESOURCE_FACTORY_H
+#define GUPNP_RESOURCE_FACTORY_H
 
 #include <glib-object.h>
 
@@ -108,4 +108,4 @@ gupnp_resource_factory_unregister_resource_proxy_type
 
 G_END_DECLS
 
-#endif /* __GUPNP_RESOURCE_FACTORY_H__ */
+#endif /* GUPNP_RESOURCE_FACTORY_H */

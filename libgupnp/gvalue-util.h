@@ -19,8 +19,8 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GVALUE_UTIL_H__
-#define __GVALUE_UTIL_H__
+#ifndef GUPNP_GVALUE_UTIL_H
+#define GUPNP_GVALUE_UTIL_H
 
 #include <glib-object.h>
 #include <libxml/tree.h>
@@ -37,4 +37,4 @@ G_GNUC_INTERNAL gboolean
 gvalue_util_value_append_to_xml_string (const GValue *value,
                                         GString      *str);
 
-#endif /* __GVALUE_UTIL_H__ */
+#endif /* GUPNP_GVALUE_UTIL_H */

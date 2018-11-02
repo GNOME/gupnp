@@ -19,8 +19,8 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GUPNP_SERVICE_PROXY_H__
-#define __GUPNP_SERVICE_PROXY_H__
+#ifndef GUPNP_SERVICE_PROXY_H
+#define GUPNP_SERVICE_PROXY_H
 
 #include "gupnp-error.h"
 #include "gupnp-service-info.h"
@@ -242,4 +242,4 @@ gupnp_service_proxy_get_subscribed (GUPnPServiceProxy              *proxy);
 
 G_END_DECLS
 
-#endif /* __GUPNP_SERVICE_PROXY_H__ */
+#endif /* GUPNP_SERVICE_PROXY_H */

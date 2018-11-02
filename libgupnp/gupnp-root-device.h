@@ -19,8 +19,8 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GUPNP_ROOT_DEVICE_H__
-#define __GUPNP_ROOT_DEVICE_H__
+#ifndef GUPNP_ROOT_DEVICE_H
+#define GUPNP_ROOT_DEVICE_H
 
 #include <libxml/tree.h>
 
@@ -122,4 +122,4 @@ gupnp_root_device_get_ssdp_resource_group
 
 G_END_DECLS
 
-#endif /* __GUPNP_ROOT_DEVICE_H__ */
+#endif /* GUPNP_ROOT_DEVICE_H */

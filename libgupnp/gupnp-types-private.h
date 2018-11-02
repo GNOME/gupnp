@@ -20,8 +20,8 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GUPNP_TYPES_PRIVATE_H__
-#define __GUPNP_TYPES_PRIVATE_H__
+#ifndef GUPNP_TYPES_PRIVATE_H
+#define GUPNP_TYPES_PRIVATE_H
 
 #include <glib-object.h>
 
@@ -32,4 +32,4 @@ gupnp_data_type_to_gtype (const char *data_type);
 
 G_END_DECLS
 
-#endif /* __GUPNP_TYPES_PRIVATE_H__ */
+#endif /* GUPNP_TYPES_PRIVATE_H */

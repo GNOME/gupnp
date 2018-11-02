@@ -20,8 +20,8 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GUPNP_TYPES_H__
-#define __GUPNP_TYPES_H__
+#ifndef GUPNP_TYPES_H
+#define GUPNP_TYPES_H
 
 #include <glib-object.h>
 
@@ -126,4 +126,4 @@ gupnp_uuid_get_type (void) G_GNUC_CONST; /* string */
 
 G_END_DECLS
 
-#endif /* __GUPNP_TYPES_H__ */
+#endif /* GUPNP_TYPES_H */

@@ -19,8 +19,8 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef __HTTP_HEADERS_H__
-#define __HTTP_HEADERS_H__
+#ifndef GUPNP_HTTP_HEADERS_H
+#define GUPNP_HTTP_HEADERS_H
 
 #include <libsoup/soup-message.h>
 
@@ -61,4 +61,4 @@ http_response_set_body_gzip      (SoupMessage   *msg,
 
 G_END_DECLS
 
-#endif /* __HTTP_HEADERS_H__ */
+#endif /* GUPNP_HTTP_HEADERS_H */

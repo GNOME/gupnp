@@ -19,8 +19,8 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GUPNP_DEVICE_H__
-#define __GUPNP_DEVICE_H__
+#ifndef GUPNP_DEVICE_H
+#define GUPNP_DEVICE_H
 
 #include "gupnp-device-info.h"
 
@@ -78,4 +78,4 @@ struct _GUPnPDeviceClass {
 
 G_END_DECLS
 
-#endif /* __GUPNP_DEVICE_H__ */
+#endif /* GUPNP_DEVICE_H */

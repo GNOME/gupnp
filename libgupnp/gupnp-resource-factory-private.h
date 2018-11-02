@@ -21,8 +21,8 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GUPNP_RESOURCE_FACTORY_PRIVATE_H__
-#define __GUPNP_RESOURCE_FACTORY_PRIVATE_H__
+#ifndef GUPNP_RESOURCE_FACTORY_PRIVATE_H
+#define GUPNP_RESOURCE_FACTORY_PRIVATE_H
 
 #include "xml-util.h"
 #include "gupnp-device.h"
@@ -75,4 +75,4 @@ gupnp_resource_factory_create_service (GUPnPResourceFactory *factory,
 
 G_END_DECLS
 
-#endif /* __GUPNP_RESOURCE_FACTORY_PRIVATE_H__ */
+#endif /* GUPNP_RESOURCE_FACTORY_PRIVATE_H */

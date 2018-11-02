@@ -19,8 +19,8 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GUPNP_CONTEXT_PRIVATE_H__
-#define __GUPNP_CONTEXT_PRIVATE_H__
+#ifndef GUPNP_CONTEXT_PRIVATE_H
+#define GUPNP_CONTEXT_PRIVATE_H
 
 #include <libsoup/soup.h>
 
@@ -38,4 +38,4 @@ _gupnp_context_add_server_handler_with_data (GUPnPContext *context,
 
 G_END_DECLS
 
-#endif /* __GUPNP_CONTEXT_PRIVATE_H__ */
+#endif /* GUPNP_CONTEXT_PRIVATE_H */

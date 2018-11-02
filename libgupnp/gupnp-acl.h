@@ -19,8 +19,8 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GUPNP_ACL_H__
-#define __GUPNP_ACL_H__
+#ifndef GUPNP_ACL_H
+#define GUPNP_ACL_H
 
 #include <glib.h>
 #include <glib-object.h>
@@ -135,4 +135,4 @@ gupnp_acl_can_sync (GUPnPAcl *self);
 
 G_END_DECLS
 
-#endif
+#endif /* GUPNP_ACL_H */

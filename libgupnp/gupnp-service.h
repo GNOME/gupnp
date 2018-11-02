@@ -19,8 +19,8 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GUPNP_SERVICE_H__
-#define __GUPNP_SERVICE_H__
+#ifndef GUPNP_SERVICE_H
+#define GUPNP_SERVICE_H
 
 #include <stdarg.h>
 
@@ -191,4 +191,4 @@ gupnp_service_signals_autoconnect (GUPnPService *service,
 
 G_END_DECLS
 
-#endif /* __GUPNP_SERVICE_H__ */
+#endif /* GUPNP_SERVICE_H */

@@ -19,8 +19,8 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GUPNP_WHITE_LIST_H__
-#define __GUPNP_WHITE_LIST_H__
+#ifndef GUPNP_WHITE_LIST_H
+#define GUPNP_WHITE_LIST_H
 
 #include <glib.h>
 #include "gupnp-context.h"
@@ -107,4 +107,4 @@ gupnp_white_list_check_context  (GUPnPWhiteList *white_list,
 
 G_END_DECLS
 
-#endif /* __GUPNP_WHITE_LIST_H__ */
+#endif /* GUPNP_WHITE_LIST_H */

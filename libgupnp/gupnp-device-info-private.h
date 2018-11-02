@@ -19,8 +19,8 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GUPNP_DEVICE_INFO_PRIVATE_H__
-#define __GUPNP_DEVICE_INFO_PRIVATE_H__
+#ifndef GUPNP_DEVICE_INFO_PRIVATE_H
+#define GUPNP_DEVICE_INFO_PRIVATE_H
 
 #include "gupnp-device-info.h"
 #include "gupnp-xml-doc.h"
@@ -28,4 +28,4 @@
 G_GNUC_INTERNAL GUPnPXMLDoc *
 _gupnp_device_info_get_document (GUPnPDeviceInfo *info);
 
-#endif /* __GUPNP_DEVICE_INFO_PRIVATE_H__ */
+#endif /* GUPNP_DEVICE_INFO_PRIVATE_H */

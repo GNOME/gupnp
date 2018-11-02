@@ -21,8 +21,8 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GUPNP_SERVICE_INTROSPECTION_H__
-#define __GUPNP_SERVICE_INTROSPECTION_H__
+#ifndef GUPNP_SERVICE_INTROSPECTION_H
+#define GUPNP_SERVICE_INTROSPECTION_H
 
 #include <glib-object.h>
 
@@ -178,4 +178,4 @@ gupnp_service_introspection_get_state_variable
 
 G_END_DECLS
 
-#endif /* __GUPNP_SERVICE_INTROSPECTION_H__ */
+#endif /* GUPNP_SERVICE_INTROSPECTION_H */

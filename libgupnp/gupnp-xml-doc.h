@@ -22,8 +22,8 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GUPNP_XML_DOC_H__
-#define __GUPNP_XML_DOC_H__
+#ifndef GUPNP_XML_DOC_H
+#define GUPNP_XML_DOC_H
 
 #include <libxml/tree.h>
 #include <glib-object.h>
@@ -82,4 +82,4 @@ gupnp_xml_doc_new_from_path             (const char     *path,
 
 G_END_DECLS
 
-#endif /* __GUPNP_XML_DOC_H__ */
+#endif /* GUPNP_XML_DOC_H */

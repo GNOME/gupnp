@@ -19,8 +19,8 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GUPNP_UUID_H__
-#define __GUPNP_UUID_H__
+#ifndef GUPNP_UUID_H
+#define GUPNP_UUID_H
 
 G_BEGIN_DECLS
 
@@ -29,4 +29,4 @@ gupnp_get_uuid (void);
 
 G_END_DECLS
 
-#endif /* __GUPNP_UUID_H__ */
+#endif /* GUPNP_UUID_H */

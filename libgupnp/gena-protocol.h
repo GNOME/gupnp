@@ -19,8 +19,8 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GENA_PROTOCOL_H__
-#define __GENA_PROTOCOL_H__
+#ifndef GUPNP_GENA_PROTOCOL_H
+#define GUPNP_GENA_PROTOCOL_H
 
 G_BEGIN_DECLS
 
@@ -34,4 +34,4 @@ G_BEGIN_DECLS
 
 G_END_DECLS
 
-#endif /* __GENA_PROTOCOL_H__ */
+#endif /* GUPNP_GENA_PROTOCOL_H */

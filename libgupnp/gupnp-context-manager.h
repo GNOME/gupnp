@@ -21,8 +21,8 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GUPNP_CONTEXT_MANAGER_H__
-#define __GUPNP_CONTEXT_MANAGER_H__
+#ifndef GUPNP_CONTEXT_MANAGER_H
+#define GUPNP_CONTEXT_MANAGER_H
 
 #include <glib.h>
 #include "gupnp-context.h"
@@ -107,4 +107,4 @@ gupnp_context_manager_get_white_list   (GUPnPContextManager *manager);
 
 G_END_DECLS
 
-#endif /* __GUPNP_CONTEXT_MANAGER_H__ */
+#endif /* GUPNP_CONTEXT_MANAGER_H */

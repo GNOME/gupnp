@@ -19,8 +19,8 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GUPNP_SERVICE_INTROSPECTION_PRIVATE_H__
-#define __GUPNP_SERVICE_INTROSPECTION_PRIVATE_H__
+#ifndef GUPNP_SERVICE_INTROSPECTION_PRIVATE_H
+#define GUPNP_SERVICE_INTROSPECTION_PRIVATE_H
 
 #include <libxml/tree.h>
 
@@ -29,4 +29,4 @@
 G_GNUC_INTERNAL GUPnPServiceIntrospection *
 gupnp_service_introspection_new (xmlDoc *scpd);
 
-#endif /* __GUPNP_SERVICE_INTROSPECTION_PRIVATE_H__ */
+#endif /* GUPNP_SERVICE_INTROSPECTION_PRIVATE_H */

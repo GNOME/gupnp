@@ -19,8 +19,8 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GUPNP_ERROR_H__
-#define __GUPNP_ERROR_H__
+#ifndef GUPNP_ERROR_H
+#define GUPNP_ERROR_H
 
 #include <glib.h>
 
@@ -142,4 +142,4 @@ typedef enum {
 
 G_END_DECLS
 
-#endif /* __GUPNP_ERROR_H__ */
+#endif /* GUPNP_ERROR_H */

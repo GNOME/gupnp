@@ -19,8 +19,8 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GUPNP_CONTROL_POINT_H__
-#define __GUPNP_CONTROL_POINT_H__
+#ifndef GUPNP_CONTROL_POINT_H
+#define GUPNP_CONTROL_POINT_H
 
 #include <libgssdp/gssdp-resource-browser.h>
 
@@ -116,4 +116,4 @@ gupnp_control_point_get_resource_factory (GUPnPControlPoint    *control_point);
 
 G_END_DECLS
 
-#endif /* __GUPNP_CONTROL_POINT_H__ */
+#endif /* GUPNP_CONTROL_POINT_H */

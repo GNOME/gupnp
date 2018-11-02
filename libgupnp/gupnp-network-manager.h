@@ -20,8 +20,8 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GUPNP_NETWORK_MANAGER_H__
-#define __GUPNP_NETWORK_MANAGER_H__
+#ifndef GUPNP_NETWORK_MANAGER_H
+#define GUPNP_NETWORK_MANAGER_H
 
 #include "gupnp-context-manager.h"
 
@@ -74,4 +74,4 @@ gupnp_network_manager_is_available                      (void);
 
 G_END_DECLS
 
-#endif /* __GUPNP_NETWORK_MANAGER_H__ */
+#endif /* GUPNP_NETWORK_MANAGER_H */

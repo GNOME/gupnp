@@ -19,8 +19,8 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef __XML_UTIL_H__
-#define __XML_UTIL_H__
+#ifndef GUPNP_XML_UTIL_H
+#define GUPNP_XML_UTIL_H
 
 #include <libxml/tree.h>
 #include <libsoup/soup-uri.h>
@@ -76,4 +76,4 @@ G_GNUC_INTERNAL void
 xml_util_add_content                    (GString    *xml_str,
                                          const char *content);
 
-#endif /* __XML_UTIL_H__ */
+#endif /* GUPNP_XML_UTIL_H */

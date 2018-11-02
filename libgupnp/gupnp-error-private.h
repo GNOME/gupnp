@@ -19,8 +19,8 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GUPNP_ERROR_PRIVATE_H__
-#define __GUPNP_ERROR_PRIVATE_H__
+#ifndef GUPNP_ERROR_PRIVATE_H
+#define GUPNP_ERROR_PRIVATE_H
 
 #include <libsoup/soup-message.h>
 
@@ -35,4 +35,4 @@ _gupnp_error_new_server_error (SoupMessage *msg);
 
 G_END_DECLS
 
-#endif /* __GUPNP_ERROR_PRIVATE_H__ */
+#endif /* GUPNP_ERROR_PRIVATE_H */

@@ -19,8 +19,8 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GUPNP_CONTEXT_H__
-#define __GUPNP_CONTEXT_H__
+#ifndef GUPNP_CONTEXT_H
+#define GUPNP_CONTEXT_H
 
 #include <libgssdp/gssdp-client.h>
 #include <libsoup/soup-server.h>
@@ -143,4 +143,4 @@ gupnp_context_remove_server_handler    (GUPnPContext *context,
                                         const char *path);
 G_END_DECLS
 
-#endif /* __GUPNP_CONTEXT_H__ */
+#endif /* GUPNP_CONTEXT_H */

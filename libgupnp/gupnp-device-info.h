@@ -19,8 +19,8 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GUPNP_DEVICE_INFO_H__
-#define __GUPNP_DEVICE_INFO_H__
+#ifndef GUPNP_DEVICE_INFO_H
+#define GUPNP_DEVICE_INFO_H
 
 #include <glib-object.h>
 #include <libxml/tree.h>
@@ -185,4 +185,4 @@ gupnp_device_info_get_resource_factory   (GUPnPDeviceInfo *device_info);
 
 G_END_DECLS
 
-#endif /* __GUPNP_DEVICE_INFO_H__ */
+#endif /* GUPNP_DEVICE_INFO_H */

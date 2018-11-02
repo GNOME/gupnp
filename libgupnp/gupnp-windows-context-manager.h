@@ -23,8 +23,8 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef __GUPNP_WINDOWS_CONTEXT_MANAGER_H__
-#define __GUPNP_WINDOWS_CONTEXT_MANAGER_H__
+#ifndef GUPNP_WINDOWS_CONTEXT_MANAGER_H
+#define GUPNP_WINDOWS_CONTEXT_MANAGER_H
 
 #include "gupnp-simple-context-manager.h"
 
@@ -70,4 +70,4 @@ typedef struct {
 
 G_END_DECLS
 
-#endif /* __GUPNP_WINDOWS_CONTEXT_MANAGER_H__ */
+#endif /* GUPNP_WINDOWS_CONTEXT_MANAGER_H */
