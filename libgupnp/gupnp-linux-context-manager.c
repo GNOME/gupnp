@@ -116,9 +116,9 @@ dump_rta_attr (sa_family_t family, struct rtattr *rt_attr)
                         rt_attr->rta_type == IFA_BROADCAST ||
                         rt_attr->rta_type == IFA_ANYCAST) {
                 data = inet_ntop (family,
-                                RTA_DATA (rt_attr),
-                                buf,
-                                sizeof (buf));
+                                  RTA_DATA (rt_attr),
+                                  buf,
+                                  sizeof (buf));
         } else if (rt_attr->rta_type == IFA_LABEL) {
                 data = (const char *) RTA_DATA (rt_attr);
         } else {
@@ -452,15 +452,33 @@ extract_info (struct nlmsghdr *header,
                         }
 
                         if (mask != NULL) {
-                                struct in_addr addr, *data;
-                                guint32 bitmask;
+                                struct in6_addr addr = { 0 }, *data;
+                                int i = 0, bits = prefixlen;
+                                guint8 *outbuf = (guint8 *)&addr.s6_addr;
+                                guint8 *inbuf;
 
-                                bitmask = htonl(G_MAXUINT32 << (32 - prefixlen));
                                 data = RTA_DATA (rt_attr);
+                                inbuf = (guint8 *)&data->s6_addr;
 
-                                addr.s_addr = data->s_addr & bitmask;
+                                for (i = 0; i < (family == AF_INET ? 4 : 16); i++) {
+                                        if (bits > 8) {
+                                                bits -= 8;
+                                                outbuf[i] = inbuf[i] & 0xff;
+                                        } else {
+                                                static const guint8 bits_a[] =
+                                                { 0x00, 0x08, 0x0C, 0x0E, 0x0F };
 
-                                inet_ntop (AF_INET,
+                                                if (bits >= 4) {
+                                                        outbuf[i] = inbuf[i] & 0xf0;
+                                                        bits -= 4;
+                                                }
+                                                outbuf[i] = outbuf[i] |
+                                                            (inbuf[i] & bits_a[bits]);
+                                                break;
+                                        }
+                                }
+
+                                inet_ntop (family,
                                            &addr,
                                            buf,
                                            sizeof (buf));
