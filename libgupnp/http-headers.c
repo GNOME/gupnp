@@ -114,14 +114,14 @@ locale_from_http_language (char *lang)
 void
 http_request_set_accept_language (SoupMessage *message)
 {
-        char *locale, *lang;
-        int dash_index;
-        GString *tmp;
-
 #ifdef G_OS_WIN32
         /* TODO: Use GetSystemDefaultLangID or similar */
         return;
 #else
+        char *locale, *lang;
+        int dash_index;
+        GString *tmp;
+
 
         locale = setlocale (LC_MESSAGES, NULL);
 

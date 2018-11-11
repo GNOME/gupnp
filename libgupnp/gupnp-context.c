@@ -948,7 +948,7 @@ host_path_handler (G_GNUC_UNUSED SoupServer        *server,
                    gpointer                         user_data)
 {
         char *local_path, *path_to_open;
-        struct stat st;
+        GStatBuf st;
         int status;
         GList *locales, *orig_locales;
         GMappedFile *mapped_file;
