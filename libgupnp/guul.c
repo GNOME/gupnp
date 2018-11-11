@@ -76,7 +76,7 @@ guul_get_uuid()
             unsigned char* uuidStr = NULL;
             stat = UuidToString (&uuid, &uuidStr);
             if (stat == RPC_S_OK) {
-                    ret = g_strdup (uuidStr);
+                    ret = g_strdup ((char *) uuidStr);
                     RpcStringFree (&uuidStr);
             }
     }
