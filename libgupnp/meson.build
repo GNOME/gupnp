@@ -1,8 +1,11 @@
 context_manager_impl = []
 context_manager_args = []
+system_deps = []
 
 if host_machine.system() == 'windows'
     context_manager_impl += 'gupnp-windows-context-manager.c'
+    system_deps += cc.find_library('ws2_32', required : 'true')
+    system_deps += cc.find_library('iphlpapi', required : 'true')
 else
     if ifaddrs_available
         context_manager_impl += 'gupnp-unix-context-manager.c'
@@ -90,7 +93,7 @@ libgupnp = library(
     'gupnp-1.2',
     sources + context_manager_impl + enums,
     version : '0.0.0',
-    dependencies : dependencies,
+    dependencies : dependencies + system_deps,
     c_args : context_manager_args,
     include_directories: include_directories('..'),
     install: true
