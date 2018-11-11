@@ -6,6 +6,11 @@ pkgconfig_DATA= gupnp-1.0.pc
 pkgconfigdir = $(libdir)/pkgconfig
 
 EXTRA_DIST = gupnp-1.0.pc.in gupnp-1.0-uninstalled.pc.in
+EXTRA_DIST = subprojects/guul/meson.build \
+			 subprojects/guul/guul.h \
+			 subprojects/guul/guul.c \
+			 meson.build \
+			 meson_options.txt
 
 DISTCHECK_CONFIGURE_FLAGS = --enable-gtk-doc --enable-introspection
 

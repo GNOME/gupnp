@@ -12,4 +12,5 @@ light_client_LDFLAGS = $(GTHREAD_LIBS) $(LIBGUPNP_LIBS)
 MAINTAINERCLEANFILES = Makefile.in
 
 EXTRA_DIST = BinaryLight1.xml \
-	     SwitchPower1.xml
+	     SwitchPower1.xml \
+		 meson.build

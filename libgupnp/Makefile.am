@@ -134,7 +134,8 @@ EXTRA_DIST = gupnp-marshal.list 	   \
 	     gupnp-unix-context-manager.c  \
 	     gupnp-unix-context-manager.h  \
 	     gupnp-windows-context-manager.c \
-	     gupnp-windows-context-manager.h
+	     gupnp-windows-context-manager.h \
+		 meson.build
 
 -include $(INTROSPECTION_MAKEFILE)
 INTROSPECTION_GIRS =
