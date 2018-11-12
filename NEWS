@@ -1,3 +1,76 @@
+1.1.0
+=====
+- Bump API and ABI version
+- GUPnPRootDevice implements GInitable
+- Clean-up functions added for GObject-Introspection compatibility
+- Remove all deprecated functions from GUPnP 1.0 API
+- Switch build to Meson
+- Port everything to new GLib type macros
+- Add IPv6 support to Linux context manager
+- Fix IPv6 LL support for context
+- Add gupnp_context_manager_create_full for specifying the socket family
+
+Bugs fixed in this release:
+ - https://bugzilla.gnome.org/show_bug.cgi?id=654446
+ - https://bugzilla.gnome.org/show_bug.cgi?id=770318
+ - https://bugzilla.gnome.org/show_bug.cgi?id=777491
+ - https://bugzilla.gnome.org/show_bug.cgi?id=780640
+ - https://bugzilla.gnome.org/show_bug.cgi?id=780715
+ - https://bugzilla.gnome.org/show_bug.cgi?id=793955
+
+All contributors to this release:
+ - Jens Georg <mail@jensge.org>
+ - Sven Neumann <neumann@teufel.de>
+ - Oliver Tappe <zooey@hirschkaefer.de>
+ - Bastien Nocera <hadess@hadess.net>
+
+1.0.3
+=====
+- Avoid a crash in gupnp_root_device_constructor
+- Propagage User-Agent from Cache
+- Fix potential issue with boolean vs. bitwise evaluation
+- Fix a crash in GUPnPServiceProxy::subscription_expire
+- Accept broken Action header without the "
+- Fix issue with strcpy destination buffer size in linux context manager
+
+Bugs fixed in this release:
+ - https://bugzilla.gnome.org/show_bug.cgi?id=780640
+ - https://bugzilla.gnome.org/show_bug.cgi?id=780715
+ - https://bugzilla.gnome.org/show_bug.cgi?id=793955
+
+All contributors to this release:
+ - Jens Georg <mail@jensge.org>
+ - Sven Neumann <neumann@teufel.de>
+ - Bastien Nocera <hadess@hadess.net>
+
+1.0.2
+=====
+- Fix a potential crash of GUPnPProxy when trying to access a dangling
+  GUPnPServiceProxy pointer of a server handler.
+
+Bugs fixed in this release:
+ - https://bugzilla.gnome.org/show_bug.cgi?id=777491
+
+All contributors to this release:
+ - Sven Neumann <neumann@teufel.de>
+
+1.0.1
+=====
+
+- Connman CM: Various fixes
+- Linux CM: Fix compiler warning about negative shift
+- Documentation: Fix FSF address
+- Documentation: Fix references
+- Build: Update ax_append_link_flags
+
+Bugs fixed in this release:
+ - https://bugzilla.gnome.org/show_bug.cgi?id=770318
+
+All contributors to this release:
+ - Sven Neumann <neumann@teufel.de>
+ - Jens Georg <mail@jensge.org>
+ - Oliver Tappe <zooey@hirschkaefer.de>
+
 1.0.0
 =====
 
