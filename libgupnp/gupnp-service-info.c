@@ -27,6 +27,8 @@
  * service information.
  */
 
+#define G_LOG_DOMAIN "GUPnPServiceInfo"
+
 #include <libsoup/soup.h>
 #include <string.h>
 
@@ -729,9 +731,17 @@ gupnp_service_info_get_introspection_async_full
 
         data->message = NULL;
         if (scpd_url != NULL) {
-                data->message = soup_message_new (SOUP_METHOD_GET, scpd_url);
+                GUPnPContext *context = NULL;
+                char *local_scpd_url = NULL;
 
+                context = gupnp_service_info_get_context (info);
+
+                local_scpd_url = gupnp_context_rewrite_uri (context, scpd_url);
                 g_free (scpd_url);
+
+                data->message = soup_message_new (SOUP_METHOD_GET,
+                                                  local_scpd_url);
+                g_free (local_scpd_url);
         }
 
         if (data->message == NULL) {

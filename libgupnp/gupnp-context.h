@@ -106,6 +106,10 @@ gupnp_context_add_server_handler       (GUPnPContext *context,
 void
 gupnp_context_remove_server_handler    (GUPnPContext *context,
                                         const char *path);
+
+char *
+gupnp_context_rewrite_uri              (GUPnPContext *context,
+                                        const char *uri);
 G_END_DECLS
 
 #endif /* GUPNP_CONTEXT_H */

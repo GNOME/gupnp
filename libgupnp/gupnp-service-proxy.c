@@ -842,9 +842,18 @@ begin_action_msg (GUPnPServiceProxy              *proxy,
                                         (GUPNP_SERVICE_INFO (proxy));
 
         if (control_url != NULL) {
-                ret->msg = soup_message_new (SOUP_METHOD_POST, control_url);
+                GUPnPContext *context = NULL;
+                char *local_control_url = NULL;
 
+                context = gupnp_service_info_get_context
+                                        (GUPNP_SERVICE_INFO (proxy));
+
+                local_control_url = gupnp_context_rewrite_uri (context,
+                                                               control_url);
                 g_free (control_url);
+
+                ret->msg = soup_message_new (SOUP_METHOD_POST, local_control_url);
+                g_free (local_control_url);
         }
 
         if (ret->msg == NULL) {
@@ -2065,7 +2074,7 @@ subscription_expire (gpointer user_data)
         GUPnPContext *context;
         SoupMessage *msg;
         SoupSession *session;
-        char *sub_url, *timeout;
+        char *sub_url, *timeout, *local_sub_url;
 
         proxy = GUPNP_SERVICE_PROXY (user_data);
         priv = gupnp_service_proxy_get_instance_private (proxy);
@@ -2082,9 +2091,11 @@ subscription_expire (gpointer user_data)
         sub_url = gupnp_service_info_get_event_subscription_url
                                                 (GUPNP_SERVICE_INFO (proxy));
 
-        msg = soup_message_new (GENA_METHOD_SUBSCRIBE, sub_url);
-
+        local_sub_url = gupnp_context_rewrite_uri (context, sub_url);
         g_free (sub_url);
+
+        msg = soup_message_new (GENA_METHOD_SUBSCRIBE, local_sub_url);
+        g_free (local_sub_url);
 
         g_return_val_if_fail (msg != NULL, FALSE);
 
@@ -2258,7 +2269,7 @@ subscribe (GUPnPServiceProxy *proxy)
                 priv->subscription_timeout_src = NULL;
         }
 
-	context = gupnp_service_info_get_context (GUPNP_SERVICE_INFO (proxy));
+        context = gupnp_service_info_get_context (GUPNP_SERVICE_INFO (proxy));
 
         /* Create subscription message */
         sub_url = gupnp_service_info_get_event_subscription_url
@@ -2266,9 +2277,13 @@ subscribe (GUPnPServiceProxy *proxy)
 
         msg = NULL;
         if (sub_url != NULL) {
-                msg = soup_message_new (GENA_METHOD_SUBSCRIBE, sub_url);
+                char *local_sub_url = NULL;
 
+                local_sub_url = gupnp_context_rewrite_uri (context, sub_url);
                 g_free (sub_url);
+
+                msg = soup_message_new (GENA_METHOD_SUBSCRIBE, local_sub_url);
+                g_free (local_sub_url);
         }
 
         if (msg == NULL) {
@@ -2359,15 +2374,17 @@ unsubscribe (GUPnPServiceProxy *proxy)
 
         if (priv->sid != NULL) {
                 SoupMessage *msg;
-                char *sub_url;
+                char *sub_url, *local_sub_url;
 
                 /* Create unsubscription message */
                 sub_url = gupnp_service_info_get_event_subscription_url
-                                                   (GUPNP_SERVICE_INFO (proxy));
+                                                (GUPNP_SERVICE_INFO (proxy));
 
-                msg = soup_message_new (GENA_METHOD_UNSUBSCRIBE, sub_url);
-
+                local_sub_url = gupnp_context_rewrite_uri (context, sub_url);
                 g_free (sub_url);
+
+                msg = soup_message_new (GENA_METHOD_UNSUBSCRIBE, local_sub_url);
+                g_free (local_sub_url);
 
                 if (msg != NULL) {
                         /* Add headers */

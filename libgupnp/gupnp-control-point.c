@@ -709,6 +709,7 @@ load_description (GUPnPControlPoint *control_point,
                 GUPnPContext *context;
                 SoupSession *session;
                 GetDescriptionURLData *data;
+                char *local_description = NULL;
 
                 context = gupnp_control_point_get_context (control_point);
 
@@ -718,8 +719,12 @@ load_description (GUPnPControlPoint *control_point,
 
                 data->tries = max_tries;
                 data->timeout = timeout;
+                local_description = gupnp_context_rewrite_uri (context,
+                                                               description_url);
                 data->message = soup_message_new (SOUP_METHOD_GET,
-                                                  description_url);
+                                                  local_description);
+                g_free (local_description);
+
                 if (data->message == NULL) {
                         g_warning ("Invalid description URL: %s",
                                    description_url);

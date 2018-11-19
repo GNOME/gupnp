@@ -1209,8 +1209,11 @@ subscribe (GUPnPService *service,
         SubscriptionData *data;
         char *start, *end, *uri;
         GUPnPServicePrivate *priv;
+        GUPnPContext *context;
 
         priv = gupnp_service_get_instance_private (service);
+        context = gupnp_service_info_get_context
+                                        (GUPNP_SERVICE_INFO (service));
 
         data = g_slice_new0 (SubscriptionData);
 
@@ -1226,8 +1229,13 @@ subscribe (GUPnPService *service,
                         break;
 
                 if (strncmp (start, "http://", strlen ("http://")) == 0) {
+                        char *local_uri;
+
                         uri = g_strndup (start, end - start);
-                        data->callbacks = g_list_append (data->callbacks, uri);
+                        local_uri = gupnp_context_rewrite_uri (context, uri);
+                        g_free (uri);
+
+                        data->callbacks = g_list_append (data->callbacks, local_uri);
                 }
 
                 start = end;

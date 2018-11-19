@@ -1597,3 +1597,45 @@ gupnp_context_remove_server_handler (GUPnPContext *context, const char *path)
         priv = gupnp_context_get_instance_private (context);
         soup_server_remove_handler (priv->server, path);
 }
+
+/**
+ * gupnp_context_rewrite_uri:
+ * @context: a #GUPnPContext
+ * @uri: an uri to rewrite if necessary
+ *
+ * Returns: A re-written version of the @uri if the context is on a link-local
+ * IPv6 address, a copy of the @uri otherwise.
+ *
+ * Since: 1.11.1
+ */
+char *
+gupnp_context_rewrite_uri (GUPnPContext *context, const char *plain_uri)
+{
+        const char *host = NULL;
+        SoupURI *uri = NULL;
+        GInetAddress *addr = NULL;
+        char *retval = NULL;
+        int index = -1;
+
+        uri = soup_uri_new (plain_uri);
+        host = soup_uri_get_host (uri);
+        addr = g_inet_address_new_from_string (host);
+        index = gssdp_client_get_index (GSSDP_CLIENT (context));
+
+        if (g_inet_address_get_is_link_local (addr) &&
+            g_inet_address_get_family (addr) == G_SOCKET_FAMILY_IPV6) {
+                char *new_host;
+
+                new_host = g_strdup_printf ("%s%%%d",
+                                            host,
+                                            index);
+                soup_uri_set_host (uri, new_host);
+                g_free (new_host);
+        }
+
+        g_object_unref (addr);
+        retval = soup_uri_to_string (uri, FALSE);
+        soup_uri_free (uri);
+
+        return retval;
+}

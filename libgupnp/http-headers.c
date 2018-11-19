@@ -26,6 +26,8 @@
 #include <string.h>
 #include <gio/gio.h>
 
+#include <libsoup/soup.h>
+
 #include "http-headers.h"
 
 /* Converts @lang from HTTP language tag format into locale format.
