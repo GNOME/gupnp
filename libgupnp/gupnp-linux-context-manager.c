@@ -267,7 +267,8 @@ static void
 network_device_create_context (NetworkInterface *device,
                                const char       *address,
                                const char       *label,
-                               const char       *mask)
+                               const char       *mask,
+                               GInetAddressMask *host_mask)
 {
         guint port;
         GError *error = NULL;
@@ -292,6 +293,7 @@ network_device_create_context (NetworkInterface *device,
                                   "interface", label,
                                   "network", device->essid ? device->essid
                                                            : mask,
+                                  "host-mask", host_mask,
                                   "port", port,
                                   NULL);
 
@@ -392,7 +394,8 @@ static void create_context (GUPnPLinuxContextManager *self,
                             const char               *label,
                             const char               *address,
                             const char               *mask,
-                            struct ifaddrmsg         *ifa);
+                            struct ifaddrmsg         *ifa,
+                            GInetAddressMask         *host_mask);
 static void remove_context (GUPnPLinuxContextManager *self,
                             const char               *address,
                             const char               *label,
@@ -524,7 +527,8 @@ create_context (GUPnPLinuxContextManager *self,
                 const char               *address,
                 const char               *label,
                 const char               *mask,
-                struct ifaddrmsg         *ifa)
+                struct ifaddrmsg         *ifa,
+                GInetAddressMask         *host_mask)
 {
         NetworkInterface *device;
         GUPnPLinuxContextManagerPrivate *priv;
@@ -548,7 +552,8 @@ create_context (GUPnPLinuxContextManager *self,
         network_device_create_context (device,
                                        address,
                                        label,
-                                       mask);
+                                       mask,
+                                       host_mask);
 }
 
 static void
@@ -833,8 +838,19 @@ receive_netlink_message (GUPnPLinuxContextManager *self, GError **error)
                                               &label,
                                               &mask);
 
-                                if (address != NULL)
-                                        create_context (self, address, label, mask, ifa);
+                                if (address != NULL) {
+                                        GInetAddress *mask_addr;
+                                        GInetAddressMask *host_mask;
+
+                                        mask_addr = g_inet_address_new_from_string (mask);
+                                        host_mask = g_inet_address_mask_new (mask_addr,
+                                                                             ifa->ifa_prefixlen,
+                                                                             NULL);
+                                        create_context (self, address, label, mask, ifa, host_mask);
+
+                                        g_object_unref (host_mask);
+                                        g_object_unref (mask_addr);
+                                }
                                 g_free (label);
                                 g_free (address);
                                 g_free (mask);
