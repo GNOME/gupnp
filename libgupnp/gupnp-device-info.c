@@ -766,11 +766,11 @@ icon_free (Icon *icon)
  * @mime_type: (out) (allow-none): The location where to store the the format
  * of the returned icon, or %NULL. The returned string should be freed after
  * use
- * @depth: (out) (allow-none) :  The location where to store the depth of the
+ * @depth: (out) (allow-none):  The location where to store the depth of the
  * returned icon, or %NULL
- * @width: (out) (allow-none) : The location where to store the width of the
+ * @width: (out) (allow-none): The location where to store the width of the
  * returned icon, or %NULL
- * @height: (out) (allow-none) : The location where to store the height of the
+ * @height: (out) (allow-none): The location where to store the height of the
  * returned icon, or %NULL
  *
  * Get a URL pointing to the icon most closely matching the
