@@ -442,16 +442,20 @@ extract_info (struct nlmsghdr *header,
                         *label = g_strdup ((char *) RTA_DATA (rt_attr));
                 } else if (rt_attr->rta_type == IFA_ADDRESS) {
                         if (address != NULL) {
-                                const char *result = NULL;
-                                result = inet_ntop (family,
-                                           RTA_DATA (rt_attr),
-                                           buf,
-                                           sizeof (buf));
-                                if (result == NULL) {
-                                    g_critical ("Failed ntop: %m");
+                                GInetAddress *addr;
+
+                                *address = NULL;
+                                addr = g_inet_address_new_from_bytes (RTA_DATA (rt_attr), family);
+                                if (family == AF_INET) {
+                                        *address = g_inet_address_to_string (addr);
                                 } else {
-                                    *address = g_strdup (result);
+                                        if (g_inet_address_get_is_link_local (addr) ||
+                                            g_inet_address_get_is_loopback (addr) ||
+                                            g_inet_address_get_is_site_local (addr)) {
+                                                *address = g_inet_address_to_string (addr);
+                                        }
                                 }
+                                g_object_unref (addr);
                         }
 
                         if (mask != NULL) {
@@ -824,11 +828,6 @@ receive_netlink_message (GUPnPLinuxContextManager *self, GError **error)
 
                                 g_debug ("Received RTM_NEWADDR");
                                 ifa = NLMSG_DATA (header);
-                                if (ifa->ifa_family == AF_INET6 &&
-                                        (ifa->ifa_scope != RT_SCOPE_SITE &&
-                                         ifa->ifa_scope != RT_SCOPE_LINK &&
-                                         ifa->ifa_scope != RT_SCOPE_HOST))
-                                        break;
 
                                 extract_info (header,
                                               priv->dump_netlink_packets,
