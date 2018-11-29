@@ -4,24 +4,14 @@ pkg = import('pkgconfig')
 
 cc = meson.get_compiler('c')
 
+netlink_available = cc.has_header('linux/rtnetlink.h')
+ifaddrs_available = cc.has_header('ifaddrs.h')
+
 conf = configuration_data()
 conf.set_quoted('VERSION', meson.project_version())
-
-netlink_test = '''#include <sys/socket.h>
-#include <linux/rtnetlink.h>
-'''
-netlink_available = cc.compiles(netlink_test, name : 'linux/rtnetlink.h availability')
 conf.set('HAVE_NETLINK', netlink_available)
-
-ifaddrs_test = '#include <ifaddrs.h>'
-ifaddrs_available = cc.compiles(ifaddrs_test, name : 'ifaddrs.h availability')
 conf.set('HAVE_IFADDRS_H', ifaddrs_available)
-
-wireless_test ='''#include <sys/socket.h>
-#include <linux/wireless.h>
-'''
-conf.set('HAVE_LINUX_WIRELESS_H',
-         cc.compiles(wireless_test, name : 'linux/wireless.h availability'))
+conf.set('HAVE_LINUX_WIRELESS_H', cc.has_header('linux/wireless.h'))
 
 config_h = configure_file(output : 'config.h', configuration : conf)
 add_global_arguments('-DHAVE_CONFIG_H=1', language : 'c')
