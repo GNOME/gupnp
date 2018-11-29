@@ -260,6 +260,8 @@ network_device_update_essid (NetworkInterface *device)
                 device->essid = g_strdup (essid);
         else
                 old_essid = NULL;
+#else
+        old_essid = NULL;
 #endif
         g_free (old_essid);
 }
