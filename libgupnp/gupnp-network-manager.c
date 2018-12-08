@@ -501,7 +501,7 @@ device_proxy_new_cb (GObject      *source_object,
                 use_new_device (manager, nm_device);
 
 done:
-        g_clear_pointer (&nm_device, (GDestroyNotify) nm_device_unref);
+        g_clear_pointer (&nm_device, nm_device_unref);
         g_clear_object (&device_proxy);
 }
 
