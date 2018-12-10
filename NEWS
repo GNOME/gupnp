@@ -1,3 +1,17 @@
+1.1.1
+=====
+- Fix issue when building VAPI
+- Pass on network mask from linux CM
+- Properly rewrite v6 link-local urls when accessing
+- Minor introspection annotation fixes
+- Properly filter v6 scopes in linux CM
+- Fix compile issues with linux CM when there is no wireless.h
+- Fix doble-free in linux CM
+- Simplify build tests a bit
+
+All contributors to this release:
+ - Jens Georg <mail@jensge.org>
+
 1.1.0
 =====
 - Bump API and ABI version
