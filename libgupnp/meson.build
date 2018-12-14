@@ -80,6 +80,7 @@ sources = files(
     'gupnp-service-info.c',
     'gupnp-service-introspection.c',
     'gupnp-service-proxy.c',
+    'gupnp-service-proxy-action.c',
     'gupnp-simple-context-manager.c',
     'gupnp-types.c',
     'gupnp-white-list.c',

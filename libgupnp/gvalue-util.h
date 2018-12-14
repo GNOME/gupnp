@@ -37,4 +37,7 @@ G_GNUC_INTERNAL gboolean
 gvalue_util_value_append_to_xml_string (const GValue *value,
                                         GString      *str);
 
+G_GNUC_INTERNAL void
+gvalue_free                            (gpointer data);
+
 #endif /* GUPNP_GVALUE_UTIL_H */

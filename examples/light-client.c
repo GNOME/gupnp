@@ -39,16 +39,28 @@ send_cmd (GUPnPServiceProxy *proxy)
   GError *error = NULL;
   gboolean target;
 
+  GUPnPServiceProxyAction *action;
+
   if (mode == TOGGLE) {
     /* We're toggling, so first fetch the current status */
-    if (!gupnp_service_proxy_send_action
-        (proxy, "GetStatus", &error,
-         /* IN args */ NULL,
-         /* OUT args */ "ResultStatus", G_TYPE_BOOLEAN, &target, NULL)) {
+
+    action = gupnp_service_proxy_action_new ("GetStatus", NULL);
+
+    gupnp_service_proxy_call_action (proxy, action, NULL, &error);
+    if (error != NULL)
       goto error;
-    }
+
+    gupnp_service_proxy_action_get_result (action,
+                                           &error,
+                                           "ResultStatus", G_TYPE_BOOLEAN, &target, NULL);
+    g_clear_pointer (&action, gupnp_service_proxy_action_unref);
+
+    if (error != NULL)
+      goto error;
+
     /* And then toggle it */
     target = ! target;
+
   } else {
     /* Mode is a boolean, so the target is the mode thanks to our well chosen
        enumeration values. */
@@ -56,12 +68,13 @@ send_cmd (GUPnPServiceProxy *proxy)
   }
 
   /* Set the target */
-  if (!gupnp_service_proxy_send_action (proxy, "SetTarget", &error,
-                                        /* IN args */
-                                        "newTargetValue", G_TYPE_BOOLEAN, target, NULL,
-                                        /* OUT args */
-                                        NULL)) {
-    goto error;
+
+  action = gupnp_service_proxy_action_new ("SetTarget",
+                                           "newTargetValue", G_TYPE_BOOLEAN, target, NULL);
+  gupnp_service_proxy_call_action (proxy, action, NULL, &error);
+  g_clear_pointer (&action, gupnp_service_proxy_action_unref);
+  if (error != NULL) {
+          goto error;
   } else {
     if (!quiet) {
       g_print ("Set switch to %s.\n", target ? "on" : "off");
@@ -76,6 +89,7 @@ send_cmd (GUPnPServiceProxy *proxy)
   return;
 
  error:
+  g_clear_pointer (&action, gupnp_service_proxy_action_unref);
   g_printerr ("Cannot set switch: %s\n", error->message);
   g_error_free (error);
   goto done;

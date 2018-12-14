@@ -243,6 +243,7 @@ test_bgo_696762 (void)
     test_run_loop (data.loop);
     g_assert (data.proxy != NULL);
 
+    G_GNUC_BEGIN_IGNORE_DEPRECATIONS
     gupnp_service_proxy_begin_action (data.proxy,
                                       "Browse",
                                       test_bgo_696762_on_browse,
@@ -254,6 +255,7 @@ test_bgo_696762 (void)
                                       "RequestedCount", G_TYPE_UINT, 0,
                                       "SortCriteria", G_TYPE_STRING, "",
                                       NULL);
+    G_GNUC_END_IGNORE_DEPRECATIONS
 
     test_run_loop (data.loop);
 
