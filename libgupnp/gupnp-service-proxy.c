@@ -35,6 +35,7 @@
 #include <errno.h>
 
 #include "gupnp-service-proxy.h"
+#include "gupnp-service-proxy-action-private.h"
 #include "gupnp-context-private.h"
 #include "gupnp-error.h"
 #include "gupnp-error-private.h"
@@ -81,20 +82,6 @@ enum {
 
 static guint signals[LAST_SIGNAL];
 
-struct _GUPnPServiceProxyAction {
-        volatile gint ref_count;
-        GUPnPServiceProxy *proxy;
-
-        SoupMessage *msg;
-        GString *msg_str;
-
-        GUPnPServiceProxyActionCallback callback;
-        gpointer user_data;
-
-        GError *error;    /* If non-NULL, description of error that
-                             occurred when preparing message */
-};
-
 typedef struct {
         GType type;       /* type of the variable this notification is for */
 
@@ -124,13 +111,7 @@ subscribe (GUPnPServiceProxy *proxy);
 static void
 unsubscribe (GUPnPServiceProxy *proxy);
 
-static GUPnPServiceProxyAction *
-gupnp_service_proxy_action_ref (GUPnPServiceProxyAction *action);
-
-static void
-gupnp_service_proxy_action_unref (GUPnPServiceProxyAction *action);
-
-static void
+void
 gupnp_service_proxy_remove_action (GUPnPServiceProxy       *proxy,
                                    GUPnPServiceProxyAction *action)
 {
@@ -141,44 +122,6 @@ gupnp_service_proxy_remove_action (GUPnPServiceProxy       *proxy,
         priv->pending_actions = g_list_remove (priv->pending_actions,
                                                action);
 }
-
-static GUPnPServiceProxyAction *
-gupnp_service_proxy_action_ref (GUPnPServiceProxyAction *action)
-{
-        g_return_val_if_fail (action, NULL);
-        g_return_val_if_fail (action->ref_count > 0, NULL);
-
-        g_atomic_int_inc (&action->ref_count);
-
-        return action;
-}
-
-static void
-gupnp_service_proxy_action_unref (GUPnPServiceProxyAction *action)
-{
-
-        g_return_if_fail (action);
-        g_return_if_fail (action->ref_count > 0);
-
-
-        if (g_atomic_int_dec_and_test (&action->ref_count)) {
-                if (action->proxy != NULL) {
-                        g_object_remove_weak_pointer (G_OBJECT (action->proxy),
-                                                      (gpointer *)&(action->proxy));
-                        gupnp_service_proxy_remove_action (action->proxy, action);
-                }
-
-                if (action->msg != NULL)
-                        g_object_unref (action->msg);
-
-                g_slice_free (GUPnPServiceProxyAction, action);
-        }
-}
-
-G_DEFINE_BOXED_TYPE (GUPnPServiceProxyAction,
-                     gupnp_service_proxy_action,
-                     gupnp_service_proxy_action_ref,
-                     gupnp_service_proxy_action_unref)
 
 static void
 callback_data_free (CallbackData *data)
@@ -811,8 +754,7 @@ begin_action_msg (GUPnPServiceProxy              *proxy,
         priv = gupnp_service_proxy_get_instance_private (proxy);
 
         /* Create action structure */
-        ret = g_slice_new (GUPnPServiceProxyAction);
-        ret->ref_count = 1;
+        ret = gupnp_service_proxy_action_new (action);
 
         ret->proxy = proxy;
         g_object_add_weak_pointer (G_OBJECT (proxy), (gpointer *)&(ret->proxy));
