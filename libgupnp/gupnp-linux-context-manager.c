@@ -81,6 +81,9 @@ struct _GUPnPLinuxContextManagerPrivate {
          * structure */
         GHashTable *interfaces;
 
+        /* Receive buffer for netlink messages. */
+        char recvbuf[8196];
+
         gboolean dump_netlink_packets;
 };
 typedef struct _GUPnPLinuxContextManagerPrivate GUPnPLinuxContextManagerPrivate;
@@ -777,20 +780,20 @@ remove_device (GUPnPLinuxContextManager *self,
 static void
 receive_netlink_message (GUPnPLinuxContextManager *self, GError **error)
 {
-        static char buf[8196];
-
         gssize len;
         GError *inner_error = NULL;
-        struct nlmsghdr *header = (struct nlmsghdr *) buf;
+        struct nlmsghdr *header;
         struct ifinfomsg *ifi;
         struct ifaddrmsg *ifa;
         GUPnPLinuxContextManagerPrivate *priv;
 
         priv = gupnp_linux_context_manager_get_instance_private (self);
 
+        header = (struct nlmsghdr *) priv->recvbuf;
+
         len = g_socket_receive (priv->netlink_socket,
-                                buf,
-                                sizeof (buf),
+                                priv->recvbuf,
+                                sizeof (priv->recvbuf),
                                 NULL,
                                 &inner_error);
         if (len == -1) {
@@ -807,7 +810,8 @@ receive_netlink_message (GUPnPLinuxContextManager *self, GError **error)
 
                 /* We should have at most len / 16 + 1 lines with 74 characters each */
                 hexdump = g_string_new_len (NULL, ((len / 16) + 1) * 73);
-                gupnp_linux_context_manager_hexdump ((guint8 *) buf, len, hexdump);
+                gupnp_linux_context_manager_hexdump ((guint8 *) priv->recvbuf,
+                                                     len, hexdump);
 
                 g_debug ("Netlink packet dump:\n%s", hexdump->str);
                 g_string_free (hexdump, TRUE);
