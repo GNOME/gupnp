@@ -470,39 +470,6 @@ stop_main_loop (G_GNUC_UNUSED GUPnPServiceProxy       *proxy,
                 } \
         } G_STMT_END
 
-/* Initializes hash table to hold arg names as keys and GValues of
- * given type and value.
- */
-#define VAR_ARGS_TO_IN_LIST(var_args, names, values) \
-        G_STMT_START { \
-                const gchar *arg_name = va_arg (var_args, const gchar *); \
-         \
-                while (arg_name != NULL) { \
-                        GValue *value = g_new0 (GValue, 1); \
-                        gchar *__error = NULL; \
-                        GType type = va_arg (var_args, GType); \
-         \
-                        G_VALUE_COLLECT_INIT (value, \
-                                              type, \
-                                              var_args, \
-                                              G_VALUE_NOCOPY_CONTENTS, \
-                                              &__error); \
-                        if (__error == NULL) { \
-                                names = g_list_prepend (names, g_strdup (arg_name)); \
-                                values = g_list_prepend (values, value); \
-                        } else { \
-                                g_warning ("Failed to collect value of type %s for %s: %s", \
-                                           g_type_name (type), \
-                                           arg_name, \
-                                           __error); \
-                                g_free (__error); \
-                        } \
-                        arg_name = va_arg (var_args, const gchar *); \
-                } \
-                names = g_list_reverse (names); \
-                values = g_list_reverse (values); \
-        } G_STMT_END
-
 /* Puts values stored in hash table with GValues into var args.
  */
 #define OUT_HASH_TABLE_TO_VAR_ARGS(hash, var_args) \
@@ -740,6 +707,91 @@ gupnp_service_proxy_begin_action (GUPnPServiceProxy              *proxy,
 }
 
 /* Begins a basic action message */
+static void
+prepare_action_msg (GUPnPServiceProxy              *proxy,
+                    GUPnPServiceProxyAction        *ret,
+                    GUPnPServiceProxyActionCallback callback,
+                    gpointer                        user_data)
+{
+        GUPnPServiceProxyPrivate *priv;
+        char *control_url, *full_action;
+        const char *service_type;
+
+        priv = gupnp_service_proxy_get_instance_private (proxy);
+
+        ret->proxy = proxy;
+        g_object_add_weak_pointer (G_OBJECT (proxy), (gpointer *)&(ret->proxy));
+
+        ret->callback  = callback;
+        ret->user_data = user_data;
+
+        priv->pending_actions = g_list_prepend (priv->pending_actions, ret);
+
+        /* Make sure we have a service type */
+        service_type = gupnp_service_info_get_service_type
+                                        (GUPNP_SERVICE_INFO (proxy));
+        if (service_type == NULL) {
+                ret->error = g_error_new (GUPNP_SERVER_ERROR,
+                                          GUPNP_SERVER_ERROR_OTHER,
+                                          "No service type defined");
+
+                return;
+        }
+
+        /* Create message */
+        control_url = gupnp_service_info_get_control_url
+                                        (GUPNP_SERVICE_INFO (proxy));
+
+        if (control_url != NULL) {
+                GUPnPContext *context = NULL;
+                char *local_control_url = NULL;
+
+                context = gupnp_service_info_get_context
+                                        (GUPNP_SERVICE_INFO (proxy));
+
+                local_control_url = gupnp_context_rewrite_uri (context,
+                                                               control_url);
+                g_free (control_url);
+
+                ret->msg = soup_message_new (SOUP_METHOD_POST, local_control_url);
+                g_free (local_control_url);
+        }
+
+        if (ret->msg == NULL) {
+                ret->error = g_error_new (GUPNP_SERVER_ERROR,
+                                          GUPNP_SERVER_ERROR_INVALID_URL,
+                                          "No valid control URL defined");
+
+                return;
+        }
+
+        /* Specify action */
+        full_action = g_strdup_printf ("\"%s#%s\"", service_type, ret->name);
+        soup_message_headers_append (ret->msg->request_headers,
+                                     "SOAPAction",
+                                     full_action);
+        g_free (full_action);
+
+        /* Specify language */
+        http_request_set_accept_language (ret->msg);
+
+        /* Accept gzip encoding */
+        soup_message_headers_append (ret->msg->request_headers,
+                                     "Accept-Encoding", "gzip");
+
+        g_string_insert (ret->msg_str, ret->header_pos, "<u:");
+        ret->header_pos += strlen("<u:");
+        g_string_insert (ret->msg_str, ret->header_pos, ret->name);
+        ret->header_pos += strlen (ret->name);
+        g_string_insert (ret->msg_str, ret->header_pos, " xmlns:u=\"");
+        ret->header_pos += strlen(" xmlns:u=\"");
+        g_string_insert (ret->msg_str, ret->header_pos, service_type);
+        ret->header_pos += strlen (service_type);
+        g_string_insert (ret->msg_str, ret->header_pos, "\">");
+}
+
+
+/* Begins a basic action message */
 static GUPnPServiceProxyAction *
 begin_action_msg (GUPnPServiceProxy              *proxy,
                   const char                     *action,
@@ -754,7 +806,7 @@ begin_action_msg (GUPnPServiceProxy              *proxy,
         priv = gupnp_service_proxy_get_instance_private (proxy);
 
         /* Create action structure */
-        ret = gupnp_service_proxy_action_new (action);
+        ret = gupnp_service_proxy_action_new_internal (action);
 
         ret->proxy = proxy;
         g_object_add_weak_pointer (G_OBJECT (proxy), (gpointer *)&(ret->proxy));
@@ -885,6 +937,35 @@ action_got_response (SoupSession             *session,
         }
 }
 
+static void
+gupnp_service_proxy_action_queue (GUPnPServiceProxyAction *action)
+{
+        GUPnPContext *context;
+        SoupSession *session;
+
+        soup_message_set_request (action->msg,
+                                  "text/xml; charset=\"utf-8\"",
+                                  SOUP_MEMORY_TAKE,
+                                  action->msg_str->str,
+                                  action->msg_str->len);
+
+        g_string_free (action->msg_str, FALSE);
+
+        /* We need to keep our own reference to the message as well,
+         * in order for send_action() to work. */
+        g_object_ref (action->msg);
+
+        /* Send the message */
+        context = gupnp_service_info_get_context
+                                (GUPNP_SERVICE_INFO (action->proxy));
+        session = gupnp_context_get_session (context);
+
+        soup_session_queue_message (session,
+                                    action->msg,
+                                    (SoupSessionCallback) action_got_response,
+                                    action);
+}
+
 /* Finishes an action message and sends it off */
 static void
 finish_action_msg (GUPnPServiceProxyAction *action,
@@ -923,18 +1004,6 @@ finish_action_msg (GUPnPServiceProxyAction *action,
                                     action->msg,
                                     (SoupSessionCallback) action_got_response,
                                     action);
-}
-
-/* Writes a parameter name and GValue pair to @msg */
-static void
-write_in_parameter (const char *arg_name,
-                    GValue     *value,
-                    GString    *msg_str)
-{
-        /* Write parameter pair */
-        xml_util_start_element (msg_str, arg_name);
-        gvalue_util_value_append_to_xml_string (value, msg_str);
-        xml_util_end_element (msg_str, arg_name);
 }
 
 static gboolean
@@ -1022,8 +1091,6 @@ gupnp_service_proxy_begin_action_list
                                     gpointer                         user_data)
 {
         GUPnPServiceProxyAction *ret;
-        GList *names;
-        GList *values;
 
         g_return_val_if_fail (GUPNP_IS_SERVICE_PROXY (proxy), NULL);
         g_return_val_if_fail (action, NULL);
@@ -1032,8 +1099,10 @@ gupnp_service_proxy_begin_action_list
                               g_list_length (in_values),
                               NULL);
 
-        /* Create message */
-        ret = begin_action_msg (proxy, action, callback, user_data);
+        ret = gupnp_service_proxy_action_new_from_list (action,
+                                                        in_names,
+                                                        in_values);
+        prepare_action_msg (proxy, ret, callback, user_data);
 
         if (ret->error) {
                 g_idle_add (action_error_idle_cb, ret);
@@ -1041,21 +1110,7 @@ gupnp_service_proxy_begin_action_list
                 return ret;
         }
 
-        /* Arguments */
-        values = in_values;
-
-        for (names = in_names; names; names=names->next) {
-                GValue* val = values->data;
-
-                write_in_parameter (names->data,
-                                    val,
-                                    ret->msg_str);
-
-                values = values->next;
-        }
-
-        /* Finish and send off */
-        finish_action_msg (ret, action);
+        gupnp_service_proxy_action_queue (ret);
 
         return ret;
 }

@@ -208,6 +208,14 @@ gupnp_service_proxy_set_subscribed (GUPnPServiceProxy              *proxy,
 gboolean
 gupnp_service_proxy_get_subscribed (GUPnPServiceProxy              *proxy);
 
+GUPnPServiceProxyAction *
+gupnp_service_proxy_action_new (const char *action,
+                                ...);
+
+GUPnPServiceProxyAction *
+gupnp_service_proxy_action_new_from_list (const char *action,
+                                          GList      *in_names,
+                                          GList      *in_values);
 
 G_END_DECLS
 
