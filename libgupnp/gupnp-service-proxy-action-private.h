@@ -153,6 +153,9 @@ struct _GUPnPServiceProxyAction {
         SoupMessage *msg;
         GString *msg_str;
 
+        GCancellable *cancellable;
+        gulong cancellable_connection_id;
+
         GUPnPServiceProxyActionCallback callback;
         gpointer user_data;
 

@@ -265,7 +265,7 @@ gupnp_service_proxy_dispose (GObject *object)
                         g_list_delete_link (priv->pending_actions,
                                             priv->pending_actions);
 
-                gupnp_service_proxy_cancel_action (proxy, action);
+                g_cancellable_cancel (action->cancellable);
         }
 
         /* Cancel pending messages */
@@ -608,10 +608,33 @@ gupnp_service_proxy_begin_action (GUPnPServiceProxy              *proxy,
                                                       ret);
 }
 
+static void
+on_action_cancelled (GCancellable *cancellable, gpointer user_data)
+{
+        GUPnPServiceProxyAction *action = (GUPnPServiceProxyAction *) user_data;
+
+        GUPnPContext *context;
+        SoupSession *session;
+
+        if (action->msg != NULL) {
+                context = gupnp_service_info_get_context
+                                        (GUPNP_SERVICE_INFO (action->proxy));
+                session = gupnp_context_get_session (context);
+
+                soup_session_cancel_message (session,
+                                             action->msg,
+                                             SOUP_STATUS_CANCELLED);
+                g_cancellable_disconnect (action->cancellable,
+                                          action->cancellable_connection_id);
+                action->cancellable_connection_id = 0;
+        }
+}
+
 /* Begins a basic action message */
 static void
 prepare_action_msg (GUPnPServiceProxy              *proxy,
-                    GUPnPServiceProxyAction        *ret)
+                    GUPnPServiceProxyAction        *ret,
+                    GCancellable                   *cancellable)
 {
         GUPnPServiceProxyPrivate *priv;
         char *control_url, *full_action;
@@ -623,6 +646,16 @@ prepare_action_msg (GUPnPServiceProxy              *proxy,
         g_object_add_weak_pointer (G_OBJECT (proxy), (gpointer *)&(ret->proxy));
 
         priv->pending_actions = g_list_prepend (priv->pending_actions, ret);
+
+        if (cancellable != NULL) {
+                ret->cancellable = g_object_ref (cancellable);
+        } else {
+                ret->cancellable = g_cancellable_new ();
+        }
+        ret->cancellable_connection_id = g_cancellable_connect (ret->cancellable,
+                                                                G_CALLBACK (on_action_cancelled),
+                                                                ret,
+                                                                NULL);
 
         /* Make sure we have a service type */
         service_type = gupnp_service_info_get_service_type
@@ -725,9 +758,16 @@ action_task_got_response (SoupSession *session,
                           gpointer    user_data)
 {
         GTask *task = G_TASK (user_data);
+        GUPnPServiceProxyAction *action = (GUPnPServiceProxyAction *) g_task_get_task_data (task);
 
         switch (msg->status_code) {
         case SOUP_STATUS_CANCELLED:
+                if (action->cancellable != NULL && action->cancellable_connection_id != 0) {
+                        g_cancellable_disconnect (action->cancellable,
+                                        action->cancellable_connection_id);
+                        action->cancellable_connection_id = 0;
+                }
+
                 g_task_return_new_error (task,
                                          G_IO_ERROR,
                                          G_IO_ERROR_CANCELLED,
@@ -743,6 +783,12 @@ action_task_got_response (SoupSession *session,
                 break;
 
         default:
+                if (action->cancellable != NULL && action->cancellable_connection_id != 0) {
+                        g_cancellable_disconnect (action->cancellable,
+                                        action->cancellable_connection_id);
+                        action->cancellable_connection_id = 0;
+                }
+
                 g_task_return_pointer (task,
                                        g_task_get_task_data (task),
                                        (GDestroyNotify) gupnp_service_proxy_action_unref);
@@ -1087,30 +1133,21 @@ gupnp_service_proxy_end_action_hash
  * @action: A #GUPnPServiceProxyAction handle
  *
  * Cancels @action, freeing the @action handle.
+ *
+ * Deprecated: 1.1.2: Use the #GCancellable passed to
+ * gupnp_service_proxy_call_action_async() or gupnp_service_proxy_call_action()
  **/
 void
 gupnp_service_proxy_cancel_action (GUPnPServiceProxy       *proxy,
                                    GUPnPServiceProxyAction *action)
 {
-        GUPnPContext *context;
-        SoupSession *session;
-
         g_return_if_fail (GUPNP_IS_SERVICE_PROXY (proxy));
         g_return_if_fail (action);
         g_return_if_fail (proxy == action->proxy);
 
-        if (action->msg != NULL) {
-                context = gupnp_service_info_get_context
-                                        (GUPNP_SERVICE_INFO (proxy));
-                session = gupnp_context_get_session (context);
-
-                soup_session_cancel_message (session,
-                                             action->msg,
-                                             SOUP_STATUS_CANCELLED);
+        if (action->cancellable != NULL) {
+                g_cancellable_cancel (action->cancellable);
         }
-
-        if (action->error != NULL)
-                g_error_free (action->error);
 
         gupnp_service_proxy_action_unref (action);
 }
@@ -2076,7 +2113,7 @@ gupnp_service_proxy_call_action_async (GUPnPServiceProxy       *proxy,
                               gupnp_service_proxy_action_ref (action),
                               (GDestroyNotify) gupnp_service_proxy_action_unref);
 
-        prepare_action_msg (proxy, action);
+        prepare_action_msg (proxy, action, cancellable);
 
         if (action->error != NULL) {
                 g_task_return_error (task, g_error_copy (action->error));
@@ -2114,7 +2151,7 @@ gupnp_service_proxy_call_action (GUPnPServiceProxy       *proxy,
 
         g_return_val_if_fail (GUPNP_IS_SERVICE_PROXY (proxy), NULL);
 
-        prepare_action_msg (proxy, action);
+        prepare_action_msg (proxy, action, cancellable);
 
         if (action->error != NULL) {
                 g_propagate_error (error, g_error_copy (action->error));
