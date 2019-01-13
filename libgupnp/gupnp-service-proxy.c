@@ -411,17 +411,6 @@ gupnp_service_proxy_send_action (GUPnPServiceProxy *proxy,
         return ret;
 }
 
-/* GDestroyNotify for GHashTable holding GValues.
- */
-void
-_value_free (gpointer data)
-{
-  GValue *value = (GValue *) data;
-
-  g_value_unset (value);
-  g_free (value);
-}
-
 /**
  * gupnp_service_proxy_send_action_valist:
  * @proxy: A #GUPnPServiceProxy
@@ -457,7 +446,7 @@ gupnp_service_proxy_send_action_valist (GUPnPServiceProxy *proxy,
         out_hash = g_hash_table_new_full (g_str_hash,
                                           g_str_equal,
                                           g_free,
-                                          _value_free);
+                                          gvalue_free);
         VAR_ARGS_TO_OUT_HASH_TABLE (var_args, out_hash);
 
         handle = gupnp_service_proxy_action_new_from_list (action_name, in_names, in_values);
@@ -480,7 +469,7 @@ out:
         gupnp_service_proxy_action_unref (handle);
         va_end (var_args_copy);
         g_list_free_full (in_names, g_free);
-        g_list_free_full (in_values, _value_free);
+        g_list_free_full (in_values, gvalue_free);
         g_hash_table_unref (out_hash);
 
         return result;
@@ -596,7 +585,7 @@ gupnp_service_proxy_begin_action (GUPnPServiceProxy              *proxy,
 
         ret = gupnp_service_proxy_action_new_from_list (action, in_names, in_values);
         g_list_free_full (in_names, g_free);
-        g_list_free_full (in_values, _value_free);
+        g_list_free_full (in_values, gvalue_free);
 
         ret->callback = callback;
         ret->user_data = user_data;
@@ -897,7 +886,7 @@ gupnp_service_proxy_begin_action_valist
 
         ret = gupnp_service_proxy_action_new_from_list (action, in_names, in_values);
         g_list_free_full (in_names, g_free);
-        g_list_free_full (in_values, _value_free);
+        g_list_free_full (in_values, gvalue_free);
 
         ret->callback = callback;
         ret->user_data = user_data;

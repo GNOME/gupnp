@@ -264,3 +264,14 @@ gvalue_util_value_append_to_xml_string (const GValue *value,
                 }
         }
 }
+
+/* GDestroyNotify for GHashTable holding GValues.
+ */
+void
+gvalue_free (gpointer data)
+{
+  GValue *value = (GValue *) data;
+
+  g_value_unset (value);
+  g_free (value);
+}

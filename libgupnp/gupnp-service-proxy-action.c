@@ -281,7 +281,7 @@ gupnp_service_proxy_action_new (const char *action,
                                                            in_names,
                                                            in_values);;
         g_list_free_full (in_names, g_free);
-        g_list_free_full (in_values, _value_free);
+        g_list_free_full (in_values, gvalue_free);
 
         return result;
 }
@@ -486,7 +486,7 @@ gupnp_service_proxy_action_get_result_valist (GUPnPServiceProxyAction *action,
         out_hash = g_hash_table_new_full (g_str_hash,
                                           g_str_equal,
                                           g_free,
-                                          _value_free);
+                                          gvalue_free);
         G_VA_COPY (var_args_copy, var_args);
         VAR_ARGS_TO_OUT_HASH_TABLE (var_args, out_hash);
         local_error = NULL;
