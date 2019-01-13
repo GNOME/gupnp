@@ -25,6 +25,25 @@
 #include "gvalue-util.h"
 #include "xml-util.h"
 
+/* Checks an action response for errors and returns the parsed
+ * xmlDoc object. */
+
+G_GNUC_INTERNAL xmlDoc *
+_check_action_response (G_GNUC_UNUSED GUPnPServiceProxy *proxy,
+                       GUPnPServiceProxyAction         *action,
+                       xmlNode                        **params,
+                       GError                         **error);
+
+G_GNUC_INTERNAL void
+_read_out_parameter (const char *arg_name,
+                    GValue     *value,
+                    xmlNode    *params);
+
+/* GDestroyNotify for GHashTable holding GValues.
+ */
+G_GNUC_INTERNAL void
+_value_free (gpointer data);
+
 GUPnPServiceProxyAction *
 gupnp_service_proxy_action_new_internal (const char *action) {
         GUPnPServiceProxyAction *ret;
@@ -41,6 +60,7 @@ GUPnPServiceProxyAction *
 gupnp_service_proxy_action_ref (GUPnPServiceProxyAction *action)
 {
         g_return_val_if_fail (action, NULL);
+        g_debug ("=> action_action_ref");
 
         return g_atomic_rc_box_acquire (action);
 }
@@ -48,12 +68,14 @@ gupnp_service_proxy_action_ref (GUPnPServiceProxyAction *action)
 static void
 action_dispose (GUPnPServiceProxyAction *action)
 {
+        g_debug ("=> action_dispose");
         if (action->proxy != NULL) {
                 g_object_remove_weak_pointer (G_OBJECT (action->proxy),
                                 (gpointer *)&(action->proxy));
                 gupnp_service_proxy_remove_action (action->proxy, action);
         }
 
+        g_clear_error (&action->error);
         g_clear_object (&action->msg);
         g_free (action->name);
 }
@@ -62,6 +84,7 @@ void
 gupnp_service_proxy_action_unref (GUPnPServiceProxyAction *action)
 {
         g_return_if_fail (action);
+        g_debug ("=> action_unref");
 
         g_atomic_rc_box_release_full (action, (GDestroyNotify) action_dispose);
 }
@@ -100,9 +123,10 @@ GUPnPServiceProxyAction *
 gupnp_service_proxy_action_new (const char *action,
                                 ...)
 {
-        va_list var_args;
         GList *in_names = NULL;
         GList *in_values = NULL;
+        GUPnPServiceProxyAction *result = NULL;
+        va_list var_args;
 
         g_return_val_if_fail (action != NULL, NULL);
 
@@ -110,11 +134,14 @@ gupnp_service_proxy_action_new (const char *action,
         VAR_ARGS_TO_IN_LIST (var_args, in_names, in_values);
         va_end (var_args);
 
-        return gupnp_service_proxy_action_new_from_list (action,
-                                                         in_names,
-                                                         in_values);;
-}
+        result = gupnp_service_proxy_action_new_from_list (action,
+                                                           in_names,
+                                                           in_values);;
+        g_list_free_full (in_names, g_free);
+        g_list_free_full (in_values, _value_free);
 
+        return result;
+}
 
 /**
  * gupnp_service_proxy_action_new_from_list:
@@ -159,4 +186,178 @@ gupnp_service_proxy_action_new_from_list (const char *action_name,
         write_footer (action);
 
         return action;
+}
+
+/**
+ * gupnp_service_proxy_action_get_result_list:
+ * @action: A #GUPnPServiceProxyAction handle
+ * @out_names: (element-type utf8) (transfer none): #GList of 'out' parameter
+ * names (as strings)
+ * @out_types: (element-type GType) (transfer none): #GList of types (as #GType)
+ * that line up with @out_names
+ * @out_values: (element-type GValue) (transfer full) (out): #GList of values
+ * (as #GValue) that line up with @out_names and @out_types.
+ * @error: The location where to store any error, or %NULL
+ *
+ * A variant of gupnp_service_proxy_action_get_result() that takes lists of
+ * out-parameter names, types and place-holders for values. The returned list
+ * in @out_values must be freed using #g_list_free and each element in it using
+ * #g_value_unset and #g_free.
+ *
+ * Return value : %TRUE on success.
+ *
+ **/
+gboolean
+gupnp_service_proxy_action_get_result_list (GUPnPServiceProxyAction *action,
+                                            GList                   *out_names,
+                                            GList                   *out_types,
+                                            GList                  **out_values,
+                                            GError                 **error)
+{
+        xmlDoc *response;
+        xmlNode *params;
+        GList *names;
+        GList *types;
+        GList *out_values_list;
+
+        out_values_list = NULL;
+
+        g_return_val_if_fail (action, FALSE);
+
+        /* Check for saved error from begin_action() */
+        if (action->error) {
+                g_propagate_error (error, g_error_copy (action->error));
+
+                return FALSE;
+        }
+
+        /* Check response for errors and do initial parsing */
+        response = _check_action_response (NULL, action, &params, &action->error);
+        if (response == NULL) {
+                g_propagate_error (error, g_error_copy (action->error));
+
+                return FALSE;
+        }
+
+        /* Read arguments */
+        types = out_types;
+        for (names = out_names; names; names=names->next) {
+                GValue *val;
+
+                val = g_new0 (GValue, 1);
+                g_value_init (val, (GType) types->data);
+
+                _read_out_parameter (names->data, val, params);
+
+                out_values_list = g_list_append (out_values_list, val);
+
+                types = types->next;
+        }
+
+        *out_values = out_values_list;
+
+        /* Cleanup */
+        xmlFreeDoc (response);
+
+        return TRUE;
+
+}
+
+/**
+ * gupnp_service_proxy_action_get_result_hash:
+ * @action: A #GUPnPServiceProxyAction handle
+ * @out_hash: (element-type utf8 GValue) (inout) (transfer none): A #GHashTable of
+ * out parameter name and initialised #GValue pairs
+ * @error: The location where to store any error, or %NULL
+ *
+ * See gupnp_service_proxy_action_get_result(); this version takes a #GHashTable for
+ * runtime generated parameter lists.
+ *
+ * Return value: %TRUE on success.
+ *
+ **/
+gboolean
+gupnp_service_proxy_action_get_result_hash (GUPnPServiceProxyAction *action,
+                                            GHashTable              *hash,
+                                            GError                 **error)
+{
+        xmlDoc *response;
+        xmlNode *params;
+
+        g_return_val_if_fail (action, FALSE);
+
+        /* Check for saved error from begin_action() */
+        if (action->error) {
+                g_propagate_error (error, g_error_copy (action->error));
+
+                return FALSE;
+        }
+
+        /* Check response for errors and do initial parsing */
+        response = _check_action_response (NULL, action, &params, &action->error);
+        if (response == NULL) {
+                g_propagate_error (error, g_error_copy (action->error));
+
+                return FALSE;
+        }
+
+        /* Read arguments */
+        g_hash_table_foreach (hash, (GHFunc) _read_out_parameter, params);
+
+        /* Cleanup */
+        xmlFreeDoc (response);
+
+        return TRUE;
+
+}
+
+gboolean
+gupnp_service_proxy_action_get_result (GUPnPServiceProxyAction *action,
+                                       GError                 **error,
+                                       ...)
+{
+        va_list var_args;
+        gboolean ret;
+
+        va_start (var_args, error);
+        ret = gupnp_service_proxy_action_get_result_valist (action,
+                                                            error,
+                                                            var_args);
+        va_end (var_args);
+
+        return ret;
+}
+
+gboolean
+gupnp_service_proxy_action_get_result_valist (GUPnPServiceProxyAction *action,
+                                              GError                 **error,
+                                              va_list                  var_args)
+{
+        GHashTable *out_hash;
+        va_list var_args_copy;
+        gboolean result;
+        GError *local_error;
+
+        g_return_val_if_fail (action, FALSE);
+
+        out_hash = g_hash_table_new_full (g_str_hash,
+                                          g_str_equal,
+                                          g_free,
+                                          _value_free);
+        G_VA_COPY (var_args_copy, var_args);
+        VAR_ARGS_TO_OUT_HASH_TABLE (var_args, out_hash);
+        local_error = NULL;
+        result = gupnp_service_proxy_action_get_result_hash (action,
+                                                             out_hash,
+                                                             &local_error);
+
+        if (local_error == NULL) {
+                OUT_HASH_TABLE_TO_VAR_ARGS (out_hash, var_args_copy);
+        } else {
+                g_propagate_error (error, local_error);
+        }
+        va_end (var_args_copy);
+        g_hash_table_unref (out_hash);
+
+        return result;
 }

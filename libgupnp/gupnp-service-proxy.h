@@ -210,12 +210,55 @@ gupnp_service_proxy_get_subscribed (GUPnPServiceProxy              *proxy);
 
 GUPnPServiceProxyAction *
 gupnp_service_proxy_action_new (const char *action,
-                                ...);
+                                ...) G_GNUC_NULL_TERMINATED;
 
 GUPnPServiceProxyAction *
 gupnp_service_proxy_action_new_from_list (const char *action,
                                           GList      *in_names,
                                           GList      *in_values);
+
+gboolean
+gupnp_service_proxy_action_get_result (GUPnPServiceProxyAction *action,
+                                       GError                 **error,
+                                       ...) G_GNUC_NULL_TERMINATED;
+
+gboolean
+gupnp_service_proxy_action_get_result_list (GUPnPServiceProxyAction *action,
+                                            GList                   *out_names,
+                                            GList                   *out_types,
+                                            GList                  **out_values,
+                                            GError                 **error);
+gboolean
+gupnp_service_proxy_action_get_result_hash (GUPnPServiceProxyAction *action,
+                                            GHashTable              *out_hash,
+                                            GError                 **error);
+
+
+GUPnPServiceProxyAction *
+gupnp_service_proxy_call_action_async (GUPnPServiceProxy       *proxy,
+                                       GUPnPServiceProxyAction *action,
+                                       GCancellable            *cancellable,
+                                       GAsyncReadyCallback     callback,
+                                       gpointer                user_data);
+
+
+GUPnPServiceProxyAction *
+gupnp_service_proxy_call_action_finish (GUPnPServiceProxy *proxy,
+                                        GAsyncResult      *result,
+                                        GError           **error);
+
+GUPnPServiceProxyAction *
+gupnp_service_proxy_call_action (GUPnPServiceProxy       *proxy,
+                                 GUPnPServiceProxyAction *action,
+                                 GCancellable            *cancellable,
+                                 GError                 **error);
+
+GUPnPServiceProxyAction *
+gupnp_service_proxy_action_ref (GUPnPServiceProxyAction *action);
+
+void
+gupnp_service_proxy_action_unref (GUPnPServiceProxyAction *action);
+
 
 G_END_DECLS
 
