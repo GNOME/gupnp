@@ -203,9 +203,14 @@ gupnp_context_manager_filter_context (GUPnPWhiteList *white_list,
                 /* If the white list is empty, treat it as disabled */
                 if (check) {
                         GUPnPContext *context;
+                        const char *property = "context";
+
+                        if (GUPNP_IS_CONTROL_POINT (obj->data)) {
+                                property = "client";
+                        }
 
                         g_object_get (G_OBJECT (obj->data),
-                                      "context", &context,
+                                      property, &context,
                                       NULL);
 
                         match = gupnp_white_list_check_context (white_list,
