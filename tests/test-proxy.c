@@ -61,6 +61,7 @@ service_proxy_available_cb (G_GNUC_UNUSED GUPnPControlPoint *cp,
         char *result = NULL;
         guint count, total;
         GError *error = NULL;
+        GUPnPServiceProxyAction *action = NULL;
 
         location = gupnp_service_info_get_location (GUPNP_SERVICE_INFO (proxy));
 
@@ -84,9 +85,8 @@ service_proxy_available_cb (G_GNUC_UNUSED GUPnPControlPoint *cp,
         gupnp_service_proxy_set_subscribed (proxy, TRUE);
 
         /* And test action IO */
-        gupnp_service_proxy_send_action (proxy,
+        action = gupnp_service_proxy_action_new (
                                          "Browse",
-                                         &error,
                                          /* IN args */
                                          "ObjectID",
                                                 G_TYPE_STRING,
@@ -106,7 +106,19 @@ service_proxy_available_cb (G_GNUC_UNUSED GUPnPControlPoint *cp,
                                          "SortCriteria",
                                                 G_TYPE_STRING,
                                                 "",
-                                         NULL,
+                                         NULL);
+        gupnp_service_proxy_call_action (proxy, action, NULL, &error);
+
+        if (error) {
+                g_printerr ("Error: %s\n", error->message);
+                g_error_free (error);
+                gupnp_service_proxy_action_unref (action);
+
+                return;
+        }
+
+        gupnp_service_proxy_action_get_result (action,
+                                               &error,
                                          /* OUT args */
                                          "Result",
                                                 G_TYPE_STRING,
@@ -122,6 +134,7 @@ service_proxy_available_cb (G_GNUC_UNUSED GUPnPControlPoint *cp,
         if (error) {
                 g_printerr ("Error: %s\n", error->message);
                 g_error_free (error);
+                gupnp_service_proxy_action_unref (action);
 
                 return;
         }
@@ -131,6 +144,7 @@ service_proxy_available_cb (G_GNUC_UNUSED GUPnPControlPoint *cp,
         g_print ("\tNumberReturned: %u\n", count);
         g_print ("\tTotalMatches:   %u\n", total);
 
+        gupnp_service_proxy_action_unref (action);
         g_free (result);
 }
 
