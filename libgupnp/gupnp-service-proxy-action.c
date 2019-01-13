@@ -201,7 +201,6 @@ GUPnPServiceProxyAction *
 gupnp_service_proxy_action_ref (GUPnPServiceProxyAction *action)
 {
         g_return_val_if_fail (action, NULL);
-        g_debug ("=> action_action_ref");
 
         return g_atomic_rc_box_acquire (action);
 }
@@ -229,7 +228,6 @@ void
 gupnp_service_proxy_action_unref (GUPnPServiceProxyAction *action)
 {
         g_return_if_fail (action);
-        g_debug ("=> action_unref");
 
         g_atomic_rc_box_release_full (action, (GDestroyNotify) action_dispose);
 }
