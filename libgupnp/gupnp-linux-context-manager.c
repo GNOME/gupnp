@@ -279,6 +279,7 @@ network_device_create_context (NetworkInterface *device,
         guint port;
         GError *error = NULL;
         GUPnPContext *context;
+        GSSDPUDAVersion *version;
 
         if (g_hash_table_contains (device->contexts, address)) {
                 g_debug ("Context for address %s on %s already exists",
@@ -288,7 +289,10 @@ network_device_create_context (NetworkInterface *device,
                 return;
         }
 
-        g_object_get (device->manager, "port", &port, NULL);
+        g_object_get (device->manager,
+                        "port", &port,
+                        "uda-version", &version,
+                        NULL);
 
         network_device_update_essid (device);
 
@@ -296,6 +300,7 @@ network_device_create_context (NetworkInterface *device,
                                   NULL,
                                   &error,
                                   "host-ip", address,
+                                  "uda-version", version,
                                   "interface", label,
                                   "network", device->essid ? device->essid
                                                            : mask,
