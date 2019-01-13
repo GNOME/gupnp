@@ -64,6 +64,7 @@
 struct _GUPnPContextManagerPrivate {
         guint              port;
         GSocketFamily      family;
+        GSSDPUDAVersion    uda_version;
 
         GUPnPContextManager *impl;
 
@@ -82,6 +83,7 @@ enum {
         PROP_0,
         PROP_PORT,
         PROP_SOCKET_FAMILY,
+        PROP_UDA_VERSION,
         PROP_WHITE_LIST
 };
 
@@ -327,6 +329,9 @@ gupnp_context_manager_set_property (GObject      *object,
         case PROP_SOCKET_FAMILY:
                 priv->family = g_value_get_enum (value);
                 break;
+        case PROP_UDA_VERSION:
+                priv->uda_version = g_value_get_enum (value);
+                break;
         default:
                 G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
                 break;
@@ -350,6 +355,9 @@ gupnp_context_manager_get_property (GObject    *object,
                 g_value_set_uint (value, priv->port);
                 break;
         case PROP_SOCKET_FAMILY:
+                g_value_set_enum (value, priv->family);
+                break;
+        case PROP_UDA_VERSION:
                 g_value_set_enum (value, priv->family);
                 break;
         case PROP_WHITE_LIST:
@@ -447,6 +455,26 @@ gupnp_context_manager_class_init (GUPnPContextManagerClass *klass)
                                     G_PARAM_CONSTRUCT_ONLY |
                                     G_PARAM_STATIC_STRINGS));
 
+        /**
+         * GUPnPContextManager:uda-version:
+         *
+         * The UDA version the contexts will support. Use %GSSDP_UDA_VERSION_UNSPECIFIED
+         * for using the default protocol family.
+         *
+         * Since: 1.1.2
+         **/
+        g_object_class_install_property
+                (object_class,
+                 PROP_SOCKET_FAMILY,
+                 g_param_spec_enum ("uda-version",
+                                    "UDA version",
+                                    "UDA version the created contexts will implement",
+                                    G_TYPE_SOCKET_FAMILY,
+                                    G_SOCKET_FAMILY_INVALID,
+                                    G_PARAM_READWRITE |
+                                    G_PARAM_CONSTRUCT_ONLY |
+                                    G_PARAM_STATIC_STRINGS));
+
          /**
          * GUPnPContextManager:white-list:
          *
@@ -515,7 +543,7 @@ gupnp_context_manager_class_init (GUPnPContextManagerClass *klass)
  * NetworkManager - on its availability during runtime. If it is not available,
  * the implementation falls back to the basic Unix context manager instead.
  *
- * Equivalent to calling #gupnp_context_manager_create_full (%G_SOCKET_FAMILY_IPV4, port);
+ * Equivalent to calling #gupnp_context_manager_create_full (%GSSDP_CLIENT_UDA_VERSION_1_0, %G_SOCKET_FAMILY_IPV4, port);
  *
  * Returns: (transfer full): A new #GUPnPContextManager object.
  *
@@ -524,7 +552,9 @@ gupnp_context_manager_class_init (GUPnPContextManagerClass *klass)
 GUPnPContextManager *
 gupnp_context_manager_create (guint port)
 {
-        return gupnp_context_manager_create_full (G_SOCKET_FAMILY_IPV4, port);
+        return gupnp_context_manager_create_full (GSSDP_UDA_VERSION_1_0,
+                                                  G_SOCKET_FAMILY_IPV4,
+                                                  port);
 }
 
 /**
@@ -542,7 +572,7 @@ gupnp_context_manager_create (guint port)
  * Since: 1.1.0
  **/
 GUPnPContextManager *
-gupnp_context_manager_create_full (GSocketFamily family, guint port)
+gupnp_context_manager_create_full (GSSDPUDAVersion uda_version, GSocketFamily family, guint port)
 {
 #if defined(USE_NETWORK_MANAGER) || defined (USE_CONNMAN)
         GDBusConnection *system_bus;
@@ -739,4 +769,17 @@ gupnp_context_manager_get_socket_family (GUPnPContextManager *manager)
         priv = gupnp_context_manager_get_instance_private (manager);
 
         return priv->family;
+}
+
+GSSDPUDAVersion
+gupnp_context_manager_get_uda_version (GUPnPContextManager *manager)
+{
+        GUPnPContextManagerPrivate *priv;
+
+        g_return_val_if_fail (GUPNP_IS_CONTEXT_MANAGER (manager),
+                              GSSDP_UDA_VERSION_UNSPECIFIED);
+
+        priv = gupnp_context_manager_get_instance_private (manager);
+
+        return priv->uda_version;
 }

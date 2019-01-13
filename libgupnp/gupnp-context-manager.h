@@ -55,8 +55,9 @@ GUPnPContextManager *
 gupnp_context_manager_create            (guint port);
 
 GUPnPContextManager *
-gupnp_context_manager_create_full       (GSocketFamily   family,
-                                         guint           port);
+gupnp_context_manager_create_full       (GSSDPUDAVersion uda_version,
+                                         GSocketFamily         family,
+                                         guint                 port);
 
 void
 gupnp_context_manager_rescan_control_points
@@ -80,6 +81,9 @@ gupnp_context_manager_get_white_list    (GUPnPContextManager *manager);
 
 GSocketFamily
 gupnp_context_manager_get_socket_family (GUPnPContextManager *manager);
+
+GSSDPUDAVersion
+gupnp_context_manager_get_uda_version   (GUPnPContextManager *manager);
 
 G_END_DECLS
 
