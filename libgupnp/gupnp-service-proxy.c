@@ -400,10 +400,12 @@ gupnp_service_proxy_send_action (GUPnPServiceProxy *proxy,
         gboolean ret;
 
         va_start (var_args, error);
+        G_GNUC_BEGIN_IGNORE_DEPRECATIONS
         ret = gupnp_service_proxy_send_action_valist (proxy,
                                                       action,
                                                       error,
                                                       var_args);
+        G_GNUC_END_IGNORE_DEPRECATIONS
         va_end (var_args);
 
         return ret;
