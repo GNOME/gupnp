@@ -553,7 +553,8 @@ on_legacy_async_callback (GObject *source, GAsyncResult *res, gpointer user_data
 
         gupnp_service_proxy_call_action_finish (GUPNP_SERVICE_PROXY (source), res, &error);
         action = (GUPnPServiceProxyAction *) user_data;
-        action->callback (action->proxy, action, action->user_data);
+        if (action->callback != NULL)
+                action->callback (action->proxy, action, action->user_data);
 }
 
 /**
@@ -610,9 +611,7 @@ gupnp_service_proxy_begin_action (GUPnPServiceProxy              *proxy,
 /* Begins a basic action message */
 static void
 prepare_action_msg (GUPnPServiceProxy              *proxy,
-                    GUPnPServiceProxyAction        *ret,
-                    GUPnPServiceProxyActionCallback callback,
-                    gpointer                        user_data)
+                    GUPnPServiceProxyAction        *ret)
 {
         GUPnPServiceProxyPrivate *priv;
         char *control_url, *full_action;
@@ -622,9 +621,6 @@ prepare_action_msg (GUPnPServiceProxy              *proxy,
 
         ret->proxy = proxy;
         g_object_add_weak_pointer (G_OBJECT (proxy), (gpointer *)&(ret->proxy));
-
-        ret->callback  = callback;
-        ret->user_data = user_data;
 
         priv->pending_actions = g_list_prepend (priv->pending_actions, ret);
 
@@ -2232,7 +2228,7 @@ gupnp_service_proxy_call_action_async (GUPnPServiceProxy       *proxy,
                               gupnp_service_proxy_action_ref (action),
                               (GDestroyNotify) gupnp_service_proxy_action_unref);
 
-        prepare_action_msg (proxy, action, NULL, NULL);
+        prepare_action_msg (proxy, action);
 
         if (action->error != NULL) {
                 g_task_return_error (task, g_error_copy (action->error));
@@ -2270,7 +2266,7 @@ gupnp_service_proxy_call_action (GUPnPServiceProxy       *proxy,
 
         g_return_val_if_fail (GUPNP_IS_SERVICE_PROXY (proxy), NULL);
 
-        prepare_action_msg (proxy, action, NULL, NULL);
+        prepare_action_msg (proxy, action);
 
         if (action->error != NULL) {
                 g_propagate_error (error, g_error_copy (action->error));
