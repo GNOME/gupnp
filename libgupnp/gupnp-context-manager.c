@@ -67,6 +67,7 @@ struct _GUPnPContextManagerPrivate {
         guint              port;
         GSocketFamily      family;
         GSSDPUDAVersion    uda_version;
+        gint32             boot_id;
 
         GUPnPContextManager *impl;
 
@@ -97,6 +98,21 @@ enum {
 
 static guint signals[SIGNAL_LAST];
 
+static gint32
+handle_update (GUPnPRootDevice *root_device)
+{
+        gint32 boot_id;
+        GSSDPResourceGroup *group = NULL;
+        GSSDPClient *client = NULL;
+
+        group = gupnp_root_device_get_ssdp_resource_group (root_device);
+        client = gssdp_resource_group_get_client (group);
+        g_object_get (G_OBJECT (client), "boot-id", &boot_id, NULL);
+        gssdp_resource_group_update (group, ++boot_id);
+
+        return boot_id;
+}
+
 static void
 on_context_available (GUPnPContextManager    *manager,
                       GUPnPContext           *context,
@@ -104,6 +120,7 @@ on_context_available (GUPnPContextManager    *manager,
 {
         GUPnPWhiteList *white_list;
         GUPnPContextManagerPrivate *priv;
+        gboolean enabled = TRUE;
 
         priv = gupnp_context_manager_get_instance_private (manager);
 
@@ -120,11 +137,37 @@ on_context_available (GUPnPContextManager    *manager,
 
                 /* Make sure we don't send anything on now blocked network */
                 g_object_set (context, "active", FALSE, NULL);
+                enabled = FALSE;
 
                 /* Save it in case we need to re-enable it */
                 priv->blacklisted = g_list_prepend (priv->blacklisted,
                                                     g_object_ref (context));
         }
+
+        /* Ignore the boot-id handling for UDA 1.0 */
+        if (priv->uda_version == GSSDP_UDA_VERSION_1_0)
+                return;
+
+        if (enabled) {
+                /* We have a new context, so we need to send ssdp:update and
+                 * re-announce on the old clients */
+                GList *l = priv->objects;
+                gint32 boot_id = -1;
+
+                while (l) {
+                        if (GUPNP_IS_ROOT_DEVICE (l->data)) {
+                                boot_id = handle_update (GUPNP_ROOT_DEVICE (l->data));
+                        }
+                        l = l->next;
+                }
+
+                if (boot_id > -1) {
+                        priv->boot_id = boot_id;
+                }
+        }
+
+        /* The new client gets the current boot-id */
+        gssdp_client_set_boot_id (GSSDP_CLIENT (context), priv->boot_id);
 }
 
 static void
@@ -182,6 +225,27 @@ on_context_unavailable (GUPnPContextManager    *manager,
                 g_object_unref (black->data);
                 priv->blacklisted = g_list_delete_link (priv->blacklisted,
                                                         black);
+        } else {
+                /* When UDA 1.0, ignore boot-id handling */
+                if (priv->uda_version > GSSDP_UDA_VERSION_1_0) {
+                        return;
+                }
+                /* We have lost a context, so we need to send ssdp:update and
+                 * re-announce on the old clients */
+                GList *l = priv->objects;
+                gint32 boot_id = -1;
+
+                while (l) {
+                        if (GUPNP_IS_ROOT_DEVICE (l->data)) {
+                                boot_id = handle_update (GUPNP_ROOT_DEVICE (l->data));
+                        }
+                        l = l->next;
+                }
+
+                if (boot_id > -1) {
+                        gssdp_client_set_boot_id (GSSDP_CLIENT (context), boot_id);
+                        priv->boot_id = boot_id;
+                }
         }
 }
 
@@ -315,6 +379,7 @@ gupnp_context_manager_init (GUPnPContextManager *manager)
 
         g_signal_connect_after (priv->white_list, "notify::enabled",
                                 G_CALLBACK (on_white_list_enabled_cb), manager);
+        priv->boot_id = time(NULL);
 }
 
 static void
