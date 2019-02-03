@@ -127,23 +127,29 @@ typedef struct {
 
 static GInitableIface* initable_parent_iface = NULL;
 
+static const char *GSSDP_UDA_VERSION_STRINGS[] = {
+        [GSSDP_UDA_VERSION_1_0] = "1.0",
+        [GSSDP_UDA_VERSION_1_1] = "1.1"
+};
+
 /*
- * Generates the default server ID.
- **/
+ * Generates the default server ID
+ */
 static char *
-make_server_id (void)
+make_server_id (GSSDPUDAVersion uda_version)
 {
 #ifdef G_OS_WIN32
         OSVERSIONINFO versioninfo;
         versioninfo.dwOSVersionInfoSize = sizeof (OSVERSIONINFO);
         if (GetVersionEx (&versioninfo)) {
-                return g_strdup_printf ("Microsoft Windows/%ld.%ld"
-                                        " UPnP/1.0 GUPnP/%s",
+                return g_strdup_printf ("Microsoft Windows/%ld.%ld UPnP/%s GUPnP/%s",
                                         versioninfo.dwMajorVersion,
                                         versioninfo.dwMinorVersion,
+                                        GSSDP_UDA_VERSION_STRINGS[uda_version],
                                         VERSION);
         } else {
-                return g_strdup_printf ("Microsoft Windows UPnP/1.0 GUPnP/%s",
+                return g_strdup_printf ("Microsoft Windows/Unknown UPnP/%s GUPnP/%s",
+                                        GSSDP_UDA_VERSION_STRINGS[uda_version],
                                         VERSION);
         }
 #else
@@ -151,21 +157,16 @@ make_server_id (void)
 
         uname (&sysinfo);
 
-        return g_strdup_printf ("%s/%s UPnP/1.0 GUPnP/%s",
+        return g_strdup_printf ("%s/%s UPnP/%s GUPnP/%s",
                                 sysinfo.sysname,
                                 sysinfo.release,
+                                GSSDP_UDA_VERSION_STRINGS[uda_version],
                                 VERSION);
 #endif
 }
-
 static void
 gupnp_context_init (GUPnPContext *context)
 {
-        char *server_id;
-
-        server_id = make_server_id ();
-        gssdp_client_set_server_id (GSSDP_CLIENT (context), server_id);
-        g_free (server_id);
 }
 
 static gboolean
@@ -174,9 +175,11 @@ gupnp_context_initable_init (GInitable     *initable,
                              GError       **error)
 {
         char *user_agent;
+        char *server_id;
         GError *inner_error = NULL;
         GUPnPContext *context;
         GUPnPContextPrivate *priv;
+        GSSDPUDAVersion version;
 
         if (!initable_parent_iface->init(initable,
                                          cancellable,
@@ -188,6 +191,11 @@ gupnp_context_initable_init (GInitable     *initable,
 
         context = GUPNP_CONTEXT (initable);
         priv = gupnp_context_get_instance_private (context);
+
+        version = gssdp_client_get_uda_version (GSSDP_CLIENT (context));
+        server_id = make_server_id (version);
+        gssdp_client_set_server_id (GSSDP_CLIENT (context), server_id);
+        g_free (server_id);
 
         priv->session = soup_session_new ();
 
