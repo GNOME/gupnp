@@ -45,6 +45,8 @@
 #include <glib.h>
 #include <glib/gstdio.h>
 
+#include <libgssdp/gssdp-enums.h>
+
 #include "gupnp.h"
 
 #ifdef HAVE_IFADDRS_H
@@ -363,7 +365,7 @@ gupnp_context_manager_get_property (GObject    *object,
                 g_value_set_enum (value, priv->family);
                 break;
         case PROP_UDA_VERSION:
-                g_value_set_enum (value, priv->family);
+                g_value_set_enum (value, priv->uda_version);
                 break;
         case PROP_WHITE_LIST:
                 g_value_set_object (value, priv->white_list);
@@ -464,18 +466,18 @@ gupnp_context_manager_class_init (GUPnPContextManagerClass *klass)
          * GUPnPContextManager:uda-version:
          *
          * The UDA version the contexts will support. Use %GSSDP_UDA_VERSION_UNSPECIFIED
-         * for using the default protocol family.
+         * for using the default UDA version.
          *
          * Since: 1.1.2
          **/
         g_object_class_install_property
                 (object_class,
-                 PROP_SOCKET_FAMILY,
+                 PROP_UDA_VERSION,
                  g_param_spec_enum ("uda-version",
                                     "UDA version",
                                     "UDA version the created contexts will implement",
-                                    G_TYPE_SOCKET_FAMILY,
-                                    G_SOCKET_FAMILY_INVALID,
+                                    GSSDP_TYPE_UDA_VERSION,
+                                    GSSDP_UDA_VERSION_UNSPECIFIED,
                                     G_PARAM_READWRITE |
                                     G_PARAM_CONSTRUCT_ONLY |
                                     G_PARAM_STATIC_STRINGS));
