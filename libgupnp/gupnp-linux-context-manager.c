@@ -272,6 +272,7 @@ network_device_update_essid (NetworkInterface *device)
 static void
 network_device_create_context (NetworkInterface *device,
                                const char       *address,
+                               GSocketFamily     family,
                                const char       *label,
                                const char       *mask,
                                GInetAddressMask *host_mask)
@@ -300,6 +301,7 @@ network_device_create_context (NetworkInterface *device,
                                   NULL,
                                   &error,
                                   "host-ip", address,
+                                  "address-family", family,
                                   "uda-version", version,
                                   "interface", label,
                                   "network", device->essid ? device->essid
@@ -566,6 +568,7 @@ create_context (GUPnPLinuxContextManager *self,
 
         network_device_create_context (device,
                                        address,
+                                       ifa->ifa_family,
                                        label,
                                        mask,
                                        host_mask);
