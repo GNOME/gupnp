@@ -615,7 +615,7 @@ gupnp_context_manager_class_init (GUPnPContextManagerClass *klass)
  * NetworkManager - on its availability during runtime. If it is not available,
  * the implementation falls back to the basic Unix context manager instead.
  *
- * Equivalent to calling #gupnp_context_manager_create_full (%GSSDP_CLIENT_UDA_VERSION_1_0, %G_SOCKET_FAMILY_IPV4, port);
+ * Equivalent to calling #gupnp_context_manager_create_full (%GSSDP_UDA_VERSION_1_0, %G_SOCKET_FAMILY_IPV4, port);
  *
  * Returns: (transfer full): A new #GUPnPContextManager object.
  *
@@ -631,7 +631,9 @@ gupnp_context_manager_create (guint port)
 
 /**
  * gupnp_context_manager_create_full:
- * @family: GSocketFamily to create the context for
+ * @uda_version: #GSSDPUDAVersion the created contexts should implement
+ * (UDA 1.0 or 1.1). For %GSSDP_UDA_VERSION_UNSPECIFIED for default.
+ * @family: #GSocketFamily to create the context for
  * @port: Port to create contexts for, or 0 if you don't care what port is used.
  *
  * Factory-method to create a new #GUPnPContextManager. The final type of the
@@ -832,6 +834,16 @@ gupnp_context_manager_get_white_list (GUPnPContextManager *manager)
         return priv->white_list;
 }
 
+/**
+ * gupnp_context_manager_get_socket_family:
+ * @manager: A #GUPnPContextManager
+ *
+ * Get the #GSocketFamily the contexts are created for. Can be
+ * %G_SOCKET_FAMILY_IPV6, %G_SOCKET_FAMILY_IPV4 or %G_SOCKET_FAMILY_INVALID for
+ * both
+ *
+ * Returns: The socket family
+ */
 GSocketFamily
 gupnp_context_manager_get_socket_family (GUPnPContextManager *manager)
 {
@@ -845,6 +857,14 @@ gupnp_context_manager_get_socket_family (GUPnPContextManager *manager)
         return priv->family;
 }
 
+/**
+ * gupnp_context_manager_get_uda_version:
+ * @manager: A #GUPnPContextManager
+ *
+ * Get the UDA protocol version the contexts are implementing
+ *
+ * Returns: The UDA protocol version
+ */
 GSSDPUDAVersion
 gupnp_context_manager_get_uda_version (GUPnPContextManager *manager)
 {

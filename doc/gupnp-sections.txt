@@ -187,6 +187,7 @@ gupnp_context_host_path_for_agent
 gupnp_context_unhost_path
 gupnp_context_get_acl
 gupnp_context_set_acl
+gupnp_context_rewrite_uri
 <SUBSECTION Standard>
 GUPnPContextClass
 GUPNP_CONTEXT
@@ -205,11 +206,14 @@ GUPnPContextPrivate
 <TITLE>GUPnPContextManager</TITLE>
 GUPnPContextManager
 gupnp_context_manager_create
+gupnp_context_manager_create_full
 gupnp_context_manager_rescan_control_points
 gupnp_context_manager_manage_control_point
 gupnp_context_manager_manage_root_device
 gupnp_context_manager_get_port
 gupnp_context_manager_get_white_list
+gupnp_context_manager_get_socket_family
+gupnp_context_manager_get_uda_version
 <SUBSECTION Standard>
 GUPnPContextManagerClass
 GUPNP_CONTEXT_MANAGER
@@ -340,6 +344,7 @@ GUPnPResourceFactoryPrivate
 GUPnPXMLDoc
 gupnp_xml_doc_new
 gupnp_xml_doc_new_from_path
+gupnp_xml_doc_get_doc
 <SUBSECTION Standard>
 GUPnPXMLDocClass
 GUPNP_XML_DOC

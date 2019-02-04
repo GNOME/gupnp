@@ -143,7 +143,13 @@ gupnp_xml_doc_new_from_path (const char *path,
         return gupnp_xml_doc_new (doc);
 }
 
+/**
+ * gupnp_xml_doc_get_doc:
+ * @xml_doc: A #GUPnPXMLDoc
+ *
+ * Returns: a pointer to the wrapped #xmlDoc
+ */
 const xmlDoc *
-gupnp_xml_doc_get_doc (GUPnPXMLDoc *doc) {
-    return doc->doc;
+gupnp_xml_doc_get_doc (GUPnPXMLDoc *xml_doc) {
+    return xml_doc->doc;
 }

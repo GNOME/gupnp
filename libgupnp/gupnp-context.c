@@ -1614,7 +1614,7 @@ gupnp_context_remove_server_handler (GUPnPContext *context, const char *path)
  * Returns: A re-written version of the @uri if the context is on a link-local
  * IPv6 address, a copy of the @uri otherwise.
  *
- * Since: 1.11.1
+ * Since: 1.1.1
  */
 char *
 gupnp_context_rewrite_uri (GUPnPContext *context, const char *plain_uri)
