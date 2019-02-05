@@ -818,48 +818,6 @@ gupnp_service_proxy_action_queue_task (GTask *task)
                                     task);
 }
 
-/* Finishes an action message and sends it off */
-#if 0
-static void
-finish_action_msg (GUPnPServiceProxyAction *action,
-                   const char              *action_name)
-{
-        GUPnPContext *context;
-        SoupSession *session;
-
-        /* Finish message */
-        g_string_append (action->msg_str, "</u:");
-        g_string_append (action->msg_str, action_name);
-        g_string_append_c (action->msg_str, '>');
-
-        g_string_append (action->msg_str,
-                         "</s:Body>"
-                         "</s:Envelope>");
-
-        soup_message_set_request (action->msg,
-                                  "text/xml; charset=\"utf-8\"",
-                                  SOUP_MEMORY_TAKE,
-                                  action->msg_str->str,
-                                  action->msg_str->len);
-
-        g_string_free (action->msg_str, FALSE);
-
-        /* We need to keep our own reference to the message as well,
-         * in order for send_action() to work. */
-        g_object_ref (action->msg);
-
-        /* Send the message */
-        context = gupnp_service_info_get_context
-                                (GUPNP_SERVICE_INFO (action->proxy));
-        session = gupnp_context_get_session (context);
-
-        soup_session_queue_message (session,
-                                    action->msg,
-                                    (SoupSessionCallback) action_got_response,
-                                    action);
-}
-#endif
-
 /**
  * gupnp_service_proxy_begin_action_valist:
  * @proxy: A #GUPnPServiceProxy
