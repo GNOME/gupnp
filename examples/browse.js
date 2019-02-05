@@ -27,11 +27,14 @@
 // DAMAGE.
 
 imports.gi.versions.GUPnP = "1.2"
+imports.gi.versions.GSSDP = "1.2"
 
 const Mainloop = imports.mainloop;
 const GUPnP = imports.gi.GUPnP;
+const GSSDP = imports.gi.GSSDP;
 const GObject = imports.gi.GObject;
 const GLib = imports.gi.GLib;
+const Gio = imports.gi.Gio;
 const Soup = imports.gi.Soup;
 
 const MEDIA_SERVER = "urn:schemas-upnp-org:device:MediaServer:1";
@@ -77,10 +80,11 @@ function _on_context_available (manager, context) {
     dms_cp.set_active (true);
 
     manager.manage_control_point (dms_cp);
+    context.unref();
 }
 
 
-var cm = GUPnP.ContextManager.create (0);
+var cm = GUPnP.ContextManager.create_full (GSSDP.UDAVersion.VERSION_1_1, Gio.SocketFamily.INVALID, 0);
 cm.connect('context-available', _on_context_available)
 
 Mainloop.run ('hello');
