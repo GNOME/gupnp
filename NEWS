@@ -1,3 +1,20 @@
+1.1.2
+=====
+- Use python3 in binding tool
+- Avoid a static buffer in the linux context manager
+- Add UDA version and address family to linux context manager
+- Implement ssdp:update in context manager
+- Update documentation
+- Introduce new sync/async service proxy call API
+
+Bugs fixed in this release:
+ - https://gitlab.gnome.org/GNOME/gupnp/issues/1
+
+All contributors to this release:
+ - Jens Georg <mail@jensge.org>
+ - Jakub Adam <jakub.adam@collabora.com>
+ - Andre Klapper <a9016009@gmx.de>
+
 1.1.1
 =====
 - Fix issue when building VAPI
