@@ -9,6 +9,7 @@ gnome.gtkdoc('gupnp',
              src_dir : [join_paths(meson.source_root(), 'libgupnp'),
                         join_paths(meson.build_root(), 'libgupnp')],
              dependencies : libgupnp,
+             scan_args : ['--ignore-decorators', 'G_DEPRECATED|G_GNUC_DEPRECATED,G_DEPRECATED_FOR'],
              ignore_headers : [
                  'gena-protocol.h',
                  'xml-util.h',

@@ -454,6 +454,20 @@ gupnp_service_proxy_action_get_result_hash (GUPnPServiceProxyAction *action,
 
 }
 
+/**
+ * gupnp_service_proxy_action_get_result:
+ * @action: A #GUPnPServiceProxyAction handle
+ * @error: (allow-none): The location where to store any error, or %NULL
+ * @...: tuples of out parameter name, out parameter type, and out parameter
+ * value location, terminated with %NULL. The out parameter values should be
+ * freed after use
+ *
+ * Retrieves the result of @action. The out parameters in @Varargs will be
+ * filled in, and if an error occurred, @error will be set. In case of
+ * an UPnP error the error code will be the same in @error.
+ *
+ * Return value: %TRUE on success.
+ **/
 gboolean
 gupnp_service_proxy_action_get_result (GUPnPServiceProxyAction *action,
                                        GError                 **error,
@@ -471,6 +485,18 @@ gupnp_service_proxy_action_get_result (GUPnPServiceProxyAction *action,
         return ret;
 }
 
+/**
+ * gupnp_service_proxy_action_get_result_valist:
+ * @action: A #GUPnPServiceProxyAction handle
+ * @error: (allow-none): The location where to store any error, or %NULL
+ * @var_args: A va_list of tuples of out parameter name, out parameter type,
+ * and out parameter value location. The out parameter values should be
+ * freed after use
+ *
+ * See gupnp_service_proxy_action_get_result().
+ *
+ * Return value: %TRUE on success.
+ **/
 gboolean
 gupnp_service_proxy_action_get_result_valist (GUPnPServiceProxyAction *action,
                                               GError                 **error,

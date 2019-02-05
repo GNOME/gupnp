@@ -242,7 +242,7 @@ gupnp_service_proxy_action_get_result_hash (GUPnPServiceProxyAction *action,
                                             GError                 **error);
 
 
-GUPnPServiceProxyAction *
+void
 gupnp_service_proxy_call_action_async (GUPnPServiceProxy       *proxy,
                                        GUPnPServiceProxyAction *action,
                                        GCancellable            *cancellable,

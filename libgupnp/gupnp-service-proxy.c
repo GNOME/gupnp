@@ -389,6 +389,9 @@ gupnp_service_proxy_class_init (GUPnPServiceProxyClass *klass)
  * a UPnPError the error code will be the same in @error.
  *
  * Return value: %TRUE if sending the action was succesful.
+ *
+ * Deprecated: 1.1.2: Use gupnp_service_proxy_action_new() and
+ * gupnp_service_proxy_call_action()
  **/
 gboolean
 gupnp_service_proxy_send_action (GUPnPServiceProxy *proxy,
@@ -423,6 +426,8 @@ gupnp_service_proxy_send_action (GUPnPServiceProxy *proxy,
  * See gupnp_service_proxy_send_action().
  *
  * Return value: %TRUE if sending the action was succesful.
+ *
+ * Deprecated: 1.1.2
  **/
 gboolean
 gupnp_service_proxy_send_action_valist (GUPnPServiceProxy *proxy,
@@ -565,7 +570,8 @@ on_legacy_async_callback (GObject *source, GAsyncResult *res, gpointer user_data
  * gupnp_service_proxy_cancel_action() or
  * gupnp_service_proxy_end_action_valist().
  *
- * Deprecated: 1.1.1: Use gupnp_service_proxy_action_new() and gupnp_service_proxy_action_call_action_async()
+ * Deprecated: 1.1.2: Use gupnp_service_proxy_action_new() and
+ * gupnp_service_proxy_action_call_action_async()
  **/
 GUPnPServiceProxyAction *
 gupnp_service_proxy_begin_action (GUPnPServiceProxy              *proxy,
@@ -868,7 +874,7 @@ finish_action_msg (GUPnPServiceProxyAction *action,
  * be freed when calling gupnp_service_proxy_cancel_action() or
  * gupnp_service_proxy_end_action_valist().
  *
- * Deprecated: 1.1.1: Use ove of
+ * Deprecated: 1.1.2
  **/
 GUPnPServiceProxyAction *
 gupnp_service_proxy_begin_action_valist
@@ -2085,8 +2091,22 @@ gupnp_service_proxy_get_subscribed (GUPnPServiceProxy *proxy)
 
 /**
  * gupnp_service_proxy_call_action_async:
+ * @proxy: (transfer none): A #GUPnPServiceProxy
+ * @action: An action
+ * @cancellable: (allow-none): A #GCancellable which can be used to cancel the
+ * current action call
+ * @callback: (scope async): A #GAsyncReadyCallback to call when the action is
+ * finished.
+ * @user_data: (closure): User data for @callback
+ *
+ * Start a call on the remote UPnP service using the pre-configured @action.
+ * Use gupnp_service_proxy_call_action_finish() in the @callback to finalize
+ * the call and gupnp_service_proxy_action_get_result(),
+ * gupnp_service_proxy_action_get_result_hash() or
+ * gupnp_service_proxy_action_get_result_list() to extract the result of the
+ * remote call.
  */
-GUPnPServiceProxyAction *
+void
 gupnp_service_proxy_call_action_async (GUPnPServiceProxy       *proxy,
                                        GUPnPServiceProxyAction *action,
                                        GCancellable            *cancellable,
@@ -2095,7 +2115,7 @@ gupnp_service_proxy_call_action_async (GUPnPServiceProxy       *proxy,
 {
         GTask *task;
 
-        g_return_val_if_fail (GUPNP_IS_SERVICE_PROXY (proxy), NULL);
+        g_return_if_fail (GUPNP_IS_SERVICE_PROXY (proxy));
 
         task = g_task_new (proxy, cancellable, callback, user_data);
         g_task_set_task_data (task,
@@ -2107,17 +2127,21 @@ gupnp_service_proxy_call_action_async (GUPnPServiceProxy       *proxy,
         if (action->error != NULL) {
                 g_task_return_error (task, g_error_copy (action->error));
                 g_object_unref (task);
-
-                return NULL;
+        } else {
+                gupnp_service_proxy_action_queue_task (task);
         }
-
-        gupnp_service_proxy_action_queue_task (task);
-
-        return action;
 }
 
 /**
  * gupnp_service_proxy_call_action_finish:
+ * @proxy: a #GUPnPServiceProxy
+ * @result: a #GAsyncResult
+ * @error: (allow-none): Return location for a #GError, or %NULL
+ *
+ * Finish an asynchronous call initiated with
+ * gupnp_service_proxy_call_action_async().
+ *
+ * Returns: %NULL, if the call had an error, the action otherwise.
  */
 GUPnPServiceProxyAction *
 gupnp_service_proxy_call_action_finish (GUPnPServiceProxy *proxy,
@@ -2129,6 +2153,18 @@ gupnp_service_proxy_call_action_finish (GUPnPServiceProxy *proxy,
         return g_task_propagate_pointer (G_TASK (result), error);
 }
 
+/**
+ * gupnp_service_proxy_call_action:
+ * @proxy: (transfer none): A #GUPnPServiceProxy
+ * @action: An action
+ * @cancellable: (allow-none): A #GCancellable which can be used to cancel the
+ * current action call
+ * @error: (allow-none): Return location for a #GError, or %NULL.
+ *
+ * Synchronously call the @action on the remote UPnP service.
+ *
+ * Returns: %NULL on error, @action if successful.
+ */
 GUPnPServiceProxyAction *
 gupnp_service_proxy_call_action (GUPnPServiceProxy       *proxy,
                                  GUPnPServiceProxyAction *action,

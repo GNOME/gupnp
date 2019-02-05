@@ -13,6 +13,7 @@ gupnp_service_get_type
 gupnp_service_info_get_type
 gupnp_service_introspection_get_type
 gupnp_service_proxy_get_type
+gupnp_service_proxy_action_get_type
 gupnp_bin_base64_get_type
 gupnp_bin_hex_get_type
 gupnp_date_get_type

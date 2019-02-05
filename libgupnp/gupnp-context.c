@@ -1389,6 +1389,9 @@ gupnp_context_unhost_path (GUPnPContext *context,
  * gupnp_context_get_acl:
  * @context: A #GUPnPContext
  *
+ * Access the #GUPnPAcl associated with this client. If there isn't any,
+ * retturns %NULL. The returned ACL must not be freed.
+ *
  * Returns:(transfer none): The access control list associated with this context or %NULL
  * if no acl is set.
  *
@@ -1410,6 +1413,9 @@ gupnp_context_get_acl (GUPnPContext *context)
  * @context: A #GUPnPContext
  * @acl: (allow-none): The new access control list or %NULL to remove the
  * current list.
+ *
+ * Attach or remove the assoicated access control list to this context. If
+ * @acl is %NULL, the current access control list will be removed.
  *
  * Since: 0.20.11
  **/
@@ -1610,6 +1616,9 @@ gupnp_context_remove_server_handler (GUPnPContext *context, const char *path)
  * gupnp_context_rewrite_uri:
  * @context: a #GUPnPContext
  * @uri: an uri to rewrite if necessary
+ *
+ * Utility function to re-write an uri to the IPv6 link-local form which has
+ * the zone index appended to the IP address.
  *
  * Returns: A re-written version of the @uri if the context is on a link-local
  * IPv6 address, a copy of the @uri otherwise.
