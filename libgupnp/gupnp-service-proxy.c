@@ -596,11 +596,13 @@ gupnp_service_proxy_begin_action (GUPnPServiceProxy              *proxy,
         ret->callback = callback;
         ret->user_data = user_data;
 
-        return gupnp_service_proxy_call_action_async (proxy,
-                                                      ret,
-                                                      NULL,
-                                                      on_legacy_async_callback,
-                                                      ret);
+        gupnp_service_proxy_call_action_async (proxy,
+                                               ret,
+                                               NULL,
+                                               on_legacy_async_callback,
+                                               ret);
+
+        return ret;
 }
 
 static void
@@ -897,7 +899,13 @@ gupnp_service_proxy_begin_action_valist
         ret->callback = callback;
         ret->user_data = user_data;
 
-        return gupnp_service_proxy_call_action_async (proxy, ret, NULL, on_legacy_async_callback, ret);
+        gupnp_service_proxy_call_action_async (proxy,
+                                               ret,
+                                               NULL,
+                                               on_legacy_async_callback,
+                                               ret);
+
+        return ret;
 
 }
 
@@ -938,7 +946,13 @@ gupnp_service_proxy_begin_action_list
         ret->callback = callback;
         ret->user_data = user_data;
 
-        return gupnp_service_proxy_call_action_async (proxy, ret, NULL, on_legacy_async_callback, ret);
+        gupnp_service_proxy_call_action_async (proxy,
+                                               ret,
+                                               NULL,
+                                               on_legacy_async_callback,
+                                               ret);
+
+        return ret;
 }
 
 /**

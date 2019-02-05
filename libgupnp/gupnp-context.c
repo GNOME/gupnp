@@ -1427,10 +1427,7 @@ gupnp_context_set_acl (GUPnPContext *context, GUPnPAcl *acl)
         g_return_if_fail (GUPNP_IS_CONTEXT (context));
 
         priv = gupnp_context_get_instance_private (context);
-        if (priv->acl != NULL) {
-                g_object_unref (priv->acl);
-                priv->acl = NULL;
-        }
+        g_clear_object (&priv->acl);
 
         if (acl != NULL)
                 priv->acl = g_object_ref (acl);
