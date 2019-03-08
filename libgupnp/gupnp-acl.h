@@ -24,7 +24,7 @@
 
 #include <glib.h>
 #include <glib-object.h>
-#include <libsoup/soup-session.h>
+#include <gio/gio.h>
 
 G_BEGIN_DECLS
 
