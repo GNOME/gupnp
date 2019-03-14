@@ -90,10 +90,20 @@ sources = files(
     'xml-util.c'
 )
 
+version = '0.0.0'
+version_arr = version.split('.')
+major_version = version_arr[0].to_int()
+minor_version = version_arr[1].to_int()
+micro_version = version_arr[2].to_int()
+current = major_version + minor_version + 1
+interface_age = micro_version
+darwin_versions = [current, '@0@.@1@'.format(current, interface_age)]
+
 libgupnp = library(
     'gupnp-1.2',
     sources + context_manager_impl + enums,
-    version : '0.0.0',
+    version : version,
+    darwin_versions : darwin_versions,
     dependencies : dependencies + system_deps,
     c_args : context_manager_args,
     include_directories: include_directories('..'),

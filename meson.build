@@ -1,4 +1,4 @@
-project('gupnp', 'c', version : '1.2.0')
+project('gupnp', 'c', version : '1.2.0', meson_version : '>= 0.48.0')
 gnome = import('gnome')
 pkg = import('pkgconfig')
 
