@@ -547,7 +547,10 @@ on_legacy_async_callback (GObject *source, GAsyncResult *res, gpointer user_data
 
         gupnp_service_proxy_call_action_finish (GUPNP_SERVICE_PROXY (source), res, &error);
         action = (GUPnPServiceProxyAction *) user_data;
-        if (action->callback != NULL)
+
+        /* Do not perform legacy call-back if action is cancelled, to comply with the old implementation */
+        if (action->callback != NULL &&
+            !g_error_matches (error, G_IO_ERROR, G_IO_ERROR_CANCELLED))
                 action->callback (action->proxy, action, action->user_data);
 }
 
