@@ -621,8 +621,6 @@ on_action_cancelled (GCancellable *cancellable, gpointer user_data)
                 soup_session_cancel_message (session,
                                              action->msg,
                                              SOUP_STATUS_CANCELLED);
-                g_cancellable_disconnect (action->cancellable,
-                                          action->cancellable_connection_id);
                 action->cancellable_connection_id = 0;
         }
 }
