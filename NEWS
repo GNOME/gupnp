@@ -1,3 +1,15 @@
+1.2.1
+=====
+- Fix a deadlock when cancelling an action
+- Do not call-back a cancelled action
+- Fix public dependencies
+
+Bugs fixed in this release:
+ - https://gitlab.gnome.org/GNOME/gupnp/issues/7
+
+All contributors to this release:
+ - Jens Georg <mail@jensge.org>
+
 1.2.0
 =====
 - Release 1.2.0
