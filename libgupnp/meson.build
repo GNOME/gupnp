@@ -1,6 +1,6 @@
 context_manager_impl = []
 context_manager_args = []
-system_deps = []
+system_deps = [guul.get_variable('guul')]
 
 if host_machine.system() == 'windows'
     context_manager_impl += 'gupnp-windows-context-manager.c'
@@ -110,6 +110,7 @@ pkg.generate(
     libraries : libgupnp,
     subdirs: 'gupnp-1.2',
     name : 'gupnp-1.2',
+    requires : dependencies,
     description : 'GObject-based UPnP library',
     version : meson.project_version(),
     filebase : 'gupnp-1.2'

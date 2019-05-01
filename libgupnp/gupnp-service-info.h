@@ -23,7 +23,6 @@
 #define GUPNP_SERVICE_INFO_H
 
 #include <glib-object.h>
-#include <libxml/tree.h>
 #include <libsoup/soup-uri.h>
 
 #include "gupnp-context.h"
