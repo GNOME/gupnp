@@ -1,6 +1,6 @@
 entities = configuration_data()
 entities.set('VERSION', meson.project_version())
-configure_file(input: 'version.xml.in',
+version_xml = configure_file(input: 'version.xml.in',
                output: 'version.xml', configuration:
                entities)
 
@@ -26,3 +26,35 @@ gnome.gtkdoc('gupnp',
                  'gupnp-types-private.h'
              ],
              install : true)
+
+xsltproc = find_program('xsltproc', required: false)
+if xsltproc.found()
+    xlstproc_flags = [
+        '--nonet',
+        '--xinclude',
+        '--path', '@0@:@1@'.format(meson.current_source_dir(), meson.current_build_dir()),
+        '--stringparam', 'man.output.quietly', '1',
+        '--stringparam', 'funcsynopsis.style', 'ansi',
+        '--stringparam', 'man.th.extra1.suppress', '1',
+        '--stringparam', 'man.authors.section.enabled', '1',
+        '--stringparam', 'man.copyright.section.enabled', '1',
+    ]
+
+    xsltproc_args = [
+        xsltproc,
+        xlstproc_flags,
+        '-o', '@OUTPUT@',
+        'http://docbook.sourceforge.net/release/xsl/current/manpages/docbook.xsl',
+        '@INPUT@'
+    ]
+
+    custom_target(
+        'man 1 pages',
+        input: 'gupnp-binding-tool.xml',
+        output: 'gupnp-binding-tool-1.2.1',
+        command: xsltproc_args,
+        depend_files : version_xml,
+        install: true,
+        install_dir: join_paths(get_option('mandir'), 'man1')
+    )
+endif
