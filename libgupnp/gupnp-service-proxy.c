@@ -1606,9 +1606,10 @@ server_handler (G_GNUC_UNUSED SoupServer        *soup_server,
                 return;
         }
 
+        priv = gupnp_service_proxy_get_instance_private (proxy);
         /* Get root propertyset element */
         node = xmlDocGetRootElement (doc);
-        if (node == NULL || strcmp ((char *) node->name, "propertyset")) {
+        if (node == NULL || strcmp ((char *) node->name, "propertyset") || priv->sid == NULL) {
                 /* Empty or unsupported */
                 xmlFreeDoc (doc);
 
@@ -1624,7 +1625,6 @@ server_handler (G_GNUC_UNUSED SoupServer        *soup_server,
          */
         emit_notify_data = emit_notify_data_new (hdr, seq, doc);
 
-        priv = gupnp_service_proxy_get_instance_private (proxy);
         priv->pending_notifies =
                 g_list_append (priv->pending_notifies, emit_notify_data);
         if (!priv->notify_idle_src) {
