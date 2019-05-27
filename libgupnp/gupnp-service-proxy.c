@@ -2183,7 +2183,7 @@ server_handler (G_GNUC_UNUSED SoupServer        *soup_server,
 
         /* Get root propertyset element */
         node = xmlDocGetRootElement (doc);
-        if (node == NULL || strcmp ((char *) node->name, "propertyset")) {
+        if (node == NULL || strcmp ((char *) node->name, "propertyset") || proxy->priv->sid == NULL) {
                 /* Empty or unsupported */
                 xmlFreeDoc (doc);
 
