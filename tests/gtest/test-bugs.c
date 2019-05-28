@@ -24,26 +24,7 @@
 #endif
 
 #include <libgupnp/gupnp.h>
-
-
-struct _GUPnPServiceAction {
-        volatile gint ref_count;
-
-        GUPnPContext *context;
-
-        char         *name;
-
-        SoupMessage  *msg;
-        gboolean      accept_gzip;
-
-        GUPnPXMLDoc  *doc;
-        xmlNode      *node;
-
-        GString      *response_str;
-
-        guint         argument_count;
-};
-
+#include <libgupnp/gupnp-service-private.h>
 
 typedef struct _TestBgo678701Service {
     GUPnPServiceProxy parent_instance;

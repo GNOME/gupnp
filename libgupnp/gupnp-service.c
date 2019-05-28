@@ -38,6 +38,7 @@
 #include "gupnp-error.h"
 #include "gupnp-acl.h"
 #include "gupnp-uuid.h"
+#include "gupnp-service-private.h"
 #include "http-headers.h"
 #include "gena-protocol.h"
 #include "xml-util.h"
@@ -94,6 +95,9 @@ static void
 notify_subscriber   (gpointer key,
                      gpointer value,
                      gpointer user_data);
+
+GUPnPServiceAction *
+gupnp_service_action_new ();
 
 GUPnPServiceAction *
 gupnp_service_action_ref (GUPnPServiceAction *action);
@@ -210,49 +214,35 @@ notify_data_free (NotifyData *data)
         g_slice_free (NotifyData, data);
 }
 
-struct _GUPnPServiceAction {
-        volatile gint ref_count;
-
-        GUPnPContext *context;
-
-        char         *name;
-
-        SoupMessage  *msg;
-        gboolean      accept_gzip;
-
-        GUPnPXMLDoc  *doc;
-        xmlNode      *node;
-
-        GString      *response_str;
-
-        guint         argument_count;
-};
+GUPnPServiceAction *
+gupnp_service_action_new ()
+{
+        return g_atomic_rc_box_new0 (GUPnPServiceAction);
+}
 
 GUPnPServiceAction *
 gupnp_service_action_ref (GUPnPServiceAction *action)
 {
         g_return_val_if_fail (action, NULL);
-        g_return_val_if_fail (action->ref_count > 0, NULL);
 
-        g_atomic_int_inc (&action->ref_count);
+        return g_atomic_rc_box_acquire (action);
+}
 
-        return action;
+static void
+action_dispose (GUPnPServiceAction *action)
+{
+        g_free (action->name);
+        g_object_unref (action->msg);
+        g_object_unref (action->context);
+        g_object_unref (action->doc);
 }
 
 void
 gupnp_service_action_unref (GUPnPServiceAction *action)
 {
         g_return_if_fail (action);
-        g_return_if_fail (action->ref_count > 0);
 
-        if (g_atomic_int_dec_and_test (&action->ref_count)) {
-                g_free (action->name);
-                g_object_unref (action->msg);
-                g_object_unref (action->context);
-                g_object_unref (action->doc);
-
-                g_slice_free (GUPnPServiceAction, action);
-        }
+        g_atomic_rc_box_release_full (action, (GDestroyNotify) action_dispose);
 }
 
 /**
@@ -1012,9 +1002,7 @@ control_server_handler (SoupServer                      *server,
         }
 
         /* Create action structure */
-        action = g_slice_new0 (GUPnPServiceAction);
-
-        action->ref_count      = 1;
+        action                 = gupnp_service_action_new ();
         action->name           = g_strdup (action_name);
         action->msg            = g_object_ref (msg);
         action->doc            = gupnp_xml_doc_new(doc);
