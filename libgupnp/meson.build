@@ -84,7 +84,7 @@ sources = files(
 libgupnp = library(
     'gupnp-1.0',
     sources + context_manager_impl + marshal,
-    version : '0.0.0',
+    version : '4.0.1',
     dependencies : dependencies + system_deps,
     c_args : context_manager_args,
     include_directories: include_directories('..'),
