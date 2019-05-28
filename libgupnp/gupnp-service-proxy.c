@@ -456,7 +456,7 @@ gupnp_service_proxy_send_action_valist (GUPnPServiceProxy *proxy,
 
         handle = gupnp_service_proxy_action_new_from_list (action_name, in_names, in_values);
 
-        if (gupnp_service_proxy_call_action (proxy, handle, NULL,  error) != NULL) {
+        if (gupnp_service_proxy_call_action (proxy, handle, NULL,  error) == NULL) {
                 result = FALSE;
                 goto out;
         }
@@ -522,7 +522,7 @@ gupnp_service_proxy_send_action_list (GUPnPServiceProxy *proxy,
 
         handle = gupnp_service_proxy_action_new_from_list (action, in_names, in_values);
 
-        if (gupnp_service_proxy_call_action (proxy, handle, NULL, error) != NULL) {
+        if (gupnp_service_proxy_call_action (proxy, handle, NULL, error) == NULL) {
                 result = FALSE;
 
                 goto out;
