@@ -133,6 +133,59 @@ gupnp_resource_factory_get_default (void)
         return default_factory;
 }
 
+static GType
+lookup_type_with_fallback (GHashTable *resource_types,
+                           const char *requested_type,
+                           const char *child_node,
+                           xmlNode    *element,
+                           GType       fallback)
+{
+        GType type = fallback;
+        char *upnp_type = NULL;
+
+        if (requested_type == NULL) {
+                g_debug ("Looking up type from XML");
+                upnp_type = xml_util_get_child_element_content_glib (element,
+                                                                     child_node);
+        } else {
+                g_debug ("Using passed type %s", requested_type);
+                upnp_type = g_strdup (requested_type);
+        }
+
+
+        if (upnp_type != NULL) {
+                g_debug ("Found type from XML: %s", upnp_type);
+                gpointer value;
+                char *needle = NULL;
+
+                value = g_hash_table_lookup (resource_types, upnp_type);
+
+                if (value == NULL) {
+                        g_debug ("Trying to use version-less type...");
+                        needle = g_strrstr (upnp_type, ":");
+                        if (needle != NULL) {
+                                *needle = '\0';
+                                g_debug ("Version-less type is %s", upnp_type);
+
+                                value = g_hash_table_lookup (resource_types, upnp_type);
+                        }
+                }
+
+                if (value != NULL) {
+                        type = GPOINTER_TO_SIZE (value);
+                }
+
+                g_debug ("Will return type %s for UPnP type %s", g_type_name (type), upnp_type);
+                g_free (upnp_type);
+        } else {
+                g_debug ("Will return fall-back type %s", upnp_type);
+        }
+
+
+        return type;
+}
+
+
 /**
  * gupnp_resource_factory_create_device_proxy:
  * @factory: A #GUPnPResourceFactory
@@ -160,7 +213,6 @@ gupnp_resource_factory_create_device_proxy
                                  const SoupURI        *url_base)
 {
         GUPnPDeviceProxy *proxy;
-        char             *upnp_type;
         GType             proxy_type = GUPNP_TYPE_DEVICE_PROXY;
         GUPnPResourceFactoryPrivate *priv;
 
@@ -173,18 +225,11 @@ gupnp_resource_factory_create_device_proxy
 
         priv = gupnp_resource_factory_get_instance_private (factory);
 
-        upnp_type = xml_util_get_child_element_content_glib (element,
-                                                             "deviceType");
-        if (upnp_type) {
-                gpointer value;
-
-                value = g_hash_table_lookup (priv->proxy_type_hash,
-                                             upnp_type);
-                if (value)
-                        proxy_type = GPOINTER_TO_SIZE (value);
-
-                g_free (upnp_type);
-        }
+        proxy_type = lookup_type_with_fallback (priv->proxy_type_hash,
+                                                NULL,
+                                                "deviceType",
+                                                element,
+                                                GUPNP_TYPE_DEVICE_PROXY);
 
         proxy = g_object_new (proxy_type,
                               "resource-factory", factory,
@@ -204,7 +249,7 @@ gupnp_resource_factory_create_device_proxy
  * @factory: A #GUPnPResourceFactory
  * @context: A #GUPnPContext
  * @doc: A #GUPnPXMLDoc
- * @element: The #xmlNode ponting to the right service element
+ * @element: The #xmlNode pointing to the right service element
  * @location: The location of the service description file
  * @udn: The UDN of the device the service is contained in
  * @service_type: (allow-none): The service type, or %NULL to use service
@@ -227,7 +272,6 @@ gupnp_resource_factory_create_service_proxy
                                  const char           *location,
                                  const SoupURI        *url_base)
 {
-        char              *type_from_xml = NULL;
         GUPnPServiceProxy *proxy;
         GType              proxy_type = GUPNP_TYPE_SERVICE_PROXY;
         GUPnPResourceFactoryPrivate *priv;
@@ -241,21 +285,11 @@ gupnp_resource_factory_create_service_proxy
 
         priv = gupnp_resource_factory_get_instance_private (factory);
 
-        if (!service_type) {
-                type_from_xml =
-                    xml_util_get_child_element_content_glib (element,
-                                                             "serviceType");
-                service_type = type_from_xml;
-        }
-
-        if (service_type) {
-                gpointer value;
-
-                value = g_hash_table_lookup (priv->proxy_type_hash,
-                                             service_type);
-                if (value)
-                        proxy_type = GPOINTER_TO_SIZE (value);
-        }
+        proxy_type = lookup_type_with_fallback (priv->proxy_type_hash,
+                                                service_type,
+                                                "serviceType",
+                                                element,
+                                                GUPNP_TYPE_SERVICE_PROXY);
 
         proxy = g_object_new (proxy_type,
                               "context", context,
@@ -266,8 +300,6 @@ gupnp_resource_factory_create_service_proxy
                               "document", doc,
                               "element", element,
                               NULL);
-
-        g_free (type_from_xml);
 
         return proxy;
 }
@@ -298,7 +330,6 @@ gupnp_resource_factory_create_device
                                  const SoupURI        *url_base)
 {
         GUPnPDevice *device;
-        char        *upnp_type;
         GType        device_type = GUPNP_TYPE_DEVICE;
         GUPnPResourceFactoryPrivate *priv;
 
@@ -310,18 +341,11 @@ gupnp_resource_factory_create_device
 
         priv = gupnp_resource_factory_get_instance_private (factory);
 
-        upnp_type = xml_util_get_child_element_content_glib (element,
-                                                             "deviceType");
-        if (upnp_type) {
-                gpointer value;
-
-                value = g_hash_table_lookup (priv->resource_type_hash,
-                                             upnp_type);
-                if (value)
-                        device_type = GPOINTER_TO_SIZE (value);
-
-                g_free (upnp_type);
-        }
+        device_type = lookup_type_with_fallback (priv->resource_type_hash,
+                                                 NULL,
+                                                 "deviceType",
+                                                 element,
+                                                 GUPNP_TYPE_DEVICE);
 
         device = g_object_new (device_type,
                                "resource-factory", factory,
@@ -362,7 +386,6 @@ gupnp_resource_factory_create_service
                                  const SoupURI        *url_base)
 {
         GUPnPService *service;
-        char         *upnp_type;
         GType         service_type = GUPNP_TYPE_SERVICE;
         GUPnPResourceFactoryPrivate *priv;
 
@@ -375,18 +398,11 @@ gupnp_resource_factory_create_service
 
         priv = gupnp_resource_factory_get_instance_private (factory);
 
-        upnp_type = xml_util_get_child_element_content_glib (element,
-                                                             "serviceType");
-        if (upnp_type) {
-                gpointer value;
-
-                value = g_hash_table_lookup (priv->resource_type_hash,
-                                             upnp_type);
-                if (value)
-                        service_type = GPOINTER_TO_SIZE (value);
-
-                g_free (upnp_type);
-        }
+        service_type = lookup_type_with_fallback (priv->resource_type_hash,
+                                                  NULL,
+                                                  "serviceType",
+                                                  element,
+                                                  GUPNP_TYPE_SERVICE);
 
         service = g_object_new (service_type,
                                 "context", context,
@@ -409,6 +425,11 @@ gupnp_resource_factory_create_service
  * Registers the GType @type for the resource of UPnP type @upnp_type. After
  * this call, the factory @factory will create object of GType @type each time
  * it is asked to create a resource object for UPnP type @upnp_type.
+ *
+ * You can either register a type for a concrete version of a device or service
+ * such as urn:schemas-upnp-org:service:AVTransport:2 or version-independently,
+ * urn:schemas-upnp-org:service:AVTransport. If you register for an explicit
+ * version of a service, it will be an exact match.
  *
  * Note: GType @type must be a derived type of #GUPNP_TYPE_DEVICE if resource is
  * a device or #GUPNP_TYPE_SERVICE if its a service.
