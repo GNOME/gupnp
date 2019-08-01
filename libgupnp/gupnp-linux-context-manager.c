@@ -47,9 +47,10 @@
 #include <sys/socket.h>
 #include <linux/netlink.h>
 #include <linux/rtnetlink.h>
-#include <net/if.h>
 #ifdef HAVE_LINUX_WIRELESS_H
 #include <linux/wireless.h>
+#else
+#include <net/if.h>
 #endif
 #include <sys/ioctl.h>
 #include <errno.h>
