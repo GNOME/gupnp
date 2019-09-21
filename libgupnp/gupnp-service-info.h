@@ -104,6 +104,17 @@ gupnp_service_info_get_introspection_async_full
                                GCancellable                     *cancellable,
                                gpointer                          user_data);
 
+void
+gupnp_service_info_introspect_async           (GUPnPServiceInfo    *info,
+                                               GCancellable        *cancellable,
+                                               GAsyncReadyCallback  callback,
+                                               gpointer             user_data);
+
+GUPnPServiceIntrospection *
+gupnp_service_info_introspect_finish          (GUPnPServiceInfo   *info,
+                                               GAsyncResult       *res,
+                                               GError            **error);
+
 G_END_DECLS
 
 #endif /* GUPNP_SERVICE_INFO_H */

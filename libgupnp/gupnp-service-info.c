@@ -786,3 +786,75 @@ gupnp_service_info_get_introspection_async_full
                                  NULL);
         }
 }
+
+static void
+prv_introspection_cb (GUPnPServiceInfo *info,
+                      GUPnPServiceIntrospection *introspection,
+                      const GError *error,
+                      gpointer user_data)
+{
+        if (error != NULL) {
+                g_task_return_error (G_TASK (user_data),
+                                     g_error_copy (error));
+        } else {
+                g_task_return_pointer (G_TASK (user_data),
+                                       introspection,
+                                       g_object_unref);
+        }
+
+        g_object_unref (G_OBJECT (user_data));
+}
+
+/**
+ * gupnp_service_info_introspect_async:
+ * @info: A #GUPnPServiceInfo
+ * @cancellable: (allow-none) : #GCancellable that can be used to cancel the call, or %NULL.
+ * @callback: (scope async) : callback to be called when introspeciton object is ready.
+ * @user_data: user_data to be passed to the callback.
+ *
+ * Note that introspection object is created from the information in service
+ * description document (SCPD) provided by the service so it can not be created
+ * if the service does not provide an SCPD.
+ *
+ * If @cancellable is used to cancel the call, @callback will be called with
+ * error code %G_IO_ERROR_CANCELLED.
+ *
+ * Since: 1.2.2
+ **/
+void
+gupnp_service_info_introspect_async           (GUPnPServiceInfo    *info,
+                                               GCancellable        *cancellable,
+                                               GAsyncReadyCallback  callback,
+                                               gpointer             user_data)
+{
+        GTask *task = g_task_new (info, cancellable, callback, user_data);
+
+        gupnp_service_info_get_introspection_async_full (info,
+                                                         prv_introspection_cb,
+                                                         cancellable,
+                                                         task);
+}
+
+/**
+ * gupnp_service_info_introspect_finish:
+ * @info: A GUPnPServiceInfo
+ * @res: A #GAsyncResult
+ * @error: (allow-none): Return location for a #GError, or %NULL
+ *
+ * Finish an asynchronous call initiated with
+ * gupnp_service_info_introspect_async().
+ *
+ * Returns: (transfer full): %NULL, if the call had an error, a
+ * #GUPnPServiceIntrospection object otherwise.
+ *
+ * Since: 1.2.2
+ */
+GUPnPServiceIntrospection *
+gupnp_service_info_introspect_finish          (GUPnPServiceInfo   *info,
+                                               GAsyncResult       *res,
+                                               GError            **error)
+{
+        g_return_val_if_fail (g_task_is_valid (res, info), NULL);
+
+        return g_task_propagate_pointer (G_TASK (res), error);
+}
