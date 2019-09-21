@@ -85,6 +85,7 @@ typedef struct {
         gulong                            cancelled_id;
 
         SoupMessage                      *message;
+        GError                           *error;
 } GetSCPDURLData;
 
 static void
@@ -672,6 +673,18 @@ cancellable_cancelled_cb (GCancellable *cancellable,
         get_scpd_url_data_free (data);
 }
 
+static gboolean
+introspection_error_cb (gpointer user_data)
+{
+        GetSCPDURLData *data = (GetSCPDURLData *)user_data;
+
+        data->callback (data->info, NULL, data->error, data->user_data);
+        g_error_free (data->error);
+        g_slice_free (GetSCPDURLData, data);
+
+        return FALSE;
+}
+
 /**
  * gupnp_service_info_get_introspection_async:
  * @info: A #GUPnPServiceInfo
@@ -744,26 +757,32 @@ gupnp_service_info_get_introspection_async_full
                 g_free (local_scpd_url);
         }
 
+        data->info      = info;
+        data->callback  = callback;
+        data->user_data = user_data;
+
         if (data->message == NULL) {
                 GError *error;
+                GSource *idle_source;
 
                 error = g_error_new
                                 (GUPNP_SERVER_ERROR,
                                  GUPNP_SERVER_ERROR_INVALID_URL,
                                  "No valid SCPD URL defined");
+                data->error = error;
 
-                callback (info, NULL, error, user_data);
+                idle_source = g_idle_source_new ();
+                g_source_set_callback (idle_source,
+                                       introspection_error_cb,
+                                       data, NULL);
+                g_source_attach (idle_source,
+                                 g_main_context_get_thread_default ());
 
-                g_error_free (error);
-
-                g_slice_free (GetSCPDURLData, data);
+                return;
 
                 return;
         }
 
-        data->info      = info;
-        data->callback  = callback;
-        data->user_data = user_data;
 
         /* Send off the message */
         priv = gupnp_service_info_get_instance_private (info);
