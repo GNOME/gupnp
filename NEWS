@@ -1,3 +1,26 @@
+1.2.2
+=====
+- Fix macOS dylib versioning
+- Fix endless loop on early notify
+- Several documentation fixes
+- Implement version-independent type registration in ResourceFactory
+- Fix an issue with implementation of the depracted functions
+- Fix an issue with including net/if.h and linux/if.h
+- Add async introspection functions matching the usual GIO function pattern
+- Go through main loop if introspection fails before the actual network request
+- Bump required GLib version to 2.58
+
+Bugs fixed in this release:
+ - https://bugzilla.gnome.org/show_bug.cgi?id=764498
+ - https://gitlab.gnome.org/GNOME/gupnp/issues/5
+ - https://gitlab.gnome.org/GNOME/gupnp/issues/6
+ - https://gitlab.gnome.org/GNOME/gupnp/issues/8
+
+All contributors to this release:
+ - Jens Georg <mail@jensge.org>
+ - Fabrice Fontaine <fontaine.fabrice@gmail.com>
+ - Tom Schoonjans <Tom.Schoonjans@diamond.ac.uk>
+
 1.2.1
 =====
 - Fix a deadlock when cancelling an action
