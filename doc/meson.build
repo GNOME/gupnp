@@ -4,6 +4,7 @@ version_xml = configure_file(input: 'version.xml.in',
                output: 'version.xml', configuration:
                entities)
 
+if get_option('gtk_doc')
 gnome.gtkdoc('gupnp',
              main_xml : 'gupnp-docs.xml',
              src_dir : [join_paths(meson.source_root(), 'libgupnp'),
@@ -26,6 +27,7 @@ gnome.gtkdoc('gupnp',
                  'gupnp-types-private.h'
              ],
              install : true)
+endif
 
 xsltproc = find_program('xsltproc', required: false)
 if xsltproc.found()

@@ -31,13 +31,10 @@ dependencies = [
 subdir('libgupnp')
 subdir('tests')
 subdir('tools')
+subdir('doc')
 
 if get_option('vapi') and get_option('introspection')
     subdir('vala')
-endif
-
-if get_option('gtk_doc')
-    subdir('doc')
 endif
 
 if get_option('examples')
