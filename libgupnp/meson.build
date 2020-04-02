@@ -4,8 +4,8 @@ system_deps = [guul.get_variable('guul')]
 
 if host_machine.system() == 'windows'
     context_manager_impl += 'gupnp-windows-context-manager.c'
-    system_deps += cc.find_library('ws2_32', required : 'true')
-    system_deps += cc.find_library('iphlpapi', required : 'true')
+    system_deps += cc.find_library('ws2_32', required : true)
+    system_deps += cc.find_library('iphlpapi', required : true)
 else
     if ifaddrs_available
         context_manager_impl += 'gupnp-unix-context-manager.c'
