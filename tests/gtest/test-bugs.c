@@ -26,6 +26,16 @@
 #include <libgupnp/gupnp.h>
 #include <libgupnp/gupnp-service-private.h>
 
+static GUPnPContext *
+create_context (guint16 port, GError **error) {
+        return GUPNP_CONTEXT (g_initable_new (GUPNP_TYPE_CONTEXT,
+                                              NULL,
+                                              error,
+                                              "host-ip", "127.0.0.1",
+                                              "msearch-port", port,
+                                              NULL));
+}
+
 typedef struct _TestBgo678701Service {
     GUPnPServiceProxy parent_instance;
 }TestBgo678701Service;
@@ -195,7 +205,7 @@ test_bgo_696762 (void)
 
     data.loop = g_main_loop_new (NULL, FALSE);
 
-    context = gupnp_context_new ("lo", 0, &error);
+    context = create_context (0, &error);
     g_assert_no_error (error);
     g_assert (context != NULL);
 
@@ -264,7 +274,7 @@ test_bgo_678701 (void)
 
     data.loop = g_main_loop_new (NULL, FALSE);
 
-    context = gupnp_context_new ("lo", 0, &error);
+    context = create_context (0, &error);
     g_assert_no_error (error);
     g_assert (context != NULL);
 
@@ -321,7 +331,7 @@ test_bgo_690400 (void)
 
     data.loop = g_main_loop_new (NULL, FALSE);
 
-    context = gupnp_context_new ("lo", 0, &error);
+    context = create_context (0, &error);
     g_assert_no_error (error);
     g_assert (context != NULL);
 
@@ -380,7 +390,7 @@ test_bgo_722696 (void)
     char *icon;
     int width;
 
-    context = gupnp_context_new ("lo", 0, &error);
+    context = create_context (0, &error);
     g_assert_no_error (error);
     g_assert (context != NULL);
 
@@ -441,7 +451,7 @@ test_bgo_743233 (void)
     GUPnPControlPoint *cp = NULL;
     GError *error = NULL;
 
-    context = gupnp_context_new ("lo", 0, &error);
+    context = create_context (0, &error);
     g_assert_no_error (error);
     g_assert (context != NULL);
 

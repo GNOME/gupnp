@@ -28,6 +28,16 @@
 #include <libsoup/soup.h>
 #include "libgupnp/gupnp.h"
 
+static GUPnPContext *
+create_context (guint16 port, GError **error) {
+        return GUPNP_CONTEXT (g_initable_new (GUPNP_TYPE_CONTEXT,
+                                              NULL,
+                                              error,
+                                              "host-ip", "127.0.0.1",
+                                              "msearch-port", port,
+                                              NULL));
+}
+
 static void
 on_message_finished (G_GNUC_UNUSED SoupSession *session,
                      G_GNUC_UNUSED SoupMessage *message,
@@ -134,9 +144,7 @@ test_gupnp_context_http_ranged_requests (void)
         g_assert (error == NULL);
         file_length = g_mapped_file_get_length (file);
 
-        context = gupnp_context_new ("lo",
-                                     0,
-                                     &error);
+        context = create_context (0, &error);
         g_assert (context != NULL);
         g_assert (error == NULL);
         port = gupnp_context_get_port (context);
