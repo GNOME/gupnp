@@ -29,5 +29,6 @@ guul_lib = static_library(
 
 guul = declare_dependency (
     link_with : guul_lib,
+    dependencies : dependencies,
     include_directories: include_directories('.')
 )
