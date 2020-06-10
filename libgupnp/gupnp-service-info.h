@@ -52,8 +52,8 @@ struct _GUPnPServiceInfoClass {
 /**
  * GUPnPServiceIntrospectionCallback:
  * @info: The #GUPnPServiceInfo introspection was requested for
- * @introspection: The new #GUPnPServiceIntrospection object, or NULL
- * @error: The #GError that occurred, or NULL
+ * @introspection: (nullable): The new #GUPnPServiceIntrospection object, or NULL
+ * @error: (nullable): The #GError that occurred, or NULL
  * @user_data: User data
  *
  * Callback notifying that @introspection for @info has been obtained.
