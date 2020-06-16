@@ -23,7 +23,7 @@ dependencies = [
     dependency('gio-2.0', version : '>= 2.58'),
     dependency('gmodule-2.0', version : '>= 2.44'),
     dependency('gobject-2.0', version : '>= 2.44'),
-    dependency('gssdp-1.2', version : '>= 1.1.3'),
+    dependency('gssdp-1.2', version : '>= 1.2.3'),
     dependency('libsoup-2.4', version : '>= 2.48.0'),
     dependency('libxml-2.0')
 ]

@@ -40,6 +40,9 @@ G_GNUC_INTERNAL SoupURI *
 gupnp_context_rewrite_uri_to_uri (GUPnPContext *context,
                                   const char   *uri);
 
+G_GNUC_INTERNAL gboolean
+gupnp_context_ip_is_ours (GUPnPContext *context, const char *address);
+
 G_END_DECLS
 
 #endif /* GUPNP_CONTEXT_PRIVATE_H */
