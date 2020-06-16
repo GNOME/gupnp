@@ -36,6 +36,10 @@ _gupnp_context_add_server_handler_with_data (GUPnPContext *context,
                                              const char *path,
                                              AclServerHandler *data);
 
+G_GNUC_INTERNAL SoupURI *
+gupnp_context_rewrite_uri_to_uri (GUPnPContext *context,
+                                  const char   *uri);
+
 G_END_DECLS
 
 #endif /* GUPNP_CONTEXT_PRIVATE_H */

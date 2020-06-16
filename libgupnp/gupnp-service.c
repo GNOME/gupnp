@@ -190,7 +190,7 @@ subscription_data_free (SubscriptionData *data)
         }
        
         /* Further cleanup */
-        g_list_free_full (data->callbacks, g_free);
+        g_list_free_full (data->callbacks, (GDestroyNotify) soup_uri_free);
 
         g_free (data->sid);
 
@@ -1217,13 +1217,14 @@ subscribe (GUPnPService *service,
                         break;
 
                 if (strncmp (start, "http://", strlen ("http://")) == 0) {
-                        char *local_uri;
+                        SoupURI *local_uri;
 
                         uri = g_strndup (start, end - start);
-                        local_uri = gupnp_context_rewrite_uri (context, uri);
+                        local_uri = gupnp_context_rewrite_uri_to_uri (context, uri);
                         g_free (uri);
-
-                        data->callbacks = g_list_append (data->callbacks, local_uri);
+                        if (local_uri != NULL) {
+                            data->callbacks = g_list_append (data->callbacks, local_uri);
+                        }
                 }
 
                 start = end;
@@ -1945,32 +1946,27 @@ notify_got_response (G_GNUC_UNUSED SoupSession *session,
 }
 
 /* Send notification @user_data to subscriber @value */
-static void
-notify_subscriber (G_GNUC_UNUSED gpointer key,
-                   gpointer               value,
-                   gpointer               user_data)
-{
-        SubscriptionData *data;
-        const char *property_set;
-        char *tmp;
-        SoupMessage *msg;
-        SoupSession *session;
+    static void
+    notify_subscriber (G_GNUC_UNUSED gpointer key,
+                       gpointer               value,
+                       gpointer               user_data)
+    {
+            SubscriptionData *data;
+            const char *property_set;
+            char *tmp;
+            SoupMessage *msg;
+            SoupSession *session;
 
-        data = value;
-        property_set = user_data;
+            data = value;
+            property_set = user_data;
 
-        /* Subscriber called unsubscribe */
-        if (subscription_data_can_delete (data))
-                return;
+            /* Subscriber called unsubscribe */
+            if (subscription_data_can_delete (data))
+                    return;
 
-        /* Create message */
-        msg = soup_message_new (GENA_METHOD_NOTIFY, data->callbacks->data);
-        if (!msg) {
-                g_warning ("Invalid callback URL: %s",
-                           (char *) data->callbacks->data);
-
-                return;
-        }
+            /* Create message */
+            msg = soup_message_new_from_uri (GENA_METHOD_NOTIFY,
+                                             data->callbacks->data);
 
         soup_message_headers_append (msg->request_headers,
                                      "NT",

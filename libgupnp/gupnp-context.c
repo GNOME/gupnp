@@ -1618,21 +1618,59 @@ gupnp_context_remove_server_handler (GUPnPContext *context, const char *path)
  * the zone index appended to the IP address.
  *
  * Returns: A re-written version of the @uri if the context is on a link-local
- * IPv6 address, a copy of the @uri otherwise.
+ * IPv6 address, a copy of the @uri otherwise or %NULL if @uri was invalid
  *
  * Since: 1.1.1
  */
 char *
-gupnp_context_rewrite_uri (GUPnPContext *context, const char *plain_uri)
+gupnp_context_rewrite_uri (GUPnPContext *context, const char *uri)
+{
+        SoupURI *soup_uri = NULL;
+        char *retval = NULL;
+
+        soup_uri = gupnp_context_rewrite_uri_to_uri (context, uri);
+        if (soup_uri == NULL) {
+                // We already issued a warning above, so just return
+                return NULL;
+        }
+
+        retval = soup_uri_to_string (soup_uri, FALSE);
+        soup_uri_free (soup_uri);
+
+        return retval;
+}
+
+/**
+ * gupnp_context_rewrite_uri_to_uri:
+ * @context: a #GUPnPContext
+ * @uri: an uri to rewrite if necessary
+ *
+ * Utility function to re-write an uri to the IPv6 link-local form which has
+ * the zone index appended to the IP address.
+ *
+ * Returns: A re-written version of the @uri if the context is on a link-local
+ * IPv6 address or @uri converted to a #SoupURI or %NULL if @uri is invalid
+ *
+ * Since: 1.2.3
+ * Stability: Private
+ */
+SoupURI *
+gupnp_context_rewrite_uri_to_uri (GUPnPContext *context, const char *uri)
 {
         const char *host = NULL;
-        SoupURI *uri = NULL;
+        SoupURI *soup_uri = NULL;
         GInetAddress *addr = NULL;
-        char *retval = NULL;
         int index = -1;
 
-        uri = soup_uri_new (plain_uri);
-        host = soup_uri_get_host (uri);
+        soup_uri = soup_uri_new (uri);
+
+        if (soup_uri == NULL) {
+                g_warning ("Invalid call-back url: %s", uri);
+
+                return NULL;
+        }
+
+        host = soup_uri_get_host (soup_uri);
         addr = g_inet_address_new_from_string (host);
         index = gssdp_client_get_index (GSSDP_CLIENT (context));
 
@@ -1643,13 +1681,11 @@ gupnp_context_rewrite_uri (GUPnPContext *context, const char *plain_uri)
                 new_host = g_strdup_printf ("%s%%%d",
                                             host,
                                             index);
-                soup_uri_set_host (uri, new_host);
+                soup_uri_set_host (soup_uri, new_host);
                 g_free (new_host);
         }
 
         g_object_unref (addr);
-        retval = soup_uri_to_string (uri, FALSE);
-        soup_uri_free (uri);
 
-        return retval;
+        return soup_uri;
 }
