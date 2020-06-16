@@ -1558,3 +1558,29 @@ gupnp_context_remove_server_handler (GUPnPContext *context, const char *path)
 
         soup_server_remove_handler (context->priv->server, path);
 }
+
+gboolean
+gupnp_context_ip_is_ours (GUPnPContext *context, const char *address)
+{
+        // TODO: Could easily be in GSSDPClient, which does something similar
+        gboolean retval = FALSE;
+        GInetAddress *addr = NULL;
+        GInetAddressMask *mask = NULL;
+
+        addr = g_inet_address_new_from_string (address);
+
+        // Link-local addresses are reachable
+        if (g_inet_address_get_is_link_local (addr)) {
+            retval = TRUE;
+            goto out;
+        }
+
+        mask = gssdp_client_get_address_mask (GSSDP_CLIENT (context));
+        retval = g_inet_address_mask_matches (mask, addr);
+        g_object_unref (mask);
+
+out:
+        g_object_unref (addr);
+
+        return retval;
+}

@@ -1182,17 +1182,28 @@ send_initial_state (SubscriptionData *data)
 }
 
 static GList *
-add_subscription_callback (GList *list,
+add_subscription_callback (GUPnPContext *context,
+                           GList *list,
                            const char *callback)
 {
-    SoupURI *local_uri = NULL;
+            SoupURI *local_uri = NULL;
+            const char *host = NULL;
 
-    local_uri = soup_uri_new (callback);
-    if (local_uri != NULL) {
-        return g_list_append (list, local_uri);
-    }
+            local_uri = soup_uri_new (callback);
+            if (local_uri == NULL)
+                        return list;
 
-    return list;
+
+            host = soup_uri_get_host (local_uri);
+            // CVE-2020-12695: Ignore subscription call-backs that are not "in
+            // our network segment"
+            if (gupnp_context_ip_is_ours (context, host)) {
+                        return g_list_append (list, local_uri);
+            } else {
+                        g_warning ("%s is not in our network; ignoring", callback);
+            }
+
+            return list;
 }
 
 /* Subscription request */
@@ -1203,6 +1214,10 @@ subscribe (GUPnPService *service,
 {
         SubscriptionData *data;
         char *start, *end;
+        GUPnPContext *context;
+
+        context = gupnp_service_info_get_context
+                                            (GUPNP_SERVICE_INFO (service));
 
         data = g_slice_new0 (SubscriptionData);
 
@@ -1224,7 +1239,7 @@ subscribe (GUPnPService *service,
                         // Also one part of CVE-2020-12695 mitigation - limit URI length
                         // UPnP does not impose any restrictions here
                         if (strlen (start) <= 256) {
-                            add_subscription_callback (data->callbacks, start);
+                            add_subscription_callback (context, data->callbacks, start);
                         } else {
                             g_warning ("Subscription URI exceeds recommended length of "
                                        "256 bytes, skipping");
