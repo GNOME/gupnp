@@ -1181,6 +1181,19 @@ send_initial_state (SubscriptionData *data)
         g_free (mem);
 }
 
+static GList *
+add_subscription_callback (GList *list,
+                           const char *callback)
+{
+    SoupURI *local_uri = NULL;
+
+    local_uri = soup_uri_new (callback);
+    if (local_uri != NULL) {
+        return g_list_append (list, local_uri);
+    }
+
+    return list;
+}
 
 /* Subscription request */
 static void
@@ -1189,7 +1202,7 @@ subscribe (GUPnPService *service,
            const char   *callback)
 {
         SubscriptionData *data;
-        char *start, *end, *uri;
+        char *start, *end;
 
         data = g_slice_new0 (SubscriptionData);
 
@@ -1205,13 +1218,18 @@ subscribe (GUPnPService *service,
                         break;
 
                 if (strncmp (start, "http://", strlen ("http://")) == 0) {
-                        SoupURI *local_uri;
-                        uri = g_strndup (start, end - start);
-                        local_uri = soup_uri_new (uri);
-                        g_free (uri);
-                        if (local_uri != NULL) {
-                            data->callbacks = g_list_append (data->callbacks, local_uri);
+                        *end = '\0';
+                        g_debug ("Subscription callback: >%s< >%s<", start, g_strndup (start, end - start));
+                        // DLNA 7.3.2.24.4 - URIs shall not exceed 256 bytes
+                        // Also one part of CVE-2020-12695 mitigation - limit URI length
+                        // UPnP does not impose any restrictions here
+                        if (strlen (start) <= 256) {
+                            add_subscription_callback (data->callbacks, start);
+                        } else {
+                            g_warning ("Subscription URI exceeds recommended length of "
+                                       "256 bytes, skipping");
                         }
+                        *end = '>';
                 }
 
                 start = end;
