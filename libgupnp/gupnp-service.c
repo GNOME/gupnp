@@ -1232,20 +1232,19 @@ subscribe (GUPnPService *service,
                 if (!end || !*end)
                         break;
 
-                if (strncmp (start, "http://", strlen ("http://")) == 0) {
-                        *end = '\0';
-                        g_debug ("Subscription callback: >%s< >%s<", start, g_strndup (start, end - start));
+                *end = '\0';
+                if (g_str_has_prefix (start, "http://")) {
                         // DLNA 7.3.2.24.4 - URIs shall not exceed 256 bytes
                         // Also one part of CVE-2020-12695 mitigation - limit URI length
                         // UPnP does not impose any restrictions here
                         if (strlen (start) <= 256) {
-                            add_subscription_callback (context, data->callbacks, start);
+                                add_subscription_callback (context, data->callbacks, start);
                         } else {
-                            g_warning ("Subscription URI exceeds recommended length of "
-                                       "256 bytes, skipping");
+                                g_warning ("Subscription URI exceeds recommended length "
+                                           "of 256 bytes, skipping");
                         }
-                        *end = '>';
                 }
+                *end = '>';
 
                 start = end;
         }
