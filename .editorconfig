@@ -1,0 +1,13 @@
+# https://editorconfig.org
+
+[*]
+end_of_line = lf
+insert_final_newline = true
+
+[*.{c,h}]
+indent_style = space
+indent_size = 8
+
+[*.xml]
+indent_style = space
+indent_size = 2
