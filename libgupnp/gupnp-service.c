@@ -1239,7 +1239,9 @@ subscribe (GUPnPService *service,
                         // Also one part of CVE-2020-12695 mitigation - limit URI length
                         // UPnP does not impose any restrictions here
                         if (strlen (start) <= 256) {
-                                add_subscription_callback (context, data->callbacks, start);
+                                data->callbacks = add_subscription_callback (context,
+                                                                             data->callbacks,
+                                                                             start);
                         } else {
                                 g_warning ("Subscription URI exceeds recommended length "
                                            "of 256 bytes, skipping");
