@@ -1702,8 +1702,8 @@ gupnp_context_ip_is_ours (GUPnPContext *context, const char *address)
 
         // Link-local addresses are reachable
         if (g_inet_address_get_is_link_local (addr)) {
-            retval = TRUE;
-            goto out;
+                retval = TRUE;
+                goto out;
         }
 
         mask = gssdp_client_get_address_mask (GSSDP_CLIENT (context));
