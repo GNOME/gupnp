@@ -1216,6 +1216,7 @@ subscribe (GUPnPService *service,
         SubscriptionData *data;
         char *start, *end;
         GUPnPContext *context;
+        int callbacks = 0;
 
         context = gupnp_service_info_get_context
                                             (GUPNP_SERVICE_INFO (service));
@@ -1224,7 +1225,10 @@ subscribe (GUPnPService *service,
 
         /* Parse callback list */
         start = (char *) callback;
-        while ((start = strchr (start, '<'))) {
+
+        // Arbitrarily limit the list of callbacks to 6
+        // Part of CVE-2020-12695 mitigation
+        while (callbacks < 6 && (start = strchr (start, '<'))) {
                 start += 1;
                 if (!start || !*start)
                         break;
@@ -1250,6 +1254,7 @@ subscribe (GUPnPService *service,
                 *end = '>';
 
                 start = end;
+                callbacks++;
         }
 
         if (!data->callbacks) {
