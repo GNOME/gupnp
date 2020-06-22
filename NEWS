@@ -1,3 +1,24 @@
+1.2.3
+=====
+- Attention: Requires GSSDP 1.2.3!
+- Always build the gupnp-binding-tool manpage
+- Fix meson build on Windows
+- Fix context creation for tests across different platforms
+- Fix static linking issue caused by libguul subproject
+- Add mitigations for CVE-2020-12695 (CallStranger)
+- Implement UDA 2.0 April 17 2020 Addendum (Patial fix for CVE-2020-12695)
+
+Bugs fixed in this release:
+ - https://gitlab.gnome.org/GNOME/gupnp/issues/15
+ - https://gitlab.gnome.org/GNOME/gupnp/issues/16
+
+All contributors to this release:
+ - Jens Georg <mail@jensge.org>
+ - soiamsoNG <83182235@qq.com>
+ - Peter Seiderer <ps.report@gmx.net>
+ - Jan-Michael Brummer <jan.brummer@tabos.org>
+ - Mart Raudsepp <leio@gentoo.org>
+
 1.2.2
 =====
 - Fix macOS dylib versioning
