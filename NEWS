@@ -1,3 +1,19 @@
+1.0.5
+=====
+- Attention! Version requirement change: Requires GSSDP 1.0.4
+- Fix an issue with if.h redefinition
+- Fix introspection annotation for introspection callback
+- Add mitigation for CVE-CVE-2020-12695 (CallStranger)
+- Implement UDA 2.0 April 17 2020 addendum (CallStranger prevention)
+
+Bugs fixed in this release:
+ - https://gitlab.gnome.org/GNOME/gupnp/issues/16
+
+All contributors to this release:
+ - Jens Georg <mail@jensge.org>
+ - soiamsoNG <83182235@qq.com>
+ - Fabrice Fontaine <fontaine.fabrice@gmail.com>
+
 1.0.4
 =====
 - Fix some win32-specific warnings
