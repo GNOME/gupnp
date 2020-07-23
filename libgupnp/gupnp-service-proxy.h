@@ -226,6 +226,9 @@ gupnp_service_proxy_action_ref (GUPnPServiceProxyAction *action);
 void
 gupnp_service_proxy_action_unref (GUPnPServiceProxyAction *action);
 
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (GUPnPServiceProxyAction,
+                               gupnp_service_proxy_action_unref)
+
 gboolean
 gupnp_service_proxy_action_get_result (GUPnPServiceProxyAction *action,
                                        GError                 **error,
