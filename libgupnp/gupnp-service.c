@@ -1193,7 +1193,8 @@ add_subscription_callback (GUPnPContext *context,
                            const char *callback)
 {
             SoupURI *local_uri = NULL;
-            const char *host = NULL;
+            char *host = NULL;
+            char *index = NULL;
 
             local_uri = gupnp_context_rewrite_uri_to_uri (context, callback);
             if (local_uri == NULL) {
@@ -1201,14 +1202,20 @@ add_subscription_callback (GUPnPContext *context,
             }
 
 
-            host = soup_uri_get_host (local_uri);
+            host = g_strdup (soup_uri_get_host (local_uri));
+            index = g_strrstr(host, "%");
+            // Cut off network index
+            if (index != NULL) {
+                    *index = '\0';
+            }
             // CVE-2020-12695: Ignore subscription call-backs that are not "in
             // our network segment"
             if (gupnp_context_ip_is_ours (context, host)) {
-                    return g_list_append (list, local_uri);
+                    list = g_list_append (list, local_uri);
             } else {
                     g_warning ("%s is not in our network; ignoring", callback);
             }
+            g_free (host);
 
             return list;
 }
