@@ -1577,7 +1577,6 @@ gupnp_context_ip_is_ours (GUPnPContext *context, const char *address)
 
         mask = gssdp_client_get_address_mask (GSSDP_CLIENT (context));
         retval = g_inet_address_mask_matches (mask, addr);
-        g_object_unref (mask);
 
 out:
         g_object_unref (addr);
