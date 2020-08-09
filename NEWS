@@ -1,3 +1,10 @@
+1.0.6
+=====
+- Fix an issue with unref'ing the mask returned by GSSDP
+
+All contributors to this release:
+ - Emilio Pozuelo Monfort <pochu27@gmail.com>
+
 1.0.5
 =====
 - Attention! Version requirement change: Requires GSSDP 1.0.4
