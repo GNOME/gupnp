@@ -1,3 +1,11 @@
+1.2.4
+=====
+- Fix subscription check on V6 link-local addresses
+- Add autofree function for GUPnPServiceProxyAction
+
+All contributors to this release:
+ - Jens Georg <mail@jensge.org>
+
 1.2.3
 =====
 - Attention: Requires GSSDP 1.2.3!
