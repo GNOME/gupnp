@@ -45,6 +45,7 @@ enums = gnome.mkenums(
 headers = files(
     'gupnp-acl.h',
     'gupnp-context.h',
+    'gupnp-context-filter.h',
     'gupnp-context-manager.h',
     'gupnp-control-point.h',
     'gupnp-device.h',
@@ -68,6 +69,7 @@ install_headers(headers, subdir : 'gupnp-1.2/libgupnp')
 sources = files(
     'gupnp-acl.c',
     'gupnp-context.c',
+    'gupnp-context-filter.c',
     'gupnp-context-manager.c',
     'gupnp-control-point.c',
     'gupnp-device.c',
