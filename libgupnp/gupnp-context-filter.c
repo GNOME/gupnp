@@ -20,7 +20,7 @@
  */
 
 /**
- * SECTION:gupnp-white-list
+ * SECTION:gupnp-context-filter
  * @short_description: Class for network filtering.
  *
  * #GUPnPContextFilter handles network filtering. It provides API to manage a
@@ -31,9 +31,9 @@
  * Since: 0.20.5
  */
 
-#include <string.h>
+#include "gupnp-context-filter.h"
 
-#include "gupnp-white-list.h"
+#include <string.h>
 
 struct _GUPnPContextFilterPrivate {
         gboolean enabled;
@@ -151,7 +151,7 @@ gupnp_context_filter_class_init (GUPnPContextFilterClass *klass)
         /**
          * GUPnPContextFilter:enabled:
          *
-         * Whether this white list is active or not.
+         * Whether this context filter is active or not.
          *
          * Since: 0.20.5
          **/
@@ -160,7 +160,7 @@ gupnp_context_filter_class_init (GUPnPContextFilterClass *klass)
                 PROP_ENABLED,
                 g_param_spec_boolean ("enabled",
                                       "Enabled",
-                                      "TRUE if the white list is active.",
+                                      "TRUE if the context filter is active.",
                                       FALSE,
                                       G_PARAM_CONSTRUCT | G_PARAM_READWRITE |
                                               G_PARAM_STATIC_STRINGS));
@@ -394,7 +394,7 @@ gupnp_context_filter_get_entries (GUPnPContextFilter *context_filter)
  *
  * Remove all entries from #GList that compose the white list.
  * The list is now empty. Even if #GUPnPContextFilter is enabled, it will have
- *the same behavior as if it was disabled.
+ * the same behavior as if it was disabled.
  *
  * Since: 0.20.5
  **/

@@ -72,9 +72,9 @@ struct _GUPnPContextManagerPrivate {
         GUPnPContextManager *impl;
 
         GList *objects; /* control points and root devices */
-        GList *blacklisted; /* Blacklisted Context */
+        GList *filtered; /* Filtered contexts */
 
-        GUPnPWhiteList *white_list;
+        GUPnPContextFilter *context_filter;
 };
 typedef struct _GUPnPContextManagerPrivate GUPnPContextManagerPrivate;
 
@@ -82,12 +82,13 @@ G_DEFINE_ABSTRACT_TYPE_WITH_PRIVATE (GUPnPContextManager,
                                      gupnp_context_manager,
                                      G_TYPE_OBJECT);
 
-enum {
+enum
+{
         PROP_0,
         PROP_PORT,
         PROP_SOCKET_FAMILY,
         PROP_UDA_VERSION,
-        PROP_WHITE_LIST
+        PROP_CONTEXT_FILTER
 };
 
 enum {
@@ -118,19 +119,19 @@ on_context_available (GUPnPContextManager    *manager,
                       GUPnPContext           *context,
                       G_GNUC_UNUSED gpointer *user_data)
 {
-        GUPnPWhiteList *white_list;
+        GUPnPContextFilter *context_filter;
         GUPnPContextManagerPrivate *priv;
         gboolean enabled = TRUE;
 
         priv = gupnp_context_manager_get_instance_private (manager);
 
-        white_list = priv->white_list;
+        context_filter = priv->context_filter;
 
         /* Try to catch the notification, only if the white list
          * is enabled, not empty and the context doesn't match */
-        if (!gupnp_white_list_is_empty (white_list) &&
-            gupnp_white_list_get_enabled (white_list) &&
-            !gupnp_white_list_check_context (white_list, context)) {
+        if (!gupnp_context_filter_is_empty (context_filter) &&
+            gupnp_context_filter_get_enabled (context_filter) &&
+            !gupnp_context_filter_check_context (context_filter, context)) {
                 /* If the conext doesn't match, block the notification
                  * and disable the context */
                 g_signal_stop_emission_by_name (manager, "context-available");
@@ -140,8 +141,8 @@ on_context_available (GUPnPContextManager    *manager,
                 enabled = FALSE;
 
                 /* Save it in case we need to re-enable it */
-                priv->blacklisted = g_list_prepend (priv->blacklisted,
-                                                    g_object_ref (context));
+                priv->filtered =
+                        g_list_prepend (priv->filtered, g_object_ref (context));
         }
 
         /* Ignore the boot-id handling for UDA 1.0 */
@@ -176,7 +177,7 @@ on_context_unavailable (GUPnPContextManager    *manager,
                         G_GNUC_UNUSED gpointer *user_data)
 {
         GList *l;
-        GList *black;
+        GList *filtered_context;
         GUPnPContextManagerPrivate *priv;
 
         priv = gupnp_context_manager_get_instance_private (manager);
@@ -217,14 +218,14 @@ on_context_unavailable (GUPnPContextManager    *manager,
                 }
         }
 
-        black = g_list_find (priv->blacklisted, context);
+        filtered_context = g_list_find (priv->filtered, context);
 
-        if (black != NULL) {
+        if (filtered_context != NULL) {
                 g_signal_stop_emission_by_name (manager, "context-unavailable");
 
-                g_object_unref (black->data);
-                priv->blacklisted = g_list_delete_link (priv->blacklisted,
-                                                        black);
+                g_object_unref (filtered_context->data);
+                priv->filtered =
+                        g_list_delete_link (priv->filtered, filtered_context);
         } else {
                 /* When UDA 1.0, ignore boot-id handling */
                 if (priv->uda_version > GSSDP_UDA_VERSION_1_0) {
@@ -250,20 +251,20 @@ on_context_unavailable (GUPnPContextManager    *manager,
 }
 
 static void
-gupnp_context_manager_filter_context (GUPnPWhiteList *white_list,
+gupnp_context_manager_filter_context (GUPnPContextFilter *context_filter,
                                       GUPnPContextManager *manager,
                                       gboolean check)
 {
         GList *next;
         GList *obj;
-        GList *blk;
+        GList *iter;
         gboolean match;
         GUPnPContextManagerPrivate *priv;
 
         priv = gupnp_context_manager_get_instance_private (manager);
 
         obj = priv->objects;
-        blk = priv->blacklisted;
+        iter = priv->filtered;
 
         while (obj != NULL) {
                 /* If the white list is empty, treat it as disabled */
@@ -279,8 +280,9 @@ gupnp_context_manager_filter_context (GUPnPWhiteList *white_list,
                                       property, &context,
                                       NULL);
 
-                        match = gupnp_white_list_check_context (white_list,
-                                                                context);
+                        match = gupnp_context_filter_check_context (
+                                context_filter,
+                                context);
                 } else {
                         /* Re-activate all context, if needed */
                         match = TRUE;
@@ -302,65 +304,67 @@ gupnp_context_manager_filter_context (GUPnPWhiteList *white_list,
                 obj = obj->next;
         }
 
-        while (blk != NULL) {
+        while (iter != NULL) {
                 /* If the white list is empty, treat it as disabled */
                 if (check)
                         /* Filter out context */
-                        match = gupnp_white_list_check_context (white_list,
-                                                                blk->data);
+                        match = gupnp_context_filter_check_context (
+                                context_filter,
+                                iter->data);
                 else
                         /* Re-activate all context, if needed */
                         match = TRUE;
 
                 if (!match) {
-                        blk = blk->next;
+                        iter = iter->next;
                         continue;
                 }
 
-                next = blk->next;
-                g_object_set (blk->data, "active", TRUE, NULL);
+                next = iter->next;
+                g_object_set (iter->data, "active", TRUE, NULL);
 
-                g_signal_emit_by_name (manager, "context-available", blk->data);
+                g_signal_emit_by_name (manager,
+                                       "context-available",
+                                       iter->data);
 
-                g_object_unref (blk->data);
-                priv->blacklisted = g_list_delete_link (priv->blacklisted,
-                                                        blk);
-                blk = next;
+                g_object_unref (iter->data);
+                priv->filtered = g_list_delete_link (priv->filtered, iter);
+                iter = next;
         }
 }
 
 static void
-on_white_list_change_cb (GUPnPWhiteList *white_list,
-                         GParamSpec *pspec,
-                         gpointer user_data)
+on_context_filter_change_cb (GUPnPContextFilter *context_filter,
+                             GParamSpec *pspec,
+                             gpointer user_data)
 {
         GUPnPContextManager *manager = GUPNP_CONTEXT_MANAGER (user_data);
         gboolean enabled;
         gboolean is_empty;
 
-        enabled = gupnp_white_list_get_enabled (white_list);
-        is_empty = gupnp_white_list_is_empty (white_list);
+        enabled = gupnp_context_filter_get_enabled (context_filter);
+        is_empty = gupnp_context_filter_is_empty (context_filter);
 
         if (enabled)
-                gupnp_context_manager_filter_context (white_list,
+                gupnp_context_manager_filter_context (context_filter,
                                                       manager,
                                                       !is_empty);
 }
 
 static void
-on_white_list_enabled_cb (GUPnPWhiteList *white_list,
-                          GParamSpec *pspec,
-                          gpointer user_data)
+on_context_filter_enabled_cb (GUPnPContextFilter *context_filter,
+                              GParamSpec *pspec,
+                              gpointer user_data)
 {
         GUPnPContextManager *manager = GUPNP_CONTEXT_MANAGER (user_data);
         gboolean enabled;
         gboolean is_empty;
 
-        enabled = gupnp_white_list_get_enabled (white_list);
-        is_empty = gupnp_white_list_is_empty (white_list);
+        enabled = gupnp_context_filter_get_enabled (context_filter);
+        is_empty = gupnp_context_filter_is_empty (context_filter);
 
         if (!is_empty)
-                gupnp_context_manager_filter_context (white_list,
+                gupnp_context_manager_filter_context (context_filter,
                                                       manager,
                                                       enabled);
 }
@@ -372,13 +376,17 @@ gupnp_context_manager_init (GUPnPContextManager *manager)
 
         priv = gupnp_context_manager_get_instance_private (manager);
 
-        priv->white_list = gupnp_white_list_new ();
+        priv->context_filter = gupnp_context_filter_new ();
 
-        g_signal_connect_after (priv->white_list, "notify::entries",
-                                G_CALLBACK (on_white_list_change_cb), manager);
+        g_signal_connect_after (priv->context_filter,
+                                "notify::entries",
+                                G_CALLBACK (on_context_filter_change_cb),
+                                manager);
 
-        g_signal_connect_after (priv->white_list, "notify::enabled",
-                                G_CALLBACK (on_white_list_enabled_cb), manager);
+        g_signal_connect_after (priv->context_filter,
+                                "notify::enabled",
+                                G_CALLBACK (on_context_filter_enabled_cb),
+                                manager);
         priv->boot_id = time(NULL);
 }
 
@@ -432,8 +440,8 @@ gupnp_context_manager_get_property (GObject    *object,
         case PROP_UDA_VERSION:
                 g_value_set_enum (value, priv->uda_version);
                 break;
-        case PROP_WHITE_LIST:
-                g_value_set_object (value, priv->white_list);
+        case PROP_CONTEXT_FILTER:
+                g_value_set_object (value, priv->context_filter);
                 break;
         default:
                 G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -445,32 +453,29 @@ static void
 gupnp_context_manager_dispose (GObject *object)
 {
         GUPnPContextManager *manager;
-        GUPnPWhiteList *wl;
+        GUPnPContextFilter *filter;
         GObjectClass *object_class;
         GUPnPContextManagerPrivate *priv;
 
         manager = GUPNP_CONTEXT_MANAGER (object);
         priv = gupnp_context_manager_get_instance_private (manager);
 
-        wl = priv->white_list;
+        filter = priv->context_filter;
 
-        g_signal_handlers_disconnect_by_func (wl,
-                                              on_white_list_enabled_cb,
+        g_signal_handlers_disconnect_by_func (filter,
+                                              on_context_filter_enabled_cb,
                                               manager);
 
-        g_signal_handlers_disconnect_by_func (wl,
-                                              on_white_list_change_cb,
+        g_signal_handlers_disconnect_by_func (filter,
+                                              on_context_filter_change_cb,
                                               NULL);
 
         g_list_free_full (priv->objects, g_object_unref);
         priv->objects = NULL;
-        g_list_free_full (priv->blacklisted, g_object_unref);
-        priv->blacklisted = NULL;
+        g_list_free_full (priv->filtered, g_object_unref);
+        priv->filtered = NULL;
 
-        if (wl) {
-                g_object_unref (wl);
-                priv->white_list = NULL;
-        }
+        g_clear_object (&filter);
 
         /* Call super */
         object_class = G_OBJECT_CLASS (gupnp_context_manager_parent_class);
@@ -547,24 +552,23 @@ gupnp_context_manager_class_init (GUPnPContextManagerClass *klass)
                                     G_PARAM_CONSTRUCT_ONLY |
                                     G_PARAM_STATIC_STRINGS));
 
-         /**
-         * GUPnPContextManager:white-list:
+        /**
+         * GUPnPContextManager:context-filter:
          *
          * The white list to use.
          **/
-        g_object_class_install_property
-                (object_class,
-                 PROP_WHITE_LIST,
-                 g_param_spec_object ("white-list",
-                                      "White List",
-                                      "The white list to use",
-                                      GUPNP_TYPE_WHITE_LIST,
-                                      G_PARAM_READABLE |
-                                      G_PARAM_STATIC_NAME |
-                                      G_PARAM_STATIC_NICK |
-                                      G_PARAM_STATIC_BLURB));
+        g_object_class_install_property (
+                object_class,
+                PROP_CONTEXT_FILTER,
+                g_param_spec_object ("context-filter",
+                                     "Context Filter",
+                                     "The Context Filter to use",
+                                     GUPNP_TYPE_CONTEXT_FILTER,
+                                     G_PARAM_READABLE | G_PARAM_STATIC_NAME |
+                                             G_PARAM_STATIC_NICK |
+                                             G_PARAM_STATIC_BLURB));
 
-       /**
+        /**
          * GUPnPContextManager::context-available:
          * @context_manager: The #GUPnPContextManager that received the signal
          * @context: The now available #GUPnPContext
@@ -814,16 +818,16 @@ gupnp_context_manager_get_port (GUPnPContextManager *manager)
 }
 
 /**
- * gupnp_context_manager_get_white_list:
+ * gupnp_context_manager_get_context_filter:
  * @manager: A #GUPnPContextManager
  *
- * Get the #GUPnPWhiteList associated with @manager.
+ * Get the #GUPnPContextFilter associated with @manager.
  *
- * Returns: (transfer none):  The #GUPnPWhiteList asssociated with this
+ * Returns: (transfer none):  The #GUPnPContextFilter asssociated with this
  * context manager.
  */
-GUPnPWhiteList *
-gupnp_context_manager_get_white_list (GUPnPContextManager *manager)
+GUPnPContextFilter *
+gupnp_context_manager_get_context_filter (GUPnPContextManager *manager)
 {
         GUPnPContextManagerPrivate *priv;
 
@@ -831,7 +835,7 @@ gupnp_context_manager_get_white_list (GUPnPContextManager *manager)
 
         priv = gupnp_context_manager_get_instance_private (manager);
 
-        return priv->white_list;
+        return priv->context_filter;
 }
 
 /**

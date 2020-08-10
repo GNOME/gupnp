@@ -24,11 +24,11 @@
 #ifndef GUPNP_CONTEXT_MANAGER_H
 #define GUPNP_CONTEXT_MANAGER_H
 
-#include <glib.h>
+#include "gupnp-context-filter.h"
 #include "gupnp-context.h"
-#include "gupnp-root-device.h"
 #include "gupnp-control-point.h"
-#include "gupnp-white-list.h"
+#include "gupnp-root-device.h"
+#include <glib.h>
 
 G_BEGIN_DECLS
 
@@ -76,8 +76,8 @@ gupnp_context_manager_manage_root_device
 guint
 gupnp_context_manager_get_port          (GUPnPContextManager *manager);
 
-GUPnPWhiteList *
-gupnp_context_manager_get_white_list    (GUPnPContextManager *manager);
+GUPnPContextFilter *
+gupnp_context_manager_get_context_filter (GUPnPContextManager *manager);
 
 GSocketFamily
 gupnp_context_manager_get_socket_family (GUPnPContextManager *manager);

@@ -61,6 +61,7 @@ headers = files(
     'gupnp-types.h',
     'gupnp-uuid.h',
     'gupnp-white-list.h',
+    'gupnp-context-filter.h',
     'gupnp-xml-doc.h'
 )
 install_headers(headers, subdir : 'gupnp-1.2/libgupnp')
@@ -84,6 +85,7 @@ sources = files(
     'gupnp-simple-context-manager.c',
     'gupnp-types.c',
     'gupnp-white-list.c',
+    'gupnp-context-filter.c',
     'gupnp-xml-doc.c',
     'gvalue-util.c',
     'http-headers.c',
