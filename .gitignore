@@ -1,24 +1,4 @@
-*.la
-*.lo
 *.o
-.deps
-.libs
-Makefile
-Makefile.in
-
-/INSTALL
-/aclocal.m4
-/autom4te.cache/
-/build-aux/
-/config.h
-/config.h.in
-/config.log
-/config.status
-/configure
-/gtk-doc.make
-/libtool
-/stamp-h1
-
 /doc/version.xml
 
 /examples/light-client
@@ -48,3 +28,6 @@ Makefile.in
 
 /vala/gupnp-1.0.stamp
 /vala/gupnp-1.0.vapi
+
+/build
+.vscode
