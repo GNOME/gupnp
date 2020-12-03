@@ -154,87 +154,84 @@ print_wl_entry(gpointer data, gpointer user_data)
 }
 
 static void
-print_context_filter_entries (GUPnPContextFilter *wl)
+print_white_list_entries(GUPnPWhiteList *wl)
 {
         GList *list;
 
         g_print ("\t\tWhite List Entries:\n");
-        list = gupnp_context_filter_get_entries (wl);
+        list = gupnp_white_list_get_entries(wl);
         g_list_foreach (list, print_wl_entry, NULL);
         g_print ("\n");
 }
 
 static gboolean
-change_context_filter (gpointer user_data)
+change_white_list(gpointer user_data)
 {
         GUPnPContextManager *context_manager = user_data;
-        GUPnPContextFilter *context_filter;
+        GUPnPWhiteList *white_list;
         static int tomato = 0;
 
         g_print ("\nChange White List:\n");
         g_print ("\t Action number %d:\n", tomato);
 
-        context_filter =
-                gupnp_context_manager_get_context_filter (context_manager);
+        white_list = gupnp_context_manager_get_white_list(context_manager);
 
         switch (tomato) {
         case 0:
                 g_print ("\t Add Entry eth0\n\n");
-                gupnp_context_filter_add_entry (context_filter, "eth0");
-                print_context_filter_entries (context_filter);
+                gupnp_white_list_add_entry(white_list, "eth0");
+                print_white_list_entries (white_list);
                 break;
         case 1:
                 g_print ("\t Enable WL\n\n");
-                gupnp_context_filter_set_enabled (context_filter, TRUE);
+                gupnp_white_list_set_enabled (white_list, TRUE);
                 break;
         case 2:
                 g_print ("\t Add Entry 127.0.0.1\n\n");
-                gupnp_context_filter_add_entry (context_filter, "127.0.0.1");
-                print_context_filter_entries (context_filter);
+                gupnp_white_list_add_entry(white_list, "127.0.0.1");
+                print_white_list_entries (white_list);
                 break;
         case 3:
                 g_print ("\t Add Entry eth5\n\n");
-                gupnp_context_filter_add_entry (context_filter, "eth5");
-                print_context_filter_entries (context_filter);
+                gupnp_white_list_add_entry(white_list, "eth5");
+                print_white_list_entries (white_list);
                 break;
         case 4:
                 g_print ("\t Remove Entry eth5\n\n");
-                gupnp_context_filter_remove_entry (context_filter, "eth5");
-                print_context_filter_entries (context_filter);
+                gupnp_white_list_remove_entry(white_list, "eth5");
+                print_white_list_entries (white_list);
                 break;
         case 5:
                 g_print ("\t Clear all entries\n\n");
-                gupnp_context_filter_clear (context_filter);
-                print_context_filter_entries (context_filter);
+                gupnp_white_list_clear(white_list);
+                print_white_list_entries (white_list);
                 break;
         case 6:
                 g_print ("\t Add Entry wlan2\n\n");
-                gupnp_context_filter_add_entry (context_filter, "wlan2");
-                print_context_filter_entries (context_filter);
+                gupnp_white_list_add_entry(white_list, "wlan2");
+                print_white_list_entries(white_list);
                 break;
         case 7:
                 g_print ("\t Disable WL\n\n");
-                gupnp_context_filter_set_enabled (context_filter, FALSE);
+                gupnp_white_list_set_enabled (white_list, FALSE);
                 break;
         case 8:
                 g_print ("\t Enable WL\n\n");
-                gupnp_context_filter_set_enabled (context_filter, TRUE);
+                gupnp_white_list_set_enabled (white_list, TRUE);
                 break;
         case 9:
                 g_print ("\t Connect to wlan0\n\n");
-                g_timeout_add_seconds (35,
-                                       change_context_filter,
-                                       context_manager);
+                g_timeout_add_seconds (35, change_white_list, context_manager);
                 break;
         case 10:
                 g_print ("\t Add Entry wlan0\n\n");
-                gupnp_context_filter_add_entry (context_filter, "wlan0");
-                print_context_filter_entries (context_filter);
+                gupnp_white_list_add_entry(white_list, "wlan0");
+                print_white_list_entries (white_list);
                 break;
         //~ case 11:
-        //~ g_print ("\t Enable WL\n");
-        //~ gupnp_context_filter_enable(context_filter, FALSE);
-        //~ break;
+                //~ g_print ("\t Enable WL\n");
+                //~ gupnp_white_list_enable(white_list, FALSE);
+                //~ break;
         default:
                 break;
         }
@@ -269,7 +266,7 @@ main (G_GNUC_UNUSED int argc, G_GNUC_UNUSED char **argv)
 
         main_loop = g_main_loop_new (NULL, FALSE);
 
-        id = g_timeout_add_seconds (5, change_context_filter, cm);
+        id = g_timeout_add_seconds (5, change_white_list, cm);
 
 #ifndef G_OS_WIN32
         /* Hook the handler for SIGTERM */
