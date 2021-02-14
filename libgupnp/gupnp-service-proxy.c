@@ -481,7 +481,7 @@ out:
 }
 
 /**
- * gupnp_service_proxy_send_action_list: (rename-to gupnp_service_proxy_send_action_list)
+ * gupnp_service_proxy_send_action_list:
  * @proxy: (transfer none) : A #GUPnPServiceProxy
  * @action: An action
  * @in_names: (element-type utf8) (transfer none): #GList of 'in' parameter
