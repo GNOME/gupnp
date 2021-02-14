@@ -29,25 +29,25 @@
 imports.gi.versions.GUPnP = "1.2"
 
 const Mainloop = imports.mainloop;
+const GObject = imports.gi.GObject;
 const GUPnP = imports.gi.GUPnP;
 
-const CONTENT_DIR = "urn:schemas-upnp-org:service:RenderingControl:2";
+const CONTENT_DIR = "urn:schemas-upnp-org:service:RenderingControl:1";
 
 function _on_ready () {
 }
 
 function _on_sp_available (cp, proxy) {
-    print ("Got Proxy");
-    for (var i = 0; i < 1000; ++i) {
-        proxy.send_action_list ("GetVolume",
-                                ["InstanceId", "Channel"],
-                                [0, 0],
-                                [],
-                                []);
+    print ("Got Proxy ", proxy.get_location());
+    for (let i = 0; i < 1000; ++i) {
+	let action = GUPnP.ServiceProxyAction.new_from_list("GetVolume", ["InstanceId", "Channel"], [0, 0]);
+	proxy.call_action(action, null);
+	let [success, result] = action.get_result_list(["CurrentVolume"], [GObject.TYPE_FLOAT]);
+	print(result);
     }
 }
 
-var context = new GUPnP.Context ( {'interface': "lo"});
+var context = new GUPnP.Context ( {'interface': "wlp3s0"});
 context.init(null);
 var cp = new GUPnP.ControlPoint ( {'client': context, 'target' : CONTENT_DIR});
 cp.connect ("service-proxy-available", _on_sp_available);
