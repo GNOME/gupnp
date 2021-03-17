@@ -30,13 +30,6 @@ level libraries utilizing the GUPnP framework.</description>
 
   <maintainer>
     <foaf:Person>
-      <foaf:name>Ross Burton</foaf:name>
-      <foaf:mbox rdf:resource="mailto:ross@burtonini.com" />
-      <gnome:userid>rburton</gnome:userid>
-    </foaf:Person>
-  </maintainer>
-  <maintainer>
-    <foaf:Person>
       <foaf:name>Jens Georg</foaf:name>
       <foaf:mbox rdf:resource="mailto:mail@jensge.org" />
       <gnome:userid>jensgeorg</gnome:userid>
