@@ -36,12 +36,27 @@
       <name>A_ARG_TYPE_Count</name>
       <dataType>ui4</dataType>
     </stateVariable>
+    <stateVariable sendEvents="no">
+      <name>A_ARG_TYPE_Tock</name>
+      <dataType>string</dataType>
+    </stateVariable>
     <stateVariable sendEvents="yes">
       <name>evented_variable</name>
       <dataType>string</dataType>
+      <allowedValue>Tock</allowedValue>
     </stateVariable>
   </serviceStateTable>
   <actionList>
+    <action>
+      <name>Tick</name>
+      <argumentList>
+        <argument>
+          <name>Result</name>
+          <direction>out</direction>
+          <relatedStateVariable>A_ARG_TYPE_Tock</relatedStateVariable>
+        </argument>
+      </argumentList>
+    </action>
     <action>
       <name>Browse</name>
       <argumentList>

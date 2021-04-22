@@ -928,7 +928,10 @@ control_server_handler (SoupServer                      *server,
         const char *accept_encoding;
         char *action_name;
         char *end;
+        const char *content_type;
         GUPnPServiceAction *action;
+        GHashTable *content_type_params = NULL;
+        GSSDPUDAVersion uda_version;
 
         service = GUPNP_SERVICE (user_data);
 
@@ -952,7 +955,39 @@ control_server_handler (SoupServer                      *server,
                                              "close");
         }
 
+        // Check Content-Type header
+        content_type =
+                soup_message_headers_get_content_type (msg->request_headers,
+                                                       &content_type_params);
+
+        // It has to be there and have text/xml for ALL UDA versions
+        if (content_type == NULL ||
+            g_ascii_strcasecmp (content_type, "text/xml") != 0) {
+                soup_message_set_status (
+                        msg,
+                        SOUP_KNOWN_STATUS_CODE_PRECONDITION_FAILED);
+                g_clear_pointer (&content_type_params, g_hash_table_unref);
+                return;
+        }
+
         context = gupnp_service_info_get_context (GUPNP_SERVICE_INFO (service));
+        uda_version = gssdp_client_get_uda_version (GSSDP_CLIENT (context));
+
+        // For UDA >= 1.1, the encoding must be utf-8
+        if (uda_version >= GSSDP_UDA_VERSION_1_1) {
+                if (content_type_params == NULL ||
+                    !g_hash_table_contains (content_type_params, "charset") ||
+                    g_ascii_strcasecmp (
+                            g_hash_table_lookup (content_type_params,
+                                                 "charset"),
+                            "utf-8") != 0) {
+                        soup_message_set_status (msg, SOUP_STATUS_PRECONDITION_FAILED);
+                        g_clear_pointer (&content_type_params, g_hash_table_destroy);
+                        return;
+                }
+        }
+
+        g_clear_pointer (&content_type_params, g_hash_table_destroy);
 
         /* Get action name */
         soap_action = soup_message_headers_get_one (msg->request_headers,

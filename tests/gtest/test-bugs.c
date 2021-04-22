@@ -27,12 +27,16 @@
 #include <libgupnp/gupnp-service-private.h>
 
 static GUPnPContext *
-create_context (guint16 port, GError **error) {
+create_context (GSSDPUDAVersion uda_version, guint16 port, GError **error) {
         return GUPNP_CONTEXT (g_initable_new (GUPNP_TYPE_CONTEXT,
                                               NULL,
                                               error,
-                                              "host-ip", "127.0.0.1",
-                                              "msearch-port", port,
+                                              "uda-version",
+                                              uda_version,
+                                              "host-ip",
+                                              "127.0.0.1",
+                                              "msearch-port",
+                                              port,
                                               NULL));
 }
 
@@ -186,8 +190,12 @@ static void
 test_run_loop (GMainLoop *loop)
 {
     guint timeout_id = 0;
+    const char *test_timeout = g_getenv ("GUPNP_TEST_TIMEOUT");
 
-    timeout_id = g_timeout_add_seconds (2, test_on_timeout, NULL);
+    timeout_id = g_timeout_add_seconds (
+            test_timeout == NULL ? 2 : atoi (test_timeout),
+            test_on_timeout,
+            NULL);
     g_main_loop_run (loop);
     g_source_remove (timeout_id);
 }
@@ -205,7 +213,7 @@ test_bgo_696762 (void)
 
     data.loop = g_main_loop_new (NULL, FALSE);
 
-    context = create_context (0, &error);
+    context = create_context (GSSDP_UDA_VERSION_1_0, 0, &error);
     g_assert_no_error (error);
     g_assert (context != NULL);
 
@@ -274,7 +282,7 @@ test_bgo_678701 (void)
 
     data.loop = g_main_loop_new (NULL, FALSE);
 
-    context = create_context (0, &error);
+    context = create_context (GSSDP_UDA_VERSION_1_0, 0, &error);
     g_assert_no_error (error);
     g_assert (context != NULL);
 
@@ -331,7 +339,7 @@ test_bgo_690400 (void)
 
     data.loop = g_main_loop_new (NULL, FALSE);
 
-    context = create_context (0, &error);
+    context = create_context (GSSDP_UDA_VERSION_1_0, 0, &error);
     g_assert_no_error (error);
     g_assert (context != NULL);
 
@@ -390,7 +398,7 @@ test_bgo_722696 (void)
     char *icon;
     int width;
 
-    context = create_context (0, &error);
+    context = create_context (GSSDP_UDA_VERSION_1_0, 0, &error);
     g_assert_no_error (error);
     g_assert (context != NULL);
 
@@ -451,7 +459,7 @@ test_bgo_743233 (void)
     GUPnPControlPoint *cp = NULL;
     GError *error = NULL;
 
-    context = create_context (0, &error);
+    context = create_context (GSSDP_UDA_VERSION_1_0, 0, &error);
     g_assert_no_error (error);
     g_assert (context != NULL);
 
@@ -469,6 +477,403 @@ test_bgo_743233 (void)
     g_object_unref (context);
 }
 
+typedef struct _TestGgo24Data {
+        GMainLoop *loop;
+        GUPnPServiceInfo *service;
+        SoupSession *session;
+        SoupKnownStatusCode result;
+} TestGgo24Data;
+
+static void
+on_message_done (SoupSession *session, SoupMessage *msg, gpointer user_data)
+{
+        TestGgo24Data *data = (TestGgo24Data *) user_data;
+
+        data->result = msg->status_code;
+        g_main_loop_quit (data->loop);
+}
+
+#define TICK_CALL                                                              \
+        "<?xml version=\"1.0\"?>"                                              \
+        "<s:Envelope xmlns:s=\"http://schemas.xmlsoap.org/soap/envelope/\" "   \
+        "s:encodingStyle=\"http://schemas.xmlsoap.org/soap/encoding/\">"       \
+        "<s:Body>"                                                             \
+        "<u:Tick xmlns:u=\"urn:test-gupnp-org:service:TestService:1\">"        \
+        "</u:Tick>"                                                            \
+        "</s:Body>"                                                            \
+        "</s:Envelope>"
+
+static gboolean
+test_ggo_24_1_call_no_content_type (gpointer user_data)
+{
+        SoupMessage *msg;
+        TestGgo24Data *data = (TestGgo24Data *) user_data;
+        char *control_url;
+
+        control_url = gupnp_service_info_get_control_url (data->service);
+        msg = soup_message_new (SOUP_METHOD_POST, control_url);
+        g_free (control_url);
+        soup_message_headers_append (
+                msg->request_headers,
+                "SOAPAction",
+                "urn:test-gupnp-org:service:TestService:1#Tick");
+
+        soup_message_body_append_take (msg->request_body,
+                                       (guchar *) TICK_CALL,
+                                       sizeof (TICK_CALL));
+
+        soup_session_queue_message (data->session,
+                                    g_object_ref (msg),
+                                    on_message_done,
+                                    data);
+
+        return FALSE;
+}
+
+static gboolean
+test_ggo_24_1_call_invalid_content_type (gpointer user_data)
+{
+        SoupMessage *msg;
+        TestGgo24Data *data = (TestGgo24Data *) user_data;
+        char *control_url;
+
+        control_url = gupnp_service_info_get_control_url (data->service);
+        msg = soup_message_new (SOUP_METHOD_POST, control_url);
+        g_free (control_url);
+        soup_message_headers_append (
+                msg->request_headers,
+                "SOAPAction",
+                "urn:test-gupnp-org:service:TestService:1#Tick");
+
+
+        soup_message_body_append_take (msg->request_body,
+                                       (guchar *) TICK_CALL,
+                                       sizeof (TICK_CALL));
+
+        soup_message_headers_set_content_type (msg->request_headers,
+                                               "text/plain",
+                                               NULL);
+
+        soup_session_queue_message (data->session,
+                                    g_object_ref (msg),
+                                    on_message_done,
+                                    data);
+
+        return FALSE;
+}
+
+static gboolean
+test_ggo_24_1_call_plain_content_type (gpointer user_data)
+{
+        SoupMessage *msg;
+        TestGgo24Data *data = (TestGgo24Data *) user_data;
+        char *control_url;
+
+        control_url = gupnp_service_info_get_control_url (data->service);
+
+        msg = soup_message_new (SOUP_METHOD_POST, control_url);
+        g_free (control_url);
+        soup_message_headers_append (
+                msg->request_headers,
+                "SOAPAction",
+                "urn:test-gupnp-org:service:TestService:1#Tick");
+
+
+        soup_message_body_append_take (msg->request_body,
+                                       (guchar *) TICK_CALL,
+                                       sizeof (TICK_CALL));
+
+        soup_message_headers_set_content_type (msg->request_headers,
+                                               "text/xml",
+                                               NULL);
+
+        soup_session_queue_message (data->session,
+                                    g_object_ref (msg),
+                                    on_message_done,
+                                    data);
+
+        return FALSE;
+}
+
+static gboolean
+test_ggo_24_1_call_missing_encoding_content_type (gpointer user_data)
+{
+        SoupMessage *msg;
+        TestGgo24Data *data = (TestGgo24Data *) user_data;
+        char *control_url;
+        GHashTable *params =
+                g_hash_table_new_full (g_str_hash, g_str_equal, NULL, NULL);
+
+        control_url = gupnp_service_info_get_control_url (data->service);
+
+        msg = soup_message_new (SOUP_METHOD_POST, control_url);
+        g_free (control_url);
+        soup_message_headers_append (
+                msg->request_headers,
+                "SOAPAction",
+                "urn:test-gupnp-org:service:TestService:1#Tick");
+
+
+        soup_message_body_append_take (msg->request_body,
+                                       (guchar *) TICK_CALL,
+                                       sizeof (TICK_CALL));
+
+
+
+        g_hash_table_replace (params, "frobnication", "dada");
+        soup_message_headers_set_content_type (msg->request_headers,
+                                               "text/xml",
+                                               params);
+
+        soup_session_queue_message (data->session,
+                                    g_object_ref (msg),
+                                    on_message_done,
+                                    data);
+        g_hash_table_unref (params);
+
+        return FALSE;
+}
+
+static gboolean
+test_ggo_24_1_call_wrong_encoding_content_type (gpointer user_data)
+{
+        SoupMessage *msg;
+        TestGgo24Data *data = (TestGgo24Data *) user_data;
+        char *control_url;
+        GHashTable *params =
+                g_hash_table_new_full (g_str_hash, g_str_equal, NULL, NULL);
+
+        control_url = gupnp_service_info_get_control_url (data->service);
+
+        msg = soup_message_new (SOUP_METHOD_POST, control_url);
+        g_free (control_url);
+        soup_message_headers_append (
+                msg->request_headers,
+                "SOAPAction",
+                "urn:test-gupnp-org:service:TestService:1#Tick");
+
+
+        soup_message_body_append_take (msg->request_body,
+                                       (guchar *) TICK_CALL,
+                                       sizeof (TICK_CALL));
+
+
+
+        g_hash_table_replace (params, "charset⎄", "iso-8859-1");
+        soup_message_headers_set_content_type (msg->request_headers,
+                                               "text/xml",
+                                               params);
+
+        soup_session_queue_message (data->session,
+                                    g_object_ref (msg),
+                                    on_message_done,
+                                    data);
+        g_hash_table_unref (params);
+
+        return FALSE;
+}
+
+static gboolean
+test_ggo_24_1_call_proper_encoding_content_type (gpointer user_data)
+{
+        SoupMessage *msg;
+        TestGgo24Data *data = (TestGgo24Data *) user_data;
+        char *control_url;
+        GHashTable *params =
+                g_hash_table_new_full (g_str_hash, g_str_equal, NULL, NULL);
+
+        control_url = gupnp_service_info_get_control_url (data->service);
+
+        msg = soup_message_new (SOUP_METHOD_POST, control_url);
+        g_free (control_url);
+        soup_message_headers_append (
+                msg->request_headers,
+                "SOAPAction",
+                "urn:test-gupnp-org:service:TestService:1#Tick");
+
+
+        soup_message_body_append_take (msg->request_body,
+                                       (guchar *) TICK_CALL,
+                                       sizeof (TICK_CALL));
+
+
+
+        g_hash_table_replace (params, "charset", "utf-8");
+        soup_message_headers_set_content_type (msg->request_headers,
+                                               "text/xml",
+                                               params);
+        g_hash_table_unref (params);
+
+        soup_session_queue_message (data->session,
+                                    g_object_ref (msg),
+                                    on_message_done,
+                                    data);
+
+        return FALSE;
+}
+
+static void
+on_tick_call (GUPnPService *service,
+              GUPnPServiceAction *action,
+              gpointer user_data)
+{
+        gupnp_service_action_set (action,
+                                  "Result",
+                                  G_TYPE_STRING,
+                                  "Tock",
+                                  NULL);
+        gupnp_service_action_return (action);
+}
+
+static void
+test_ggo_24_1 (void)
+{
+        // Test the correct handling of the Content-Type header in SOAP calls
+        GUPnPContext *context = NULL;
+        GError *error = NULL;
+        TestGgo24Data data = { .loop = g_main_loop_new (NULL, FALSE),
+                               .service = NULL,
+                               .session = soup_session_new (),
+                               .result = SOUP_KNOWN_STATUS_CODE_NONE };
+        GUPnPRootDevice *rd = NULL;
+
+        context = create_context (GSSDP_UDA_VERSION_1_0, 0, &error);
+        g_assert_no_error (error);
+        g_assert (context != NULL);
+
+        rd = gupnp_root_device_new (context,
+                                    "TestDevice.xml",
+                                    DATA_PATH,
+                                    &error);
+        g_assert_no_error (error);
+        g_assert (rd != NULL);
+
+        data.service = gupnp_device_info_get_service (
+                GUPNP_DEVICE_INFO (rd),
+                "urn:test-gupnp-org:service:TestService:1");
+
+        g_signal_connect (data.service,
+                          "action-invoked::Tick",
+                          G_CALLBACK (on_tick_call),
+                          &data);
+
+        gupnp_root_device_set_available (rd, TRUE);
+
+        g_timeout_add_seconds (1, test_ggo_24_1_call_no_content_type, &data);
+        test_run_loop (data.loop);
+        g_assert_cmpint (data.result,
+                         ==,
+                         SOUP_KNOWN_STATUS_CODE_PRECONDITION_FAILED);
+
+        g_timeout_add_seconds (1,
+                               test_ggo_24_1_call_invalid_content_type,
+                               &data);
+        test_run_loop (data.loop);
+        g_assert_cmpint (data.result,
+                         ==,
+                         SOUP_KNOWN_STATUS_CODE_PRECONDITION_FAILED);
+
+        g_timeout_add_seconds (1, test_ggo_24_1_call_plain_content_type, &data);
+        test_run_loop (data.loop);
+        g_assert_cmpint (data.result, ==, SOUP_KNOWN_STATUS_CODE_OK);
+
+        g_timeout_add_seconds (1,
+                               test_ggo_24_1_call_missing_encoding_content_type,
+                               &data);
+        test_run_loop (data.loop);
+        g_assert_cmpint (data.result, ==, SOUP_KNOWN_STATUS_CODE_OK);
+
+        g_timeout_add_seconds (1,
+                               test_ggo_24_1_call_wrong_encoding_content_type,
+                               &data);
+        test_run_loop (data.loop);
+        g_assert_cmpint (data.result, ==, SOUP_KNOWN_STATUS_CODE_OK);
+
+        g_timeout_add_seconds (1,
+                               test_ggo_24_1_call_proper_encoding_content_type,
+                               &data);
+        test_run_loop (data.loop);
+        g_assert_cmpint (data.result, ==, SOUP_KNOWN_STATUS_CODE_OK);
+
+        g_object_unref (rd);
+        g_object_unref (context);
+        g_main_loop_unref (data.loop);
+}
+
+static void
+test_ggo_24_2 (void)
+{
+        // Test the correct handling of the Content-Type header in SOAP calls
+        GUPnPContext *context = NULL;
+        GError *error = NULL;
+        TestGgo24Data data = { .loop = g_main_loop_new (NULL, FALSE),
+                               .service = NULL,
+                               .session = soup_session_new (),
+                               .result = SOUP_KNOWN_STATUS_CODE_NONE };
+        GUPnPRootDevice *rd = NULL;
+
+        context = create_context (GSSDP_UDA_VERSION_1_1, 0, &error);
+        g_assert_no_error (error);
+        g_assert (context != NULL);
+
+        rd = gupnp_root_device_new (context,
+                                    "TestDevice.xml",
+                                    DATA_PATH,
+                                    &error);
+        g_assert_no_error (error);
+        g_assert (rd != NULL);
+
+        data.service = gupnp_device_info_get_service (
+                GUPNP_DEVICE_INFO (rd),
+                "urn:test-gupnp-org:service:TestService:1");
+
+        g_signal_connect (data.service,
+                          "action-invoked::Tick",
+                          G_CALLBACK (on_tick_call),
+                          &data);
+
+        gupnp_root_device_set_available (rd, TRUE);
+
+        g_timeout_add_seconds (1, test_ggo_24_1_call_no_content_type, &data);
+        test_run_loop (data.loop);
+        g_assert_cmpint (data.result, ==, SOUP_KNOWN_STATUS_CODE_PRECONDITION_FAILED);
+
+        g_timeout_add_seconds (1,
+                               test_ggo_24_1_call_invalid_content_type,
+                               &data);
+        test_run_loop (data.loop);
+        g_assert_cmpint (data.result, ==, SOUP_KNOWN_STATUS_CODE_PRECONDITION_FAILED);
+
+        g_timeout_add_seconds (1,
+                               test_ggo_24_1_call_plain_content_type,
+                               &data);
+        test_run_loop (data.loop);
+        g_assert_cmpint (data.result, ==, SOUP_KNOWN_STATUS_CODE_PRECONDITION_FAILED);
+
+        g_timeout_add_seconds (1,
+                               test_ggo_24_1_call_missing_encoding_content_type,
+                               &data);
+        test_run_loop (data.loop);
+        g_assert_cmpint (data.result, ==, SOUP_KNOWN_STATUS_CODE_PRECONDITION_FAILED);
+
+        g_timeout_add_seconds (1,
+                               test_ggo_24_1_call_wrong_encoding_content_type,
+                               &data);
+        test_run_loop (data.loop);
+        g_assert_cmpint (data.result, ==, SOUP_KNOWN_STATUS_CODE_PRECONDITION_FAILED);
+
+        // Only the proper content-type with proper encoding should be accepted
+        g_timeout_add_seconds (1,
+                               test_ggo_24_1_call_proper_encoding_content_type,
+                               &data);
+        test_run_loop (data.loop);
+        g_assert_cmpint (data.result, ==, SOUP_KNOWN_STATUS_CODE_OK);
+
+        g_object_unref (rd);
+        g_object_unref (context);
+        g_main_loop_unref (data.loop);
+}
+
 int
 main (int argc, char *argv[]) {
     g_test_init (&argc, &argv, NULL);
@@ -477,6 +882,8 @@ main (int argc, char *argv[]) {
     g_test_add_func ("/bugs/690400", test_bgo_690400);
     g_test_add_func ("/bugs/722696", test_bgo_722696);
     g_test_add_func ("/bugs/743233", test_bgo_743233);
+    g_test_add_func ("/bugs/24/1", test_ggo_24_1);
+    g_test_add_func ("/bugs/24/2", test_ggo_24_2);
 
     return g_test_run ();
 }
