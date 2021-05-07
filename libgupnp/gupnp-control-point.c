@@ -112,6 +112,7 @@ get_description_url_data_free (GetDescriptionURLData *data)
         g_free (data->udn);
         g_free (data->service_type);
         g_free (data->description_url);
+        g_object_unref (data->control_point);
 
         g_slice_free (GetDescriptionURLData, data);
 }
@@ -714,7 +715,7 @@ load_description (GUPnPControlPoint *control_point,
 
                 http_request_set_accept_language (data->message);
 
-                data->control_point   = control_point;
+                data->control_point   = g_object_ref (control_point);
 
                 data->udn             = g_strdup (udn);
                 data->service_type    = g_strdup (service_type);
