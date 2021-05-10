@@ -954,6 +954,19 @@ control_server_handler (SoupServer                      *server,
 
         context = gupnp_service_info_get_context (GUPNP_SERVICE_INFO (service));
 
+        const char *host_header =
+                soup_message_headers_get_one (msg->request_headers, "Host");
+
+        if (!gupnp_context_validate_host_header (context, host_header)) {
+                g_warning ("Host header mismatch, expected %s:%d, got %s",
+                           gssdp_client_get_host_ip (GSSDP_CLIENT (context)),
+                           gupnp_context_get_port (context),
+                           host_header);
+
+                soup_message_set_status (msg, SOUP_STATUS_PRECONDITION_FAILED);
+                return;
+        }
+
         /* Get action name */
         soap_action = soup_message_headers_get_one (msg->request_headers,
                                                     "SOAPAction");

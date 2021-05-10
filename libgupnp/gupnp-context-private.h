@@ -43,6 +43,9 @@ gupnp_context_rewrite_uri_to_uri (GUPnPContext *context,
 G_GNUC_INTERNAL gboolean
 gupnp_context_ip_is_ours (GUPnPContext *context, const char *address);
 
+G_GNUC_INTERNAL gboolean
+gupnp_context_validate_host_header (GUPnPContext *context, const char *host);
+
 G_END_DECLS
 
 #endif /* GUPNP_CONTEXT_PRIVATE_H */
