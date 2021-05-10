@@ -943,8 +943,6 @@ create_ioctl_socket (GUPnPLinuxContextManager *self, GError **error)
         priv->fd = socket (AF_INET, SOCK_DGRAM, 0);
 
         if (priv->fd < 0) {
-                priv->fd = 0;
-
                 g_set_error_literal (error,
                                      G_IO_ERROR,
                                      g_io_error_from_errno (errno),
@@ -1045,6 +1043,7 @@ gupnp_linux_context_manager_init (GUPnPLinuxContextManager *self)
         GUPnPLinuxContextManagerPrivate *priv;
 
         priv = gupnp_linux_context_manager_get_instance_private (self);
+        priv->fd = -1;
 
         priv->nl_seq = 0;
 
@@ -1087,8 +1086,10 @@ gupnp_linux_context_manager_constructed (GObject *object)
                                NULL);
 cleanup:
         if (error) {
-                if (priv->fd > 0)
+                if (priv->fd >= 0) {
                         close (priv->fd);
+                        priv->fd = -1;
+                }
 
                 g_warning ("Failed to setup Linux context manager: %s",
                            error->message);
@@ -1129,9 +1130,9 @@ gupnp_linux_context_manager_dispose (GObject *object)
                 priv->netlink_socket = NULL;
         }
 
-        if (priv->fd != 0) {
+        if (priv->fd >= 0) {
                 close (priv->fd);
-                priv->fd = 0;
+                priv->fd = -1;
         }
 
         if (priv->interfaces) {
