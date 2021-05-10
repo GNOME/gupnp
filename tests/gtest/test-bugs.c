@@ -25,6 +25,7 @@
 
 #include <libgupnp/gupnp.h>
 #include <libgupnp/gupnp-service-private.h>
+#include <libgupnp/gupnp-context-private.h>
 
 static GUPnPContext *
 create_context (guint16 port, GError **error) {
@@ -469,14 +470,81 @@ test_bgo_743233 (void)
     g_object_unref (context);
 }
 
+static void
+test_ggo_24 (void)
+{
+        // IPv4
+        g_assert (
+                validate_host_header ("127.0.0.1:4711", "127.0.0.1", 4711));
+
+        g_assert (
+                validate_host_header ("127.0.0.1", "127.0.0.1", 80));
+
+        g_assert_false (
+                validate_host_header ("example.com", "127.0.0.1", 4711));
+
+        g_assert_false (
+                validate_host_header ("example.com:80", "127.0.0.1", 4711));
+
+        g_assert_false (
+                validate_host_header ("example.com:4711", "127.0.0.1", 4711));
+
+        g_assert_false (
+                validate_host_header ("192.168.1.2:4711", "127.0.0.1", 4711));
+
+        g_assert_false (
+                validate_host_header ("[fe80::01]", "127.0.0.1", 4711));
+
+        // Link ids should not be parsed
+        g_assert_false (
+                validate_host_header ("[fe80::01%1]", "127.0.0.1", 4711));
+
+        g_assert_false (
+                validate_host_header ("[fe80::01%eth0]", "127.0.0.1", 4711));
+
+        // IPv6
+        g_assert (
+                validate_host_header ("[::1]:4711", "::1", 4711));
+
+        g_assert (
+                validate_host_header ("[::1]", "::1", 80));
+
+        // Host header needs to be enclosed in [] even without port
+        g_assert_false (
+                validate_host_header ("::1", "::1", 80));
+
+        g_assert_false (
+                validate_host_header ("example.com", "::1", 4711));
+
+        g_assert_false (
+                validate_host_header ("example.com:80", "::1", 4711));
+
+        g_assert_false (
+                validate_host_header ("example.com:4711", "::1", 4711));
+
+        g_assert_false (
+                validate_host_header ("192.168.1.2:4711", "::1", 4711));
+
+        g_assert_false (
+                validate_host_header ("[fe80::01]", "::1", 4711));
+
+        // Link ids should not be parsed
+        g_assert_false (
+                validate_host_header ("[fe80::01%1]", "fe80::acab", 4711));
+
+        g_assert_false (
+                validate_host_header ("[fe80::01%eth0]", "fe80::acab", 4711));
+}
+
 int
 main (int argc, char *argv[]) {
     g_test_init (&argc, &argv, NULL);
-    g_test_add_func ("/bugs/696762", test_bgo_696762);
-    g_test_add_func ("/bugs/678701", test_bgo_678701);
-    g_test_add_func ("/bugs/690400", test_bgo_690400);
-    g_test_add_func ("/bugs/722696", test_bgo_722696);
-    g_test_add_func ("/bugs/743233", test_bgo_743233);
+    g_test_add_func ("/bugs/bgo/696762", test_bgo_696762);
+    g_test_add_func ("/bugs/bgo/678701", test_bgo_678701);
+    g_test_add_func ("/bugs/bgo/690400", test_bgo_690400);
+    g_test_add_func ("/bugs/bgo/722696", test_bgo_722696);
+    g_test_add_func ("/bugs/bgo/743233", test_bgo_743233);
+    g_test_add_func ("/bugs/ggo/24", test_ggo_24);
 
     return g_test_run ();
 }
