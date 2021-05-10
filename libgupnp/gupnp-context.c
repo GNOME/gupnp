@@ -1583,3 +1583,54 @@ out:
 
         return retval;
 }
+
+gboolean
+gupnp_context_validate_host_header (GUPnPContext *context,
+                                    const char *host_header)
+{
+        gboolean retval = FALSE;
+        // Be lazy and let GUri do the heavy lifting here, such as stripping the
+        // [] from v6 addresses, splitting of the port etc.
+        char *uri_from_host = g_strconcat ("http://", host_header, NULL);
+
+        char *host = NULL;
+        int port = 0;
+        GError *error = NULL;
+
+        g_uri_split_network (uri_from_host,
+                             G_URI_FLAGS_NONE,
+                             NULL,
+                             &host,
+                             &port,
+                             &error);
+
+        if (error != NULL) {
+                g_debug ("Failed to parse HOST header from request: %s",
+                         error->message);
+                goto out;
+        }
+
+        const char *host_ip = gssdp_client_get_host_ip (GSSDP_CLIENT (context));
+        gint context_port = gupnp_context_get_port (context);
+
+        if (!g_str_equal (host, host_ip)) {
+                g_debug ("Mismatch between host header and host IP (%s, "
+                         "expected: %s)",
+                         host,
+                         host_ip);
+        }
+
+        if (port != context_port) {
+                g_debug ("Mismatch between host header and host port (%d, "
+                         "expected %d)",
+                         port,
+                         context_port);
+        }
+
+        retval = g_str_equal (host, host_ip) && port == context_port;
+
+out:
+        g_clear_error (&error);
+        g_free (uri_from_host);
+        return retval;
+}
