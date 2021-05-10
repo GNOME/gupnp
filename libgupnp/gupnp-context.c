@@ -1585,9 +1585,11 @@ out:
 }
 
 gboolean
-gupnp_context_validate_host_header (GUPnPContext *context,
-                                    const char *host_header)
+validate_host_header (const char *host_header,
+                      const char *host_ip,
+                      guint context_port)
 {
+
         gboolean retval = FALSE;
         // Be lazy and let GUri do the heavy lifting here, such as stripping the
         // [] from v6 addresses, splitting of the port etc.
@@ -1610,8 +1612,11 @@ gupnp_context_validate_host_header (GUPnPContext *context,
                 goto out;
         }
 
-        const char *host_ip = gssdp_client_get_host_ip (GSSDP_CLIENT (context));
-        gint context_port = gupnp_context_get_port (context);
+        // -1 means there was no :port; according to UDA this is allowed and
+        // defaults to 80, the HTTP port then
+        if (port == -1) {
+                port = 80;
+        }
 
         if (!g_str_equal (host, host_ip)) {
                 g_debug ("Mismatch between host header and host IP (%s, "
@@ -1631,6 +1636,18 @@ gupnp_context_validate_host_header (GUPnPContext *context,
 
 out:
         g_clear_error (&error);
+        g_free (host);
         g_free (uri_from_host);
+
         return retval;
+}
+
+gboolean
+gupnp_context_validate_host_header (GUPnPContext *context,
+                                    const char *host_header)
+{
+        return validate_host_header (
+                host_header,
+                gssdp_client_get_host_ip (GSSDP_CLIENT (context)),
+                gupnp_context_get_port (context));
 }

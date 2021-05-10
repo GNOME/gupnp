@@ -42,6 +42,11 @@ gupnp_context_ip_is_ours (GUPnPContext *context, const char *address);
 G_GNUC_INTERNAL gboolean
 gupnp_context_validate_host_header (GUPnPContext *context, const char *host);
 
+gboolean
+validate_host_header (const char *host_header,
+                      const char *host_ip,
+                      guint context_port);
+
 G_END_DECLS
 
 #endif /* __GUPNP_CONTEXT_PRIVATE_H__ */
