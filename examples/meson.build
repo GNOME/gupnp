@@ -10,3 +10,9 @@ executable(
     'light-client.c',
     dependencies : gupnp
 )
+
+executable(
+    'get-volume',
+    'get-volume.c',
+    dependencies: gupnp
+)
