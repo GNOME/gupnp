@@ -230,6 +230,10 @@ action_dispose (GUPnPServiceProxyAction *action)
         g_clear_object (&action->cancellable);
         g_clear_error (&action->error);
         g_clear_object (&action->msg);
+        if (action->msg_str != NULL) {
+                g_string_free (action->msg_str, TRUE);
+                action->msg_str = NULL;
+        }
         g_free (action->name);
 }
 

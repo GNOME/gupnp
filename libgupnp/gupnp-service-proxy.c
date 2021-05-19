@@ -724,6 +724,7 @@ prepare_action_msg (GUPnPServiceProxy              *proxy,
                                   ret->msg_str->len);
 
         g_string_free (ret->msg_str, FALSE);
+        ret->msg_str = NULL;
 }
 
 static void
