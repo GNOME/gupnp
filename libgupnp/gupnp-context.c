@@ -331,10 +331,7 @@ gupnp_context_dispose (GObject *object)
         context = GUPNP_CONTEXT (object);
         priv = gupnp_context_get_instance_private (context);
 
-        if (priv->session) {
-                g_object_unref (priv->session);
-                priv->session = NULL;
-        }
+        g_clear_object (&priv->session);
 
         while (priv->host_path_datas) {
                 HostPathData *data;
@@ -344,10 +341,7 @@ gupnp_context_dispose (GObject *object)
                 gupnp_context_unhost_path (context, data->server_path);
         }
 
-        if (priv->server) {
-                g_object_unref (priv->server);
-                priv->server = NULL;
-        }
+        g_clear_object (&priv->server);
 
         /* Call super */
         object_class = G_OBJECT_CLASS (gupnp_context_parent_class);
