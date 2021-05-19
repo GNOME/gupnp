@@ -61,6 +61,15 @@ check_action_response (G_GNUC_UNUSED GUPnPServiceProxy *proxy,
         xmlDoc *response;
         int code;
 
+        if (action->msg == NULL) {
+                g_set_error (error,
+                             GUPNP_SERVER_ERROR,
+                             GUPNP_SERVER_ERROR_INVALID_RESPONSE,
+                             "No message, the action was not sent?");
+
+                return NULL;
+        }
+
         /* Check for errors */
         switch (action->msg->status_code) {
         case SOUP_STATUS_OK:
