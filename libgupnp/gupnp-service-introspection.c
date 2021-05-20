@@ -103,9 +103,22 @@ gupnp_service_state_variable_info_free
         }
 
         g_list_free_full (variable->allowed_values, g_free);
-
-        g_slice_free (GUPnPServiceStateVariableInfo, variable);
 }
+
+static void
+gupnp_service_state_variable_info_free (
+        GUPnPServiceStateVariableInfo *variable);
+
+static void
+gupnp_service_state_variable_info_relase (GUPnPServiceStateVariableInfo *info)
+{
+        g_rc_box_release_full (info, (GDestroyNotify)gupnp_service_state_variable_info_free);
+}
+
+G_DEFINE_BOXED_TYPE(GUPnPServiceStateVariableInfo,
+                     gupnp_service_state_variable_info,
+                     g_rc_box_acquire,
+                     gupnp_service_state_variable_info_relase)
 
 static void
 gupnp_service_introspection_init (GUPnPServiceIntrospection *introspection)
@@ -147,9 +160,21 @@ gupnp_service_action_arg_info_free (GUPnPServiceActionArgInfo *argument)
 {
         g_free (argument->name);
         g_free (argument->related_state_variable);
-
-        g_slice_free (GUPnPServiceActionArgInfo, argument);
 }
+
+static void
+gupnp_service_action_arg_info_unref (GUPnPServiceActionArgInfo *argument)
+{
+        g_rc_box_release_full (
+                argument,
+                (GDestroyNotify) gupnp_service_action_arg_info_free);
+}
+
+G_DEFINE_BOXED_TYPE (GUPnPServiceActionArgInfo,
+                     gupnp_service_action_arg_info,
+                     g_rc_box_acquire,
+                     gupnp_service_action_arg_info_unref)
+
 
 /**
  * gupnp_service_action_info_free:
@@ -163,9 +188,22 @@ gupnp_service_action_info_free (GUPnPServiceActionInfo *action_info)
 {
         g_free (action_info->name);
         g_list_free_full (action_info->arguments,
-                          (GDestroyNotify) gupnp_service_action_arg_info_free);
-        g_slice_free (GUPnPServiceActionInfo, action_info);
+                          (GDestroyNotify) gupnp_service_action_arg_info_unref);
 }
+
+
+static void
+gupnp_service_action_info_unref (GUPnPServiceActionInfo *argument)
+{
+        g_rc_box_release_full (
+                argument,
+                (GDestroyNotify) gupnp_service_action_info_free);
+}
+
+G_DEFINE_BOXED_TYPE (GUPnPServiceActionInfo,
+                     gupnp_service_action_info,
+                     g_rc_box_acquire,
+                     gupnp_service_action_info_unref)
 
 static void
 gupnp_service_introspection_finalize (GObject *object)
@@ -177,10 +215,10 @@ gupnp_service_introspection_finalize (GObject *object)
         priv = gupnp_service_introspection_get_instance_private (introspection);
 
         g_list_free_full (priv->variables,
-                          (GDestroyNotify) gupnp_service_state_variable_info_free);
+                          (GDestroyNotify) gupnp_service_state_variable_info_relase);
 
         g_list_free_full (priv->actions,
-                          (GDestroyNotify) gupnp_service_action_info_free);
+                          (GDestroyNotify) gupnp_service_action_info_unref);
 
         /* Contents don't need to be freed, they were owned by priv->variables
          */
@@ -466,7 +504,7 @@ get_state_variable (xmlNodePtr variable_node)
                 return NULL;
         }
 
-        variable = g_slice_new0 (GUPnPServiceStateVariableInfo);
+        variable = g_rc_box_new0(GUPnPServiceStateVariableInfo);
 
         success = set_variable_type (variable, data_type);
         g_free (data_type);
@@ -522,7 +560,7 @@ get_action_argument (xmlNodePtr argument_node)
                 return NULL;
         }
 
-        argument = g_slice_new0 (GUPnPServiceActionArgInfo);
+        argument = g_rc_box_new0 (GUPnPServiceActionArgInfo);
 
         argument->name = name;
         argument->related_state_variable = state_var;
@@ -604,7 +642,7 @@ get_actions (xmlNode *list_element)
                 if (!name)
                         continue;
 
-                action_info = g_slice_new0 (GUPnPServiceActionInfo);
+                action_info = g_rc_box_new0 (GUPnPServiceActionInfo);
                 action_info->name = name;
                 action_info->arguments = get_action_arguments (action_node);
 

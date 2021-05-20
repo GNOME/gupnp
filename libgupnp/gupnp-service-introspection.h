@@ -31,6 +31,10 @@ G_BEGIN_DECLS
 #define GUPNP_TYPE_SERVICE_INTROSPECTION \
                 (gupnp_service_introspection_get_type ())
 
+#define GUPNP_TYPE_SERVICE_ACTION_INFO (gupnp_service_action_info_get_type())
+#define GUPNP_TYPE_SERVICE_ACTION_ARG_INFO (gupnp_service_action_arg_info_get_type())
+
+
 G_DECLARE_FINAL_TYPE (GUPnPServiceIntrospection,
                       gupnp_service_introspection,
                       GUPNP,
@@ -66,6 +70,8 @@ typedef struct {
         char                          *related_state_variable;
         gboolean                       retval;
 } GUPnPServiceActionArgInfo;
+GType
+gupnp_service_action_arg_info_get_type (void);
 
 /**
  * GUPnPServiceActionInfo:
@@ -79,6 +85,9 @@ typedef struct {
         char  *name;
         GList *arguments; /* list of #GUPnPServiceActionArgInfo */
 } GUPnPServiceActionInfo;
+
+GType
+gupnp_service_action_info_get_type (void);
 
 /**
  * GUPnPServiceStateVariableInfo:
@@ -112,6 +121,8 @@ typedef struct {
         GList   *allowed_values;
 } GUPnPServiceStateVariableInfo;
 
+GType
+gupnp_service_state_variable_info_get_type (void);
 
 const GList *
 gupnp_service_introspection_list_action_names
