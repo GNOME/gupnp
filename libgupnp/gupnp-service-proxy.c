@@ -2066,7 +2066,7 @@ gupnp_service_proxy_get_subscribed (GUPnPServiceProxy *proxy)
 /**
  * gupnp_service_proxy_call_action_async:
  * @proxy: (transfer none): A #GUPnPServiceProxy
- * @action: An action
+ * @action: (transfer none): A #GUPnPServiceProxyAction to call
  * @cancellable: (allow-none): A #GCancellable which can be used to cancel the
  * current action call
  * @callback: (scope async): A #GAsyncReadyCallback to call when the action is
@@ -2115,7 +2115,7 @@ gupnp_service_proxy_call_action_async (GUPnPServiceProxy       *proxy,
  * Finish an asynchronous call initiated with
  * gupnp_service_proxy_call_action_async().
  *
- * Returns: %NULL, if the call had an error, the action otherwise.
+ * Returns: (nullable) (transfer none): %NULL, if the call had an error, the action otherwise.
  */
 GUPnPServiceProxyAction *
 gupnp_service_proxy_call_action_finish (GUPnPServiceProxy *proxy,
@@ -2130,14 +2130,14 @@ gupnp_service_proxy_call_action_finish (GUPnPServiceProxy *proxy,
 /**
  * gupnp_service_proxy_call_action:
  * @proxy: (transfer none): A #GUPnPServiceProxy
- * @action: An action
+ * @action: (transfer none): An action
  * @cancellable: (allow-none): A #GCancellable which can be used to cancel the
  * current action call
  * @error: (allow-none): Return location for a #GError, or %NULL.
  *
  * Synchronously call the @action on the remote UPnP service.
  *
- * Returns: %NULL on error, @action if successful.
+ * Returns: (nullable)(transfer none): %NULL on error, @action if successful.
  */
 GUPnPServiceProxyAction *
 gupnp_service_proxy_call_action (GUPnPServiceProxy       *proxy,
