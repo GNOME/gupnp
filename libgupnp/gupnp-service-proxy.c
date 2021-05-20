@@ -2152,6 +2152,9 @@ gupnp_service_proxy_call_action (GUPnPServiceProxy       *proxy,
 
         prepare_action_msg (proxy, action, cancellable);
 
+        /* prepare_action_msg has queued the message, so remove it */
+        gupnp_service_proxy_remove_action (proxy, action);
+
         if (action->error != NULL) {
                 g_propagate_error (error, g_error_copy (action->error));
 
@@ -2167,9 +2170,6 @@ gupnp_service_proxy_call_action (GUPnPServiceProxy       *proxy,
                 update_message_after_not_allowed (action->msg);
                 soup_session_send_message (session, action->msg);
         }
-
-        /* prepare_action_msg has queued the message, so remove it */
-        gupnp_service_proxy_remove_action (proxy, action);
 
         if (action->msg->status_code == SOUP_STATUS_CANCELLED) {
                 action->error = g_error_new (G_IO_ERROR,
