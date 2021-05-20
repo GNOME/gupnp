@@ -1,9 +1,4 @@
 #!/usr/bin/gjs
-//
-// Copyright (c) 2016, Jens Georg <mail@jensge.org>
-//
-// All rights reserved.
-//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
 //
@@ -31,20 +26,32 @@ imports.gi.versions.GUPnP = "1.2"
 const Mainloop = imports.mainloop;
 const GObject = imports.gi.GObject;
 const GUPnP = imports.gi.GUPnP;
+const GLib = imports.gi.GLib;
 
 const CONTENT_DIR = "urn:schemas-upnp-org:service:RenderingControl:1";
 
-function _on_ready () {
+function on_action(proxy, res) {
+    let action = proxy.call_action_finish (res);
+    let [success, volume] = action.get_result_list(["CurrentVolume"], [GObject.TYPE_FLOAT]);
+    print(volume);
+}
+
+function on_service_introspection(proxy, res) {
+    var result = proxy.introspect_finish(res);
+    var action_info = result.get_action("GetVolume")
+    var state_variable_name = action_info.arguments[1].related_state_variable;
+
+    var channel = result.get_state_variable (state_variable_name);
+
+    print ("Calling GetVolume for channel ", channel.allowed_values[0]);
+    var action = GUPnP.ServiceProxyAction.new_from_list("GetVolume", ["InstanceID", "Channel"], [0, channel.allowed_values[0]]);
+    proxy.call_action_async (action, null, on_action);
 }
 
 function _on_sp_available (cp, proxy) {
-    print ("Got Proxy ", proxy.get_location());
-    for (let i = 0; i < 1000; ++i) {
-	let action = GUPnP.ServiceProxyAction.new_from_list("GetVolume", ["InstanceId", "Channel"], [0, 0]);
-	proxy.call_action(action, null);
-	let [success, result] = action.get_result_list(["CurrentVolume"], [GObject.TYPE_FLOAT]);
-	print(result);
-    }
+    print ("Got ServiceProxy ", proxy.get_id(), proxy.get_location());
+    print ("Introspecting service...");
+    proxy.introspect_async(null, on_service_introspection)
 }
 
 var context = new GUPnP.Context ( {'interface': "wlp3s0"});
@@ -52,4 +59,5 @@ context.init(null);
 var cp = new GUPnP.ControlPoint ( {'client': context, 'target' : CONTENT_DIR});
 cp.connect ("service-proxy-available", _on_sp_available);
 cp.active = true;
-Mainloop.run ("");
+GLib.timeout_add_seconds (GLib.PRIORITY_LOW, 10, () => { Mainloop.quit(); return false; })
+Mainloop.run ();
