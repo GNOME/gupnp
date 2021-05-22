@@ -52,7 +52,7 @@ check-merge-request:
 .build-template: &build
   stage: build
   script:
-      - meson . build --prefix=/usr -Db_coverage=true
+      - meson . build --prefix=/usr -Db_coverage=true -Dgssdp-1.2:sniffer=false
       - ninja -C build
   artifacts:
       expire_in: 1 day
@@ -159,7 +159,7 @@ static-scan:
   needs:
     - build-fedora-container@x86_64
   script:
-    - meson --buildtype=debug _scan_build
+    - meson --buildtype=debug _scan_build -Dgssdp-1.2:sniffer=false
     - ninja -C _scan_build scan-build
   artifacts:
     paths:
@@ -172,7 +172,7 @@ pages:
     - .gupnp.fedora:34@x86_64
   stage: website
   script:
-      - meson doc-build -Dgtk_doc=true
+      - meson doc-build -Dgtk_doc=true -Dgssdp-1.2:sniffer=false
       - ninja -C doc-build gupnp-doc
       - mkdir -p public
       - mv doc-build/doc/html public/docs
