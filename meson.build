@@ -18,13 +18,15 @@ add_project_arguments('-DHAVE_CONFIG_H=1', language : 'c')
 
 guul = subproject('guul', default_options : ['default_library=static'])
 
+gssdp_dep = dependency('gssdp-1.2', version : '>= 1.2.4', default_options: ['sniffer=false'])
+
 dependencies = [
     dependency('glib-2.0', version : '>= 2.58'),
     dependency('gio-2.0', version : '>= 2.58'),
     dependency('gmodule-2.0', version : '>= 2.44'),
     dependency('gobject-2.0', version : '>= 2.44'),
-    dependency('gssdp-1.2', version : '>= 1.2.3'),
     dependency('libsoup-2.4', version : '>= 2.48.0'),
+    gssdp_dep,
     dependency('libxml-2.0')
 ]
 

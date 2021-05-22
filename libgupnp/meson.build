@@ -127,6 +127,12 @@ pkg.generate(
 )
 
 if get_option('introspection')
+    gir_includes = ['GObject-2.0', 'Gio-2.0', 'Soup-2.4', 'libxml2-2.0']
+    if gssdp_dep.type_name() == 'internal'
+        gir_includes += subproject('gssdp-1.2').get_variable('gir').get(0)
+    else
+        gir_includes += 'GSSDP-1.2'
+    endif
     gir = gnome.generate_gir(
         libgupnp,
         sources : headers + sources + enums,
@@ -136,7 +142,7 @@ if get_option('introspection')
         symbol_prefix : 'gupnp',
         identifier_prefix : 'GUPnP',
         export_packages : 'gupnp-1.2',
-        includes : ['GObject-2.0', 'Gio-2.0', 'Soup-2.4', 'GSSDP-1.2', 'libxml2-2.0'],
+        includes : gir_includes,
         install : true,
         extra_args : '-DGOBJECT_INTROSPECTION_SKIP'
     )
