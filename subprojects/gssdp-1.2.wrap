@@ -1,6 +1,5 @@
 [wrap-git]
-#url = https://gitlab.gnome.org/GNOME/gssdp.git
-url = file:///home/jens/Source/gssdp
+url = https://gitlab.gnome.org/GNOME/gssdp.git
 revision = master
 depth = 1
  
