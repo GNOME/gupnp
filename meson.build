@@ -1,4 +1,4 @@
-project('gupnp', 'c', version : '1.2.4', meson_version : '>= 0.48.0')
+project('gupnp', 'c', version : '1.2.4', meson_version : '>= 0.53.0')
 gnome = import('gnome')
 pkg = import('pkgconfig')
 
@@ -14,7 +14,7 @@ conf.set('HAVE_IFADDRS_H', ifaddrs_available)
 conf.set('HAVE_LINUX_WIRELESS_H', cc.has_header('linux/wireless.h'))
 
 config_h = configure_file(output : 'config.h', configuration : conf)
-add_global_arguments('-DHAVE_CONFIG_H=1', language : 'c')
+add_project_arguments('-DHAVE_CONFIG_H=1', language : 'c')
 
 guul = subproject('guul', default_options : ['default_library=static'])
 

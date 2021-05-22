@@ -117,10 +117,10 @@ gupnp = declare_dependency(
 )
 
 pkg.generate(
-    libraries : libgupnp,
+    libgupnp,
     subdirs: 'gupnp-1.2',
     name : 'gupnp-1.2',
-    requires : dependencies,
+    requires : ['glib-2.0', 'gio-2.0', 'gssdp-1.2'],
     description : 'GObject-based UPnP library',
     version : meson.project_version(),
     filebase : 'gupnp-1.2'
