@@ -142,7 +142,7 @@ coverage-analysis:
   script:
     - cd build
     - mkdir -p coveragereport
-    - gcovr --html-details --print-summary --root=.. --exclude=../build --exclude=../docs/reference --exclude=../tests --exclude=../tools --exclude=../examples --output coveragereport/index.html
+    - gcovr --html-details --print-summary --root=.. --exclude=../build --exclude=../subprojects --exclude=../docs/reference --exclude=../tests --exclude=../tools --exclude=../examples --output coveragereport/index.html
   coverage: '/^lines: (\d+\.\d+\%)/'
   artifacts:
     when: always
