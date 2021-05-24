@@ -1,6 +1,6 @@
 AC_PREREQ([2.64])
 AC_INIT([gupnp],
-        [1.0.6],
+        [1.0.7],
         [https://gitlab.gnome.org/GNOME/gupnp/issues/new],
         [gupnp],
         [http://www.gupnp.org/])

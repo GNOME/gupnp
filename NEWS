@@ -1,3 +1,13 @@
+1.0.7
+=====
+- Validate host headers to prevent DNS rebind attack
+- Prevent use-after-free for if service proxy goes down before
+  libsoap request ends
+
+All contributors to this release:
+ - Jens Georg <mail@jensge.org>
+ - Doug Nazar <nazard@nazar.ca>
+
 1.0.6
 =====
 - Fix an issue with unref'ing the mask returned by GSSDP
