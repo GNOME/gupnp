@@ -1,3 +1,13 @@
+1.2.6
+=====
+- Fix wrong dependency on GSSDP 1.2.4
+
+Bugs fixed in this release:
+ - https://gitlab.gnome.org/GNOME/gupnp/issues/48
+
+All contributors to this release:
+ - Jens Georg <mail@jensge.org>
+
 1.2.5
 =====
 - Fix introspection annotation for send_action_list
