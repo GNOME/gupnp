@@ -1,3 +1,37 @@
+1.2.5
+=====
+- Fix introspection annotation for send_action_list
+- Fix potential fd leak in linux CM
+- Fix potential NULL pointer dereference when evaluating
+  unset ServiceProxyActions
+- Fix leaking the message string if an action is never
+  sent
+- Fix leaking the ServiceProxyAction if sending fails
+  in call_action
+- Fix introspection annotation for send_action and
+  call_action_finish to prevent a double-free
+- Make ServiceIntrospection usable from
+  gobject-introspection
+- Add Python examle
+- Add C example
+- Fix JavaScript example
+- Fix potential use-after-free if service proxy is
+  destroxed before libsoup request finishes in control
+  point
+- Fix potential data leak due to being vulnerable to DNS
+  rebind attacs
+
+Bugs fixed in this release:
+ - https://gitlab.gnome.org/GNOME/gupnp/issues/47
+ - https://gitlab.gnome.org/GNOME/gupnp/issues/46
+ - https://gitlab.gnome.org/GNOME/gupnp/issues/23
+ - https://gitlab.gnome.org/GNOME/gupnp/issues/24
+
+All contributors to this release:
+ - Jens Georg <mail@jensge.org>
+ - Doug Nazar <nazard@nazar.ca>
+ - Andre Klapper <a9016009@gmx.de>
+
 1.2.4
 =====
 - Fix subscription check on V6 link-local addresses
