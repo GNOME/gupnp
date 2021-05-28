@@ -131,7 +131,6 @@ G_BEGIN_DECLS
                 } \
         } G_STMT_END
 
-
 struct _GUPnPServiceProxyAction {
         GUPnPServiceProxy *proxy;
         char *name;
@@ -146,8 +145,12 @@ struct _GUPnPServiceProxyAction {
         GUPnPServiceProxyActionCallback callback;
         gpointer user_data;
 
-        GError *error;    /* If non-NULL, description of error that
-                             occurred when preparing message */
+        GError *error; /* If non-NULL, description of error that
+                          occurred when preparing message */
+
+        GPtrArray *args;
+        GHashTable *arg_map;
+        gboolean pending;
 };
 
 G_GNUC_INTERNAL GUPnPServiceProxyAction *
@@ -158,6 +161,9 @@ gupnp_service_proxy_action_get_result_valist (GUPnPServiceProxyAction *action,
                                               GError                 **error,
                                               va_list                  var_args);
 
+G_GNUC_INTERNAL void
+gupnp_service_proxy_action_serialize (GUPnPServiceProxyAction *action,
+                                      const char *service_type);
 G_END_DECLS
 
 #endif /* GUPNP_SERVICE_PROXY_ACTION_H */

@@ -617,10 +617,12 @@ on_action_cancelled (GCancellable *cancellable, gpointer user_data)
         }
 }
 
+
+
 /* Begins a basic action message */
 static void
 prepare_action_msg (GUPnPServiceProxy              *proxy,
-                    GUPnPServiceProxyAction        *ret,
+                    GUPnPServiceProxyAction        *action,
                     GCancellable                   *cancellable)
 {
         GUPnPServiceProxyPrivate *priv;
@@ -628,27 +630,26 @@ prepare_action_msg (GUPnPServiceProxy              *proxy,
         const char *service_type;
 
         priv = gupnp_service_proxy_get_instance_private (proxy);
+        action->proxy = proxy;
+        g_object_add_weak_pointer (G_OBJECT (proxy), (gpointer *)&(action->proxy));
 
-        ret->proxy = proxy;
-        g_object_add_weak_pointer (G_OBJECT (proxy), (gpointer *)&(ret->proxy));
-
-        priv->pending_actions = g_list_prepend (priv->pending_actions, ret);
+        priv->pending_actions = g_list_prepend (priv->pending_actions, action);
 
         if (cancellable != NULL) {
-                ret->cancellable = g_object_ref (cancellable);
+                action->cancellable = g_object_ref (cancellable);
         } else {
-                ret->cancellable = g_cancellable_new ();
+                action->cancellable = g_cancellable_new ();
         }
-        ret->cancellable_connection_id = g_cancellable_connect (ret->cancellable,
+        action->cancellable_connection_id = g_cancellable_connect (action->cancellable,
                                                                 G_CALLBACK (on_action_cancelled),
-                                                                ret,
+                                                                action,
                                                                 NULL);
 
         /* Make sure we have a service type */
         service_type = gupnp_service_info_get_service_type
                                         (GUPNP_SERVICE_INFO (proxy));
         if (service_type == NULL) {
-                ret->error = g_error_new (GUPNP_SERVER_ERROR,
+                action->error = g_error_new (GUPNP_SERVER_ERROR,
                                           GUPNP_SERVER_ERROR_OTHER,
                                           "No service type defined");
 
@@ -670,12 +671,10 @@ prepare_action_msg (GUPnPServiceProxy              *proxy,
                                                                control_url);
                 g_free (control_url);
 
-                ret->msg = soup_message_new (SOUP_METHOD_POST, local_control_url);
+                action->msg = soup_message_new (SOUP_METHOD_POST, local_control_url);
                 g_free (local_control_url);
-        }
-
-        if (ret->msg == NULL) {
-                ret->error = g_error_new (GUPNP_SERVER_ERROR,
+        } else {
+                action->error = g_error_new (GUPNP_SERVER_ERROR,
                                           GUPNP_SERVER_ERROR_INVALID_URL,
                                           "No valid control URL defined");
 
@@ -683,37 +682,29 @@ prepare_action_msg (GUPnPServiceProxy              *proxy,
         }
 
         /* Specify action */
-        full_action = g_strdup_printf ("\"%s#%s\"", service_type, ret->name);
-        soup_message_headers_append (ret->msg->request_headers,
+        full_action = g_strdup_printf ("\"%s#%s\"", service_type, action->name);
+        soup_message_headers_append (action->msg->request_headers,
                                      "SOAPAction",
                                      full_action);
         g_free (full_action);
 
         /* Specify language */
-        http_request_set_accept_language (ret->msg);
+        http_request_set_accept_language (action->msg);
 
         /* Accept gzip encoding */
-        soup_message_headers_append (ret->msg->request_headers,
+        soup_message_headers_append (action->msg->request_headers,
                                      "Accept-Encoding", "gzip");
 
-        g_string_insert (ret->msg_str, ret->header_pos, "<u:");
-        ret->header_pos += strlen("<u:");
-        g_string_insert (ret->msg_str, ret->header_pos, ret->name);
-        ret->header_pos += strlen (ret->name);
-        g_string_insert (ret->msg_str, ret->header_pos, " xmlns:u=\"");
-        ret->header_pos += strlen(" xmlns:u=\"");
-        g_string_insert (ret->msg_str, ret->header_pos, service_type);
-        ret->header_pos += strlen (service_type);
-        g_string_insert (ret->msg_str, ret->header_pos, "\">");
+        gupnp_service_proxy_action_serialize (action, service_type);
 
-        soup_message_set_request (ret->msg,
+        soup_message_set_request (action->msg,
                                   "text/xml; charset=\"utf-8\"",
                                   SOUP_MEMORY_TAKE,
-                                  ret->msg_str->str,
-                                  ret->msg_str->len);
+                                  action->msg_str->str,
+                                  action->msg_str->len);
 
-        g_string_free (ret->msg_str, FALSE);
-        ret->msg_str = NULL;
+        g_string_free (action->msg_str, FALSE);
+        action->msg_str = NULL;
 }
 
 static void
@@ -807,6 +798,7 @@ gupnp_service_proxy_action_queue_task (GTask *task)
                                     action->msg,
                                     (SoupSessionCallback) action_task_got_response,
                                     task);
+        action->pending = TRUE;
 }
 
 /**

@@ -16,6 +16,20 @@
 #include "gvalue-util.h"
 #include "xml-util.h"
 
+struct _ActionArgument {
+        char *name;
+        GValue value;
+};
+typedef struct _ActionArgument ActionArgument;
+
+void
+action_argument_free (ActionArgument* arg)
+{
+        g_free (arg->name);
+        g_value_unset (&arg->value);
+        g_free (arg);
+}
+
 /* Reads a value into the parameter name and initialised GValue pair
  * from @response */
 static void
@@ -187,6 +201,8 @@ gupnp_service_proxy_action_new_internal (const char *action) {
 
         ret = g_atomic_rc_box_new0 (GUPnPServiceProxyAction);
         ret->name = g_strdup (action);
+        ret->args = g_ptr_array_new_with_free_func((GDestroyNotify)action_argument_free);
+        ret->arg_map = g_hash_table_new (g_str_hash, g_str_equal);
 
         return ret;
 }
@@ -219,6 +235,8 @@ action_dispose (GUPnPServiceProxyAction *action)
                 g_string_free (action->msg_str, TRUE);
                 action->msg_str = NULL;
         }
+        g_hash_table_destroy (action->arg_map);
+        g_ptr_array_unref (action->args);
         g_free (action->name);
 }
 
@@ -237,14 +255,13 @@ G_DEFINE_BOXED_TYPE (GUPnPServiceProxyAction,
 
 /* Writes a parameter name and GValue pair to @msg */
 static void
-write_in_parameter (const char *arg_name,
-                    GValue     *value,
+write_in_parameter (ActionArgument *arg,
                     GString    *msg_str)
 {
         /* Write parameter pair */
-        xml_util_start_element (msg_str, arg_name);
-        gvalue_util_value_append_to_xml_string (value, msg_str);
-        xml_util_end_element (msg_str, arg_name);
+        xml_util_start_element (msg_str, arg->name);
+        gvalue_util_value_append_to_xml_string (&arg->value, msg_str);
+        xml_util_end_element (msg_str, arg->name);
 }
 
 static void
@@ -387,34 +404,62 @@ gupnp_service_proxy_action_new_from_list (const char *action_name,
 {
         GUPnPServiceProxyAction *action;
         GList *names, *values;
+        guint position;
 
         action = gupnp_service_proxy_action_new_internal (action_name);
+
+        /* Arguments */
+        for (names = in_names, values = in_values, position = 0;
+             names && values;
+             names = names->next, values = values->next, position++) {
+                GValue *val = values->data;
+
+                ActionArgument *arg = g_new0 (ActionArgument, 1);
+                arg->name = g_strdup (names->data);
+                g_value_init (&arg->value, G_VALUE_TYPE (val));
+                g_value_copy (val, &arg->value);
+                g_hash_table_insert (action->arg_map,
+                                     arg->name,
+                                     GUINT_TO_POINTER (position));
+                g_ptr_array_add (action->args, arg);
+        }
+
+        return action;
+}
+
+void
+gupnp_service_proxy_action_serialize (GUPnPServiceProxyAction *action,
+                                      const char *service_type)
+{
+        if (action->msg_str != NULL) {
+                g_string_free (action->msg_str, TRUE);
+        }
         action->msg_str = xml_util_new_string ();
 
         g_string_append (action->msg_str,
                          "<?xml version=\"1.0\"?>"
                          "<s:Envelope xmlns:s="
-                                "\"http://schemas.xmlsoap.org/soap/envelope/\" "
-                          "s:encodingStyle="
-                                "\"http://schemas.xmlsoap.org/soap/encoding/\">"
+                         "\"http://schemas.xmlsoap.org/soap/envelope/\" "
+                         "s:encodingStyle="
+                         "\"http://schemas.xmlsoap.org/soap/encoding/\">"
                          "<s:Body>");
         action->header_pos = action->msg_str->len;
 
-        /* Arguments */
-        for (names = in_names, values = in_values;
-             names && values;
-             names=names->next, values = values->next) {
-                GValue* val = values->data;
+        g_ptr_array_foreach (action->args,
+                             (GFunc) write_in_parameter,
+                             action->msg_str);
 
-                write_in_parameter (names->data,
-                                    val,
-                                    action->msg_str);
-        }
-
-        /* Finish and send off */
         write_footer (action);
 
-        return action;
+        g_string_insert (action->msg_str, action->header_pos, "<u:");
+        action->header_pos += strlen ("<u:");
+        g_string_insert (action->msg_str, action->header_pos, action->name);
+        action->header_pos += strlen (action->name);
+        g_string_insert (action->msg_str, action->header_pos, " xmlns:u=\"");
+        action->header_pos += strlen (" xmlns:u=\"");
+        g_string_insert (action->msg_str, action->header_pos, service_type);
+        action->header_pos += strlen (service_type);
+        g_string_insert (action->msg_str, action->header_pos, "\">");
 }
 
 /**
