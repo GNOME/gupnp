@@ -622,28 +622,10 @@ on_action_cancelled (GCancellable *cancellable, gpointer user_data)
 /* Begins a basic action message */
 static void
 prepare_action_msg (GUPnPServiceProxy              *proxy,
-                    GUPnPServiceProxyAction        *action,
-                    GCancellable                   *cancellable)
+                    GUPnPServiceProxyAction        *action)
 {
-        GUPnPServiceProxyPrivate *priv;
         char *control_url, *full_action;
         const char *service_type;
-
-        priv = gupnp_service_proxy_get_instance_private (proxy);
-        action->proxy = proxy;
-        g_object_add_weak_pointer (G_OBJECT (proxy), (gpointer *)&(action->proxy));
-
-        priv->pending_actions = g_list_prepend (priv->pending_actions, action);
-
-        if (cancellable != NULL) {
-                action->cancellable = g_object_ref (cancellable);
-        } else {
-                action->cancellable = g_cancellable_new ();
-        }
-        action->cancellable_connection_id = g_cancellable_connect (action->cancellable,
-                                                                G_CALLBACK (on_action_cancelled),
-                                                                action,
-                                                                NULL);
 
         /* Make sure we have a service type */
         service_type = gupnp_service_info_get_service_type
@@ -2070,9 +2052,11 @@ gupnp_service_proxy_call_action_async (GUPnPServiceProxy       *proxy,
                                        gpointer                user_data)
 {
         GTask *task;
+        GUPnPServiceProxyPrivate *priv;
 
         g_return_if_fail (GUPNP_IS_SERVICE_PROXY (proxy));
 
+        priv = gupnp_service_proxy_get_instance_private (proxy);
         task = g_task_new (proxy, cancellable, callback, user_data);
         char *task_name = g_strdup_printf ("UPnP Call \"%s\"", action->name);
         g_task_set_name (task, task_name);
@@ -2081,12 +2065,27 @@ gupnp_service_proxy_call_action_async (GUPnPServiceProxy       *proxy,
                               gupnp_service_proxy_action_ref (action),
                               (GDestroyNotify) gupnp_service_proxy_action_unref);
 
-        prepare_action_msg (proxy, action, cancellable);
+        prepare_action_msg (proxy, action);
 
         if (action->error != NULL) {
                 g_task_return_error (task, g_error_copy (action->error));
                 g_object_unref (task);
         } else {
+                action->proxy = proxy;
+                g_object_add_weak_pointer (G_OBJECT (proxy), (gpointer *)&(action->proxy));
+
+                priv->pending_actions = g_list_prepend (priv->pending_actions, action);
+
+                if (cancellable != NULL) {
+                        action->cancellable = g_object_ref (cancellable);
+                } else {
+                        action->cancellable = g_cancellable_new ();
+                }
+                action->cancellable_connection_id = g_cancellable_connect (action->cancellable,
+                                                                           G_CALLBACK (on_action_cancelled),
+                                                                           action,
+                                                                           NULL);
+
                 gupnp_service_proxy_action_queue_task (task);
         }
 }
@@ -2110,7 +2109,12 @@ gupnp_service_proxy_call_action_finish (GUPnPServiceProxy *proxy,
 {
         g_return_val_if_fail (g_task_is_valid (G_TASK (result), proxy), NULL);
 
-        return g_task_propagate_pointer (G_TASK (result), error);
+        GUPnPServiceProxyAction *action =
+                g_task_propagate_pointer (G_TASK (result), error);
+        g_clear_weak_pointer (&action->proxy);
+        action->pending = FALSE;
+
+        return action;
 }
 
 /**
@@ -2137,16 +2141,23 @@ gupnp_service_proxy_call_action (GUPnPServiceProxy       *proxy,
 
         g_return_val_if_fail (GUPNP_IS_SERVICE_PROXY (proxy), NULL);
 
-        prepare_action_msg (proxy, action, cancellable);
-
-        /* prepare_action_msg has queued the message, so remove it */
-        gupnp_service_proxy_remove_action (proxy, action);
+        prepare_action_msg (proxy, action);
 
         if (action->error != NULL) {
                 g_propagate_error (error, g_error_copy (action->error));
 
                 return NULL;
         }
+
+        if (cancellable != NULL) {
+                action->cancellable = g_object_ref (cancellable);
+        } else {
+                action->cancellable = g_cancellable_new ();
+        }
+        action->cancellable_connection_id = g_cancellable_connect (action->cancellable,
+                                                                   G_CALLBACK (on_action_cancelled),
+                                                                   action,
+                                                                   NULL);
 
         context = gupnp_service_info_get_context (GUPNP_SERVICE_INFO (proxy));
         session = gupnp_context_get_session (context);
