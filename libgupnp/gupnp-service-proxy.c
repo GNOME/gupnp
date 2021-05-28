@@ -605,7 +605,7 @@ on_action_cancelled (GCancellable *cancellable, gpointer user_data)
         GUPnPContext *context;
         SoupSession *session;
 
-        if (action->msg != NULL) {
+        if (action->msg != NULL && action->proxy != NULL) {
                 context = gupnp_service_info_get_context
                                         (GUPNP_SERVICE_INFO (action->proxy));
                 session = gupnp_context_get_session (context);
