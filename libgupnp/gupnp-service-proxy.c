@@ -2163,6 +2163,11 @@ gupnp_service_proxy_call_action (GUPnPServiceProxy       *proxy,
         session = gupnp_context_get_session (context);
         soup_session_send_message (session, action->msg);
 
+        g_cancellable_disconnect (action->cancellable,
+                                  action->cancellable_connection_id);
+        action->cancellable_connection_id = 0;
+        g_clear_object (&action->cancellable);
+
         /* If not allowed, try again */
         if (action->msg->status_code == SOUP_STATUS_METHOD_NOT_ALLOWED) {
                 update_message_after_not_allowed (action->msg);
