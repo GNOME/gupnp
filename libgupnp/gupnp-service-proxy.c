@@ -445,7 +445,7 @@ gupnp_service_proxy_send_action_valist (GUPnPServiceProxy *proxy,
 
         handle = gupnp_service_proxy_action_new_from_list (action_name, in_names, in_values);
 
-        if (gupnp_service_proxy_call_action (proxy, handle, NULL,  error) == NULL) {
+        if (gupnp_service_proxy_call_action (proxy, handle, NULL, error) == NULL) {
                 result = FALSE;
                 goto out;
         }
@@ -539,8 +539,12 @@ on_legacy_async_callback (GObject *source, GAsyncResult *res, gpointer user_data
 
         /* Do not perform legacy call-back if action is cancelled, to comply with the old implementation */
         if (action->callback != NULL &&
-            !g_error_matches (error, G_IO_ERROR, G_IO_ERROR_CANCELLED))
+            !g_error_matches (error, G_IO_ERROR, G_IO_ERROR_CANCELLED)) {
+                g_propagate_error (&action->error, error);
                 action->callback (action->proxy, action, action->user_data);
+        }
+
+        g_clear_error (&error);
 }
 
 /**
@@ -620,9 +624,10 @@ on_action_cancelled (GCancellable *cancellable, gpointer user_data)
 
 
 /* Begins a basic action message */
-static void
-prepare_action_msg (GUPnPServiceProxy              *proxy,
-                    GUPnPServiceProxyAction        *action)
+static gboolean
+prepare_action_msg (GUPnPServiceProxy *proxy,
+                    GUPnPServiceProxyAction *action,
+                    GError **error)
 {
         char *control_url, *full_action;
         const char *service_type;
@@ -631,37 +636,38 @@ prepare_action_msg (GUPnPServiceProxy              *proxy,
         service_type = gupnp_service_info_get_service_type
                                         (GUPNP_SERVICE_INFO (proxy));
         if (service_type == NULL) {
-                action->error = g_error_new (GUPNP_SERVER_ERROR,
-                                          GUPNP_SERVER_ERROR_OTHER,
-                                          "No service type defined");
+                g_propagate_error (error,
+                                   g_error_new (GUPNP_SERVER_ERROR,
+                                                GUPNP_SERVER_ERROR_OTHER,
+                                                "No service type defined"));
 
-                return;
+                return FALSE;
         }
 
         /* Create message */
         control_url = gupnp_service_info_get_control_url
                                         (GUPNP_SERVICE_INFO (proxy));
 
-        if (control_url != NULL) {
-                GUPnPContext *context = NULL;
-                char *local_control_url = NULL;
+        if (control_url == NULL) {
+                g_propagate_error (
+                        error,
+                        g_error_new (GUPNP_SERVER_ERROR,
+                                     GUPNP_SERVER_ERROR_INVALID_URL,
+                                     "No valid control URL defined"));
 
-                context = gupnp_service_info_get_context
-                                        (GUPNP_SERVICE_INFO (proxy));
-
-                local_control_url = gupnp_context_rewrite_uri (context,
-                                                               control_url);
-                g_free (control_url);
-
-                action->msg = soup_message_new (SOUP_METHOD_POST, local_control_url);
-                g_free (local_control_url);
-        } else {
-                action->error = g_error_new (GUPNP_SERVER_ERROR,
-                                          GUPNP_SERVER_ERROR_INVALID_URL,
-                                          "No valid control URL defined");
-
-                return;
+                return FALSE;
         }
+
+        GUPnPContext *context = NULL;
+        char *local_control_url = NULL;
+
+        context = gupnp_service_info_get_context (GUPNP_SERVICE_INFO (proxy));
+
+        local_control_url = gupnp_context_rewrite_uri (context, control_url);
+        g_free (control_url);
+
+        action->msg = soup_message_new (SOUP_METHOD_POST, local_control_url);
+        g_free (local_control_url);
 
         /* Specify action */
         full_action = g_strdup_printf ("\"%s#%s\"", service_type, action->name);
@@ -687,6 +693,8 @@ prepare_action_msg (GUPnPServiceProxy              *proxy,
 
         g_string_free (action->msg_str, FALSE);
         action->msg_str = NULL;
+
+        return TRUE;
 }
 
 static void
@@ -2053,6 +2061,7 @@ gupnp_service_proxy_call_action_async (GUPnPServiceProxy       *proxy,
 {
         GTask *task;
         GUPnPServiceProxyPrivate *priv;
+        GError *error = NULL;
 
         g_return_if_fail (GUPNP_IS_SERVICE_PROXY (proxy));
 
@@ -2065,10 +2074,10 @@ gupnp_service_proxy_call_action_async (GUPnPServiceProxy       *proxy,
                               gupnp_service_proxy_action_ref (action),
                               (GDestroyNotify) gupnp_service_proxy_action_unref);
 
-        prepare_action_msg (proxy, action);
+        prepare_action_msg (proxy, action, &error);
 
-        if (action->error != NULL) {
-                g_task_return_error (task, g_error_copy (action->error));
+        if (error != NULL) {
+                g_task_return_error (task, error);
                 g_object_unref (task);
         } else {
                 action->proxy = proxy;
@@ -2140,12 +2149,9 @@ gupnp_service_proxy_call_action (GUPnPServiceProxy       *proxy,
         SoupSession *session = NULL;
 
         g_return_val_if_fail (GUPNP_IS_SERVICE_PROXY (proxy), NULL);
+        g_return_val_if_fail (!action->pending, NULL);
 
-        prepare_action_msg (proxy, action);
-
-        if (action->error != NULL) {
-                g_propagate_error (error, g_error_copy (action->error));
-
+        if (!prepare_action_msg (proxy, action, error)) {
                 return NULL;
         }
 
@@ -2175,10 +2181,11 @@ gupnp_service_proxy_call_action (GUPnPServiceProxy       *proxy,
         }
 
         if (action->msg->status_code == SOUP_STATUS_CANCELLED) {
-                action->error = g_error_new (G_IO_ERROR,
-                                             G_IO_ERROR_CANCELLED,
-                                             "Action message was cancelled");
-                g_propagate_error (error, g_error_copy (action->error));
+                g_propagate_error (
+                        error,
+                        g_error_new (G_IO_ERROR,
+                                     G_IO_ERROR_CANCELLED,
+                                     "Action message was cancelled"));
 
                 return NULL;
         }
