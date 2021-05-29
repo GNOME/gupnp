@@ -2093,6 +2093,9 @@ gupnp_service_proxy_call_action_async (GUPnPServiceProxy       *proxy,
         g_return_if_fail (GUPNP_IS_SERVICE_PROXY (proxy));
 
         task = g_task_new (proxy, cancellable, callback, user_data);
+        char *task_name = g_strdup_printf ("UPnP Call \"%s\"", action->name);
+        g_task_set_name (task, task_name);
+        g_free (task_name);
         g_task_set_task_data (task,
                               gupnp_service_proxy_action_ref (action),
                               (GDestroyNotify) gupnp_service_proxy_action_unref);
