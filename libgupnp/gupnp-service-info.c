@@ -694,7 +694,7 @@ introspection_error_cb (gpointer user_data)
  *
  * Note that introspection object is created from the information in service
  * description document (SCPD) provided by the service so it can not be created
- * if the service does not provide an SCPD.
+ * if the service does not provide a SCPD.
  **/
 void
 gupnp_service_info_get_introspection_async
@@ -717,7 +717,7 @@ gupnp_service_info_get_introspection_async
  *
  * Note that introspection object is created from the information in service
  * description document (SCPD) provided by the service so it can not be created
- * if the service does not provide an SCPD.
+ * if the service does not provide a SCPD.
  *
  * If @cancellable is used to cancel the call, @callback will be called with
  * error code %G_IO_ERROR_CANCELLED.
@@ -834,7 +834,7 @@ prv_introspection_cb (GUPnPServiceInfo *info,
  *
  * Note that introspection object is created from the information in service
  * description document (SCPD) provided by the service so it can not be created
- * if the service does not provide an SCPD.
+ * if the service does not provide a SCPD.
  *
  * If @cancellable is used to cancel the call, @callback will be called with
  * error code %G_IO_ERROR_CANCELLED.

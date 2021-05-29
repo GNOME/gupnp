@@ -543,7 +543,7 @@ gupnp_device_info_get_manufacturer (GUPnPDeviceInfo *info)
  * gupnp_device_info_get_manufacturer_url:
  * @info: A #GUPnPDeviceInfo
  *
- * Get a URL pointing to the manufacturer's website.
+ * Get an URL pointing to the manufacturer's website.
  *
  * Return value: A string, or %NULL. g_free() after use.
  **/
@@ -628,7 +628,7 @@ gupnp_device_info_get_model_number (GUPnPDeviceInfo *info)
  * gupnp_device_info_get_model_url:
  * @info: A #GUPnPDeviceInfo
  *
- * Get a URL pointing to the device model's website.
+ * Get an URL pointing to the device model's website.
  *
  * Return value: A string, or %NULL. g_free() after use.
  **/
@@ -692,7 +692,7 @@ gupnp_device_info_get_upc (GUPnPDeviceInfo *info)
  * gupnp_device_info_get_presentation_url:
  * @info: A #GUPnPDeviceInfo
  *
- * Get a URL pointing to the device's presentation page, for web-based
+ * Get an URL pointing to the device's presentation page, for web-based
  * administration.
  *
  * Return value: A string, or %NULL. g_free() after use.
@@ -774,7 +774,7 @@ icon_free (Icon *icon)
  * @height: (out) (allow-none): The location where to store the height of the
  * returned icon, or %NULL
  *
- * Get a URL pointing to the icon most closely matching the
+ * Get an URL pointing to the icon most closely matching the
  * given criteria, or %NULL. If @requested_mime_type is set, only icons with
  * this mime type will be returned. If @requested_depth is set, only icons with
  * this or lower depth will be returned. If @requested_width and/or

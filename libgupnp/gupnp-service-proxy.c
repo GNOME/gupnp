@@ -387,7 +387,7 @@ gupnp_service_proxy_class_init (GUPnPServiceProxyClass *klass)
  *
  * Sends action @action with parameters @Varargs to the service exposed by
  * @proxy synchronously. If an error occurred, @error will be set. In case of
- * a UPnPError the error code will be the same in @error.
+ * an UPnPError the error code will be the same in @error.
  *
  * Return value: %TRUE if sending the action was succesful.
  *
