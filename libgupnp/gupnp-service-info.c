@@ -848,6 +848,7 @@ gupnp_service_info_introspect_async           (GUPnPServiceInfo    *info,
                                                gpointer             user_data)
 {
         GTask *task = g_task_new (info, cancellable, callback, user_data);
+        g_task_set_name (task, "UPnP service introspection");
 
         gupnp_service_info_get_introspection_async_full (info,
                                                          prv_introspection_cb,
