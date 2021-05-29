@@ -666,6 +666,7 @@ prepare_action_msg (GUPnPServiceProxy *proxy,
         local_control_url = gupnp_context_rewrite_uri (context, control_url);
         g_free (control_url);
 
+        g_clear_object (&action->msg);
         action->msg = soup_message_new (SOUP_METHOD_POST, local_control_url);
         g_free (local_control_url);
 
