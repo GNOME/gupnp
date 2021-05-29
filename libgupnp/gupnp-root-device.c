@@ -273,7 +273,7 @@ fill_resource_group (xmlNode            *element,
         }
 }
 
-/* Load and parse @description_path as an XML document, synchronously. */
+/* Load and parse @description_path as a XML document, synchronously. */
 static GUPnPXMLDoc *
 load_and_parse (const char *description_path)
 {

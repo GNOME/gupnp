@@ -79,7 +79,7 @@ G_BEGIN_DECLS
 /**
  * GUPNP_TYPE_URI:
  *
- * A string type representing a Universal Resource Indentifier.
+ * A string type representing an Universal Resource Indentifier.
  */
 #define GUPNP_TYPE_URI \
                 (gupnp_uri_get_type ())

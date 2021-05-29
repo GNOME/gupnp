@@ -167,7 +167,7 @@ xml_util_get_attribute_contents (xmlNode    *node,
 
 /**
  * xml_util_real_node:
- * @node: an %xmlNodePtr
+ * @node: a %xmlNodePtr
  *
  * Finds the first "real" node (ie, not a comment or whitespace) at or
  * after @node at its level in the tree.

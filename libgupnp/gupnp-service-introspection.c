@@ -34,7 +34,7 @@
  *
  * Note that all the introspection information is retreived from the service
  * description document (SCPD) provided by the service and hence can not be
- * guaranteed to be complete. A UPnP service is required to provide an SCPD but
+ * guaranteed to be complete. A UPnP service is required to provide a SCPD but
  * unfortunately, many services either do not provide this document or the
  * document does not provide any or all of the introspection information.
  *
@@ -750,7 +750,7 @@ collect_variable_names (gpointer data,
 
 /**
  * gupnp_service_introspection_new:
- * @scpd: Pointer to the SCPD of the service to create a introspection for
+ * @scpd: Pointer to the SCPD of the service to create an introspection for
  *
  * Create a new #GUPnPServiceIntrospection for the service created from the
  * SCPD @scpd or %NULL.
