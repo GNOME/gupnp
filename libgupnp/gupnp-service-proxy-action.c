@@ -756,3 +756,49 @@ gupnp_service_proxy_action_get_result_valist (GUPnPServiceProxyAction *action,
 
         return result;
 }
+
+gboolean
+gupnp_service_proxy_action_set (GUPnPServiceProxyAction *action,
+                                const char *key,
+                                const GValue *value,
+                                GError **error)
+{
+        g_return_val_if_fail (key != NULL, FALSE);
+        g_return_val_if_fail (value != NULL, FALSE);
+        g_return_val_if_fail (error != NULL && *error == NULL, FALSE);
+        gpointer position;
+
+        if (!g_hash_table_lookup_extended (action->arg_map,
+                                           key,
+                                           NULL,
+                                           &position)) {
+                g_propagate_error (error,
+                                   g_error_new (GUPNP_SERVER_ERROR,
+                                                GUPNP_SERVER_ERROR_OTHER,
+                                                "Unknown argument: %s",
+                                                key));
+
+                return FALSE;
+        }
+
+        ActionArgument *arg =
+                g_ptr_array_index (action->args, GPOINTER_TO_UINT (position));
+
+        if (G_VALUE_TYPE (value) != G_VALUE_TYPE (&arg->value)) {
+                g_propagate_error (
+                        error,
+                        g_error_new (
+                                GUPNP_SERVER_ERROR,
+                                GUPNP_SERVER_ERROR_OTHER,
+                                "Type mismatch for %s. Expected %s, got %s",
+                                key,
+                                G_VALUE_TYPE_NAME (&arg->value),
+                                G_VALUE_TYPE_NAME (value)));
+
+                return FALSE;
+        }
+
+        g_value_copy (value, &arg->value);
+
+        return TRUE;
+}
