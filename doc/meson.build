@@ -30,6 +30,8 @@ endif
 
 xsltproc = find_program('xsltproc', required: false)
 if xsltproc.found()
+    stylesheet = 'http://docbook.sourceforge.net/release/xsl/current/manpages/docbook.xsl'
+
     xlstproc_flags = [
         '--nonet',
         '--xinclude',
@@ -45,17 +47,31 @@ if xsltproc.found()
         xsltproc,
         xlstproc_flags,
         '-o', '@OUTPUT@',
-        'http://docbook.sourceforge.net/release/xsl/current/manpages/docbook.xsl',
+        stylesheet,
         '@INPUT@'
     ]
 
-    custom_target(
-        'man 1 pages',
-        input: 'gupnp-binding-tool.xml',
-        output: 'gupnp-binding-tool-1.2.1',
-        command: xsltproc_args,
-        depend_files : version_xml,
-        install: true,
-        install_dir: join_paths(get_option('mandir'), 'man1')
+    stylesheet_check = run_command(
+        [
+            xsltproc,
+            xlstproc_flags,
+            '--noout',
+            stylesheet,
+            'gupnp-binding-tool.xml'
+        ]
     )
+    if (stylesheet_check.returncode() == 0)
+        message('Stylesheet ' + stylesheet + ' available')
+        custom_target(
+            'man 1 pages',
+            input: 'gupnp-binding-tool.xml',
+            output: 'gupnp-binding-tool-1.2.1',
+            command: xsltproc_args,
+            depend_files : version_xml,
+            install: true,
+            install_dir: join_paths(get_option('mandir'), 'man1')
+        )
+    else
+        message('Stylesheet ' + stylesheet + ' not found, not building man page')
+    endif
 endif
