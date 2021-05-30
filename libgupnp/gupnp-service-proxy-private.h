@@ -1,3 +1,6 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ */
 #ifndef GUPNP_SERVICE_PROXY_PRIVATE_H
 #define GUPNP_SERVICE_PROXY_PRIVATE_H
 
