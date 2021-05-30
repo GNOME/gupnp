@@ -277,6 +277,54 @@ write_footer (GUPnPServiceProxyAction *action)
                          "</s:Envelope>");
 }
 
+/**
+ * gupnp_service_proxy_action_new:
+ * @action: The name of a remote action to call
+ * @...: tuples of in parameter name, in parameter type, and in parameter
+ * value, terminated with %NULL
+ *
+ * Prepares action @action with parameters @Varargs to be sent off to
+ * a remote service later with gupnp_service_proxy_call_action() or
+ * gupnp_service_proxy_call_action_async().
+ *
+ * After the action call has finished, the results of the call may be
+ * retrived from the #GUPnPServiceProxyAction by using
+ * gupnp_service_proxy_action_get_result(),
+ * gupnp_service_proxy_action_get_result_list() or
+ * gupnp_service_proxy_action_get_result_hash()
+ *
+ * <informalexample>
+ * <programlisting>
+ * GUPnPServiceProxyAction *action =
+ *         gupnp_service_proxy_action_new ("GetVolume",
+ *                                         // Parameters
+ *                                         "InstanceID", G_TYPE_INT, 0,
+ *                                         "Channel", G_TYPE_STRING, "Master",
+ *                                         NULL);
+ *
+ * GError *error = NULL;
+ * gupnp_service_proxy_call_action (proxy, action, NULL, &error);
+ * if (error != NULL) {
+ *         g_warning ("Failed to call GetVolume: %s", error->message);
+ *         g_clear_error (&error);
+ *
+ *         return;
+ * }
+ *
+ * guint16 volume = 0;
+ * if (!gupnp_service_proxy_action_get_result (action,
+ *                                             &error,
+ *                                             "CurrentVolume", G_TYPE_UINT, &volume,
+ *                                             NULL)) {
+ *         g_message ("Current Volume: %u", volume);
+ * }
+ *
+ * gupnp_service_proxy_action_unref (action);
+ * </programlisting>
+ * </informalexample>
+ *
+ * Returns: A newly created #GUPnPServiceProxyAction
+ */
 GUPnPServiceProxyAction *
 gupnp_service_proxy_action_new (const char *action,
                                 ...)
@@ -308,6 +356,46 @@ gupnp_service_proxy_action_new (const char *action,
  * names (as strings)
  * @in_values: (element-type GValue) (transfer none): #GList of values (as
  * #GValue) that line up with @in_names
+ *
+ * Prepares action @action with parameters @in_names and @in_values to be
+ * sent off to a remote service later with gupnp_service_proxy_call_action() or
+ * gupnp_service_proxy_call_action_async(). This is mainly useful for language
+ * bindings.
+ *
+ * After the action call has finished, the results of the call may be
+ * retrived from the #GUPnPServiceProxyAction by using
+ * gupnp_service_proxy_action_get_result(),
+ * gupnp_service_proxy_action_get_result_list() or
+ * gupnp_service_proxy_action_get_result_hash()
+ * <informalexample>
+ * <programlisting>
+ * GList *in_args = NULL;
+ * in_args = g_list_append (in_args, "InstanceID");
+ * in_args = g_list_append (in_args, "Unit");
+ * in_args = g_list_append (in_args, "Target");
+ *
+ * GValue instance = G_VALUE_INIT;
+ * g_value_set_int (&instance, 0);
+ * GValue unit = G_VALUE_INIT;
+ * g_value_set_static_string (&unit, "ABS_TIME");
+ * GValue target = G_VALUE_INIT;
+ * g_value_set_static_string (&target, "00:00:00.000");
+ *
+ * GList *in_values = NULL;
+ * in_values = g_list_append (in_values, &instance);
+ * in_values = g_list_append (in_values, &unit);
+ * in_values = g_list_append (in_values, &target);
+ *
+ * GUPnPServiceProxyAction *action =
+ *         gunp_service_proxy_action_new_from_list ("Seek", in_args, in_values);
+ *
+ * GError *error = NULL;
+ * gupnp_service_proxy_call_action_async (proxy, action, NULL, on_action_finished, NULL);
+ * gupnp_service_proxy_action_unref (action);
+ * </programlisting>
+ * </informalexample>
+ *
+ * Returns: A newly created #GUPnPServiceProxyAction
  */
 GUPnPServiceProxyAction *
 gupnp_service_proxy_action_new_from_list (const char *action_name,
@@ -361,8 +449,57 @@ gupnp_service_proxy_action_new_from_list (const char *action_name,
  * out-parameter names, types and place-holders for values. The returned list
  * in @out_values must be freed using #g_list_free and each element in it using
  * #g_value_unset and #g_free.
+ * <informalexample>
+ * <programlisting>
+ * void on_action_finished(GObject *object, GAsyncResult *res, gpointer user_data)
+ * {
+ *     GUPnPServiceProxyAction *action;
+ *     GError *error;
+ *
+ *     action = gupnp_service_proxy_call_action_finish (GUPNP_SERVICE_PROXY (object),
+ *                                                      res,
+ *                                                      &error);
+ *
+ *     if (error != NULL) {
+ *              g_print ("Call failed: %s", error->message);
+ *              g_clear_error (&error);
+ *              return;
+ *     }
+ *
+ *     GList *out_args = NULL;
+ *     out_args = g_list_append (out_args, "PlayMode");
+ *     out_args = g_list_append (out_args, "RecQualityMode");
+ *     GList *out_types = NULL;
+ *     out_types = g_list_append (out_types, GSIZE_TO_POINTER (G_TYPE_STRING));
+ *     out_types = g_list_append (out_types, GSIZE_TO_POINTER (G_TYPE_STRING));
+ *     GList *out_values = NULL;
+ *
+ *     if (!gupnp_service_proxy_action_get_result_list (action,
+ *                                                      out_args,
+ *                                                      out_types,
+ *                                                      &out_values,
+ *                                                      &error)) {
+ *              g_print ("Getting results failed: %s", error->message);
+ *              g_clear_error (&error);
+ *              return;
+ *     }
+ *
+ *     GList *iter = out_values;
+ *     while (iter != NULL) {
+ *         GValue *value = iter->data;
+ *         g_print ("Result: %s\n", g_value_get_string (value));
+ *         g_value_unset (value);
+ *         g_free (value);
+ *         iter = g_list_remove_link (iter, iter);
+ *     }
+ *     g_list_free (out_values);
+ * }
+ * </programlisting>
+ * </informalexample>
  *
  * Return value : %TRUE on success.
+ *
+ * Since: 1.1.2
  *
  **/
 gboolean
@@ -431,8 +568,54 @@ gupnp_service_proxy_action_get_result_list (GUPnPServiceProxyAction *action,
  * See gupnp_service_proxy_action_get_result(); this version takes a #GHashTable for
  * runtime generated parameter lists.
  *
+ * The @out_hash needs to be pre-initialized with key value pairs denoting the argument
+ * to retrieve and an empty #GValue initialized to hold the wanted type with g_value_init().
+ *
+ * <informalexample>
+ * <programlisting>
+ * void on_action_finished(GObject *object, GAsyncResult *res, gpointer user_data)
+ * {
+ *     GUPnPServiceProxyAction *action;
+ *     GError *error;
+ *
+ *     action = gupnp_service_proxy_call_action_finish (GUPNP_SERVICE_PROXY (object),
+ *                                                      res,
+ *                                                      &error);
+ *
+ *     if (error != NULL) {
+ *              g_print ("Call failed: %s", error->message);
+ *              g_clear_error (&error);
+ *              return;
+ *     }
+ *
+ *     GValue play_mode = G_VALUE_INIT;
+ *     g_value_init(&play_mode, G_TYPE_STRING);
+ *     GValue rec_quality_mode = G_VALUE_INIT;
+ *     g_value_init(&rec_quality_mode, G_TYPE_STRING);
+ *
+ *     GHashTable *out_args = g_hash_table_new (g_str_hash, g_str_equal);
+ *     g_hash_table_insert(out_args, "PlayMode", &play_mode);
+ *     g_hash_table_insert(out_args, "RecQualityMode", &rec_quality_mode);
+ *
+ *     if (!gupnp_service_proxy_action_get_result_hash (action,
+ *                                                      out_args,
+ *                                                      &error)) {
+ *              g_print ("Getting results failed: %s", error->message);
+ *              g_clear_error (&error);
+ *              return;
+ *     }
+ *
+ *     g_value_unset (&play_mode);
+ *     g_value_unset (&rec_quality_mode);
+ *
+ *     g_hash_table_unref (out_args);
+ * }
+ * </programlisting>
+ * </informalexample>
+ *
  * Return value: %TRUE on success.
  *
+ * Since: 1.1.2
  **/
 gboolean
 gupnp_service_proxy_action_get_result_hash (GUPnPServiceProxyAction *action,
