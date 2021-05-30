@@ -62,15 +62,6 @@ request_range_and_compare (GMappedFile *file,
 
         full_length = g_mapped_file_get_length (file);
 
-        /* interpretation according to SoupRange documentation */
-        if (want_end == -1) {
-                if (want_start < 0)
-                        want_length = -want_start;
-                else
-                        want_length = full_length - want_start;
-        } else
-                want_length = want_end - want_start + 1;
-
         message = soup_message_new ("GET", uri);
         g_object_ref (message);
 
