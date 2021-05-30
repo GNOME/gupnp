@@ -1,5 +1,4 @@
-GUPnP
-=====
+# GUPnP
 
 GUPnP is an object-oriented open source framework for creating UPnP devices and
 control points, written in C using GObject and libsoup. The GUPnP API is
@@ -21,4 +20,20 @@ threads. GUPnP is entirely single-threaded (though asynchronous), integrates
 with the GLib main loop, and provides the same set of features as libupnp while
 hiding most of the UPnP internals through an elegant object-oriented design.
 
-GUPnP is free software released under the GNU LGPL.
+GUPnP is free software released under the GNU LGPL version 2.1 or later.
+
+## Building
+
+GUPnP uses the meson build system. To build GUPnP, the simplest variant is
+```
+$ meson setup build
+$ meson compile -C build
+```
+
+There are several options to customize the build, please see (meson_options.txt) for
+a brief overview.
+
+## Developer documentation
+
+The developer documentation is available at https://gnome.pages.gitlab.gnome.org/gupnp/docs/
+
