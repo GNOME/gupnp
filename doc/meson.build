@@ -6,6 +6,15 @@ version_xml = configure_file(input: 'version.xml.in',
 
 if get_option('gtk_doc')
     gnome.gtkdoc('gupnp',
+             content_files : files(
+                'client-tutorial.xml',
+                'fdl-1.1.xml',
+                'glossary.xml',
+                'gupnp-binding-tool.xml',
+                'gupnp-docs.xml',
+                'overview.xml',
+                'server-tutorial.xml'
+             ),
              main_xml : 'gupnp-docs.xml',
              src_dir : ['libgupnp'],
              dependencies : libgupnp,
