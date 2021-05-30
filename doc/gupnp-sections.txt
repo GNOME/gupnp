@@ -92,15 +92,16 @@ gupnp_service_proxy_remove_notify
 gupnp_service_proxy_remove_raw_notify
 gupnp_service_proxy_set_subscribed
 gupnp_service_proxy_get_subscribed
-gupnp_service_proxy_action_get_result
-gupnp_service_proxy_action_get_result_hash
-gupnp_service_proxy_action_get_result_list
-gupnp_service_proxy_action_get_type
+<SUBSECTION GUPnPServiceProxyAction>
 gupnp_service_proxy_action_new
 gupnp_service_proxy_action_new_from_list
 gupnp_service_proxy_action_ref
 gupnp_service_proxy_action_unref
+gupnp_service_proxy_action_get_result
+gupnp_service_proxy_action_get_result_hash
+gupnp_service_proxy_action_get_result_list
 <SUBSECTION Standard>
+gupnp_service_proxy_action_get_type
 GUPnPServiceProxyClass
 GUPNP_SERVICE_PROXY
 GUPNP_IS_SERVICE_PROXY
@@ -111,6 +112,10 @@ GUPNP_IS_SERVICE_PROXY_CLASS
 GUPNP_SERVICE_PROXY_GET_CLASS
 <SUBSECTION Private>
 GUPnPServiceProxyPrivate
+OUT_HASH_TABLE_TO_VAR_ARGS
+VALUE_LCOPY_SKIP
+VAR_ARGS_TO_IN_LIST
+VAR_ARGS_TO_OUT_HASH_TABLE
 </SECTION>
 
 <SECTION>
@@ -175,8 +180,18 @@ gupnp_root_device_get_type
 GUPNP_ROOT_DEVICE_CLASS
 GUPNP_IS_ROOT_DEVICE_CLASS
 GUPNP_ROOT_DEVICE_GET_CLASS
+GUPNP_TYPE_CONTROL_ERROR
+GUPNP_TYPE_EVENTING_ERROR
+GUPNP_TYPE_ROOTDEVICE_ERROR
+GUPNP_TYPE_SERVER_ERROR
+GUPnPRootdeviceError
 <SUBSECTION Private>
 GUPnPRootDevicePrivate
+gupnp_control_error_get_type
+gupnp_eventing_error_get_type
+gupnp_rootdevice_error_get_type
+gupnp_rootdevice_error_quark
+gupnp_server_error_get_type
 </SECTION>
 
 <SECTION>
@@ -278,6 +293,15 @@ gupnp_service_introspection_get_type
 GUPNP_SERVICE_INTROSPECTION_CLASS
 GUPNP_IS_SERVICE_INTROSPECTION_CLASS
 GUPNP_SERVICE_INTROSPECTION_GET_CLASS
+GUPNP_TYPE_SERVICE_ACTION_ARG_DIRECTION
+GUPNP_TYPE_SERVICE_ACTION_ARG_INFO
+GUPNP_TYPE_SERVICE_ACTION_INFO
+gupnp_service_action_arg_direction_get_type
+gupnp_service_action_arg_info_get_type
+gupnp_service_action_info_get_type
+gupnp_service_info_introspect_async
+gupnp_service_info_introspect_finish
+gupnp_service_state_variable_info_get_type
 </SECTION>
 
 <SECTION>
@@ -365,6 +389,8 @@ gupnp_xml_doc_get_type
 GUPNP_XML_DOC_CLASS
 GUPNP_IS_XML_DOC_CLASS
 GUPNP_XML_DOC_GET_CLASS
+GUPNP_TYPE_XML_ERROR
+gupnp_xml_error_get_type
 </SECTION>
 
 <SECTION>
