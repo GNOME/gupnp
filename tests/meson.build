@@ -1,9 +1,12 @@
-foreach program : ['browsing', 'proxy', 'server', 'introspection', 'white-list']
-    executable(
-        'test-' + program,
-        sources : 'test-@0@.c'.format(program),
-        dependencies : [gupnp, gio_unix]
+foreach program : ['context', 'bugs']
+    test(
+        program,
+        executable(
+            'test-' + program,
+            'test-@0@.c'.format (program),
+            dependencies : gupnp,
+            c_args : '-DDATA_PATH="@0@/data"'.format(meson.current_source_dir())
+        ),
+        is_parallel : false
     )
 endforeach
-
-subdir('gtest')
