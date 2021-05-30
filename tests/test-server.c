@@ -26,13 +26,34 @@
 #include <string.h>
 #include <signal.h>
 
+
+#ifndef G_OS_WIN32
+#include <glib-unix.h>
+#endif
+
 GMainLoop *main_loop;
 
+static gboolean
+unix_signal_handler (gpointer user_data)
+{
+        g_main_loop_quit (main_loop);
+
+        return G_SOURCE_REMOVE;
+}
+
+
+#ifdef G_OS_WIN32
+/*
+ *  Since in Windows this is basically called from
+ *  the ConsoleCtrlHandler which does not share the restrictions of Unix signals
+ */
 static void
 interrupt_signal_handler (G_GNUC_UNUSED int signum)
 {
-        g_main_loop_quit (main_loop);
+        unix_signal_handler (NULL);
 }
+
+#endif
 
 static void
 notify_failed_cb (G_GNUC_UNUSED GUPnPService *service,
@@ -62,9 +83,6 @@ main (int argc, char **argv)
         GUPnPContext *context;
         GUPnPRootDevice *dev;
         GUPnPServiceInfo *content_dir;
-#ifndef G_OS_WIN32
-        struct sigaction sig_action;
-#endif /* G_OS_WIN32 */
 
         if (argc < 2) {
                 g_printerr ("Usage: %s DESCRIPTION_FILE\n", argv[0]);
@@ -126,11 +144,9 @@ main (int argc, char **argv)
 
         main_loop = g_main_loop_new (NULL, FALSE);
 
-        /* Hook the handler for SIGTERM */
+        /* Hook the handler for SIGINT */
 #ifndef G_OS_WIN32
-        memset (&sig_action, 0, sizeof (sig_action));
-        sig_action.sa_handler = interrupt_signal_handler;
-        sigaction (SIGINT, &sig_action, NULL);
+        g_unix_signal_add (SIGINT, unix_signal_handler, NULL);
 #else
         signal(SIGINT, interrupt_signal_handler);
 #endif /* G_OS_WIN32 */

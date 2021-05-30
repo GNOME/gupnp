@@ -25,6 +25,8 @@ guul = subproject('guul', default_options : ['default_library=static'])
 
 gssdp_dep = dependency('gssdp-1.2', version : '>= 1.2.3', default_options: ['sniffer=false'])
 
+gio_unix = dependency('gio-unix-2.0', version: '>= 2.44', required: host_machine.system() != 'windows')
+
 dependencies = [
     dependency('glib-2.0', version : '>= ' + glib_version),
     dependency('gio-2.0', version : '>= ' + glib_version),

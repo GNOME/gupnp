@@ -29,12 +29,31 @@
 
 GMainLoop *main_loop;
 
+#ifndef G_OS_WIN32
+#include <glib-unix.h>
+#endif
+
+static gboolean
+unix_signal_handler (gpointer user_data)
+{
+        g_main_loop_quit (main_loop);
+
+        return G_SOURCE_REMOVE;
+}
+
+
+#ifdef G_OS_WIN32
+/*
+ *  Since in Windows this is basically called from
+ *  the ConsoleCtrlHandler which does not share the restrictions of Unix signals
+ */
 static void
 interrupt_signal_handler (G_GNUC_UNUSED int signum)
 {
-        g_main_loop_quit (main_loop);
+        unix_signal_handler (NULL);
 }
 
+#endif
 static void
 device_proxy_available_cb (G_GNUC_UNUSED GUPnPControlPoint *cp,
                            GUPnPDeviceProxy                *proxy)
@@ -246,9 +265,6 @@ main (G_GNUC_UNUSED int argc, G_GNUC_UNUSED char **argv)
 {
         GUPnPContextManager *cm;
         guint id;
-#ifndef G_OS_WIN32
-        struct sigaction sig_action;
-#endif /* G_OS_WIN32 */
 
         setlocale (LC_ALL, "");
 
@@ -269,10 +285,7 @@ main (G_GNUC_UNUSED int argc, G_GNUC_UNUSED char **argv)
         id = g_timeout_add_seconds (5, change_white_list, cm);
 
 #ifndef G_OS_WIN32
-        /* Hook the handler for SIGTERM */
-        memset (&sig_action, 0, sizeof (sig_action));
-        sig_action.sa_handler = interrupt_signal_handler;
-        sigaction (SIGINT, &sig_action, NULL);
+        g_unix_signal_add (SIGINT, unix_signal_handler, NULL);
 #else
         signal(SIGINT, interrupt_signal_handler);
 #endif /* G_OS_WIN32 */

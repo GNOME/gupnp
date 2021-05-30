@@ -28,21 +28,41 @@
 #include <signal.h>
 #include <glib.h>
 
+#ifndef G_OS_WIN32
+#include <glib-unix.h>
+#endif
+
 GMainLoop *main_loop;
 
 static GCancellable *cancellable;
 
-static void
-interrupt_signal_handler (G_GNUC_UNUSED int signum)
+static gboolean
+unix_signal_handler (gpointer user_data)
 {
         if (g_cancellable_is_cancelled (cancellable)) {
                 g_main_loop_quit (main_loop);
+
+                return G_SOURCE_REMOVE;
         } else {
                 g_print ("Canceling all introspection calls. "
-                         "Press ^C again to quit.\n");
+                         "Press ^C again to force quit.\n");
                 g_cancellable_cancel (cancellable);
+                return G_SOURCE_CONTINUE;
         }
 }
+
+#ifdef G_OS_WIN32
+/*
+ *  Since in Windows this is basically called from
+ *  the ConsoleCtrlHandler which does not share the restrictions of Unix signals
+ */
+static void
+interrupt_signal_handler (G_GNUC_UNUSED int signum)
+{
+        unix_signal_handler (NULL);
+}
+
+#endif
 
 static void
 print_action_arguments (GList *argument_list)
@@ -101,7 +121,7 @@ print_state_variables (GUPnPServiceIntrospection *introspection)
                 g_print ("state variables:\n");
                 for (iter = variables; iter; iter = iter->next) {
                         GUPnPServiceStateVariableInfo *variable;
-                        GValue default_value;
+                        GValue default_value = G_VALUE_INIT;
                         const char * default_value_str;
 
                         variable = (GUPnPServiceStateVariableInfo *) iter->data;
@@ -113,7 +133,6 @@ print_state_variables (GUPnPServiceIntrospection *introspection)
                                  g_type_name (variable->type),
                                  variable->send_events? "yes": "no");
 
-                        memset (&default_value, 0, sizeof (GValue));
                         g_value_init (&default_value, G_TYPE_STRING);
                         g_value_transform (&variable->default_value,
                                            &default_value);
@@ -125,11 +144,7 @@ print_state_variables (GUPnPServiceIntrospection *introspection)
                         g_value_unset (&default_value);
 
                         if (variable->is_numeric) {
-                                GValue min, max, step;
-
-                                memset (&min, 0, sizeof (GValue));
-                                memset (&max, 0, sizeof (GValue));
-                                memset (&step, 0, sizeof (GValue));
+                                GValue min = G_VALUE_INIT, max = G_VALUE_INIT, step = G_VALUE_INIT;
 
                                 g_value_init (&min, G_TYPE_STRING);
                                 g_value_init (&max, G_TYPE_STRING);
@@ -225,9 +240,6 @@ main (int argc, char **argv)
         GError *error = NULL;
         GUPnPContext *context;
         GUPnPControlPoint *cp;
-#ifndef G_OS_WIN32
-        struct sigaction sig_action;
-#endif /* G_OS_WIN32 */
 
         error = NULL;
         context = g_initable_new (GUPNP_TYPE_CONTEXT, NULL, &error, NULL);
@@ -257,11 +269,9 @@ main (int argc, char **argv)
 
         main_loop = g_main_loop_new (NULL, FALSE);
 
-        /* Hook the handler for SIGTERM */
+        /* Hook the handler for SIGINT */
 #ifndef G_OS_WIN32
-        memset (&sig_action, 0, sizeof (sig_action));
-        sig_action.sa_handler = interrupt_signal_handler;
-        sigaction (SIGINT, &sig_action, NULL);
+        g_unix_signal_add (SIGINT, unix_signal_handler, NULL);
 #else
         signal(SIGINT,interrupt_signal_handler);
 #endif /* G_OS_WIN32 */
