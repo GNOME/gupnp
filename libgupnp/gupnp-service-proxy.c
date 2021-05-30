@@ -483,7 +483,7 @@ out:
 
 /**
  * gupnp_service_proxy_send_action_list:
- * @proxy: (transfer none) : A #GUPnPServiceProxy
+ * @proxy: (transfer none): A #GUPnPServiceProxy
  * @action: An action
  * @in_names: (element-type utf8) (transfer none): #GList of 'in' parameter
  * names (as strings)
@@ -575,7 +575,7 @@ on_legacy_async_callback (GObject *source, GAsyncResult *res, gpointer user_data
  * gupnp_service_proxy_end_action_valist().
  *
  * Deprecated: 1.1.2: Use gupnp_service_proxy_action_new() and
- * gupnp_service_proxy_action_call_action_async()
+ * gupnp_service_proxy_call_action_async()
  **/
 GUPnPServiceProxyAction *
 gupnp_service_proxy_begin_action (GUPnPServiceProxy              *proxy,

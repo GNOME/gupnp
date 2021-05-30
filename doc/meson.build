@@ -32,6 +32,7 @@ if get_option('gtk_doc')
                  'gupnp-error-private.h',
                  'gupnp-resource-factory-private.h',
                  'gupnp-service-introspection-private.h',
+                 'gupnp-service-proxy-action-private.h',
                  'gupnp-types-private.h'
              ],
              install : true)
