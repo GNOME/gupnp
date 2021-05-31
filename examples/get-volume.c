@@ -50,7 +50,7 @@ on_introspection (GObject *object, GAsyncResult *res, gpointer user_data)
                 &error);
 
         if (error != NULL) {
-                g_critical (error->message);
+                g_critical ("%s", error->message);
                 g_clear_error (&error);
         }
 
@@ -111,7 +111,7 @@ on_introspection (GObject *object, GAsyncResult *res, gpointer user_data)
         g_list_free (out_names);
 
         if (error != NULL) {
-                g_critical (error->message);
+                g_critical ("%s", error->message);
                 g_clear_error (&error);
         } else {
                 g_print ("Current volume: %s\n",
@@ -147,7 +147,7 @@ int main(int argc, char *argv[])
         GUPnPContext *context = gupnp_context_new ("wlp3s0", 0, &error);
 
         if (error != NULL) {
-                g_error (error->message);
+                g_error ("%s", error->message);
         }
 
         GUPnPControlPoint *cp = gupnp_control_point_new (context, CONTENT_DIR);
