@@ -27,6 +27,8 @@
  * notification. #GUPnPService implements the #GUPnPServiceInfo interface.
  */
 
+#include <config.h>
+
 #include <gobject/gvaluecollector.h>
 #include <gmodule.h>
 #include <libsoup/soup-date.h>

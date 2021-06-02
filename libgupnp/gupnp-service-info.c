@@ -29,6 +29,7 @@
 
 #define G_LOG_DOMAIN "GUPnPServiceInfo"
 
+#include <config.h>
 #include <libsoup/soup.h>
 #include <string.h>
 

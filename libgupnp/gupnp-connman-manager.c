@@ -29,6 +29,8 @@
  *
  */
 
+#include <config.h>
+
 #include "gupnp-connman-manager.h"
 #include "gupnp-context.h"
 

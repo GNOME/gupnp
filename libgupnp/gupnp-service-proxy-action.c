@@ -19,6 +19,8 @@
  * Boston, MA 02110-1301, USA.
  */
 
+#include <config.h>
+
 #include "gupnp-error-private.h"
 #include "gupnp-service-proxy.h"
 #include "gupnp-service-proxy-private.h"
