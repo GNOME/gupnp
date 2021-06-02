@@ -13,6 +13,9 @@ conf.set('HAVE_NETLINK', netlink_available)
 conf.set('HAVE_IFADDRS_H', ifaddrs_available)
 conf.set('HAVE_LINUX_WIRELESS_H', cc.has_header('linux/wireless.h'))
 
+conf.set('GLIB_VERSION_MIN_REQUIRED', 'GLIB_VERSION_2_58')
+conf.set('GLIB_VERSION_MAX_ALLOWED', 'GLIB_VERSION_2_58')
+
 config_h = configure_file(output : 'config.h', configuration : conf)
 add_project_arguments('-DHAVE_CONFIG_H=1', language : 'c')
 
