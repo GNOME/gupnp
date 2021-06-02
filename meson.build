@@ -13,6 +13,7 @@ conf.set('HAVE_NETLINK', netlink_available)
 conf.set('HAVE_IFADDRS_H', ifaddrs_available)
 conf.set('HAVE_LINUX_WIRELESS_H', cc.has_header('linux/wireless.h'))
 
+add_project_arguments(cc.get_supported_arguments('-Werror=deprecated-declarations'), language: 'c')
 conf.set('GLIB_VERSION_MIN_REQUIRED', 'GLIB_VERSION_2_58')
 conf.set('GLIB_VERSION_MAX_ALLOWED', 'GLIB_VERSION_2_58')
 
