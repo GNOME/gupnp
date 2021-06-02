@@ -28,6 +28,7 @@
  * types when invoking actions on a #GUPnPServiceProxy.
  */
 
+#include <config.h>
 #include <string.h>
 
 #include "gupnp-types.h"

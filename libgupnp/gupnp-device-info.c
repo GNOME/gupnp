@@ -27,6 +27,7 @@
  * device information.
  */
 
+#include <config.h>
 #include <string.h>
 
 #include "gupnp-device-info.h"

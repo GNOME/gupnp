@@ -34,6 +34,7 @@
  * a device proxy type needs to be derived from #GUPnPDeviceProxy).
  */
 
+#include <config.h>
 #include <string.h>
 
 #include "gupnp-resource-factory-private.h"

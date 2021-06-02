@@ -26,6 +26,7 @@
  * #GUPnPRootDevice allows for implementing root devices.
  */
 
+#include <config.h>
 #include <string.h>
 
 #include <libgssdp/gssdp-resource-group.h>
