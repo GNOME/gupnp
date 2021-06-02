@@ -1721,26 +1721,22 @@ validate_host_header (const char *host_header,
         // [] from v6 addresses, splitting of the port etc.
         char *uri_from_host = g_strconcat ("http://", host_header, NULL);
 
-        char *host = NULL;
+        const char *host = NULL;
         int port = 0;
-        GError *error = NULL;
 
-        g_uri_split_network (uri_from_host,
-                             G_URI_FLAGS_NONE,
-                             NULL,
-                             &host,
-                             &port,
-                             &error);
-
-        if (error != NULL) {
-                g_debug ("Failed to parse HOST header from request: %s",
-                         error->message);
+        SoupURI *uri = soup_uri_new (uri_from_host);
+        if (uri == NULL) {
+                g_debug ("Failed to parse HOST header %s from request",
+                         host_header);
                 goto out;
         }
+        host = soup_uri_get_host (uri);
+        port = soup_uri_get_port (uri);
+
 
         // -1 means there was no :port; according to UDA this is allowed and
         // defaults to 80, the HTTP port then
-        if (port == -1) {
+        if (soup_uri_uses_default_port (uri)) {
                 port = 80;
         }
 
@@ -1761,8 +1757,7 @@ validate_host_header (const char *host_header,
         retval = g_str_equal (host, host_ip) && port == context_port;
 
 out:
-        g_clear_error (&error);
-        g_free (host);
+        g_clear_pointer (&uri, soup_uri_free);
         g_free (uri_from_host);
 
         return retval;
