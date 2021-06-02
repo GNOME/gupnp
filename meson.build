@@ -23,6 +23,7 @@ wireless_test ='''#include <sys/socket.h>
 conf.set('HAVE_LINUX_WIRELESS_H',
          cc.compiles(wireless_test, name : 'linux/wireless.h availability'))
 
+add_project_arguments(cc.get_supported_arguments('-Werror=deprecated-declarations'), language: 'c')
 conf.set('GLIB_VERSION_MIN_REQUIRED', 'GLIB_VERSION_2_44')
 conf.set('GLIB_VERSION_MAX_ALLOWED', 'GLIB_VERSION_2_44')
 
