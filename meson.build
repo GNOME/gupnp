@@ -23,6 +23,9 @@ wireless_test ='''#include <sys/socket.h>
 conf.set('HAVE_LINUX_WIRELESS_H',
          cc.compiles(wireless_test, name : 'linux/wireless.h availability'))
 
+conf.set('GLIB_VERSION_MIN_REQUIRED', 'GLIB_VERSION_2_44')
+conf.set('GLIB_VERSION_MAX_ALLOWED', 'GLIB_VERSION_2_44')
+
 config_h = configure_file(output : 'config.h', configuration : conf)
 add_global_arguments('-DHAVE_CONFIG_H=1', language : 'c')
 
