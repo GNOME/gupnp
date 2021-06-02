@@ -30,6 +30,8 @@
  * Since: 0.20.11
  */
 
+#include <config.h>
+
 #include "gupnp-acl.h"
 #include "gupnp-acl-private.h"
 #include "gupnp-device.h"

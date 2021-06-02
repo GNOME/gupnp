@@ -32,6 +32,7 @@
  * Since: 0.13.0
  */
 
+#include <config.h>
 #include <string.h>
 #include "gupnp-xml-doc.h"
 #include "gupnp-error.h"

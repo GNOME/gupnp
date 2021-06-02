@@ -27,6 +27,7 @@
  * service information.
  */
 
+#include <config.h>
 #include <libsoup/soup.h>
 #include <string.h>
 

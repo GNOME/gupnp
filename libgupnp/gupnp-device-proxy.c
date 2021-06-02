@@ -27,6 +27,7 @@
  * and services. #GUPnPDeviceProxy implements the #GUPnPDeviceInfo interface.
  */
 
+#include <config.h>
 #include <string.h>
 
 #include "gupnp-device-proxy.h"

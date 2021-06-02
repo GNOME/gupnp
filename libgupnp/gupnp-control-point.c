@@ -31,6 +31,7 @@
  * the specified discovery target changes.
  */
 
+#include <config.h>
 #include <string.h>
 
 #include "gupnp-control-point.h"

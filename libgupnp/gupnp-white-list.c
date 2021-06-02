@@ -31,6 +31,7 @@
  * Since: 0.20.5
  */
 
+#include <config.h>
 #include <string.h>
 
 #include "gupnp-white-list.h"
