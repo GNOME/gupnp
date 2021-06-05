@@ -131,7 +131,7 @@ on_context_available (GUPnPContextManager    *manager,
         if (!gupnp_white_list_is_empty (white_list) &&
             gupnp_white_list_get_enabled (white_list) &&
             !gupnp_white_list_check_context (white_list, context)) {
-                /* If the conext doesn't match, block the notification
+                /* If the context doesn't match, block the notification
                  * and disable the context */
                 g_signal_stop_emission_by_name (manager, "context-available");
 
