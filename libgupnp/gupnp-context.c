@@ -771,7 +771,7 @@ host_path_data_set_language (HostPathData *data, const char *language)
  * @context: A #GUPnPContext
  * @language: A language tag as defined in RFC 2616 3.10
  *
- * Set the default language for the Content-Length header to @language.
+ * Set the default language for the Content-Language header to @language.
  *
  * If the client sends an Accept-Language header the UPnP HTTP server
  * is required to send a Content-Language header in return. If there are

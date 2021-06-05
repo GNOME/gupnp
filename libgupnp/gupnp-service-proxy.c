@@ -2017,10 +2017,10 @@ unsubscribe (GUPnPServiceProxy *proxy)
  *
  * (Un)subscribes to this service.
  *
- * Note that the relevant messages are not immediately sent but queued.
+ * <note>The relevant messages are not immediately sent but queued.
  * If you want to unsubcribe from this service because the application
  * is quitting, rely on automatic synchronised unsubscription on object
- * destruction instead.
+ * destruction instead.</note>
  **/
 void
 gupnp_service_proxy_set_subscribed (GUPnPServiceProxy *proxy,
