@@ -368,7 +368,7 @@ gupnp_white_list_remove_entry (GUPnPWhiteList *white_list, const gchar* entry)
  *
  * Get the #GList of entries that compose the white list. Do not free
  *
- * Return value: (element-type utf8) (transfer none):  a #GList of entries
+ * Return value: (nullable)(element-type utf8) (transfer none):  a #GList of entries
  * used to filter networks, interfaces,... or %NULL.
  * Do not modify or free the list nor its elements.
  *

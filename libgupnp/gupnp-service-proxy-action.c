@@ -650,7 +650,7 @@ gupnp_service_proxy_action_get_result_hash (GUPnPServiceProxyAction *action,
 /**
  * gupnp_service_proxy_action_get_result:
  * @action: A #GUPnPServiceProxyAction handle
- * @error: (allow-none): The location where to store any error, or %NULL
+ * @error: (optional): The location where to store any error, or %NULL
  * @...: tuples of out parameter name, out parameter type, and out parameter
  * value location, terminated with %NULL. The out parameter values should be
  * freed after use
@@ -681,7 +681,7 @@ gupnp_service_proxy_action_get_result (GUPnPServiceProxyAction *action,
 /**
  * gupnp_service_proxy_action_get_result_valist:
  * @action: A #GUPnPServiceProxyAction handle
- * @error: (allow-none): The location where to store any error, or %NULL
+ * @error: (optional): The location where to store any error, or %NULL
  * @var_args: A va_list of tuples of out parameter name, out parameter type,
  * and out parameter value location. The out parameter values should be
  * freed after use

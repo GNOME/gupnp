@@ -201,7 +201,7 @@ lookup_type_with_fallback (GHashTable *resource_types,
  * Create a #GUPnPDeviceProxy for the device with element @element, as
  * read from the device description file specified by @location.
  *
- * Return value: A new #GUPnPDeviceProxy.
+ * Return value:(nullable)(transfer full): A new #GUPnPDeviceProxy.
  **/
 GUPnPDeviceProxy *
 gupnp_resource_factory_create_device_proxy
@@ -253,14 +253,14 @@ gupnp_resource_factory_create_device_proxy
  * @element: The #xmlNode pointing to the right service element
  * @location: The location of the service description file
  * @udn: The UDN of the device the service is contained in
- * @service_type: (allow-none): The service type, or %NULL to use service
+ * @service_type: (nullable): The service type, or %NULL to use service
  * type from @element
  * @url_base: The URL base for this service, or %NULL if none
  *
  * Create a #GUPnPServiceProxy for the service with element @element, as
  * read from the service description file specified by @location.
  *
- * Return value: A new #GUPnPServiceProxy.
+ * Return value:(nullable)(transfer full): A new #GUPnPServiceProxy.
  **/
 GUPnPServiceProxy *
 gupnp_resource_factory_create_service_proxy
@@ -318,7 +318,7 @@ gupnp_resource_factory_create_service_proxy
  * Create a #GUPnPDevice for the device with element @element, as
  * read from the device description file specified by @location.
  *
- * Return value: A new #GUPnPDevice.
+ * Return value: (nullable)(transfer full): A new #GUPnPDevice.
  **/
 GUPnPDevice *
 gupnp_resource_factory_create_device
@@ -374,7 +374,7 @@ gupnp_resource_factory_create_device
  * Create a #GUPnPService for the service with element @element, as
  * read from the service description file specified by @location.
  *
- * Return value: A new #GUPnPService.
+ * Return value: (nullable)(transfer full): A new #GUPnPService.
  **/
 GUPnPService *
 gupnp_resource_factory_create_service

@@ -380,7 +380,7 @@ gupnp_service_proxy_class_init (GUPnPServiceProxyClass *klass)
  * gupnp_service_proxy_send_action:
  * @proxy: A #GUPnPServiceProxy
  * @action: An action
- * @error: (allow-none): The location where to store any error, or %NULL
+ * @error: (optional): The location where to store any error, or %NULL
  * @...: tuples of in parameter name, in parameter type, and in parameter
  * value, followed by %NULL, and then tuples of out parameter name,
  * out parameter type, and out parameter value location, terminated with %NULL
