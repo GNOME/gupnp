@@ -1,3 +1,18 @@
+1.2.7
+=====
+
+- Fix build with -Wformat-security=error
+- Bump required GLib version to 2.66
+- Fix some introspection annotations
+- Add missing varargs functions to vapi
+- Revert fix from 1.2.5 which causes managed control points to
+  live too long
+
+All contributors to this release:
+ - Jens Georg <mail@jensge.org>
+ - Bastien Nocera <hadess@hadess.net>
+ - Andreas Müller <schnitzeltony@gmail.com>
+
 1.2.6
 =====
 - Fix wrong dependency on GSSDP 1.2.4
