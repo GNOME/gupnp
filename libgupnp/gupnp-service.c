@@ -1736,7 +1736,6 @@ gupnp_service_finalize (GObject *object)
         GUPnPService *service;
         GUPnPServicePrivate *priv;
         GObjectClass *object_class;
-        NotifyData *data;
 
         service = GUPNP_SERVICE (object);
         priv = gupnp_service_get_instance_private (service);
@@ -1748,20 +1747,11 @@ gupnp_service_finalize (GObject *object)
         g_list_free_full (priv->state_variables, g_free);
 
         /* Free notify queue */
-        while ((data = g_queue_pop_head (priv->notify_queue)))
-                notify_data_free (data);
+        g_queue_free_full (priv->notify_queue,
+                           (GDestroyNotify) notify_data_free);
 
-        g_queue_free (priv->notify_queue);
-
-        if (priv->session) {
-                g_object_unref (priv->session);
-                priv->session = NULL;
-        }
-
-        if (priv->introspection) {
-                g_object_unref (priv->introspection);
-                priv->introspection = NULL;
-        }
+        g_clear_object (&priv->session);
+        g_clear_object (&priv->introspection);
 
         /* Call super */
         object_class = G_OBJECT_CLASS (gupnp_service_parent_class);

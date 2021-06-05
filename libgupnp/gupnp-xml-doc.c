@@ -65,7 +65,7 @@ gupnp_xml_doc_finalize (GObject *object)
 
         doc = GUPNP_XML_DOC (object);
 
-        xmlFreeDoc (doc->doc);
+        g_clear_pointer (&doc->doc, xmlFreeDoc);
 
         G_OBJECT_CLASS (gupnp_xml_doc_parent_class)->finalize (object);
 }
