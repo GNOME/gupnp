@@ -1993,27 +1993,27 @@ notify_got_response (G_GNUC_UNUSED SoupSession *session,
 }
 
 /* Send notification @user_data to subscriber @value */
-    static void
-    notify_subscriber (G_GNUC_UNUSED gpointer key,
-                       gpointer               value,
-                       gpointer               user_data)
-    {
-            SubscriptionData *data;
-            const char *property_set;
-            char *tmp;
-            SoupMessage *msg;
-            SoupSession *session;
+static void
+notify_subscriber (G_GNUC_UNUSED gpointer key,
+                   gpointer value,
+                   gpointer user_data)
+{
+        SubscriptionData *data;
+        const char *property_set;
+        char *tmp;
+        SoupMessage *msg;
+        SoupSession *session;
 
-            data = value;
-            property_set = user_data;
+        data = value;
+        property_set = user_data;
 
-            /* Subscriber called unsubscribe */
-            if (subscription_data_can_delete (data))
-                    return;
+        /* Subscriber called unsubscribe */
+        if (subscription_data_can_delete (data))
+                return;
 
-            /* Create message */
-            msg = soup_message_new_from_uri (GENA_METHOD_NOTIFY,
-                                             data->callbacks->data);
+        /* Create message */
+        msg = soup_message_new_from_uri (GENA_METHOD_NOTIFY,
+                                         data->callbacks->data);
 
         soup_message_headers_append (msg->request_headers,
                                      "NT",
