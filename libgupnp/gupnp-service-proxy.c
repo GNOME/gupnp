@@ -2080,6 +2080,8 @@ gupnp_service_proxy_get_subscribed (GUPnPServiceProxy *proxy)
  * gupnp_service_proxy_action_get_result_hash() or
  * gupnp_service_proxy_action_get_result_list() to extract the result of the
  * remote call.
+ *
+ * Since: 1.1.2
  */
 void
 gupnp_service_proxy_call_action_async (GUPnPServiceProxy       *proxy,
@@ -2120,6 +2122,7 @@ gupnp_service_proxy_call_action_async (GUPnPServiceProxy       *proxy,
  * gupnp_service_proxy_call_action_async().
  *
  * Returns: (nullable) (transfer none): %NULL, if the call had an error, the action otherwise.
+ * Since: 1.1.2
  */
 GUPnPServiceProxyAction *
 gupnp_service_proxy_call_action_finish (GUPnPServiceProxy *proxy,
@@ -2142,6 +2145,7 @@ gupnp_service_proxy_call_action_finish (GUPnPServiceProxy *proxy,
  * Synchronously call the @action on the remote UPnP service.
  *
  * Returns: (nullable)(transfer none): %NULL on error, @action if successful.
+ * Since: 1.1.2
  */
 GUPnPServiceProxyAction *
 gupnp_service_proxy_call_action (GUPnPServiceProxy       *proxy,
