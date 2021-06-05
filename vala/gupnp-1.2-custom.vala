@@ -32,7 +32,7 @@ public class GUPnP.ServiceProxy : GUPnP.ServiceInfo {
 [Compact]
 public class GUPnP.ServiceProxyAction {
     [CCode (has_construct_function = false)]
-    public ServiceProxyAction (string action, ...) throws GLib.Error;
+    public ServiceProxyAction (string action, ...);
     public bool get_result (...) throws GLib.Error;
 }
 
