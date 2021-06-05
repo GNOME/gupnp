@@ -484,7 +484,7 @@ gupnp_root_device_class_init (GUPnPRootDeviceClass *klass)
          *
          * Device description document. Constructor property.
          *
-         * Since: 0.13.0
+         * Since: 0.14.0
          **/
         g_object_class_install_property
                 (object_class,
@@ -741,7 +741,7 @@ gupnp_root_device_get_description_dir (GUPnPRootDevice *root_device)
  *
  * Returns: (transfer none): The #GSSDPResourceGroup of @root_device.
  *
- * Since: 0.19.2
+ * Since: 0.20.0
  **/
 GSSDPResourceGroup *
 gupnp_root_device_get_ssdp_resource_group (GUPnPRootDevice *root_device)

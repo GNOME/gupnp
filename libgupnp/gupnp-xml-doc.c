@@ -82,13 +82,13 @@ gupnp_xml_doc_class_init (GUPnPXMLDocClass *klass)
 
 /**
  * gupnp_xml_doc_new:
- * @xml_doc: Pointer to #xmlDoc to wrap under this object
+ * @xml_doc:(transfer full): Pointer to #xmlDoc to wrap under this object
  *
  * Create a new #GUPnPXMLDoc for @xml_doc.
  *
  * Return value: A new #GUPnPXMLDoc, or %NULL on an error
  *
- * Since: 0.13.0
+ * Since: 0.14.0
  **/
 GUPnPXMLDoc *
 gupnp_xml_doc_new (xmlDoc *xml_doc)
@@ -107,13 +107,13 @@ gupnp_xml_doc_new (xmlDoc *xml_doc)
 /**
  * gupnp_xml_doc_new_from_path:
  * @path: Path to xml document
- * @error: Location to put the error into
+ * @error:(optional): Location to put the error into
  *
  * Create a new #GUPnPXMLDoc for the XML document at @path.
  *
- * Return value: A new #GUPnPXMLDoc, or %NULL on an error
+ * Return value:(nullable): A new #GUPnPXMLDoc, or %NULL on an error
  *
- * Since: 0.13.0
+ * Since: 0.14.0
  **/
 GUPnPXMLDoc *
 gupnp_xml_doc_new_from_path (const char *path,

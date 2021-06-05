@@ -513,7 +513,7 @@ gupnp_context_manager_class_init (GUPnPContextManagerClass *klass)
          * for any or %G_SOCKET_FAMILY_IPV4 for IPv4 contexts or
          * %G_SOCKET_FAMILY_IPV6 for IPv6 contexts
          *
-         * Since: 1.1.0
+         * Since: 1.2.0
          **/
         g_object_class_install_property
                 (object_class,
@@ -533,7 +533,7 @@ gupnp_context_manager_class_init (GUPnPContextManagerClass *klass)
          * The UDA version the contexts will support. Use %GSSDP_UDA_VERSION_UNSPECIFIED
          * for using the default UDA version.
          *
-         * Since: 1.1.2
+         * Since: 1.2.0
          **/
         g_object_class_install_property
                 (object_class,
@@ -619,7 +619,7 @@ gupnp_context_manager_class_init (GUPnPContextManagerClass *klass)
  *
  * Returns: (transfer full): A new #GUPnPContextManager object.
  *
- * Since: 0.17.2
+ * Since: 0.18.0
  **/
 GUPnPContextManager *
 gupnp_context_manager_create (guint port)
@@ -643,7 +643,7 @@ gupnp_context_manager_create (guint port)
  *
  * Returns: (transfer full): A new #GUPnPContextManager object.
  *
- * Since: 1.1.0
+ * Since: 1.2.0
  **/
 GUPnPContextManager *
 gupnp_context_manager_create_full (GSSDPUDAVersion uda_version, GSocketFamily family, guint port)
@@ -749,7 +749,7 @@ gupnp_context_manager_rescan_control_points (GUPnPContextManager *manager)
  * #GUPnPContextManager::context-available handler after you create a
  * #GUPnPControlPoint object for the newly available context.
  *
- * Since: 0.13.0
+ * Since: 0.14.0
  **/
 void
 gupnp_context_manager_manage_control_point (GUPnPContextManager *manager,
@@ -776,7 +776,7 @@ gupnp_context_manager_manage_control_point (GUPnPContextManager *manager,
  * #GUPnPContextManager::context-available handler after you create a
  * #GUPnPRootDevice object for the newly available context.
  *
- * Since: 0.13.0
+ * Since: 0.14.0
  **/
 void
 gupnp_context_manager_manage_root_device (GUPnPContextManager *manager,
@@ -799,7 +799,7 @@ gupnp_context_manager_manage_root_device (GUPnPContextManager *manager,
  * Get the network port associated with this context manager.
  * Returns: The network port asssociated with this context manager.
  *
- * Since: 0.19.1
+ * Since: 0.20.0
  */
 guint
 gupnp_context_manager_get_port (GUPnPContextManager *manager)
@@ -843,6 +843,7 @@ gupnp_context_manager_get_white_list (GUPnPContextManager *manager)
  * both
  *
  * Returns: The socket family
+ * Since: 1.2.0
  */
 GSocketFamily
 gupnp_context_manager_get_socket_family (GUPnPContextManager *manager)
@@ -864,6 +865,7 @@ gupnp_context_manager_get_socket_family (GUPnPContextManager *manager)
  * Get the UDA protocol version the contexts are implementing
  *
  * Returns: The UDA protocol version
+ * Since: 1.2.0
  */
 GSSDPUDAVersion
 gupnp_context_manager_get_uda_version (GUPnPContextManager *manager)

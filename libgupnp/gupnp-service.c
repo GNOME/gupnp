@@ -436,7 +436,7 @@ gupnp_service_action_get_valist (GUPnPServiceAction *action,
  * #GValue. g_list_free() the returned list and g_value_unset() and g_slice_free()
  * each element.
  *
- * Since: 0.13.3
+ * Since: 0.14.0
  **/
 GList *
 gupnp_service_action_get_values (GUPnPServiceAction *action,
@@ -519,7 +519,7 @@ gupnp_service_action_get_value (GUPnPServiceAction *action,
  * Return value: (transfer full): Value as #GValue associated with @action.
  * g_value_unset() and g_slice_free() it after usage.
  *
- * Since: 0.13.3
+ * Since: 0.14.0
  **/
 GValue *
 gupnp_service_action_get_gvalue (GUPnPServiceAction *action,
@@ -544,7 +544,7 @@ gupnp_service_action_get_gvalue (GUPnPServiceAction *action,
  *
  * Return value: The number of IN arguments from the @action.
  *
- * Since: 0.17.0
+ * Since: 0.18.0
  */
 guint
 gupnp_service_action_get_argument_count (GUPnPServiceAction *action)
@@ -628,7 +628,7 @@ gupnp_service_action_set_valist (GUPnPServiceAction *action,
  *
  * Sets the specified action return values.
  *
- * Since: 0.13.3
+ * Since: 0.14.0
  **/
 void
 gupnp_service_action_set_values (GUPnPServiceAction *action,
@@ -806,7 +806,7 @@ gupnp_service_action_return_error (GUPnPServiceAction *action,
  * Return value: (transfer full): #SoupMessage associated with @action. Unref
  * after using it.
  *
- * Since: 0.13.0
+ * Since: 0.14.0
  **/
 SoupMessage *
 gupnp_service_action_get_message (GUPnPServiceAction *action)

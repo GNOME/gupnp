@@ -499,7 +499,7 @@ gupnp_service_proxy_action_new_from_list (const char *action_name,
  *
  * Return value : %TRUE on success.
  *
- * Since: 1.1.2
+ * Since: 1.2.0
  *
  **/
 gboolean
@@ -615,7 +615,7 @@ gupnp_service_proxy_action_get_result_list (GUPnPServiceProxyAction *action,
  *
  * Return value: %TRUE on success.
  *
- * Since: 1.1.2
+ * Since: 1.2.0
  **/
 gboolean
 gupnp_service_proxy_action_get_result_hash (GUPnPServiceProxyAction *action,

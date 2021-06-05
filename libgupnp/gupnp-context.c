@@ -499,7 +499,7 @@ gupnp_context_class_init (GUPnPContextClass *klass)
          * sends Accept-Language and no language-specific pages to serve
          * exist. The property defaults to 'en'.
          *
-         * Since: 0.17.0
+         * Since: 0.18.0
          **/
         g_object_class_install_property
                 (object_class,
@@ -778,7 +778,7 @@ host_path_data_set_language (HostPathData *data, const char *language)
  * no files hosted in languages which match the requested ones the
  * Content-Language header is set to this value. The default value is "en".
  *
- * Since: 0.17.0
+ * Since: 0.18.0
  */
 void
 gupnp_context_set_default_language (GUPnPContext *context,
@@ -815,7 +815,7 @@ gupnp_context_set_default_language (GUPnPContext *context,
  * Returns: (transfer none): The default content of the Content-Language
  * header.
  *
- * Since: 0.17.0
+ * Since: 0.18.0
  */
 const char *
 gupnp_context_get_default_language (GUPnPContext *context)
@@ -1308,7 +1308,7 @@ path_compare_func (HostPathData *path_data,
  *
  * Return value: %TRUE on success, %FALSE otherwise.
  *
- * Since: 0.13.3
+ * Since: 0.14.0
  **/
 gboolean
 gupnp_context_host_path_for_agent (GUPnPContext *context,
@@ -1614,7 +1614,7 @@ gupnp_context_remove_server_handler (GUPnPContext *context, const char *path)
  * Returns: A re-written version of the @uri if the context is on a link-local
  * IPv6 address, a copy of the @uri otherwise or %NULL if @uri was invalid
  *
- * Since: 1.1.1
+ * Since: 1.2.0
  */
 char *
 gupnp_context_rewrite_uri (GUPnPContext *context, const char *uri)

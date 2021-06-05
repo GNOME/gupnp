@@ -391,7 +391,7 @@ gupnp_service_proxy_class_init (GUPnPServiceProxyClass *klass)
  *
  * Return value: %TRUE if sending the action was succesful.
  *
- * Deprecated: 1.1.2: Use gupnp_service_proxy_action_new() and
+ * Deprecated: 1.2.0: Use gupnp_service_proxy_action_new() and
  * gupnp_service_proxy_call_action()
  **/
 gboolean
@@ -428,7 +428,7 @@ gupnp_service_proxy_send_action (GUPnPServiceProxy *proxy,
  *
  * Return value: %TRUE if sending the action was succesful.
  *
- * Deprecated: 1.1.2
+ * Deprecated: 1.2.0
  **/
 gboolean
 gupnp_service_proxy_send_action_valist (GUPnPServiceProxy *proxy,
@@ -502,7 +502,7 @@ out:
  *
  * Return value: %TRUE if sending the action was succesful.
  *
- * Deprecated: 1.1.2: Use gupnp_service_proxy_action_new_from_list() and gupnp_service_proxy_call_action()
+ * Deprecated: 1.2.0: Use gupnp_service_proxy_action_new_from_list() and gupnp_service_proxy_call_action()
  *
  **/
 gboolean
@@ -574,7 +574,7 @@ on_legacy_async_callback (GObject *source, GAsyncResult *res, gpointer user_data
  * gupnp_service_proxy_cancel_action() or
  * gupnp_service_proxy_end_action_valist().
  *
- * Deprecated: 1.1.2: Use gupnp_service_proxy_action_new() and
+ * Deprecated: 1.2.0: Use gupnp_service_proxy_action_new() and
  * gupnp_service_proxy_call_action_async()
  **/
 GUPnPServiceProxyAction *
@@ -837,7 +837,7 @@ gupnp_service_proxy_action_queue_task (GTask *task)
  * be freed when calling gupnp_service_proxy_cancel_action() or
  * gupnp_service_proxy_end_action_valist().
  *
- * Deprecated: 1.1.2
+ * Deprecated: 1.2.0
  **/
 GUPnPServiceProxyAction *
 gupnp_service_proxy_begin_action_valist
@@ -889,7 +889,7 @@ gupnp_service_proxy_begin_action_valist
  * be freed when calling gupnp_service_proxy_cancel_action() or
  * gupnp_service_proxy_end_action_list().
  *
- * Since: 0.13.3
+ * Since: 0.14.0
  **/
 GUPnPServiceProxyAction *
 gupnp_service_proxy_begin_action_list
@@ -1104,7 +1104,7 @@ gupnp_service_proxy_end_action_hash
  *
  * Cancels @action, freeing the @action handle.
  *
- * Deprecated: 1.1.2: Use the #GCancellable passed to
+ * Deprecated: 1.2.0: Use the #GCancellable passed to
  * gupnp_service_proxy_call_action_async() or gupnp_service_proxy_call_action()
  **/
 void
@@ -2080,6 +2080,7 @@ gupnp_service_proxy_get_subscribed (GUPnPServiceProxy *proxy)
  * gupnp_service_proxy_action_get_result_hash() or
  * gupnp_service_proxy_action_get_result_list() to extract the result of the
  * remote call.
+ * Since: 1.2.0
  */
 void
 gupnp_service_proxy_call_action_async (GUPnPServiceProxy       *proxy,
@@ -2120,6 +2121,7 @@ gupnp_service_proxy_call_action_async (GUPnPServiceProxy       *proxy,
  * gupnp_service_proxy_call_action_async().
  *
  * Returns: (nullable) (transfer none): %NULL, if the call had an error, the action otherwise.
+ * Since: 1.2.0
  */
 GUPnPServiceProxyAction *
 gupnp_service_proxy_call_action_finish (GUPnPServiceProxy *proxy,
@@ -2142,6 +2144,7 @@ gupnp_service_proxy_call_action_finish (GUPnPServiceProxy *proxy,
  * Synchronously call the @action on the remote UPnP service.
  *
  * Returns: (nullable)(transfer none): %NULL on error, @action if successful.
+ * Since: 1.2.0
  */
 GUPnPServiceProxyAction *
 gupnp_service_proxy_call_action (GUPnPServiceProxy       *proxy,
