@@ -191,11 +191,6 @@ check_action_response (G_GNUC_UNUSED GUPnPServiceProxy *proxy,
 }
 
 
-/* GDestroyNotify for GHashTable holding GValues.
- */
-G_GNUC_INTERNAL void
-_value_free (gpointer data);
-
 GUPnPServiceProxyAction *
 gupnp_service_proxy_action_new_internal (const char *action) {
         GUPnPServiceProxyAction *ret;

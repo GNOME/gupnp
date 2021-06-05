@@ -168,20 +168,10 @@ gupnp_device_info_dispose (GObject *object)
         info = GUPNP_DEVICE_INFO (object);
         priv = gupnp_device_info_get_instance_private (info);
 
-        if (priv->factory) {
-                g_object_unref (priv->factory);
-                priv->factory = NULL;
-        }
-
-        if (priv->context) {
-                g_object_unref (priv->context);
-                priv->context = NULL;
-        }
-
-        if (priv->doc) {
-                g_object_unref (priv->doc);
-                priv->doc = NULL;
-        }
+        g_clear_object (&priv->factory);
+        g_clear_object (&priv->factory);
+        g_clear_object (&priv->context);
+        g_clear_object (&priv->doc);
 
         G_OBJECT_CLASS (gupnp_device_info_parent_class)->dispose (object);
 }
@@ -722,7 +712,7 @@ typedef struct {
 } Icon;
 
 static Icon *
-icon_parse (G_GNUC_UNUSED GUPnPDeviceInfo *info, xmlNode *element)
+icon_parse (xmlNode *element)
 {
         Icon *icon;
 
@@ -819,7 +809,7 @@ gupnp_device_info_get_icon_url (GUPnPDeviceInfo *info,
                 if (!strcmp ("icon", (char *) element->name)) {
                         gboolean mime_type_ok;
 
-                        icon = icon_parse (info, element);
+                        icon = icon_parse (element);
 
                         if (requested_mime_type) {
                                 if (icon->mime_type)
