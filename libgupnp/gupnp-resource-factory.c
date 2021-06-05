@@ -67,7 +67,7 @@ gupnp_resource_factory_init (GUPnPResourceFactory *factory)
                                                        NULL);
 }
 
-    static void
+static void
 gupnp_resource_factory_finalize (GObject *object)
 {
     GUPnPResourceFactory *self;
