@@ -55,7 +55,7 @@ struct _GUPnPUnixContextManager {
 
 G_DEFINE_TYPE (GUPnPUnixContextManager,
                gupnp_unix_context_manager,
-               GUPNP_TYPE_SIMPLE_CONTEXT_MANAGER);
+               GUPNP_TYPE_SIMPLE_CONTEXT_MANAGER)
 
 /*
  * Create a context for all network interfaces that are up.

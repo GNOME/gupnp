@@ -45,7 +45,7 @@ typedef struct _GUPnPSimpleContextManagerPrivate GUPnPSimpleContextManagerPrivat
 
 G_DEFINE_ABSTRACT_TYPE_WITH_PRIVATE (GUPnPSimpleContextManager,
                                      gupnp_simple_context_manager,
-                                     GUPNP_TYPE_CONTEXT_MANAGER);
+                                     GUPNP_TYPE_CONTEXT_MANAGER)
 
 static GList*
 gupnp_simple_context_manager_get_interfaces (GUPnPSimpleContextManager *manager)

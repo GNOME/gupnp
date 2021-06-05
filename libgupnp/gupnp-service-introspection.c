@@ -74,7 +74,7 @@ typedef struct _GUPnPServiceIntrospectionPrivate
 
 G_DEFINE_TYPE_WITH_PRIVATE (GUPnPServiceIntrospection,
                             gupnp_service_introspection,
-                            G_TYPE_OBJECT);
+                            G_TYPE_OBJECT)
 enum {
         PROP_0,
         PROP_SCPD

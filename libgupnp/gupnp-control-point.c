@@ -57,7 +57,7 @@ typedef struct _GUPnPControlPointPrivate GUPnPControlPointPrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE (GUPnPControlPoint,
                             gupnp_control_point,
-                            GSSDP_TYPE_RESOURCE_BROWSER);
+                            GSSDP_TYPE_RESOURCE_BROWSER)
 
 enum {
         PROP_0,

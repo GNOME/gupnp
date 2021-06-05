@@ -96,7 +96,7 @@ struct _GUPnPLinuxContextManager {
 
 G_DEFINE_TYPE_WITH_PRIVATE (GUPnPLinuxContextManager,
                             gupnp_linux_context_manager,
-                            GUPNP_TYPE_CONTEXT_MANAGER);
+                            GUPNP_TYPE_CONTEXT_MANAGER)
 
 typedef enum {
         /* Interface is up */
