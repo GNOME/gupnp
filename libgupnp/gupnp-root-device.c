@@ -563,7 +563,7 @@ gupnp_root_device_class_init (GUPnPRootDeviceClass *klass)
  * @description_path: Path to device description document. This could either
  * be an absolute path or path relative to @description_dir.
  * @description_dir: Path to directory where description documents are provided.
- * @error: (allow-none): The location for a #GError to report issue with
+ * @error: (inout)(optional)(nullable): The location for a #GError to report issue with
  * creation on or %NULL.
  *
  * Create a new #GUPnPRootDevice object, automatically loading and parsing
@@ -597,7 +597,7 @@ gupnp_root_device_new (GUPnPContext *context,
  * @description_path: Path to device description document. This could either
  * be an absolute path or path relative to @description_dir.
  * @description_dir: Path to directory where description documents are provided.
- * @error: (allow-none): The location for a #GError to report issue with
+ * @error: (inout)(optional)(nullable): The location for a #GError to report issue with
  * creation on or %NULL.
  *
  * Create a new #GUPnPRootDevice, automatically loading and parsing

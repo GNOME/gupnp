@@ -664,10 +664,10 @@ _gupnp_context_get_server_uri (GUPnPContext *context)
 
 /**
  * gupnp_context_new:
- * @iface: (allow-none): The network interface to use, or %NULL to
+ * @iface: (nullable): The network interface to use, or %NULL to
  * auto-detect.
  * @port: Port to run on, or 0 if you don't care what port is used.
- * @error: A location to store a #GError, or %NULL
+ * @error: (inout)(optional)(nullable): A location to store a #GError, or %NULL
  *
  * Create a new #GUPnPContext with the specified @main_context, @iface and
  * @port.
@@ -1405,7 +1405,7 @@ gupnp_context_get_acl (GUPnPContext *context)
 /**
  * gupnp_context_set_acl:
  * @context: A #GUPnPContext
- * @acl: (allow-none): The new access control list or %NULL to remove the
+ * @acl: (nullable): The new access control list or %NULL to remove the
  * current list.
  *
  * Attach or remove the assoicated access control list to this context. If
@@ -1531,7 +1531,7 @@ gupnp_acl_server_handler (SoupServer *server,
  * @path: the toplevel path for the handler.
  * @callback: callback to invoke for requests under @path
  * @user_data: the user_data passed to @callback
- * @destroy: (allow-none): A #GDestroyNotify for @user_data or %NULL if none.
+ * @destroy: (nullable): A #GDestroyNotify for @user_data or %NULL if none.
  *
  * Add a #SoupServerCallback to the #GUPnPContext<!-- -->'s #SoupServer.
  *

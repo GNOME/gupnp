@@ -438,7 +438,7 @@ gupnp_service_proxy_action_new_from_list (const char *action_name,
  * that line up with @out_names
  * @out_values: (element-type GValue) (transfer full) (out): #GList of values
  * (as #GValue) that line up with @out_names and @out_types.
- * @error: The location where to store any error, or %NULL
+ * @error:(inout)(optional)(nullable): The location where to store any error, or %NULL
  *
  * A variant of gupnp_service_proxy_action_get_result() that takes lists of
  * out-parameter names, types and place-holders for values. The returned list
@@ -558,7 +558,7 @@ gupnp_service_proxy_action_get_result_list (GUPnPServiceProxyAction *action,
  * @action: A #GUPnPServiceProxyAction handle
  * @out_hash: (element-type utf8 GValue) (inout) (transfer none): A #GHashTable of
  * out parameter name and initialised #GValue pairs
- * @error: The location where to store any error, or %NULL
+ * @error:(inout)(optional)(nullable): The location where to store any error, or %NULL
  *
  * See gupnp_service_proxy_action_get_result(); this version takes a #GHashTable for
  * runtime generated parameter lists.
@@ -650,7 +650,7 @@ gupnp_service_proxy_action_get_result_hash (GUPnPServiceProxyAction *action,
 /**
  * gupnp_service_proxy_action_get_result:
  * @action: A #GUPnPServiceProxyAction handle
- * @error: (allow-none): The location where to store any error, or %NULL
+ * @error: (inout)(optional)(nullable): The location where to store any error, or %NULL
  * @...: tuples of out parameter name, out parameter type, and out parameter
  * value location, terminated with %NULL. The out parameter values should be
  * freed after use
@@ -681,7 +681,7 @@ gupnp_service_proxy_action_get_result (GUPnPServiceProxyAction *action,
 /**
  * gupnp_service_proxy_action_get_result_valist:
  * @action: A #GUPnPServiceProxyAction handle
- * @error: (allow-none): The location where to store any error, or %NULL
+ * @error: (inout)(optional)(nullable): The location where to store any error, or %NULL
  * @var_args: A va_list of tuples of out parameter name, out parameter type,
  * and out parameter value location. The out parameter values should be
  * freed after use

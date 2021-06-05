@@ -2315,7 +2315,7 @@ connect_names_to_signal_handlers (GUPnPService *service,
  * gupnp_service_signals_autoconnect:
  * @service: A #GUPnPService
  * @user_data: the data to pass to each of the callbacks
- * @error: return location for a #GError, or %NULL
+ * @error: (inout)(optional)(nullable): return location for a #GError, or %NULL
  *
  * A convenience function that attempts to connect all possible
  * #GUPnPService::action-invoked and #GUPnPService::query-variable signals to

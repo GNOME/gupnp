@@ -46,13 +46,13 @@ gupnp_acl_default_init (GUPnPAclInterface *klass)
 /**
  * gupnp_acl_is_allowed:
  * @self: an instance of #GUPnPAcl
- * @device: (allow-none): The #GUPnPDevice associated with @path or %NULL if
+ * @device: (nullable): The #GUPnPDevice associated with @path or %NULL if
  * unknown.
- * @service: (allow-none): The #GUPnPService associated with @path or %NULL if
+ * @service: (nullable): The #GUPnPService associated with @path or %NULL if
  * unknown.
  * @path: The path being served.
  * @address: IP address of the peer.
- * @agent: (allow-none): The User-Agent header of the peer or %NULL if not
+ * @agent: (nullable): The User-Agent header of the peer or %NULL if not
  * unknown.
  * @returns %TRUE if the peer is allowed, %FALSE otherwise
  *
@@ -81,15 +81,15 @@ gupnp_acl_is_allowed (GUPnPAcl     *self,
 /**
  * gupnp_acl_is_allowed_async:
  * @self: a #GUPnPAcl
- * @device: (allow-none): The #GUPnPDevice associated with @path or %NULL if
+ * @device: (nullable): The #GUPnPDevice associated with @path or %NULL if
  * unknown.
- * @service: (allow-none): The #GUPnPService associated with @path or %NULL if
+ * @service: (nullable): The #GUPnPService associated with @path or %NULL if
  * unknown.
  * @path: The path being served.
  * @address: IP address of the peer
- * @agent: (allow-none): The User-Agent header of the peer or %NULL if not
+ * @agent: (nullable): The User-Agent header of the peer or %NULL if not
  * unknown.
- * @cancellable: (allow-none): A #GCancellable which can be used to cancel the
+ * @cancellable: (nullable): A #GCancellable which can be used to cancel the
  * operation.
  * @callback: Callback to call after the function is done.
  * @user_data: Some user data.
@@ -132,7 +132,7 @@ gupnp_acl_is_allowed_async (GUPnPAcl           *self,
  * gupnp_acl_is_allowed_finish:
  * @self: An instance of #GUPnPAcl
  * @res: %GAsyncResult obtained from the callback in gupnp_acl_is_allowed_async()
- * @error: (allow-none): A return location for a #GError describing the failure
+ * @error: (inout)(optional)(nullable): A return location for a #GError describing the failure
  * @returns %TRUE if the authentication was successful, %FALSE otherwise and on
  * error. Check @error for details.
  *
@@ -170,11 +170,11 @@ gupnp_acl_can_sync (GUPnPAcl *self)
 
 /**
  * acl_server_handler_new:
- * @service: (allow-none): A #GUPnPContext or %NULL if unknown
+ * @service: (nullable): A #GUPnPContext or %NULL if unknown
  * @context: The #GUPnPContext the server handler is run on.
  * @callback: The #SoupServerCallback we're wrapping.
  * @user_data: The user_data for @callback
- * @notify: (allow-none): The #GDestroyNotify for @user_data or %NULL if none.
+ * @notify: (nullable): The #GDestroyNotify for @user_data or %NULL if none.
  * @returns: A newly allocated #AclServerHandler
  *
  * Allocate a new #AclServerHandler.
@@ -222,7 +222,7 @@ acl_server_handler_free (AclServerHandler *handler)
  * @server: A #SoupServer instance.
  * @message: The #SoupMessage we want to handle.
  * @path: The path we're trying to serve.
- * @query: (allow-none): The query parameters of the request.
+ * @query: (nullable): The query parameters of the request.
  * @client: The #SoupClientContext for this request.
  * @handler: The #AclServerHandler used with this request.
  * @returns: A new instance of #AclAsyncHandler.

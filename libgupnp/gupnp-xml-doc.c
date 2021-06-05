@@ -107,7 +107,7 @@ gupnp_xml_doc_new (xmlDoc *xml_doc)
 /**
  * gupnp_xml_doc_new_from_path:
  * @path: Path to xml document
- * @error:(optional): Location to put the error into
+ * @error:(inout)(optional)(nullable): Location to put the error into
  *
  * Create a new #GUPnPXMLDoc for the XML document at @path.
  *

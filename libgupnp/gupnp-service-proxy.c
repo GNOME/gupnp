@@ -380,7 +380,7 @@ gupnp_service_proxy_class_init (GUPnPServiceProxyClass *klass)
  * gupnp_service_proxy_send_action:
  * @proxy: A #GUPnPServiceProxy
  * @action: An action
- * @error: (allow-none): The location where to store any error, or %NULL
+ * @error: (inout)(optional)(nullable): The location where to store any error, or %NULL
  * @...: tuples of in parameter name, in parameter type, and in parameter
  * value, followed by %NULL, and then tuples of out parameter name,
  * out parameter type, and out parameter value location, terminated with %NULL
@@ -419,7 +419,7 @@ gupnp_service_proxy_send_action (GUPnPServiceProxy *proxy,
  * gupnp_service_proxy_send_action_valist:
  * @proxy: A #GUPnPServiceProxy
  * @action: An action
- * @error: (allow-none): The location where to store any error, or %NULL
+ * @error: (inout)(optional)(nullable): The location where to store any error, or %NULL
  * @var_args: va_list of tuples of in parameter name, in parameter type, and in
  * parameter value, followed by %NULL, and then tuples of out parameter name,
  * out parameter type, and out parameter value location
@@ -495,7 +495,7 @@ out:
  * that line up with @out_names
  * @out_values: (element-type GValue) (transfer full) (out): #GList of values
  * (as #GValue) that line up with @out_names and @out_types.
- * @error: (allow-none): The location where to store any error, or %NULL
+ * @error: (inout)(optional)(nullable): The location where to store any error, or %NULL
  *
  * The synchronous variant of #gupnp_service_proxy_begin_action_list and
  * #gupnp_service_proxy_end_action_list.
@@ -920,7 +920,7 @@ gupnp_service_proxy_begin_action_list
  * gupnp_service_proxy_end_action:
  * @proxy: A #GUPnPServiceProxy
  * @action: A #GUPnPServiceProxyAction handle
- * @error: (allow-none): The location where to store any error, or %NULL
+ * @error: (inout)(optional)(nullable): The location where to store any error, or %NULL
  * @...: tuples of out parameter name, out parameter type, and out parameter
  * value location, terminated with %NULL. The out parameter values should be
  * freed after use
@@ -965,7 +965,7 @@ gupnp_service_proxy_end_action (GUPnPServiceProxy       *proxy,
  * gupnp_service_proxy_end_action_valist:
  * @proxy: A #GUPnPServiceProxy
  * @action: A #GUPnPServiceProxyAction handle
- * @error: (allow-none): The location where to store any error, or %NULL
+ * @error: (inout)(optional)(nullable): The location where to store any error, or %NULL
  * @var_args: A va_list of tuples of out parameter name, out parameter type,
  * and out parameter value location. The out parameter values should be
  * freed after use
@@ -1005,7 +1005,7 @@ gupnp_service_proxy_end_action_valist (GUPnPServiceProxy       *proxy,
  * gupnp_service_proxy_end_action_list:
  * @proxy: A #GUPnPServiceProxy
  * @action: A #GUPnPServiceProxyAction handle
- * @error: The location where to store any error, or %NULL
+ * @error:(inout)(optional)(nullable): The location where to store any error, or %NULL
  * @out_names: (element-type utf8) (transfer none): #GList of 'out' parameter
  * names (as strings)
  * @out_types: (element-type GType) (transfer none): #GList of types (as #GType)
@@ -1057,7 +1057,7 @@ gupnp_service_proxy_end_action_list (GUPnPServiceProxy       *proxy,
  * gupnp_service_proxy_end_action_hash:
  * @proxy: A #GUPnPServiceProxy
  * @action: A #GUPnPServiceProxyAction handle
- * @error: The location where to store any error, or %NULL
+ * @error:(inout)(optional)(nullable): The location where to store any error, or %NULL
  * @hash: (element-type utf8 GValue) (inout) (transfer none): A #GHashTable of
  * out parameter name and initialised #GValue pairs
  *
@@ -2115,7 +2115,7 @@ gupnp_service_proxy_call_action_async (GUPnPServiceProxy       *proxy,
  * gupnp_service_proxy_call_action_finish:
  * @proxy: a #GUPnPServiceProxy
  * @result: a #GAsyncResult
- * @error: (allow-none): Return location for a #GError, or %NULL
+ * @error: (inout)(optional)(nullable): Return location for a #GError, or %NULL
  *
  * Finish an asynchronous call initiated with
  * gupnp_service_proxy_call_action_async().
@@ -2139,7 +2139,7 @@ gupnp_service_proxy_call_action_finish (GUPnPServiceProxy *proxy,
  * @action: (transfer none): An action
  * @cancellable: (allow-none): A #GCancellable which can be used to cancel the
  * current action call
- * @error: (allow-none): Return location for a #GError, or %NULL.
+ * @error: (inout)(optional)(nullable): Return location for a #GError, or %NULL.
  *
  * Synchronously call the @action on the remote UPnP service.
  *

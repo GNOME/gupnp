@@ -828,7 +828,7 @@ prv_introspection_cb (GUPnPServiceInfo *info,
 /**
  * gupnp_service_info_introspect_async:
  * @info: A #GUPnPServiceInfo
- * @cancellable: (allow-none) : #GCancellable that can be used to cancel the call, or %NULL.
+ * @cancellable: (nullable) : #GCancellable that can be used to cancel the call, or %NULL.
  * @callback: (scope async) : callback to be called when introspeciton object is ready.
  * @user_data: user_data to be passed to the callback.
  *
@@ -860,12 +860,12 @@ gupnp_service_info_introspect_async           (GUPnPServiceInfo    *info,
  * gupnp_service_info_introspect_finish:
  * @info: A GUPnPServiceInfo
  * @res: A #GAsyncResult
- * @error: (allow-none): Return location for a #GError, or %NULL
+ * @error: (inout)(optional)(nullable): Return location for a #GError, or %NULL
  *
  * Finish an asynchronous call initiated with
  * gupnp_service_info_introspect_async().
  *
- * Returns: (transfer full): %NULL, if the call had an error, a
+ * Returns: (nullable)(transfer full): %NULL, if the call had an error, a
  * #GUPnPServiceIntrospection object otherwise.
  *
  * Since: 1.2.2

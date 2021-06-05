@@ -514,7 +514,7 @@ gupnp_device_info_get_friendly_name (GUPnPDeviceInfo *info)
  *
  * Get the manufacturer of the device.
  *
- * Return value: A string, or %NULL. g_free() after use.
+ * Return value:(nullable)(transfer full): A string, or %NULL. g_free() after use.
  **/
 char *
 gupnp_device_info_get_manufacturer (GUPnPDeviceInfo *info)
@@ -535,7 +535,7 @@ gupnp_device_info_get_manufacturer (GUPnPDeviceInfo *info)
  *
  * Get an URL pointing to the manufacturer's website.
  *
- * Return value: A string, or %NULL. g_free() after use.
+ * Return value:(nullable)(transfer full): A string, or %NULL. g_free() after use.
  **/
 char *
 gupnp_device_info_get_manufacturer_url (GUPnPDeviceInfo *info)
@@ -557,7 +557,7 @@ gupnp_device_info_get_manufacturer_url (GUPnPDeviceInfo *info)
  *
  * Get the description of the device model.
  *
- * Return value: A string, or %NULL. g_free() after use.
+ * Return value:(nullable)(transfer full): A string, or %NULL. g_free() after use.
  **/
 char *
 gupnp_device_info_get_model_description (GUPnPDeviceInfo *info)
@@ -578,7 +578,7 @@ gupnp_device_info_get_model_description (GUPnPDeviceInfo *info)
  *
  * Get the model name of the device.
  *
- * Return value: A string, or %NULL. g_free() after use.
+ * Return value:(nullable)(transfer full): A string, or %NULL. g_free() after use.
  **/
 char *
 gupnp_device_info_get_model_name (GUPnPDeviceInfo *info)
@@ -599,7 +599,7 @@ gupnp_device_info_get_model_name (GUPnPDeviceInfo *info)
  *
  * Get the model number of the device.
  *
- * Return value: A string, or %NULL. g_free() after use.
+ * Return value:(nullable)(transfer full): A string, or %NULL. g_free() after use.
  **/
 char *
 gupnp_device_info_get_model_number (GUPnPDeviceInfo *info)
@@ -620,7 +620,7 @@ gupnp_device_info_get_model_number (GUPnPDeviceInfo *info)
  *
  * Get an URL pointing to the device model's website.
  *
- * Return value: A string, or %NULL. g_free() after use.
+ * Return value:(nullable)(transfer full): A string, or %NULL. g_free() after use.
  **/
 char *
 gupnp_device_info_get_model_url (GUPnPDeviceInfo *info)
@@ -642,7 +642,7 @@ gupnp_device_info_get_model_url (GUPnPDeviceInfo *info)
  *
  * Get the serial number of the device.
  *
- * Return value: A string, or %NULL. g_free() after use.
+ * Return value:(nullable)(transfer full): A string, or %NULL. g_free() after use.
  **/
 char *
 gupnp_device_info_get_serial_number (GUPnPDeviceInfo *info)
@@ -663,7 +663,7 @@ gupnp_device_info_get_serial_number (GUPnPDeviceInfo *info)
  *
  * Get the Universal Product Code of the device.
  *
- * Return value: A string, or %NULL. g_free() after use.
+ * Return value:(nullable)(transfer full): A string, or %NULL. g_free() after use.
  **/
 char *
 gupnp_device_info_get_upc (GUPnPDeviceInfo *info)
@@ -685,7 +685,7 @@ gupnp_device_info_get_upc (GUPnPDeviceInfo *info)
  * Get an URL pointing to the device's presentation page, for web-based
  * administration.
  *
- * Return value: A string, or %NULL. g_free() after use.
+ * Return value:(nullable)(transfer full): A string, or %NULL. g_free() after use.
  **/
 char *
 gupnp_device_info_get_presentation_url (GUPnPDeviceInfo *info)
@@ -747,21 +747,21 @@ icon_free (Icon *icon)
 /**
  * gupnp_device_info_get_icon_url:
  * @info: A #GUPnPDeviceInfo
- * @requested_mime_type: (allow-none) (transfer none): The requested file
+ * @requested_mime_type: (nullable) (transfer none): The requested file
  * format, or %NULL for any
  * @requested_depth: The requested color depth, or -1 for any
  * @requested_width: The requested width, or -1 for any
  * @requested_height: The requested height, or -1 for any
  * @prefer_bigger: %TRUE if a bigger, rather than a smaller icon should be
  * returned if no exact match could be found
- * @mime_type: (out) (allow-none): The location where to store the the format
+ * @mime_type: (out) (optional): The location where to store the the format
  * of the returned icon, or %NULL. The returned string should be freed after
  * use
- * @depth: (out) (allow-none):  The location where to store the depth of the
+ * @depth: (out) (optional):  The location where to store the depth of the
  * returned icon, or %NULL
- * @width: (out) (allow-none): The location where to store the width of the
+ * @width: (out) (optional): The location where to store the width of the
  * returned icon, or %NULL
- * @height: (out) (allow-none): The location where to store the height of the
+ * @height: (out) (optional): The location where to store the height of the
  * returned icon, or %NULL
  *
  * Get an URL pointing to the icon most closely matching the
@@ -772,7 +772,7 @@ icon_free (Icon *icon)
  * returned, unless @prefer_bigger is set, in which case the next biggest icon
  * will be returned. The returned strings should be freed.
  *
- * Return value: (transfer full): a string, or %NULL.  g_free() after use.
+ * Return value:(nullable)(transfer full): a string, or %NULL.  g_free() after use.
  **/
 char *
 gupnp_device_info_get_icon_url (GUPnPDeviceInfo *info,
@@ -1012,7 +1012,7 @@ resource_type_match (const char *query,
  * Get a #GList of strings that represent the device class and version as
  * announced in the device description file using the &lt;dlna:X_DLNADOC&gt;
  * element.
- * Returns: (transfer full) (element-type utf8): a #GList of newly allocated strings or
+ * Returns:(nullable)(transfer full) (element-type utf8): a #GList of newly allocated strings or
  * %NULL if the device description doesn't contain the &lt;dlna:X_DLNADOC&gt;
  * element.
  *
@@ -1059,7 +1059,7 @@ gupnp_device_info_list_dlna_device_class_identifier (GUPnPDeviceInfo *info)
  * Get a #GList of strings that represent the device capabilities as announced
  * in the device description file using the &lt;dlna:X_DLNACAP&gt; element.
  *
- * Returns: (transfer full) (element-type utf8): a #GList of newly allocated strings or
+ * Returns:(nullable)(transfer full) (element-type utf8): a #GList of newly allocated strings or
  * %NULL if the device description doesn't contain the &lt;dlna:X_DLNACAP&gt;
  * element.
  *
@@ -1119,7 +1119,7 @@ gupnp_device_info_list_dlna_capabilities (GUPnPDeviceInfo *info)
  * This function provides generic access to the contents of arbitrary elements
  * in the device description file.
  *
- * Return value: a newly allocated string or %NULL if the device
+ * Return value:(nullable)(transfer full): a newly allocated string or %NULL if the device
  *               description doesn't contain the given @element
  *
  * Since: 0.14.0
@@ -1152,7 +1152,7 @@ gupnp_device_info_get_description_value (GUPnPDeviceInfo *info,
  * must cache any used devices if it wishes to keep them around and re-use
  * them.
  *
- * Return value: (element-type GUPnP.DeviceInfo) (transfer full): a #GList of
+ * Return value:(nullable)(element-type GUPnP.DeviceInfo) (transfer full): a #GList of
  * new #GUPnPDeviceInfo objects.
  **/
 GList *
@@ -1198,7 +1198,7 @@ gupnp_device_info_list_devices (GUPnPDeviceInfo *info)
  * Get a #GList of strings representing the types of the devices
  * directly contained in @info.
  *
- * Return value: (element-type utf8) (transfer full): A #GList of strings. The
+ * Return value:(nullable)(element-type utf8) (transfer full): A #GList of strings. The
  * elements should be g_free()'d and the list should be g_list_free()'d.
  **/
 GList *
@@ -1249,7 +1249,7 @@ gupnp_device_info_list_device_types (GUPnPDeviceInfo *info)
  * this function a new object is created. The application must cache any used
  * devices if it wishes to keep them around and re-use them.
  *
- * Returns: (transfer full)(allow-none): A new #GUPnPDeviceInfo.
+ * Returns: (transfer full)(nullable): A new #GUPnPDeviceInfo.
  **/
 GUPnPDeviceInfo *
 gupnp_device_info_get_device (GUPnPDeviceInfo *info,
@@ -1315,7 +1315,7 @@ gupnp_device_info_get_device (GUPnPDeviceInfo *info,
  * function new objects are created. The application must cache any used
  * services if it wishes to keep them around and re-use them.
  *
- * Return value: (element-type GUPnP.ServiceInfo) (transfer full) : A #GList of
+ * Return value: (nullable)(element-type GUPnP.ServiceInfo) (transfer full) : A #GList of
  * new #GUPnPServiceInfo objects.
  */
 GList *
@@ -1361,7 +1361,7 @@ gupnp_device_info_list_services (GUPnPDeviceInfo *info)
  * Get a #GList of strings representing the types of the services
  * directly contained in @info.
  *
- * Return value: (element-type utf8) (transfer full): A #GList of strings. The
+ * Return value: (nullable)(element-type utf8) (transfer full): A #GList of strings. The
  * elements should be g_free()'d and the list should be g_list_free()'d.
  **/
 GList *
@@ -1412,7 +1412,7 @@ gupnp_device_info_list_service_types (GUPnPDeviceInfo *info)
  * this function a new object is created. The application must cache any used
  * services if it wishes to keep them around and re-use them.
  *
- * Returns: (transfer full)(allow-none): A #GUPnPServiceInfo.
+ * Returns: (nullable)(transfer full): A #GUPnPServiceInfo.
  **/
 GUPnPServiceInfo *
 gupnp_device_info_get_service (GUPnPDeviceInfo *info,
