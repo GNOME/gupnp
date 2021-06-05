@@ -80,7 +80,7 @@ typedef struct _GUPnPContextManagerPrivate GUPnPContextManagerPrivate;
 
 G_DEFINE_ABSTRACT_TYPE_WITH_PRIVATE (GUPnPContextManager,
                                      gupnp_context_manager,
-                                     G_TYPE_OBJECT);
+                                     G_TYPE_OBJECT)
 
 enum {
         PROP_0,

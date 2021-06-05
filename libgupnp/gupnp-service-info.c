@@ -63,7 +63,7 @@ typedef struct _GUPnPServiceInfoPrivate GUPnPServiceInfoPrivate;
 
 G_DEFINE_ABSTRACT_TYPE_WITH_PRIVATE (GUPnPServiceInfo,
                                      gupnp_service_info,
-                                     G_TYPE_OBJECT);
+                                     G_TYPE_OBJECT)
 
 enum {
         PROP_0,

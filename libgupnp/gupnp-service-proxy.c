@@ -67,7 +67,7 @@ typedef struct _GUPnPServiceProxyPrivate GUPnPServiceProxyPrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE (GUPnPServiceProxy,
                             gupnp_service_proxy,
-                            GUPNP_TYPE_SERVICE_INFO);
+                            GUPNP_TYPE_SERVICE_INFO)
 
 enum {
         PROP_0,

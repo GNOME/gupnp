@@ -214,7 +214,7 @@ gupnp_resource_factory_create_device_proxy
                                  const SoupURI        *url_base)
 {
         GUPnPDeviceProxy *proxy;
-        GType             proxy_type = GUPNP_TYPE_DEVICE_PROXY;
+        GType proxy_type;
         GUPnPResourceFactoryPrivate *priv;
 
         g_return_val_if_fail (GUPNP_IS_RESOURCE_FACTORY (factory), NULL);

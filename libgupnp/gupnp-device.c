@@ -44,7 +44,7 @@ typedef struct _GUPnPDevicePrivate GUPnPDevicePrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE (GUPnPDevice,
                             gupnp_device,
-                            GUPNP_TYPE_DEVICE_INFO);
+                            GUPNP_TYPE_DEVICE_INFO)
 
 
 enum {

@@ -74,7 +74,7 @@ typedef struct _GUPnPServicePrivate GUPnPServicePrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE (GUPnPService,
                             gupnp_service,
-                            GUPNP_TYPE_SERVICE_INFO);
+                            GUPNP_TYPE_SERVICE_INFO)
 
 enum {
         PROP_0,

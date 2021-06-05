@@ -44,7 +44,7 @@ typedef struct _GUPnPWhiteListPrivate GUPnPWhiteListPrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE (GUPnPWhiteList,
                             gupnp_white_list,
-                            G_TYPE_OBJECT);
+                            G_TYPE_OBJECT)
 
 enum {
         PROP_0,

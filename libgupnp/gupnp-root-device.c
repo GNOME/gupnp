@@ -64,7 +64,7 @@ G_DEFINE_TYPE_EXTENDED (GUPnPRootDevice,
                         G_ADD_PRIVATE(GUPnPRootDevice)
                         G_IMPLEMENT_INTERFACE
                                 (G_TYPE_INITABLE,
-                                 gupnp_root_device_initable_iface_init));
+                                 gupnp_root_device_initable_iface_init))
 
 enum {
         PROP_0,

@@ -98,7 +98,7 @@ G_DEFINE_TYPE_EXTENDED (GUPnPContext,
                         G_ADD_PRIVATE(GUPnPContext)
                         G_IMPLEMENT_INTERFACE
                                 (G_TYPE_INITABLE,
-                                 gupnp_context_initable_iface_init));
+                                 gupnp_context_initable_iface_init))
 
 enum {
         PROP_0,

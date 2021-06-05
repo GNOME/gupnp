@@ -37,7 +37,7 @@
 
 G_DEFINE_TYPE (GUPnPDeviceProxy,
                gupnp_device_proxy,
-               GUPNP_TYPE_DEVICE_INFO);
+               GUPNP_TYPE_DEVICE_INFO)
 
 
 static GUPnPDeviceInfo *
