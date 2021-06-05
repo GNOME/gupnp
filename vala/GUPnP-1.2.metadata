@@ -3,8 +3,6 @@ Acl
     .is_allowed_async skip
     .is_allowed_finish skip
 DeviceInfo
-    .get_device nullable=true
-    .get_service nullable=true
     .element skip
     .document skip
 Service
@@ -18,8 +16,6 @@ ServiceInfo
     .document skip
     .element skip
 ServiceIntrospection
-    .get_action nullable=true unowned=true
-    .get_state_variable nullable=true unowned=true
     .scpd skip
 ServiceProxy
     .add_notify skip=false

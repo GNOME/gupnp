@@ -1422,7 +1422,7 @@ gupnp_device_info_list_service_types (GUPnPDeviceInfo *info)
  * this function a new object is created. The application must cache any used
  * services if it wishes to keep them around and re-use them.
  *
- * Returns: (transfer full): A #GUPnPServiceInfo.
+ * Returns: (transfer full)(allow-none): A #GUPnPServiceInfo.
  **/
 GUPnPServiceInfo *
 gupnp_device_info_get_service (GUPnPDeviceInfo *info,

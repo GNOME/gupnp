@@ -897,7 +897,7 @@ state_variable_search_func (GUPnPServiceStateVariableInfo *variable,
  *
  * Returns the state variable by the name @variable_name in this service.
  *
- * Return value: (transfer none): the state variable or %NULL. Do not modify or
+ * Return value: (transfer none)(allow-none): the state variable or %NULL. Do not modify or
  * free it.
  **/
 const GUPnPServiceStateVariableInfo *
@@ -937,7 +937,7 @@ action_search_func (GUPnPServiceActionInfo *action,
  *
  * Returns the action by the name @action_name in this service.
  *
- * Return value: (transfer none): the action or %NULL. Do not modify or free
+ * Return value: (transfer none)(allow-none): the action or %NULL. Do not modify or free
  * it.
  **/
 const GUPnPServiceActionInfo *
