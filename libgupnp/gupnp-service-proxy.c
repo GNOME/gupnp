@@ -889,7 +889,7 @@ gupnp_service_proxy_begin_action_valist
  * be freed when calling gupnp_service_proxy_cancel_action() or
  * gupnp_service_proxy_end_action_list().
  *
- * Since: 0.13.3
+ * Since: 0.14.0
  **/
 GUPnPServiceProxyAction *
 gupnp_service_proxy_begin_action_list
@@ -2081,7 +2081,7 @@ gupnp_service_proxy_get_subscribed (GUPnPServiceProxy *proxy)
  * gupnp_service_proxy_action_get_result_list() to extract the result of the
  * remote call.
  *
- * Since: 1.1.2
+ * Since: 1.2.0
  */
 void
 gupnp_service_proxy_call_action_async (GUPnPServiceProxy       *proxy,
@@ -2122,7 +2122,7 @@ gupnp_service_proxy_call_action_async (GUPnPServiceProxy       *proxy,
  * gupnp_service_proxy_call_action_async().
  *
  * Returns: (nullable) (transfer none): %NULL, if the call had an error, the action otherwise.
- * Since: 1.1.2
+ * Since: 1.2.0
  */
 GUPnPServiceProxyAction *
 gupnp_service_proxy_call_action_finish (GUPnPServiceProxy *proxy,
@@ -2145,7 +2145,7 @@ gupnp_service_proxy_call_action_finish (GUPnPServiceProxy *proxy,
  * Synchronously call the @action on the remote UPnP service.
  *
  * Returns: (nullable)(transfer none): %NULL on error, @action if successful.
- * Since: 1.1.2
+ * Since: 1.2.0
  */
 GUPnPServiceProxyAction *
 gupnp_service_proxy_call_action (GUPnPServiceProxy       *proxy,
