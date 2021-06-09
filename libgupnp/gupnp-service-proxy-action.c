@@ -329,22 +329,41 @@ GUPnPServiceProxyAction *
 gupnp_service_proxy_action_new (const char *action,
                                 ...)
 {
-        GList *in_names = NULL;
-        GList *in_values = NULL;
         GUPnPServiceProxyAction *result = NULL;
         va_list var_args;
 
         g_return_val_if_fail (action != NULL, NULL);
 
         va_start (var_args, action);
-        VAR_ARGS_TO_IN_LIST (var_args, in_names, in_values);
-        va_end (var_args);
+        const char *arg_name = va_arg (var_args, const char *);
 
-        result = gupnp_service_proxy_action_new_from_list (action,
-                                                           in_names,
-                                                           in_values);;
-        g_list_free_full (in_names, g_free);
-        g_list_free_full (in_values, gvalue_free);
+        result = gupnp_service_proxy_action_new_internal (action);
+
+        gint position = 0;
+        while (arg_name != NULL) {
+                ActionArgument *arg = g_new0 (ActionArgument, 1);
+                arg->name = g_strdup (arg_name);
+
+                GType type = va_arg (var_args, GType);
+                char *error = NULL;
+
+                G_VALUE_COLLECT_INIT (&arg->value, type, var_args, 0, &error);
+                if (error == NULL) {
+                        g_hash_table_insert (result->arg_map,
+                                             arg->name,
+                                             GUINT_TO_POINTER (position));
+                        g_ptr_array_add (result->args, arg);
+                } else {
+                        g_warning (
+                                "Failed to collect value of type %s for %s: %s",
+                                g_type_name (type),
+                                arg_name,
+                                error);
+                        g_free (error);
+                }
+                arg_name = va_arg (var_args, const char *);
+        }
+        va_end (var_args);
 
         return result;
 }
