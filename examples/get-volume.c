@@ -64,35 +64,17 @@ on_introspection (GObject *object, GAsyncResult *res, gpointer user_data)
                                       i,
                                       state_variable_name)
                                       ->allowed_values->data;
-        g_print ("Calling GetVolume for channel %s", channel);
-        GList *in_names = NULL;
-        in_names = g_list_prepend (in_names, g_strdup ("Channel"));
-        in_names = g_list_prepend (in_names, g_strdup ("InstanceID"));
-        GList *in_values = NULL;
-        GValue instance = G_VALUE_INIT;
-        g_value_init (&instance, G_TYPE_INT);
-        g_value_set_int (&instance, 0);
-        in_values = g_list_prepend (in_values, &instance);
-        GValue channel_v = G_VALUE_INIT;
-        g_value_init (&channel_v, G_TYPE_STRING);
-        g_value_set_string (&channel_v, channel);
+        g_print ("Calling GetVolume for channel %s...", channel);
 
         GUPnPServiceProxyAction *a =
-                gupnp_service_proxy_action_new_from_list ("GetVolume",
-                                                          in_names,
-                                                          in_values);
-        g_list_free_full (in_names, g_free);
-        g_list_free (in_values);
-        g_value_unset (&channel_v);
-
-        g_boxed_copy (gupnp_service_proxy_action_get_type (), a);
-
+                gupnp_service_proxy_action_new ("GetVolume",
+                                                "InstanceID", G_TYPE_INT, 0,
+                                                "Channel", G_TYPE_STRING, channel,
+                                                NULL);
         gupnp_service_proxy_call_action (GUPNP_SERVICE_PROXY (object),
                                          a,
                                          NULL,
                                          &error);
-        g_boxed_free (gupnp_service_proxy_action_get_type (), a);
-
 
         GList *out_names = NULL;
         out_names = g_list_prepend (out_names, "CurrentVolume");
