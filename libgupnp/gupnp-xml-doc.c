@@ -82,7 +82,7 @@ gupnp_xml_doc_class_init (GUPnPXMLDocClass *klass)
 
 /**
  * gupnp_xml_doc_new:
- * @xml_doc:(transfer none): Pointer to #xmlDoc to wrap under this object
+ * @xml_doc:(transfer full): Pointer to #xmlDoc to wrap under this object
  *
  * Create a new #GUPnPXMLDoc for @xml_doc.
  *
