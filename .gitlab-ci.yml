@@ -133,13 +133,13 @@ test-fedora@x86_64:
     - build-fedora@x86_64
   <<: *test
 
-trigger-rygel:
-  stage: analysis
-  needs:
-    - test-fedora@x86_64
-  trigger: GNOME/rygel
-  only:
-    - master
+  #trigger-rygel:
+  #stage: analysis
+  #needs:
+  #  - test-fedora@x86_64
+  #trigger: GNOME/rygel
+  #only:
+  #  - master
 
 coverage-analysis:
   extends:
