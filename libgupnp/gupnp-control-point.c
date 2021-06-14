@@ -31,6 +31,13 @@
 #define GUPNP_MAX_DESCRIPTION_DOWNLOAD_RETRIES 4
 #define GUPNP_INITIAL_DESCRIPTION_RETRY_TIMEOUT 5
 
+typedef enum
+{
+        RESOURCE_TYPE_UNSPECIFIED,
+        RESOURCE_TYPE_DEVICE,
+        RESOURCE_TYPE_SERVICE,
+} ResourceType;
+
 struct _GUPnPControlPointPrivate {
         GUPnPResourceFactory *factory;
 
@@ -66,6 +73,7 @@ typedef struct {
         GUPnPControlPoint *control_point;
 
         char *udn;
+        ResourceType type;
         char *service_type;
         char *description_url;
 
@@ -261,7 +269,8 @@ find_service_node (GUPnPControlPoint *control_point,
 
 static GList *
 find_device_node (GUPnPControlPoint *control_point,
-                  const char        *udn)
+                  const char        *udn,
+                  const char        *type_string)
 {
         GList *l;
         GUPnPControlPointPrivate *priv;
@@ -274,7 +283,10 @@ find_device_node (GUPnPControlPoint *control_point,
 
                 info = GUPNP_DEVICE_INFO (l->data);
 
-                if (strcmp (udn, gupnp_device_info_get_udn (info)) == 0)
+                if (g_str_equal (udn, gupnp_device_info_get_udn (info)) &&
+                    ((type_string == NULL) ||
+                    g_str_equal (type_string,
+                                  gupnp_device_info_get_device_type (info))))
                         break;
 
                 l = l->next;
@@ -328,6 +340,7 @@ create_and_report_device_proxy (GUPnPControlPoint  *control_point,
                                 GUPnPXMLDoc        *doc,
                                 xmlNode            *element,
                                 const char         *udn,
+                                const char         *type_string,
                                 const char         *description_url,
                                 SoupURI            *url_base)
 {
@@ -336,7 +349,7 @@ create_and_report_device_proxy (GUPnPControlPoint  *control_point,
         GUPnPContext *context;
         GUPnPControlPointPrivate *priv;
 
-        if (find_device_node (control_point, udn) != NULL)
+        if (find_device_node (control_point, udn, type_string) != NULL)
                 /* We already have a proxy for this device */
                 return;
 
@@ -450,6 +463,7 @@ process_device_list (xmlNode           *element,
                      GUPnPControlPoint *control_point,
                      GUPnPXMLDoc       *doc,
                      const char        *udn,
+                     ResourceType       type,
                      const char        *service_type,
                      const char        *description_url,
                      SoupURI           *url_base)
@@ -474,6 +488,7 @@ process_device_list (xmlNode           *element,
                                              control_point,
                                              doc,
                                              udn,
+                                             type,
                                              service_type,
                                              description_url,
                                              url_base);
@@ -493,7 +508,7 @@ process_device_list (xmlNode           *element,
 
                 /* Match */
 
-                if (service_type) {
+                if (type == RESOURCE_TYPE_SERVICE) {
                         /* Dive into serviceList */
                         children = xml_util_get_element (element,
                                                          "serviceList",
@@ -508,13 +523,20 @@ process_device_list (xmlNode           *element,
                                                       description_url,
                                                       url_base);
                         }
-                } else
+                } else {
+                        prop = xml_util_get_child_element_content (
+                                element,
+                                "deviceType");
+
                         create_and_report_device_proxy (control_point,
                                                         doc,
                                                         element,
                                                         udn,
+                                                        (char *) prop,
                                                         description_url,
                                                         url_base);
+                        xmlFree (prop);
+                }
         }
 
         g_object_unref (control_point);
@@ -527,6 +549,7 @@ static void
 description_loaded (GUPnPControlPoint *control_point,
                     GUPnPXMLDoc       *doc,
                     const char        *udn,
+                    ResourceType       type,
                     const char        *service_type,
                     const char        *description_url)
 {
@@ -558,6 +581,7 @@ description_loaded (GUPnPControlPoint *control_point,
                              control_point,
                              doc,
                              udn,
+                             type,
                              service_type,
                              description_url,
                              url_base);
@@ -595,6 +619,7 @@ got_description_url (SoupSession           *session,
                 description_loaded (data->control_point,
                                     doc,
                                     data->udn,
+                                    data->type,
                                     data->service_type,
                                     data->description_url);
 
@@ -616,6 +641,7 @@ got_description_url (SoupSession           *session,
                         description_loaded (data->control_point,
                                             doc,
                                             data->udn,
+                                            data->type,
                                             data->service_type,
                                             data->description_url);
 
@@ -676,6 +702,7 @@ static void
 load_description (GUPnPControlPoint *control_point,
                   const char        *description_url,
                   const char        *udn,
+                  ResourceType       type,
                   const char        *service_type,
                   guint              max_tries,
                   guint              timeout)
@@ -691,6 +718,7 @@ load_description (GUPnPControlPoint *control_point,
                 description_loaded (control_point,
                                     doc,
                                     udn,
+                                    type,
                                     service_type,
                                     description_url);
         } else {
@@ -728,6 +756,7 @@ load_description (GUPnPControlPoint *control_point,
                 data->control_point   = control_point;
 
                 data->udn             = g_strdup (udn);
+                data->type = type;
                 data->service_type    = g_strdup (service_type);
                 data->description_url = g_strdup (description_url);
                 data->timeout_source  = NULL;
@@ -754,6 +783,7 @@ description_url_retry_timeout (gpointer user_data)
         load_description (data->control_point,
                           data->description_url,
                           data->udn,
+                          data->type,
                           data->service_type,
                           data->tries,
                           data->timeout);
@@ -765,6 +795,7 @@ description_url_retry_timeout (gpointer user_data)
 
 static gboolean
 parse_usn (const char *usn,
+           ResourceType *type,
            char      **udn,
            char      **service_type)
 {
@@ -774,6 +805,7 @@ parse_usn (const char *usn,
 
         ret = FALSE;
 
+        *type = RESOURCE_TYPE_UNSPECIFIED;
         *udn = *service_type = NULL;
 
         /* Verify we have a valid USN */
@@ -793,6 +825,7 @@ parse_usn (const char *usn,
                 /* uuid:device-UUID */
 
                 *udn = bits[0];
+                *type = RESOURCE_TYPE_DEVICE;
 
                 ret = TRUE;
 
@@ -804,11 +837,12 @@ parse_usn (const char *usn,
                 n_second_bits = g_strv_length (second_bits);
 
                 if (n_second_bits >= 2 &&
-                    !strcmp (second_bits[0], "upnp") &&
-                    !strcmp (second_bits[1], "rootdevice")) {
+                    g_str_equal(second_bits[0], "upnp") &&
+                    g_str_equal(second_bits[1], "rootdevice")) {
                         /* uuid:device-UUID::upnp:rootdevice */
 
                         *udn = bits[0];
+                        *type = RESOURCE_TYPE_DEVICE;
 
                         ret = TRUE;
                 } else if (n_second_bits >= 3 &&
@@ -816,12 +850,15 @@ parse_usn (const char *usn,
                         /* uuid:device-UIID::urn:domain-name:service/device:
                          * type:v */
 
-                        if (!strcmp (second_bits[2], "device")) {
+                        if (g_str_equal (second_bits[2], "device")) {
                                 *udn = bits[0];
+                                *type = RESOURCE_TYPE_DEVICE;
+                                *service_type = bits[1];
 
                                 ret = TRUE;
-                        } else if (!strcmp (second_bits[2], "service")) {
+                        } else if (g_str_equal (second_bits[2], "service")) {
                                 *udn = bits[0];
+                                *type = RESOURCE_TYPE_SERVICE;
                                 *service_type = bits[1];
 
                                 ret = TRUE;
@@ -861,13 +898,16 @@ gupnp_control_point_resource_available (GSSDPResourceBrowser *resource_browser,
                 return;
         }
 
+        ResourceType type;
+
         /* Parse USN */
-        if (!parse_usn (usn, &udn, &service_type))
+        if (!parse_usn (usn, &type, &udn, &service_type))
                 return;
 
         load_description (control_point,
                           locations->data,
                           udn,
+                          type,
                           service_type,
                           GUPNP_MAX_DESCRIPTION_DOWNLOAD_RETRIES,
                           GUPNP_INITIAL_DESCRIPTION_RETRY_TIMEOUT);
@@ -885,16 +925,17 @@ gupnp_control_point_resource_unavailable
         char *udn, *service_type;
         GetDescriptionURLData *get_data;
         GUPnPControlPointPrivate *priv;
+        ResourceType type;
 
         control_point = GUPNP_CONTROL_POINT (resource_browser);
         priv = gupnp_control_point_get_instance_private (control_point);
 
         /* Parse USN */
-        if (!parse_usn (usn, &udn, &service_type))
+        if (!parse_usn (usn, &type, &udn, &service_type))
                 return;
 
         /* Find proxy */
-        if (service_type) {
+        if (type == RESOURCE_TYPE_SERVICE) {
                 GList *l = find_service_node (control_point, udn, service_type);
 
                 if (l) {
@@ -913,8 +954,8 @@ gupnp_control_point_resource_unavailable
 
                         g_object_unref (proxy);
                 }
-        } else {
-                GList *l = find_device_node (control_point, udn);
+        } else if (type == RESOURCE_TYPE_DEVICE){
+                GList *l = find_device_node (control_point, udn, service_type);
 
                 if (l) {
                         GUPnPDeviceProxy *proxy;
