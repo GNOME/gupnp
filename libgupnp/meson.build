@@ -116,6 +116,8 @@ gupnp = declare_dependency(
     dependencies : dependencies
 )
 
+meson.override_dependency('gupnp-1.2', gupnp)
+
 pkg.generate(
     libgupnp,
     subdirs: 'gupnp-1.2',
