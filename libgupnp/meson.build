@@ -106,7 +106,7 @@ libgupnp = library(
     darwin_versions : darwin_versions,
     dependencies : dependencies + system_deps,
     c_args : context_manager_args,
-    include_directories: include_directories('..'),
+    include_directories: [include_directories('..'), config_h_inc],
     install: true
 )
 

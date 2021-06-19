@@ -18,9 +18,7 @@ add_project_arguments(cc.get_supported_arguments('-Werror=deprecated-declaration
 conf.set('GLIB_VERSION_MIN_REQUIRED', 'GLIB_VERSION_' + glib_version.underscorify())
 conf.set('GLIB_VERSION_MAX_ALLOWED', 'GLIB_VERSION_' + glib_version.underscorify())
 
-config_h = configure_file(output : 'config.h', configuration : conf)
-add_project_arguments('-DHAVE_CONFIG_H=1', language : 'c')
-
+subdir('internal')
 guul = subproject('guul', default_options : ['default_library=static'])
 
 gssdp_dep = dependency('gssdp-1.2', version : '>= 1.2.3', default_options: ['sniffer=false'])
@@ -34,7 +32,7 @@ dependencies = [
     dependency('gobject-2.0', version : '>= ' + glib_version),
     dependency('libsoup-2.4', version : '>= 2.48.0'),
     gssdp_dep,
-    dependency('libxml-2.0')
+    dependency('libxml-2.0'),
 ]
 
 subdir('libgupnp')
