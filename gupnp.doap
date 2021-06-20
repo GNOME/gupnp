@@ -21,10 +21,10 @@ level libraries utilizing the GUPnP framework.</description>
 
   <homepage
   rdf:resource="http://gupnp.org" />
-  <mailing-list
-  rdf:resource="http://mail.gnome.org/mailman/listinfo/gupnp-list" />
+  <support-forum
+  rdf:resource="https://discourse.gnome.org/tag/gupnp" />
   <download-page
-  rdf:resource="http://gupnp.org/download"/>
+  rdf:resource="https://download.gnome.org/sources/gssdp/"/>
   <bug-database
   rdf:resource="https://gitlab.gnome.org/GNOME/gupnp/issues/" />
 
