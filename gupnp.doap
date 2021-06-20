@@ -24,7 +24,7 @@ level libraries utilizing the GUPnP framework.</description>
   <support-forum
   rdf:resource="https://discourse.gnome.org/tag/gupnp" />
   <download-page
-  rdf:resource="https://download.gnome.org/sources/gssdp/"/>
+  rdf:resource="https://download.gnome.org/sources/gupnp/"/>
   <bug-database
   rdf:resource="https://gitlab.gnome.org/GNOME/gupnp/issues/" />
 
