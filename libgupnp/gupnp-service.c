@@ -1379,6 +1379,20 @@ subscription_server_handler (G_GNUC_UNUSED SoupServer        *server,
 
         service = GUPNP_SERVICE (user_data);
 
+        const char *host =
+                soup_message_headers_get_one (msg->request_headers, "Host");
+        GUPnPContext *context = gupnp_service_info_get_context (user_data);
+        if (!gupnp_context_validate_host_header(context, host)) {
+                g_warning ("Host header mismatch, expected %s:%d, got %s",
+                           gssdp_client_get_host_ip (GSSDP_CLIENT (context)),
+                           gupnp_context_get_port (context),
+                           host);
+
+                soup_message_set_status (msg, SOUP_STATUS_BAD_REQUEST);
+
+                return;
+        }
+
         callback = soup_message_headers_get_one (msg->request_headers,
                                                  "Callback");
         nt       = soup_message_headers_get_one (msg->request_headers, "NT");
