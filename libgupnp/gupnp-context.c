@@ -1673,32 +1673,6 @@ gupnp_context_rewrite_uri_to_uri (GUPnPContext *context, const char *uri)
 }
 
 gboolean
-gupnp_context_ip_is_ours (GUPnPContext *context, const char *address)
-{
-        // TODO: Could easily be in GSSDPClient, which does something similar
-        gboolean retval = FALSE;
-        GInetAddress *addr = NULL;
-        GInetAddressMask *mask = NULL;
-
-        addr = g_inet_address_new_from_string (address);
-
-        // Link-local addresses are reachable
-        if (g_inet_address_get_is_link_local (addr)) {
-                retval = TRUE;
-                goto out;
-        }
-
-        mask = gssdp_client_get_address_mask (GSSDP_CLIENT (context));
-        retval = g_inet_address_mask_matches (mask, addr);
-        g_object_unref (mask);
-
-out:
-        g_object_unref (addr);
-
-        return retval;
-}
-
-gboolean
 validate_host_header (const char *host_header,
                       const char *host_ip,
                       guint context_port)
