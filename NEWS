@@ -1,3 +1,25 @@
+1.3.0
+=====
+
+- Service: name Tasks
+- Doc: Some grammaer fixes
+- Dead and deprecated code clean-up
+- Move tests that are actually examples into examples
+- Move tests from gtest to test
+- Doc: General clean-up
+- Fix some introspection annotations
+- Build: Make gupnp usable as a subproject (more or less)
+- Make it possible to re-use a ServiceProxyAction
+- Service: Validate "Host" header for GENA actions
+
+Bugs fixed in this release:
+ - https://gitlab.gnome.org/GNOME/gupnp/issues/17
+ - https://gitlab.gnome.org/GNOME/gupnp/issues/18
+ - https://gitlab.gnome.org/GNOME/gupnp/issues/55
+
+All contributors to this release:
+ - Jens Georg <mail@jensge.org>
+
 1.2.7
 =====
 
