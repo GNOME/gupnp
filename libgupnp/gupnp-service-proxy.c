@@ -278,10 +278,7 @@ gupnp_service_proxy_dispose (GObject *object)
         }
 
         /* Cancel pending notifications */
-        if (priv->notify_idle_src) {
-                g_source_destroy (priv->notify_idle_src);
-                priv->notify_idle_src = NULL;
-        }
+        g_clear_pointer (&priv->notify_idle_src, g_source_destroy);
 
         g_list_free_full (priv->pending_notifies,
                           (GDestroyNotify) emit_notify_data_free);
