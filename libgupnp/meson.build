@@ -90,7 +90,12 @@ sources = files(
     'xml-util.c'
 )
 
-version = '0.0.0'
+v = meson.project_version().split('.')
+soversion = 0
+library_minor = v[0].to_int() * 100 + v[1].to_int()
+library_micro = v[2].to_int()
+
+version = '@0@.@1@.@2@'.format(soversion, library_minor, library_micro)
 version_arr = version.split('.')
 major_version = version_arr[0].to_int()
 minor_version = version_arr[1].to_int()
