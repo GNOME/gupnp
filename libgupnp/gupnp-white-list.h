@@ -10,54 +10,46 @@
 #define GUPNP_WHITE_LIST_H
 
 #include <glib.h>
-#include "gupnp-context.h"
+#include <libgupnp/gupnp-context-filter.h>
+#include <libgupnp/gupnp-context.h>
 
 G_BEGIN_DECLS
 
-#define GUPNP_TYPE_WHITE_LIST \
-                (gupnp_white_list_get_type ())
+#define GUPNP_TYPE_WHITE_LIST (gupnp_context_filter_get_type ())
+#define GUPNP_IS_WHITE_LIST GUPNP_IS_CONTEXT_FILTER
+typedef GUPnPContextFilter GUPnPWhiteList;
 
-G_DECLARE_DERIVABLE_TYPE (GUPnPWhiteList,
-                          gupnp_white_list,
-                          GUPNP,
-                          WHITE_LIST,
-                          GObject)
-
-struct _GUPnPWhiteListClass {
-        GObjectClass parent_class;
-};
-
-GUPnPWhiteList *
+G_GNUC_DEPRECATED_FOR(gupnp_context_filter_new) GUPnPWhiteList *
 gupnp_white_list_new            (void);
 
-void
+G_GNUC_DEPRECATED_FOR(gupnp_context_filter_set_enabled) void
 gupnp_white_list_set_enabled    (GUPnPWhiteList *white_list,
                                  gboolean enable);
 
-gboolean
+G_GNUC_DEPRECATED_FOR(gupnp_context_filter_get_enabled) gboolean
 gupnp_white_list_get_enabled     (GUPnPWhiteList *white_list);
 
-gboolean
+G_GNUC_DEPRECATED_FOR(gupnp_context_filter_is_empty) gboolean
 gupnp_white_list_is_empty       (GUPnPWhiteList *white_list);
 
-gboolean
+G_GNUC_DEPRECATED_FOR(gupnp_context_filter_add_entry) gboolean
 gupnp_white_list_add_entry      (GUPnPWhiteList *white_list,
                                  const gchar* entry);
-void
+G_GNUC_DEPRECATED_FOR(gupnp_context_filter_add_entryv) void
 gupnp_white_list_add_entryv     (GUPnPWhiteList *white_list,
                                  gchar** entries);
 
-gboolean
+G_GNUC_DEPRECATED_FOR(gupnp_context_filter_remove_entry) gboolean
 gupnp_white_list_remove_entry   (GUPnPWhiteList *white_list,
                                  const gchar* entry);
 
-GList *
+G_GNUC_DEPRECATED_FOR(gupnp_context_filter_get_entries) GList *
 gupnp_white_list_get_entries    (GUPnPWhiteList *white_list);
 
-void
+G_GNUC_DEPRECATED_FOR(gupnp_context_filter_clear) void
 gupnp_white_list_clear          (GUPnPWhiteList *white_list);
 
-gboolean
+G_GNUC_DEPRECATED_FOR(gupnp_context_filter_check_context) gboolean
 gupnp_white_list_check_context  (GUPnPWhiteList *white_list,
                                  GUPnPContext *context);
 

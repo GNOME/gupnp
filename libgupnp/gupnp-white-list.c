@@ -17,161 +17,14 @@
  * list is empty, it behaves as disabled.
  *
  * Since: 0.20.5
+ * Deprecated: 1.4.0: Use #GUPnPContextFilter
  */
 
 #include <config.h>
 #include <string.h>
 
 #include "gupnp-white-list.h"
-
-struct _GUPnPWhiteListPrivate {
-        gboolean enabled;
-        GList *entries;
-};
-typedef struct _GUPnPWhiteListPrivate GUPnPWhiteListPrivate;
-
-G_DEFINE_TYPE_WITH_PRIVATE (GUPnPWhiteList,
-                            gupnp_white_list,
-                            G_TYPE_OBJECT)
-
-enum {
-        PROP_0,
-        PROP_ENABLED,
-        PROP_ENTRIES
-};
-
-enum {
-        ENTRY_CHANGE,
-        ENABLED,
-        SIGNAL_LAST
-};
-
-static void
-gupnp_white_list_init (GUPnPWhiteList *list)
-{
-        GUPnPWhiteListPrivate *priv;
-
-        priv = gupnp_white_list_get_instance_private (list);
-
-        priv->entries = NULL;
-}
-
-static void
-gupnp_white_list_set_property (GObject      *object,
-                               guint         property_id,
-                               const GValue *value,
-                               GParamSpec   *pspec)
-{
-        GUPnPWhiteList *list;
-        GUPnPWhiteListPrivate *priv;
-
-        list = GUPNP_WHITE_LIST (object);
-        priv = gupnp_white_list_get_instance_private (list);
-
-        switch (property_id) {
-        case PROP_ENABLED:
-                priv->enabled = g_value_get_boolean (value);
-                break;
-        case PROP_ENTRIES:
-                priv->entries = g_value_get_pointer (value);
-                break;
-        default:
-                G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
-                break;
-        }
-}
-
-static void
-gupnp_white_list_get_property (GObject    *object,
-                               guint       property_id,
-                               GValue     *value,
-                               GParamSpec *pspec)
-{
-        GUPnPWhiteList *list;
-        GUPnPWhiteListPrivate *priv;
-
-        list = GUPNP_WHITE_LIST (object);
-        priv = gupnp_white_list_get_instance_private (list);
-
-        switch (property_id) {
-        case PROP_ENABLED:
-                g_value_set_boolean (value, priv->enabled);
-                break;
-        case PROP_ENTRIES:
-                g_value_set_pointer (value, priv->entries);
-                break;
-        default:
-                G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
-                break;
-        }
-}
-
-static void
-gupnp_white_list_class_finalize (GObject *object)
-{
-        GUPnPWhiteList *list;
-        GObjectClass *object_class;
-        GUPnPWhiteListPrivate *priv;
-
-        list = GUPNP_WHITE_LIST (object);
-        priv = gupnp_white_list_get_instance_private (list);
-
-        g_list_free_full (priv->entries, g_free);
-        priv->entries = NULL;
-
-        /* Call super */
-        object_class = G_OBJECT_CLASS (gupnp_white_list_parent_class);
-        object_class->finalize (object);
-}
-
-static void
-gupnp_white_list_class_init (GUPnPWhiteListClass *klass)
-{
-        GObjectClass *object_class;
-
-        object_class = G_OBJECT_CLASS (klass);
-
-        object_class->set_property = gupnp_white_list_set_property;
-        object_class->get_property = gupnp_white_list_get_property;
-        object_class->finalize     = gupnp_white_list_class_finalize;
-
-        /**
-         * GUPnPWhiteList:enabled:
-         *
-         * Whether this white list is active or not.
-         *
-         * Since: 0.20.5
-         **/
-        g_object_class_install_property
-                (object_class,
-                 PROP_ENABLED,
-                 g_param_spec_boolean
-                         ("enabled",
-                          "Enabled",
-                          "TRUE if the white list is active.",
-                          FALSE,
-                          G_PARAM_CONSTRUCT |
-                          G_PARAM_READWRITE |
-                          G_PARAM_STATIC_STRINGS));
-
-        /**
-         * GUPnPWhiteList:entries: (type GList(utf8))
-         *
-         * Whether this white list is active or not.
-         *
-         * Since: 0.20.5
-         **/
-        g_object_class_install_property
-                (object_class,
-                 PROP_ENTRIES,
-                 g_param_spec_pointer
-                         ("entries",
-                          "Entries",
-                          "GList of strings that compose the white list.",
-                          G_PARAM_CONSTRUCT_ONLY |
-                          G_PARAM_READWRITE |
-                          G_PARAM_STATIC_STRINGS));
-}
+#include "gupnp-context-filter.h"
 
 /**
  * gupnp_white_list_new:
@@ -182,11 +35,12 @@ gupnp_white_list_class_init (GUPnPWhiteListClass *klass)
  * Returns: (transfer full): A new #GUPnPWhiteList object.
  *
  * Since: 0.20.5
+ * Deprecated: 1.4.0: Use gupnp_context_filter_new() instead.
  **/
 GUPnPWhiteList *
 gupnp_white_list_new (void)
 {
-        return g_object_new (GUPNP_TYPE_WHITE_LIST, NULL);
+        return g_object_new (GUPNP_TYPE_CONTEXT_FILTER, NULL);
 }
 
 /**
@@ -196,18 +50,15 @@ gupnp_white_list_new (void)
  *
  * Enable or disable the #GUPnPWhiteList to perform the network filtering.
  *
- * Since: 0.20.5
- **/
+ * Deprecated: 1.4.0: Use gupnp_context_filter_set_enabled() instead.
+ */
 void
 gupnp_white_list_set_enabled (GUPnPWhiteList *white_list, gboolean enable)
 {
-        GUPnPWhiteListPrivate *priv;
+        g_return_if_fail (GUPNP_IS_CONTEXT_FILTER (white_list));
 
-        g_return_if_fail (GUPNP_IS_WHITE_LIST (white_list));
-
-        priv = gupnp_white_list_get_instance_private (white_list);
-        priv->enabled = enable;
-        g_object_notify (G_OBJECT (white_list), "enabled");
+        gupnp_context_filter_set_enabled (GUPNP_CONTEXT_FILTER (white_list),
+                                          enable);
 }
 
 /**
@@ -219,17 +70,14 @@ gupnp_white_list_set_enabled (GUPnPWhiteList *white_list, gboolean enable)
  * Return value: %TRUE if @white_list is enabled, %FALSE otherwise.
  *
  * Since: 0.20.5
- **/
+ * Deprecated: 1.4.0: Use gupnp_context_filter_get_enabled() instead.
+ */
 gboolean
 gupnp_white_list_get_enabled (GUPnPWhiteList *white_list)
 {
-        GUPnPWhiteListPrivate *priv;
+        g_return_val_if_fail (GUPNP_IS_CONTEXT_FILTER (white_list), FALSE);
 
-        g_return_val_if_fail (GUPNP_IS_WHITE_LIST (white_list), FALSE);
-
-        priv = gupnp_white_list_get_instance_private (white_list);
-
-        return priv->enabled;
+        return gupnp_context_filter_get_enabled (GUPNP_CONTEXT_FILTER (white_list));
 }
 
 /**
@@ -240,18 +88,15 @@ gupnp_white_list_get_enabled (GUPnPWhiteList *white_list)
  *
  * Return value: %TRUE if @white_list is empty, %FALSE otherwise.
  *
- * Since: 0.20.5
- **/
+ * Deprecated: 1.4.0: Use gupnp_context_filter_is_empty() instead.
+ */
 gboolean
 gupnp_white_list_is_empty (GUPnPWhiteList *white_list)
 {
-        GUPnPWhiteListPrivate *priv;
+        g_return_val_if_fail (GUPNP_IS_CONTEXT_FILTER (white_list), TRUE);
 
-        g_return_val_if_fail (GUPNP_IS_WHITE_LIST (white_list), TRUE);
-
-        priv = gupnp_white_list_get_instance_private (white_list);
-
-        return (priv->entries == NULL);
+        return gupnp_context_filter_is_empty (
+                GUPNP_CONTEXT_FILTER (white_list));
 }
 
 /**
@@ -266,29 +111,17 @@ gupnp_white_list_is_empty (GUPnPWhiteList *white_list)
  * Return value: %TRUE if @entry is added, %FALSE otherwise.
  *
  * Since: 0.20.5
- **/
+ * Deprecated: 1.4.0: Use gupnp_context_filter_add_entry() instead.
+ */
 gboolean
 gupnp_white_list_add_entry (GUPnPWhiteList *white_list, const gchar* entry)
 {
-        GList *s_entry;
-        GUPnPWhiteListPrivate *priv;
+        g_return_val_if_fail (GUPNP_IS_CONTEXT_FILTER (white_list), FALSE);
+        g_return_val_if_fail (entry != NULL, FALSE);
 
-        g_return_val_if_fail (GUPNP_IS_WHITE_LIST (white_list), FALSE);
-        g_return_val_if_fail ((entry != NULL), FALSE);
-
-        priv = gupnp_white_list_get_instance_private (white_list);
-
-        s_entry = g_list_find_custom (priv->entries,
-                                      entry,
-                                      (GCompareFunc) g_ascii_strcasecmp);
-
-        if (s_entry == NULL) {
-                priv->entries = g_list_prepend (priv->entries,
-                                                g_strdup (entry));
-                g_object_notify (G_OBJECT (white_list), "entries");
-        }
-
-        return (s_entry == NULL);
+        return gupnp_context_filter_add_entry (
+                GUPNP_CONTEXT_FILTER (white_list),
+                entry);
 }
 
 /**
@@ -301,18 +134,17 @@ gupnp_white_list_add_entry (GUPnPWhiteList *white_list, const gchar* entry)
  * commandline args.
  *
  * Since: 0.20.8
+ * Deprecated: 1.4.0: Use gupnp_context_filter_add_entryv() instead.
  */
 void
 gupnp_white_list_add_entryv (GUPnPWhiteList *white_list, gchar **entries)
 {
-        gchar * const * iter = entries;
-
-        g_return_if_fail (GUPNP_IS_WHITE_LIST (white_list));
+        g_return_if_fail (GUPNP_IS_CONTEXT_FILTER (white_list));
         g_return_if_fail ((entries != NULL));
 
-        for (; *iter != NULL; iter++)
-                gupnp_white_list_add_entry (white_list, *iter);
- }
+        gupnp_context_filter_add_entryv (GUPNP_CONTEXT_FILTER (white_list),
+                                         entries);
+}
 
 /**
  * gupnp_white_list_remove_entry:
@@ -325,29 +157,17 @@ gupnp_white_list_add_entryv (GUPnPWhiteList *white_list, gchar **entries)
  * Return value: %TRUE if @entry is removed, %FALSE otherwise.
  *
  * Since: 0.20.5
- **/
+ * Deprecated: 1.4.0: Use gupnp_context_filter_remove_entry() instead.
+ */
 gboolean
 gupnp_white_list_remove_entry (GUPnPWhiteList *white_list, const gchar* entry)
 {
-        GList *s_entry;
-        GUPnPWhiteListPrivate *priv;
-
-        g_return_val_if_fail (GUPNP_IS_WHITE_LIST (white_list), FALSE);
+        g_return_val_if_fail (GUPNP_IS_CONTEXT_FILTER (white_list), FALSE);
         g_return_val_if_fail ((entry != NULL), FALSE);
 
-        priv = gupnp_white_list_get_instance_private (white_list);
-
-        s_entry = g_list_find_custom (priv->entries,
-                                      entry,
-                                      (GCompareFunc) g_ascii_strcasecmp);
-
-        if (s_entry != NULL) {
-                priv->entries = g_list_remove_link (priv->entries, s_entry);
-                g_list_free_full (s_entry, g_free);
-                g_object_notify (G_OBJECT (white_list), "entries");
-        }
-
-        return (s_entry != NULL);
+        return gupnp_context_filter_remove_entry (
+                GUPNP_CONTEXT_FILTER (white_list),
+                entry);
 }
 
 /**
@@ -361,17 +181,14 @@ gupnp_white_list_remove_entry (GUPnPWhiteList *white_list, const gchar* entry)
  * Do not modify or free the list nor its elements.
  *
  * Since: 0.20.5
- **/
+ * Deprecated: 1.4.0: Use gupnp_context_filter_get_entries() instead.
+ */
 GList *
 gupnp_white_list_get_entries (GUPnPWhiteList *white_list)
 {
-        GUPnPWhiteListPrivate *priv;
-
-        g_return_val_if_fail (GUPNP_IS_WHITE_LIST (white_list), NULL);
-
-        priv = gupnp_white_list_get_instance_private (white_list);
-
-        return priv->entries;
+        g_return_val_if_fail (GUPNP_IS_CONTEXT_FILTER (white_list), NULL);
+        return gupnp_context_filter_get_entries (
+                GUPNP_CONTEXT_FILTER (white_list));
 }
 
 /**
@@ -383,18 +200,14 @@ gupnp_white_list_get_entries (GUPnPWhiteList *white_list)
  * same behavior as if it was disabled.
  *
  * Since: 0.20.5
- **/
+ * Deprecated: 1.4.0: Use gupnp_context_filter_clear() instead.
+ */
 void
 gupnp_white_list_clear (GUPnPWhiteList *white_list)
 {
-        GUPnPWhiteListPrivate *priv;
+        g_return_if_fail (GUPNP_IS_CONTEXT_FILTER(white_list));
 
-        g_return_if_fail (GUPNP_IS_WHITE_LIST(white_list));
-
-        priv = gupnp_white_list_get_instance_private (white_list);
-        g_list_free_full (priv->entries, g_free);
-        priv->entries = NULL;
-        g_object_notify (G_OBJECT (white_list), "entries");
+        gupnp_context_filter_clear (GUPNP_CONTEXT_FILTER (white_list));
 }
 
 /**
@@ -411,38 +224,13 @@ gupnp_white_list_clear (GUPnPWhiteList *white_list)
  * %FALSE otherwise.
  *
  * Since: 0.20.5
- **/
+ * Deprecated: 1.4.0: Use gupnp_context_filter_check_context() instead.
+ */
 gboolean
 gupnp_white_list_check_context (GUPnPWhiteList *white_list,
                                 GUPnPContext *context)
 {
-        GSSDPClient  *client;
-        GList *l;
-        const char *interface;
-        const char *host_ip;
-        const char *network;
-        gboolean match = FALSE;
-        GUPnPWhiteListPrivate *priv;
-
-        g_return_val_if_fail (GUPNP_IS_WHITE_LIST (white_list), FALSE);
-        g_return_val_if_fail (GUPNP_IS_CONTEXT (context), FALSE);
-
-        client = GSSDP_CLIENT (context);
-        priv = gupnp_white_list_get_instance_private (white_list);
-
-        interface = gssdp_client_get_interface (client);
-        host_ip = gssdp_client_get_host_ip (client);
-        network = gssdp_client_get_network (client);
-
-        l = priv->entries;
-
-        while (l && !match) {
-                match = (interface && !strcmp (l->data, interface)) ||
-                        (host_ip && !strcmp (l->data, host_ip)) ||
-                        (network && !strcmp (l->data, network));
-
-                l = l->next;
-        }
-
-        return match;
+        return gupnp_context_filter_check_context (
+                GUPNP_CONTEXT_FILTER (white_list),
+                context);
 }
