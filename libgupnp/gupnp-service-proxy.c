@@ -2117,12 +2117,12 @@ gupnp_service_proxy_call_action_finish (GUPnPServiceProxy *proxy,
 {
         g_return_val_if_fail (g_task_is_valid (G_TASK (result), proxy), NULL);
 
-        GUPnPServiceProxyAction *action =
-                g_task_propagate_pointer (G_TASK (result), error);
+        GUPnPServiceProxyAction *action = g_task_get_task_data (G_TASK (result));
+        gupnp_service_proxy_remove_action (action->proxy, action);
         g_clear_weak_pointer (&action->proxy);
         action->pending = FALSE;
 
-        return action;
+        return g_task_propagate_pointer (G_TASK (result), error);
 }
 
 /**
