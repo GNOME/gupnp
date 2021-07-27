@@ -1212,6 +1212,7 @@ add_subscription_callback (GUPnPContext *context,
             } else {
                     g_warning ("%s is not in our network; ignoring", callback);
             }
+            g_object_unref (address);
 
             return list;
 }
