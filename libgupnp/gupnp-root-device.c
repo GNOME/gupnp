@@ -300,10 +300,7 @@ gupnp_root_device_initable_init (GInitable     *initable,
 
         location = NULL;
 
-        g_object_get (G_OBJECT (device),
-                      "context", &context,
-                      NULL);
-
+        context = gupnp_device_info_get_context (GUPNP_DEVICE_INFO (device));
         if (context == NULL) {
                 g_set_error_literal (error,
                                      GUPNP_ROOT_DEVICE_ERROR,
