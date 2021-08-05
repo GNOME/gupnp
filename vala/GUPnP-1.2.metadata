@@ -23,5 +23,5 @@ ServiceProxy
     .end_action_hash skip
     .end_action_list skip
     .send_action_list skip
-WhiteList
-    .entries skip
+XMLDoc
+    .new skip
