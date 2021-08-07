@@ -31,3 +31,5 @@
 
 /build
 .vscode
+/.flatpak-builder
+/build-dir
