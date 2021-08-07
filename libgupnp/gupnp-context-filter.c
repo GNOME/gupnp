@@ -168,7 +168,7 @@ gupnp_context_filter_class_init (GUPnPContextFilterClass *klass)
         /**
          * GUPnPContextFilter:entries: (type GList(utf8))
          *
-         * Whether this white list is active or not.
+         * A list of items to filter for.
          *
          * Since: 1.4.0
          **/
@@ -187,7 +187,7 @@ gupnp_context_filter_class_init (GUPnPContextFilterClass *klass)
  * gupnp_context_filter_new:
  *
  * Create a new #GUPnPContextFilter.
- * The white list is disabled by default.
+ * The context filter is disabled by default.
  *
  * Returns: (transfer full): A new #GUPnPContextFilter object.
  *
@@ -368,9 +368,9 @@ gupnp_context_filter_remove_entry (GUPnPContextFilter *context_filter,
  * gupnp_context_filter_get_entries:
  * @context_filter: A #GUPnPContextFilter
  *
- * Get the #GList of entries that compose the white list. Do not free
+ * Get the #GList of entries that compose the context filter. Do not free
  *
- * Return value: (element-type utf8) (transfer none):  a #GList of entries
+ * Return value: (element-type utf8) (transfer none)(nullable):  a #GList of entries
  * used to filter networks, interfaces,... or %NULL.
  * Do not modify or free the list nor its elements.
  *
@@ -392,7 +392,7 @@ gupnp_context_filter_get_entries (GUPnPContextFilter *context_filter)
  * gupnp_context_filter_clear:
  * @context_filter: A #GUPnPContextFilter
  *
- * Remove all entries from #GList that compose the white list.
+ * Remove all entries from #GList that compose the context filter.
  * The list is now empty. Even if #GUPnPContextFilter is enabled, it will have
  * the same behavior as if it was disabled.
  *
@@ -417,9 +417,9 @@ gupnp_context_filter_clear (GUPnPContextFilter *context_filter)
  * @context: A #GUPnPContext to test.
  *
  * It will check if the @context is allowed or not. The @context_filter will
- *check all its entries againt #GUPnPContext interface, host ip and network
- *fields information. This function doesn't take into account the
- *@context_filter status (enabled or not).
+ * check all its entries againt #GUPnPContext interface, host ip and network
+ * fields information. This function doesn't take into account the
+ * @context_filter status (enabled or not).
  *
  * Return value: %TRUE if @context is matching the @context_filter criterias,
  * %FALSE otherwise.

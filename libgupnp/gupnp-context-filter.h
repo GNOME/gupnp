@@ -27,9 +27,6 @@ struct _GUPnPContextFilterClass {
         GObjectClass parent_class;
 };
 
-GUPnPContextFilter *
-gupnp_context_filter_new (void);
-
 void
 gupnp_context_filter_set_enabled (GUPnPContextFilter *context_filter,
                                   gboolean enable);

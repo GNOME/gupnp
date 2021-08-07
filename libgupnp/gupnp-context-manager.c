@@ -366,7 +366,7 @@ gupnp_context_manager_init (GUPnPContextManager *manager)
 
         priv = gupnp_context_manager_get_instance_private (manager);
 
-        priv->context_filter = gupnp_context_filter_new ();
+        priv->context_filter = g_object_new (GUPNP_TYPE_CONTEXT_FILTER, NULL);
 
         g_signal_connect_after (priv->context_filter,
                                 "notify::entries",
