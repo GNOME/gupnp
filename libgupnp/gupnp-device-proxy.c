@@ -37,7 +37,7 @@ gupnp_device_proxy_get_device (GUPnPDeviceInfo *info,
         GUPnPContext         *context;
         GUPnPXMLDoc          *doc;
         const char           *location;
-        const SoupURI        *url_base;
+        const GUri *url_base;
 
         factory = gupnp_device_info_get_resource_factory (info);
         context = gupnp_device_info_get_context (info);
@@ -65,7 +65,7 @@ gupnp_device_proxy_get_service (GUPnPDeviceInfo *info,
         GUPnPContext         *context;
         GUPnPXMLDoc          *doc;
         const char           *location, *udn;
-        const SoupURI        *url_base;
+        const GUri *url_base;
 
         factory = gupnp_device_info_get_resource_factory (info);
         context = gupnp_device_info_get_context (info);

@@ -19,10 +19,10 @@ conf.set('HAVE_NETLINK', netlink_available)
 conf.set('HAVE_IFADDRS_H', ifaddrs_available)
 conf.set('HAVE_LINUX_WIRELESS_H', cc.has_header('linux/wireless.h'))
 
-glib_version = '2.66'
+glib_version = '2.69'
 add_project_arguments(cc.get_supported_arguments('-Werror=deprecated-declarations'), language: 'c')
-conf.set('GLIB_VERSION_MIN_REQUIRED', 'GLIB_VERSION_' + glib_version.underscorify())
-conf.set('GLIB_VERSION_MAX_ALLOWED', 'GLIB_VERSION_' + glib_version.underscorify())
+conf.set('GLIB_VERSION_MIN_REQUIRED', 'GLIB_VERSION_2_70'.format(glib_version.underscorify()))
+conf.set('GLIB_VERSION_MAX_ALLOWED', 'GLIB_VERSION_2_70'.format(glib_version.underscorify()))
 
 subdir('internal')
 guul = subproject('guul', default_options : ['default_library=static'])
@@ -36,7 +36,7 @@ dependencies = [
     dependency('gio-2.0', version : '>= ' + glib_version),
     dependency('gmodule-2.0', version : '>= ' + glib_version),
     dependency('gobject-2.0', version : '>= ' + glib_version),
-    dependency('libsoup-2.4', version : '>= 2.48.0'),
+    dependency('libsoup-3.0', version : '>= 2.99.0'),
     gssdp_dep,
     dependency('libxml-2.0'),
 ]

@@ -1,195 +1,224 @@
-include:
-    - remote: "https://gitlab.freedesktop.org/freedesktop/ci-templates/-/raw/290b79e0e78eab67a83766f4e9691be554fc4afd/templates/ci-fairy.yml"
-    - remote: 'https://gitlab.freedesktop.org/freedesktop/ci-templates/-/raw/290b79e0e78eab67a83766f4e9691be554fc4afd/templates/fedora.yml'
-
-variables:
-    MESON_TEST_TIMEOUT_MULTIPLIER: 3
-
-stages:
-    - review
-    - prepare
-    - build
-    - test
-    - analysis
-    - website
-
-.check-template: &check
-  extends:
-    - .fdo.ci-fairy
-  artifacts:
-    expire_in: 1 week
-    paths:
-      - check-junit-report.xml
-    reports:
-      junit: check-junit-report.xml
-
-check-commit-log:
-  variables:
-    GIT_DEPTH: "100"
-  stage: review
-  script:
-    - if [[ x"$CI_MERGE_REQUEST_TARGET_BRANCH_NAME" != "x" ]] ;
-      then
-        ci-fairy check-commits --junit-xml=check-junit-report.xml ;
-      else
-        echo "Not a merge request" ;
-      fi
-  <<: *check
-
-check-merge-request:
-  variables:
-    GIT_STRATEGY: none
-  stage: review
-  script:
-    - if [[ x"$CI_MERGE_REQUEST_TARGET_BRANCH_NAME" != "x" ]] ;
-      then
-        ci-fairy check-merge-request --require-allow-collaboration --junit-xml=check-junit-report.xml ;
-      else
-        echo "Not a merge request" ;
-      fi
-  <<: *check
-
-.build-template: &build
+flatpak:
+  tags:
+    - flatpak
+  image: registry.gitlab.gnome.org/gnome/gnome-runtime-images/gnome:master
   stage: build
   script:
-      - meson . build --prefix=/usr -Db_coverage=true
-      - ninja -C build
+    - flatpak-builder build-dir build-aux/org.gnome.GUPnP.json --stop-at=gupnp --user --disable-rofiles-fuse
+    - flatpak build build-dir meson _build
+    - flatpak build build-dir ninja -C _build
+    - flatpak build build-dir meson test -C _build --gdb
   artifacts:
-      expire_in: 1 day
-      paths:
-          - build
-
-.gupnp.fedora@common:
-  variables:
-    BASE_TAG: '2021-08-14.0'
-    FDO_UPSTREAM_REPO: GNOME/gupnp
-    FDO_DISTRIBUTION_PACKAGES: 'clang clang-analyzer gcovr git libasan libubsan python3-gobject python3-pip xmlto gobject-introspection-devel gtk-doc libsoup-devel libuuid-devel libxml2-devel vala ninja-build'
-    FDO_DISTRIBUTION_EXEC: |
-      dnf clean all &&
-      pip3 install meson markdown toml typogrify
-
-.gupnp.fedora:34@x86_64:
-  extends: .gupnp.fedora@common
-  variables:
-    FDO_DISTRIBUTION_VERSION: 34
-    FDO_DISTRIBUTION_TAG: "x86_64-${BASE_TAG}"
-
-build-fedora-container@x86_64:
-  extends:
-    - .fdo.container-build@fedora
-    - .gupnp.fedora:34@x86_64
-  stage: prepare
-  variables:
-    GIT_STRATEGY: none
-
-
-build-fedora@x86_64:
-    extends:
-        - .fdo.distribution-image@fedora
-        - .gupnp.fedora:34@x86_64
-    needs:
-        - build-fedora-container@x86_64
-    <<: *build
-
-
-.test-template: &test
-  stage: test
-  variables:
-    G_SLICE: "always-malloc"
-    MALLOC_CHECK_: "3"
-  script:
-    - cd build
-    - |
-      # Remove the many "CI_" variables from the environment. Meson dumps the
-      # whole environment for every failed test, and that gives a whole
-      # screenful of junk each time unless we strip these.
-      unset $(env|grep -o '^CI_[^=]*')
-      env LANG=C.UTF-8 LC_ALL=C.UTF-8 meson test --print-errorlogs ${MESON_TEST_EXTRA_ARGS}
-  after_script:
-    - |
-      echo "Distribution: "
-      echo
-      egrep '^NAME=|^VERSION=' /etc/os-release
-      echo
-      echo "Test suite settings:"
-      echo
-      echo "G_MESSAGES_DEBUG: ${G_MESSAGES_DEBUG}"
-      echo "MESON_TEST_EXTRA_ARGS: ${MESON_TEST_EXTRA_ARGS}"
-      echo
-      echo "These values can be set at https://gitlab.gnome.org/GNOME/gupnp/pipelines/new"
-  artifacts:
-    expire_in: 1 day
-    when: always
+    when: on_failure
+    name: "gssdp-_${CI_COMMIT_REF_NAME}"
     paths:
-    - build
-    reports:
-      junit: "build/meson-logs/testlog.junit.xml"
+      - "${CI_PROJECT_DIR}/_build/meson-logs"
 
-test-fedora@x86_64:
-  extends:
-    - .fdo.distribution-image@fedora
-    - .gupnp.fedora:34@x86_64
-  needs:
-    - build-fedora@x86_64
-  <<: *test
-
-  #trigger-rygel:
-  #stage: analysis
-  #needs:
-  #  - test-fedora@x86_64
-  #trigger: GNOME/rygel
-  #only:
-  #  - master
-
-coverage-analysis:
-  extends:
-    - .fdo.distribution-image@fedora
-    - .gupnp.fedora:34@x86_64
-  stage: analysis
-  allow_failure: true
-  script:
-    - cd build
-    - mkdir -p coveragereport
-    - gcovr --html-details --print-summary --root=.. --exclude=../build --exclude=../subprojects --exclude=../docs/reference --exclude=../tests --exclude=../tools --exclude=../examples --output coveragereport/index.html
-  coverage: '/^lines: (\d+\.\d+\%)/'
-  artifacts:
-    when: always
-    paths:
-    - build/coveragereport
-  needs:
-    - test-fedora@x86_64
-
-static-scan:
-  extends:
-    - .fdo.distribution-image@fedora
-    - .gupnp.fedora:34@x86_64
-  stage: analysis
-  needs:
-    - build-fedora-container@x86_64
-  script:
-    - meson --buildtype=debug _scan_build
-    - ninja -C _scan_build scan-build
-  artifacts:
-    paths:
-      - _scan_build/meson-logs
-  allow_failure: true
-
-pages:
-  extends:
-    - .fdo.distribution-image@fedora
-    - .gupnp.fedora:34@x86_64
-  stage: website
-  script:
-      - meson doc-build -Dgtk_doc=true
-      - ninja -C doc-build gupnp-doc
-      - mkdir -p public
-      - mv doc-build/doc/html public/docs
-  artifacts:
-    paths:
-      - public
-  needs:
-    - build-fedora-container@x86_64
-  only:
-    - master
-    - /^wip\/.*\/ci.*$/
-
+stages:
+  - build
+#
+#include:
+#    - remote: "https://gitlab.freedesktop.org/freedesktop/ci-templates/-/raw/290b79e0e78eab67a83766f4e9691be554fc4afd/templates/ci-fairy.yml"
+#    - remote: 'https://gitlab.freedesktop.org/freedesktop/ci-templates/-/raw/290b79e0e78eab67a83766f4e9691be554fc4afd/templates/fedora.yml'
+#
+#variables:
+#    MESON_TEST_TIMEOUT_MULTIPLIER: 3
+#
+#stages:
+#    - review
+#    - prepare
+#    - build
+#    - test
+#    - analysis
+#    - website
+#
+#.check-template: &check
+#  extends:
+#    - .fdo.ci-fairy
+#  artifacts:
+#    expire_in: 1 week
+#    paths:
+#      - check-junit-report.xml
+#    reports:
+#      junit: check-junit-report.xml
+#
+#check-commit-log:
+#  variables:
+#    GIT_DEPTH: "100"
+#  stage: review
+#  script:
+#    - if [[ x"$CI_MERGE_REQUEST_TARGET_BRANCH_NAME" != "x" ]] ;
+#      then
+#        ci-fairy check-commits --junit-xml=check-junit-report.xml ;
+#      else
+#        echo "Not a merge request" ;
+#      fi
+#  <<: *check
+#
+#check-merge-request:
+#  variables:
+#    GIT_STRATEGY: none
+#  stage: review
+#  script:
+#    - if [[ x"$CI_MERGE_REQUEST_TARGET_BRANCH_NAME" != "x" ]] ;
+#      then
+#        ci-fairy check-merge-request --require-allow-collaboration --junit-xml=check-junit-report.xml ;
+#      else
+#        echo "Not a merge request" ;
+#      fi
+#  <<: *check
+#
+#.build-template: &build
+#  stage: build
+#  script:
+#      - meson . build --prefix=/usr -Db_coverage=true 
+#      - ninja -C build
+#  artifacts:
+#      expire_in: 1 day
+#      paths:
+#          - build
+#
+#.gssdp.fedora@common:
+#  variables:
+#    BASE_TAG: '2021-06-19.0'
+#    FDO_UPSTREAM_REPO: GNOME/gssdp
+#    FDO_DISTRIBUTION_PACKAGES: 'clang clang-analyzer gcovr git libasan libubsan python3-gobject python3-pip xmlto gtk4-devel'
+#    FDO_DISTRIBUTION_EXEC: |
+#      dnf install -y 'dnf-command(builddep)' &&
+#      dnf builddep -y gssdp --setopt=install_weak_deps=False &&
+#      dnf clean all &&
+#      pip3 install meson markdown toml typogrify
+#
+#.gssdp.fedora:34@x86_64:
+#  extends: .gssdp.fedora@common
+#  variables:
+#    FDO_DISTRIBUTION_VERSION: 34
+#    FDO_DISTRIBUTION_TAG: "x86_64-${BASE_TAG}"
+#
+#build-fedora-container@x86_64:
+#  extends:
+#    - .fdo.container-build@fedora
+#    - .gssdp.fedora:34@x86_64
+#  stage: prepare
+#  variables:
+#    GIT_STRATEGY: none
+#
+#
+#build-fedora@x86_64:
+#    extends:
+#        - .fdo.distribution-image@fedora
+#        - .gssdp.fedora:34@x86_64
+#    needs:
+#        - build-fedora-container@x86_64
+#    <<: *build
+#
+#
+#.test-template: &test
+#  stage: test
+#  variables:
+#    G_SLICE: "always-malloc"
+#    MALLOC_CHECK_: "3"
+#  script:
+#    - cd build
+#    - |
+#      # Remove the many "CI_" variables from the environment. Meson dumps the
+#      # whole environment for every failed test, and that gives a whole
+#      # screenful of junk each time unless we strip these.
+#      unset $(env|grep -o '^CI_[^=]*')
+#      env LANG=C.UTF-8 LC_ALL=C.UTF-8 meson test --print-errorlogs ${MESON_TEST_EXTRA_ARGS}
+#  after_script:
+#    - |
+#      echo "Distribution: "
+#      echo
+#      egrep '^NAME=|^VERSION=' /etc/os-release
+#      echo
+#      echo "Test suite settings:"
+#      echo
+#      echo "G_MESSAGES_DEBUG: ${G_MESSAGES_DEBUG}"
+#      echo "MESON_TEST_EXTRA_ARGS: ${MESON_TEST_EXTRA_ARGS}"
+#      echo
+#      echo "These values can be set at https://gitlab.gnome.org/GNOME/gssdp/pipelines/new"
+#  artifacts:
+#    expire_in: 1 day
+#    when: always
+#    paths:
+#    - build
+#    reports:
+#      junit: "build/meson-logs/testlog.junit.xml"
+#
+#test-fedora@x86_64:
+#  extends:
+#    - .fdo.distribution-image@fedora
+#    - .gssdp.fedora:34@x86_64
+#  needs:
+#    - build-fedora@x86_64
+#  <<: *test
+#
+#trigger-gupnp:
+#  stage: analysis
+#  needs:
+#    - test-fedora@x86_64
+#  trigger: GNOME/gupnp
+#  only:
+#    - master
+#
+#coverage-analysis:
+#  extends:
+#    - .fdo.distribution-image@fedora
+#    - .gssdp.fedora:34@x86_64
+#  stage: analysis
+#  allow_failure: true
+#  script:
+#    - cd build
+#    - mkdir -p coveragereport
+#    - gcovr --html-details --print-summary --root=.. --exclude=../docs/reference --exclude=../tests --exclude=../tools --exclude=../examples --output coveragereport/index.html
+#  coverage: '/^lines: (\d+\.\d+\%)/'
+#  artifacts:
+#    when: always
+#    paths:
+#    - build/coveragereport
+#  needs:
+#    - test-fedora@x86_64
+#
+#static-scan:
+#  extends:
+#    - .fdo.distribution-image@fedora
+#    - .gssdp.fedora:34@x86_64
+#  stage: analysis
+#  needs:
+#    - build-fedora-container@x86_64
+#  script:
+#    - meson --buildtype=debug _scan_build
+#    - export SCANBUILD="$PWD/.gitlab-ci/scanbuild-wrapper.sh"
+#    - ninja -C _scan_build scan-build
+#  artifacts:
+#    paths:
+#      - _scan_build/meson-logs
+#  after_script:
+#    - .gitlab-ci/scanbuild-plist-to-junit.py _scan_build/meson-logs/scanbuild/ > _scan_build/junit-scan-build.xml
+#  artifacts:
+#    reports:
+#      junit: "_scan_build/junit-scan-build.xml"
+#
+#pages:
+#  extends:
+#    - .fdo.distribution-image@fedora
+#    - .gssdp.fedora:34@x86_64
+#  stage: website
+#  script:
+#      - meson doc-build -Dgtk_doc=true
+#      - ninja -C doc-build doc/GSSDP
+#      - mkdir -p public
+#      - mv doc-build/doc/GSSDP public/docs
+#
+#  artifacts:
+#    paths:
+#      - public
+#  needs:
+#    - build-fedora-container@x86_64
+#  only:
+#    - master
+#    - /^wip\/.*\/ci.*$/
+#    - /^wip\/.*\/.*doc.*$/
+#
+#

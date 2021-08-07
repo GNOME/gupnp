@@ -219,10 +219,9 @@ acl_server_handler_free (AclServerHandler *handler)
  */
 AclAsyncHandler *
 acl_async_handler_new (SoupServer *server,
-                       SoupMessage *message,
+                       SoupServerMessage *message,
                        const char *path,
                        GHashTable *query,
-                       SoupClientContext *client,
                        AclServerHandler *handler)
 {
         AclAsyncHandler *data = g_slice_new0 (AclAsyncHandler);
@@ -232,7 +231,6 @@ acl_async_handler_new (SoupServer *server,
         data->path = g_strdup (path);
         if (query != NULL)
                 data->query = g_hash_table_ref (query);
-        data->client = g_boxed_copy (SOUP_TYPE_CLIENT_CONTEXT, client);
         data->handler = handler;
 
         return data;
@@ -253,7 +251,7 @@ acl_async_handler_free (AclAsyncHandler *handler)
         g_free (handler->path);
         if (handler->query != NULL)
                 g_hash_table_unref (handler->query);
-        g_boxed_free (SOUP_TYPE_CLIENT_CONTEXT, handler->client);
+        // g_boxed_free (SOUP_TYPE_CLIENT_CONTEXT, handler->client);
 
         g_slice_free (AclAsyncHandler, handler);
 }

@@ -137,7 +137,7 @@ pkg.generate(
 )
 
 if get_option('introspection')
-    gir_includes = ['GObject-2.0', 'Gio-2.0', 'Soup-2.4', 'libxml2-2.0']
+    gir_includes = ['GObject-2.0', 'Gio-2.0', 'Soup-3.0', 'libxml2-2.0']
     if gssdp_dep.type_name() == 'internal'
         gir_includes += subproject('gssdp-1.6').get_variable('gir').get(0)
     else

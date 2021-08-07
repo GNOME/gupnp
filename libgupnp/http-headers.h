@@ -23,17 +23,17 @@ G_GNUC_INTERNAL void
 http_request_set_accept_language (SoupMessage  *message);
 
 G_GNUC_INTERNAL GList *
-http_request_get_accept_locales  (SoupMessage  *message);
+http_request_get_accept_locales (SoupMessageHeaders *message);
 
 G_GNUC_INTERNAL void
-http_response_set_content_locale (SoupMessage  *message,
-                                  const char   *locale);
+http_response_set_content_locale (SoupMessageHeaders *message,
+                                  const char *locale);
 
 G_GNUC_INTERNAL void
-http_response_set_content_type   (SoupMessage  *message,
-                                  const char   *path,
-                                  const guchar *data,
-                                  gsize         data_size);
+http_response_set_content_type (SoupMessageHeaders *response_headers,
+                                const char *path,
+                                const guchar *data,
+                                gsize data_size);
 
 G_GNUC_INTERNAL void
 http_response_set_content_range  (SoupMessage  *message,
@@ -42,9 +42,9 @@ http_response_set_content_range  (SoupMessage  *message,
                                   gsize         total);
 
 G_GNUC_INTERNAL void
-http_response_set_body_gzip      (SoupMessage   *msg,
-                                  const char    *body,
-                                  const gsize    length);
+http_response_set_body_gzip (SoupServerMessage *msg,
+                             const char *body,
+                             const gsize length);
 
 G_END_DECLS
 

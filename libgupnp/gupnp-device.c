@@ -50,7 +50,7 @@ gupnp_device_get_device (GUPnPDeviceInfo *info,
         GUPnPContext         *context;
         GUPnPDevice          *root_device;
         const char           *location;
-        const SoupURI        *url_base;
+        const GUri *url_base;
 
         device = GUPNP_DEVICE (info);
         priv = gupnp_device_get_instance_private (device);
@@ -90,7 +90,7 @@ gupnp_device_get_service (GUPnPDeviceInfo *info,
         GUPnPContext         *context;
         GUPnPDevice          *root_device;
         const char           *location, *udn;
-        const SoupURI        *url_base;
+        const GUri *url_base;
 
         device = GUPNP_DEVICE (info);
         priv = gupnp_device_get_instance_private (device);

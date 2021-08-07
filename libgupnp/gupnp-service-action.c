@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: LGPL-2.1-or-later
+
 #include <config.h>
 
 #include "gupnp-error.h"
@@ -7,6 +9,8 @@
 #include "gvalue-util.h"
 #include "http-headers.h"
 #include "xml-util.h"
+
+#include <gobject/gvaluecollector.h>
 
 GUPnPServiceAction *
 gupnp_service_action_new ()
@@ -74,7 +78,8 @@ finalize_action (GUPnPServiceAction *action)
                           "\"http://schemas.xmlsoap.org/soap/encoding/\">"
                           "<s:Body>");
 
-        if (action->msg->status_code != SOUP_STATUS_INTERNAL_SERVER_ERROR) {
+        if (soup_server_message_get_status (action->msg) !=
+            SOUP_STATUS_INTERNAL_SERVER_ERROR) {
                 g_string_append (action->response_str, "</u:");
                 g_string_append (action->response_str, action->name);
                 g_string_append (action->response_str, "Response>");
@@ -84,28 +89,34 @@ finalize_action (GUPnPServiceAction *action)
                          "</s:Body>"
                          "</s:Envelope>");
 
-        soup_message_headers_replace (action->msg->response_headers,
+        SoupMessageHeaders *headers =
+                soup_server_message_get_response_headers (action->msg);
+
+        soup_message_headers_replace (headers,
                                       "Content-Type",
                                       "text/xml; charset=\"utf-8\"");
 
         if (action->accept_gzip && action->response_str->len > 1024) {
+                // Fixme: Probably easier to use an output stream converter
+                // instead
                 http_response_set_body_gzip (action->msg,
                                              action->response_str->str,
                                              action->response_str->len);
                 g_string_free (action->response_str, TRUE);
         } else {
-                soup_message_body_append (action->msg->response_body,
-                                          SOUP_MEMORY_TAKE,
-                                          action->response_str->str,
-                                          action->response_str->len);
-                g_string_free (action->response_str, FALSE);
+                SoupMessageBody *msg_body =
+                        soup_server_message_get_response_body (action->msg);
+                soup_message_body_append_bytes (
+                        msg_body,
+                        g_string_free_to_bytes (action->response_str));
         }
+        action->response_str = NULL;
 
-        soup_message_headers_append (action->msg->response_headers, "Ext", "");
+        soup_message_headers_append (headers, "Ext", "");
 
         /* Server header on response */
         soup_message_headers_append (
-                action->msg->response_headers,
+                headers,
                 "Server",
                 gssdp_client_get_server_id (GSSDP_CLIENT (action->context)));
 
@@ -148,7 +159,8 @@ gupnp_service_action_get_locales (GUPnPServiceAction *action)
 {
         g_return_val_if_fail (action != NULL, NULL);
 
-        return http_request_get_accept_locales (action->msg);
+        return http_request_get_accept_locales (
+                soup_server_message_get_request_headers (action->msg));
 }
 
 /**
@@ -435,7 +447,8 @@ gupnp_service_action_set_values (GUPnPServiceAction *action,
         g_return_if_fail (g_list_length (arg_names) ==
                           g_list_length (arg_values));
 
-        if (action->msg->status_code == SOUP_STATUS_INTERNAL_SERVER_ERROR) {
+        if (soup_server_message_get_status (action->msg) ==
+            SOUP_STATUS_INTERNAL_SERVER_ERROR) {
                 g_warning ("Calling gupnp_service_action_set_value() after "
                            "having called gupnp_service_action_return_error() "
                            "is not allowed.");
@@ -477,7 +490,8 @@ gupnp_service_action_set_value (GUPnPServiceAction *action,
         g_return_if_fail (argument != NULL);
         g_return_if_fail (value != NULL);
 
-        if (action->msg->status_code == SOUP_STATUS_INTERNAL_SERVER_ERROR) {
+        if (soup_server_message_get_status (action->msg) ==
+            SOUP_STATUS_INTERNAL_SERVER_ERROR) {
                 g_warning ("Calling gupnp_service_action_set_value() after "
                            "having called gupnp_service_action_return_error() "
                            "is not allowed.");
@@ -502,7 +516,7 @@ gupnp_service_action_return (GUPnPServiceAction *action)
 {
         g_return_if_fail (action != NULL);
 
-        soup_message_set_status (action->msg, SOUP_STATUS_OK);
+        soup_server_message_set_status (action->msg, SOUP_STATUS_OK, "Ok");
 
         finalize_action (action);
 }
@@ -584,8 +598,9 @@ gupnp_service_action_return_error (GUPnPServiceAction *action,
 
         xml_util_end_element (action->response_str, "s:Fault");
 
-        soup_message_set_status (action->msg,
-                                 SOUP_STATUS_INTERNAL_SERVER_ERROR);
+        soup_server_message_set_status (action->msg,
+                                        SOUP_STATUS_INTERNAL_SERVER_ERROR,
+                                        "Internal server error");
 
         finalize_action (action);
 }
@@ -597,12 +612,12 @@ gupnp_service_action_return_error (GUPnPServiceAction *action,
  * Get the #SoupMessage associated with @action. Mainly intended for
  * applications to be able to read HTTP headers received from clients.
  *
- * Return value: (transfer full): #SoupMessage associated with @action. Unref
- * after using it.
+ * Return value: (transfer full): #SoupServerMessage associated with @action.
+ *Unref after using it.
  *
  * Since: 0.14.0
  **/
-SoupMessage *
+SoupServerMessage *
 gupnp_service_action_get_message (GUPnPServiceAction *action)
 {
         return g_object_ref (action->msg);

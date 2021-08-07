@@ -147,17 +147,19 @@ void
 _gupnp_error_set_server_error (GError     **error,
                                SoupMessage *msg)
 {
-        g_set_error_literal (error,
-                             GUPNP_SERVER_ERROR,
-                             code_from_status_code (msg->status_code),
-                             msg->reason_phrase);
+        g_set_error_literal (
+                error,
+                GUPNP_SERVER_ERROR,
+                code_from_status_code (soup_message_get_status (msg)),
+                soup_message_get_reason_phrase (msg));
 }
 
 /* Create a #GError with status of @msg */
 GError *
 _gupnp_error_new_server_error (SoupMessage *msg)
 {
-        return g_error_new_literal (GUPNP_SERVER_ERROR,
-                                    code_from_status_code (msg->status_code),
-                                    msg->reason_phrase);
+        return g_error_new_literal (
+                GUPNP_SERVER_ERROR,
+                code_from_status_code (soup_message_get_status (msg)),
+                soup_message_get_reason_phrase (msg));
 }

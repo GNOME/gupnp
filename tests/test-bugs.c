@@ -6,9 +6,7 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
-#ifdef HAVE_CONFIG_H
 #include <config.h>
-#endif
 
 #include <libgupnp/gupnp.h>
 #include <libgupnp/gupnp-service-private.h>
@@ -163,19 +161,20 @@ test_bgo_690400_query_variable (GUPnPService *service,
 }
 
 static gboolean
-test_on_timeout (G_GNUC_UNUSED gpointer user_data)
+test_on_timeout (gpointer user_data)
 {
-    g_assert_not_reached ();
+        g_print ("Timeout in %s\n", (const char *) user_data);
+        g_assert_not_reached ();
 
-    return FALSE;
+        return FALSE;
 }
 
 static void
-test_run_loop (GMainLoop *loop)
+test_run_loop (GMainLoop *loop, const char *name)
 {
     guint timeout_id = 0;
 
-    timeout_id = g_timeout_add_seconds (2, test_on_timeout, NULL);
+    timeout_id = g_timeout_add_seconds (2, test_on_timeout, (gpointer) name);
     g_main_loop_run (loop);
     g_source_remove (timeout_id);
 }
@@ -219,7 +218,7 @@ test_bgo_696762 (void)
                       G_CALLBACK (test_bgo_696762_on_browse_call),
                       &data);
 
-    test_run_loop (data.loop);
+    test_run_loop (data.loop, g_test_get_path ());
     g_assert (data.proxy != NULL);
 
     G_GNUC_BEGIN_IGNORE_DEPRECATIONS
@@ -236,7 +235,7 @@ test_bgo_696762 (void)
                                       NULL);
     G_GNUC_END_IGNORE_DEPRECATIONS
 
-    test_run_loop (data.loop);
+    test_run_loop (data.loop, g_test_get_path ());
 
     g_main_loop_unref (data.loop);
     g_object_unref (data.proxy);
@@ -287,7 +286,7 @@ test_bgo_678701 (void)
                       G_CALLBACK (test_bgo_678701_on_dp_available),
                       &data);
 
-    test_run_loop (data.loop);
+    test_run_loop (data.loop, g_test_get_path ());
     g_assert (data.proxy != NULL);
 
     info = gupnp_device_info_get_service (GUPNP_DEVICE_INFO (data.proxy),
@@ -341,7 +340,7 @@ test_bgo_690400 (void)
                       G_CALLBACK (test_bgo_690400_query_variable), NULL);
     gupnp_root_device_set_available (rd, TRUE);
 
-    test_run_loop (data.loop);
+    test_run_loop (data.loop, "690400 - waiting for query_variable");
     g_assert (data.proxy != NULL);
 
     gupnp_service_proxy_add_notify (data.proxy,
@@ -357,7 +356,7 @@ test_bgo_690400 (void)
 
     gupnp_service_proxy_set_subscribed (data.proxy, TRUE);
 
-    test_run_loop (data.loop);
+    test_run_loop (data.loop, "690400 - waiting for event");
 
     g_main_loop_unref (data.loop);
     g_object_unref (data.proxy);

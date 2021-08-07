@@ -36,8 +36,7 @@ typedef struct _GUPnPResourceFactoryPrivate GUPnPResourceFactoryPrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE (GUPnPResourceFactory,
                             gupnp_resource_factory,
-                            G_TYPE_OBJECT);
-
+                            G_TYPE_OBJECT)
 
 static void
 gupnp_resource_factory_init (GUPnPResourceFactory *factory)
@@ -194,14 +193,13 @@ lookup_type_with_fallback (GHashTable *resource_types,
  * Return value:(nullable)(transfer full): A new #GUPnPDeviceProxy.
  **/
 GUPnPDeviceProxy *
-gupnp_resource_factory_create_device_proxy
-                                (GUPnPResourceFactory *factory,
-                                 GUPnPContext         *context,
-                                 GUPnPXMLDoc          *doc,
-                                 xmlNode              *element,
-                                 const char           *udn,
-                                 const char           *location,
-                                 const SoupURI        *url_base)
+gupnp_resource_factory_create_device_proxy (GUPnPResourceFactory *factory,
+                                            GUPnPContext *context,
+                                            GUPnPXMLDoc *doc,
+                                            xmlNode *element,
+                                            const char *udn,
+                                            const char *location,
+                                            const GUri *url_base)
 {
         GUPnPDeviceProxy *proxy;
         GType proxy_type;
@@ -253,15 +251,14 @@ gupnp_resource_factory_create_device_proxy
  * Return value:(nullable)(transfer full): A new #GUPnPServiceProxy.
  **/
 GUPnPServiceProxy *
-gupnp_resource_factory_create_service_proxy
-                                (GUPnPResourceFactory *factory,
-                                 GUPnPContext         *context,
-                                 GUPnPXMLDoc          *doc,
-                                 xmlNode              *element,
-                                 const char           *udn,
-                                 const char           *service_type,
-                                 const char           *location,
-                                 const SoupURI        *url_base)
+gupnp_resource_factory_create_service_proxy (GUPnPResourceFactory *factory,
+                                             GUPnPContext *context,
+                                             GUPnPXMLDoc *doc,
+                                             xmlNode *element,
+                                             const char *udn,
+                                             const char *service_type,
+                                             const char *location,
+                                             const GUri *url_base)
 {
         GUPnPServiceProxy *proxy;
         GType              proxy_type = GUPNP_TYPE_SERVICE_PROXY;
@@ -311,14 +308,13 @@ gupnp_resource_factory_create_service_proxy
  * Return value: (nullable)(transfer full): A new #GUPnPDevice.
  **/
 GUPnPDevice *
-gupnp_resource_factory_create_device
-                                (GUPnPResourceFactory *factory,
-                                 GUPnPContext         *context,
-                                 GUPnPDevice          *root_device,
-                                 xmlNode              *element,
-                                 const char           *udn,
-                                 const char           *location,
-                                 const SoupURI        *url_base)
+gupnp_resource_factory_create_device (GUPnPResourceFactory *factory,
+                                      GUPnPContext *context,
+                                      GUPnPDevice *root_device,
+                                      xmlNode *element,
+                                      const char *udn,
+                                      const char *location,
+                                      const GUri *url_base)
 {
         GUPnPDevice *device;
         GType        device_type = GUPNP_TYPE_DEVICE;
@@ -367,14 +363,13 @@ gupnp_resource_factory_create_device
  * Return value: (nullable)(transfer full): A new #GUPnPService.
  **/
 GUPnPService *
-gupnp_resource_factory_create_service
-                                (GUPnPResourceFactory *factory,
-                                 GUPnPContext         *context,
-                                 GUPnPDevice          *root_device,
-                                 xmlNode              *element,
-                                 const char           *udn,
-                                 const char           *location,
-                                 const SoupURI        *url_base)
+gupnp_resource_factory_create_service (GUPnPResourceFactory *factory,
+                                       GUPnPContext *context,
+                                       GUPnPDevice *root_device,
+                                       xmlNode *element,
+                                       const char *udn,
+                                       const char *location,
+                                       const GUri *url_base)
 {
         GUPnPService *service;
         GType         service_type = GUPNP_TYPE_SERVICE;

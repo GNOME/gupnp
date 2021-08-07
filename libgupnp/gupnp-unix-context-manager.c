@@ -30,7 +30,6 @@
 #include <arpa/inet.h>
 #include <net/if.h>
 #include <ifaddrs.h>
-#include <libsoup/soup-address.h>
 #include <glib/gstdio.h>
 #include <libgssdp/gssdp-error.h>
 

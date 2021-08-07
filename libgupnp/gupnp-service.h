@@ -114,8 +114,8 @@ gupnp_service_action_return_error (GUPnPServiceAction *action,
                                    guint               error_code,
                                    const char         *error_description);
 
-SoupMessage *
-gupnp_service_action_get_message  (GUPnPServiceAction *action);
+SoupServerMessage *
+gupnp_service_action_get_message (GUPnPServiceAction *action);
 
 guint
 gupnp_service_action_get_argument_count

@@ -141,7 +141,10 @@ http_request_set_accept_language (SoupMessage *message)
 
         g_free (lang);
 
-        soup_message_headers_append (message->request_headers,
+        SoupMessageHeaders *request_headers =
+                soup_message_get_request_headers (message);
+
+        soup_message_headers_append (request_headers,
                                      "Accept-Language",
                                      tmp->str);
 
@@ -177,14 +180,14 @@ sort_locales_by_quality (const char *a,
 /* Parses the Accept-Language header in @message, and returns its values
  * in an ordered list in UNIX locale format */
 GList *
-http_request_get_accept_locales (SoupMessage *message)
+http_request_get_accept_locales (SoupMessageHeaders *request_headers)
 {
         const char *header;
         char **bits;
         int i;
         GList *locales;
 
-        header = soup_message_headers_get_one (message->request_headers,
+        header = soup_message_headers_get_one (request_headers,
                                                "Accept-Language");
         if (header == NULL)
                 return NULL;
@@ -224,15 +227,15 @@ http_request_get_accept_locales (SoupMessage *message)
 
 /* Set Accept-Language header according to @locale. */
 void
-http_response_set_content_locale (SoupMessage *msg,
-                                  const char  *locale)
+http_response_set_content_locale (SoupMessageHeaders *response_headers,
+                                  const char *locale)
 {
         char *lang;
 
         lang = g_strdup (locale);
         http_language_from_locale (lang);
 
-        soup_message_headers_append (msg->response_headers,
+        soup_message_headers_append (response_headers,
                                      "Content-Language",
                                      lang);
 
@@ -242,10 +245,10 @@ http_response_set_content_locale (SoupMessage *msg,
 /* Set Content-Type header guessed from @path, @data and @data_size using
  * g_content_type_guess(). */
 void
-http_response_set_content_type (SoupMessage  *msg,
-                                const char   *path,
+http_response_set_content_type (SoupMessageHeaders *response_headers,
+                                const char *path,
                                 const guchar *data,
-                                gsize         data_size)
+                                gsize data_size)
 {
         char *content_type, *mime;
 
@@ -262,9 +265,7 @@ http_response_set_content_type (SoupMessage  *msg,
                 mime = g_strdup ("text/xml; charset=\"utf-8\"");
         }
 
-        soup_message_headers_append (msg->response_headers,
-                                     "Content-Type",
-                                     mime);
+        soup_message_headers_append (response_headers, "Content-Type", mime);
 
         g_free (mime);
         g_free (content_type);
@@ -272,16 +273,22 @@ http_response_set_content_type (SoupMessage  *msg,
 
 /* Set Content-Encoding header to gzip and append compressed body */
 void
-http_response_set_body_gzip (SoupMessage *msg,
-                             const char  *body,
-                             const gsize  length)
+http_response_set_body_gzip (SoupServerMessage *msg,
+                             const char *body,
+                             const gsize length)
 {
         GZlibCompressor *compressor;
         gboolean finished = FALSE;
         gsize converted = 0;
 
-        soup_message_headers_append (msg->response_headers,
-                                     "Content-Encoding", "gzip");
+        SoupMessageBody *message_body =
+                soup_server_message_get_response_body (msg);
+        SoupMessageHeaders *response_headers =
+                soup_server_message_get_response_headers (msg);
+
+        soup_message_headers_append (response_headers,
+                                     "Content-Encoding",
+                                     "gzip");
 
         compressor = g_zlib_compressor_new (G_ZLIB_COMPRESSOR_FORMAT_GZIP, -1);
 
@@ -317,9 +324,10 @@ http_response_set_body_gzip (SoupMessage *msg,
                 }
 
                 if (bytes_written)
-                        soup_message_body_append (msg->response_body,
+                        soup_message_body_append (message_body,
                                                   SOUP_MEMORY_COPY,
-                                                  buf, bytes_written);
+                                                  buf,
+                                                  bytes_written);
         }
 
         g_object_unref (compressor);

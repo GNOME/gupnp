@@ -84,6 +84,7 @@ get_description_url_data_free (GetDescriptionURLData *data)
 {
         gupnp_control_point_remove_pending_get (data->control_point, data);
         if (data->message) {
+#if 0
                 GUPnPContext *context;
                 SoupSession *session;
 
@@ -94,6 +95,7 @@ get_description_url_data_free (GetDescriptionURLData *data)
                 soup_session_cancel_message (session,
                                              data->message,
                                              SOUP_STATUS_CANCELLED);
+#endif
         }
 
         if (data->timeout_source) {
@@ -284,13 +286,13 @@ find_device_node (GUPnPControlPoint *control_point,
 }
 
 static void
-create_and_report_service_proxy (GUPnPControlPoint  *control_point,
-                                 GUPnPXMLDoc        *doc,
-                                 xmlNode            *element,
-                                 const char         *udn,
-                                 const char         *service_type,
-                                 const char         *description_url,
-                                 SoupURI            *url_base)
+create_and_report_service_proxy (GUPnPControlPoint *control_point,
+                                 GUPnPXMLDoc *doc,
+                                 xmlNode *element,
+                                 const char *udn,
+                                 const char *service_type,
+                                 const char *description_url,
+                                 GUri *url_base)
 {
         GUPnPServiceProxy *proxy;
         GUPnPResourceFactory *factory;
@@ -324,12 +326,12 @@ create_and_report_service_proxy (GUPnPControlPoint  *control_point,
 }
 
 static void
-create_and_report_device_proxy (GUPnPControlPoint  *control_point,
-                                GUPnPXMLDoc        *doc,
-                                xmlNode            *element,
-                                const char         *udn,
-                                const char         *description_url,
-                                SoupURI            *url_base)
+create_and_report_device_proxy (GUPnPControlPoint *control_point,
+                                GUPnPXMLDoc *doc,
+                                xmlNode *element,
+                                const char *udn,
+                                const char *description_url,
+                                GUri *url_base)
 {
         GUPnPDeviceProxy *proxy;
         GUPnPResourceFactory *factory;
@@ -400,13 +402,13 @@ compare_service_types_versioned (const char *searched_service,
 
 /* Search @element for matching services */
 static void
-process_service_list (xmlNode           *element,
+process_service_list (xmlNode *element,
                       GUPnPControlPoint *control_point,
-                      GUPnPXMLDoc       *doc,
-                      const char        *udn,
-                      const char        *service_type,
-                      const char        *description_url,
-                      SoupURI           *url_base)
+                      GUPnPXMLDoc *doc,
+                      const char *udn,
+                      const char *service_type,
+                      const char *description_url,
+                      GUri *url_base)
 {
         g_object_ref (control_point);
 
@@ -446,13 +448,13 @@ process_service_list (xmlNode           *element,
 
 /* Recursively search @element for matching devices */
 static void
-process_device_list (xmlNode           *element,
+process_device_list (xmlNode *element,
                      GUPnPControlPoint *control_point,
-                     GUPnPXMLDoc       *doc,
-                     const char        *udn,
-                     const char        *service_type,
-                     const char        *description_url,
-                     SoupURI           *url_base)
+                     GUPnPXMLDoc *doc,
+                     const char *udn,
+                     const char *service_type,
+                     const char *description_url,
+                     GUri *url_base)
 {
         g_object_ref (control_point);
 
@@ -531,7 +533,7 @@ description_loaded (GUPnPControlPoint *control_point,
                     const char        *description_url)
 {
         xmlNode *element;
-        SoupURI *url_base;
+        GUri *url_base;
 
         /* Save the URL base, if any */
         element = xml_util_get_element ((xmlNode *)
@@ -551,7 +553,8 @@ description_loaded (GUPnPControlPoint *control_point,
                                                            "URLBase",
                                                            NULL);
         if (!url_base)
-                url_base = soup_uri_new (description_url);
+                url_base =
+                        g_uri_parse (description_url, G_URI_FLAGS_NONE, NULL);
 
         /* Iterate matching devices */
         process_device_list (element,
@@ -563,7 +566,7 @@ description_loaded (GUPnPControlPoint *control_point,
                              url_base);
 
         /* Cleanup */
-        soup_uri_free (url_base);
+        g_uri_unref (url_base);
 }
 
 
@@ -574,15 +577,23 @@ description_url_retry_timeout (gpointer user_data);
  * Description URL downloaded.
  */
 static void
-got_description_url (SoupSession           *session,
-                     SoupMessage           *msg,
+got_description_url (GObject *source,
+                     GAsyncResult *res,
                      GetDescriptionURLData *data)
 {
         GUPnPXMLDoc *doc;
         GUPnPControlPointPrivate *priv;
+        GError *error = NULL;
+        SoupMessage *message = data->message;
 
-        if (msg->status_code == SOUP_STATUS_CANCELLED)
-                return;
+        GBytes *body = soup_session_send_and_read_finish (SOUP_SESSION (source),
+                                                          res,
+                                                          &error);
+
+        if (g_error_matches (error, G_IO_ERROR, G_IO_ERROR_CANCELLED))
+                goto out;
+
+        // FIXME: What to do on other errors...
 
         data->message = NULL;
         priv = gupnp_control_point_get_instance_private (data->control_point);
@@ -600,16 +611,19 @@ got_description_url (SoupSession           *session,
 
                 get_description_url_data_free (data);
 
-                return;
+                goto out;
         }
 
         /* Not cached */
-        if (SOUP_STATUS_IS_SUCCESSFUL (msg->status_code)) {
+        if (SOUP_STATUS_IS_SUCCESSFUL (soup_message_get_status (message))) {
                 xmlDoc *xml_doc;
+                gsize length;
+                gconstpointer body_data;
+
+                body_data = g_bytes_get_data (body, &length);
 
                 /* Parse response */
-                xml_doc = xmlRecoverMemory (msg->response_body->data,
-                                            msg->response_body->length);
+                xml_doc = xmlRecoverMemory (body_data, length);
                 if (xml_doc) {
                         doc = gupnp_xml_doc_new (xml_doc);
 
@@ -637,18 +651,18 @@ got_description_url (SoupSession           *session,
 
                 get_description_url_data_free (data);
         } else {
-                GMainContext *async_context;
+                GMainContext *async_context =
+                        g_main_context_get_thread_default ();
 
                 /* Retry GET after a timeout */
-                async_context = soup_session_get_async_context (session);
-
                 data->tries--;
 
                 if (data->tries > 0) {
-                        g_warning ("Failed to GET %s: %s, retrying in %d seconds",
-                                   data->description_url,
-                                   msg->reason_phrase,
-                                   data->timeout);
+                        g_warning (
+                                "Failed to GET %s: %s, retrying in %d seconds",
+                                data->description_url,
+                                soup_message_get_reason_phrase (message),
+                                data->timeout);
 
                         data->timeout_source = g_timeout_source_new_seconds
                                         (data->timeout);
@@ -662,6 +676,10 @@ got_description_url (SoupSession           *session,
                         g_warning ("Maximum number of retries failed, not trying again");
                 }
         }
+
+out:
+        g_bytes_unref (body);
+        g_object_unref (message);
 }
 
 /*
@@ -735,11 +753,13 @@ load_description (GUPnPControlPoint *control_point,
                 priv->pending_gets = g_list_prepend (priv->pending_gets,
                                                      data);
 
-                soup_session_queue_message (session,
-                                            data->message,
-                                            (SoupSessionCallback)
-                                                   got_description_url,
-                                            data);
+                soup_session_send_and_read_async (
+                        session,
+                        data->message,
+                        G_PRIORITY_DEFAULT,
+                        NULL,
+                        (GAsyncReadyCallback) got_description_url,
+                        data);
         }
 }
 

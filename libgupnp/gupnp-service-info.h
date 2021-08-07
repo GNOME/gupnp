@@ -10,7 +10,6 @@
 #define GUPNP_SERVICE_INFO_H
 
 #include <glib-object.h>
-#include <libsoup/soup-uri.h>
 
 #include "gupnp-context.h"
 #include "gupnp-service-introspection.h"
@@ -57,8 +56,8 @@ gupnp_service_info_get_context                (GUPnPServiceInfo *info);
 const char *
 gupnp_service_info_get_location               (GUPnPServiceInfo *info);
 
-const SoupURI *
-gupnp_service_info_get_url_base               (GUPnPServiceInfo *info);
+const GUri *
+gupnp_service_info_get_url_base (GUPnPServiceInfo *info);
 
 const char *
 gupnp_service_info_get_udn                    (GUPnPServiceInfo *info);

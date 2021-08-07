@@ -25,13 +25,22 @@ create_context (guint16 port, GError **error) {
                                               NULL));
 }
 
-static void
-on_message_finished (G_GNUC_UNUSED SoupSession *session,
-                     G_GNUC_UNUSED SoupMessage *message,
-                     gpointer                   user_data) {
-        GMainLoop *loop = (GMainLoop*) user_data;
+typedef struct {
+        GMainLoop *loop;
+        GBytes *body;
+        GError *error;
+} RangeHelper;
 
-        g_main_loop_quit (loop);
+static void
+on_message_finished (GObject *source, GAsyncResult *res, gpointer user_data)
+{
+        RangeHelper *h = (RangeHelper *) user_data;
+
+        h->body = soup_session_send_and_read_finish (SOUP_SESSION (source),
+                                                     res,
+                                                     &h->error);
+
+        g_main_loop_quit (h->loop);
 }
 
 static void
@@ -50,11 +59,11 @@ request_range_and_compare (GMappedFile *file,
         full_length = g_mapped_file_get_length (file);
 
         message = soup_message_new ("GET", uri);
-        g_object_ref (message);
 
-        soup_message_headers_set_range (message->request_headers,
-                                        want_start,
-                                        want_end);
+        SoupMessageHeaders *request_headers =
+                soup_message_get_request_headers (message);
+
+        soup_message_headers_set_range (request_headers, want_start, want_end);
 
         /* interpretation according to SoupRange documentation */
         if (want_end == -1) {
@@ -70,33 +79,39 @@ request_range_and_compare (GMappedFile *file,
         } else
                 want_length = want_end - want_start + 1;
 
-
-        soup_session_queue_message (session,
-                                    message,
-                                    on_message_finished,
-                                    loop);
+        RangeHelper h = { loop, NULL, NULL };
+        soup_session_send_and_read_async (session,
+                                          message,
+                                          G_PRIORITY_DEFAULT,
+                                          NULL,
+                                          on_message_finished,
+                                          &h);
 
         g_main_loop_run (loop);
-        g_assert_cmpint (message->status_code, ==, SOUP_STATUS_PARTIAL_CONTENT);
-        g_assert_cmpint (message->response_body->length, ==, want_length);
-        got_length = soup_message_headers_get_content_length
-                                        (message->response_headers);
+        g_assert_no_error (h.error);
+        g_assert_nonnull (h.body);
+
+        g_assert_cmpint (soup_message_get_status (message),
+                         ==,
+                         SOUP_STATUS_PARTIAL_CONTENT);
+        g_assert_cmpint (g_bytes_get_size (h.body), ==, want_length);
+        SoupMessageHeaders *response_headers =
+                soup_message_get_response_headers (message);
+        got_length = soup_message_headers_get_content_length (response_headers);
         g_assert_cmpint (got_length, ==, want_length);
-        soup_message_headers_get_content_range (message->response_headers,
+        soup_message_headers_get_content_range (response_headers,
                                                 &got_start,
                                                 &got_end,
                                                 &got_length);
         g_assert_cmpint (got_start, ==, want_start);
         g_assert_cmpint (got_end, ==, want_end);
         result = memcmp (g_mapped_file_get_contents (file) + want_start,
-                         message->response_body->data,
+                         g_bytes_get_data (h.body, NULL),
                          want_length);
         g_assert_cmpint (result, ==, 0);
 
         g_object_unref (message);
-
-        message = soup_message_new ("GET", uri);
-        g_object_ref (message);
+        g_bytes_unref (h.body);
 }
 
 static void
@@ -170,18 +185,27 @@ test_gupnp_context_http_ranged_requests (void)
 
         /* Try to get 1 byte after the end of the file */
         message = soup_message_new ("GET", uri);
-        g_object_ref (message);
 
-        soup_message_headers_set_range (message->request_headers,
-                                        file_length,
-                                        file_length);
-        soup_session_queue_message (session,
-                                    message,
-                                    on_message_finished,
-                                    loop);
+        RangeHelper h = { loop, NULL, NULL };
+        soup_message_headers_set_range (
+                soup_message_get_request_headers (message),
+                file_length,
+                file_length);
+        soup_session_send_and_read_async (session,
+                                          message,
+                                          G_PRIORITY_DEFAULT,
+                                          NULL,
+                                          on_message_finished,
+                                          &h);
 
         g_main_loop_run (loop);
-        g_assert_cmpint (message->status_code, ==, SOUP_STATUS_REQUESTED_RANGE_NOT_SATISFIABLE);
+
+        g_assert_no_error (h.error);
+        g_assert_nonnull (h.body);
+        g_bytes_unref (h.body);
+        g_assert_cmpint (soup_message_get_status (message),
+                         ==,
+                         SOUP_STATUS_REQUESTED_RANGE_NOT_SATISFIABLE);
 
         g_object_unref (message);
 

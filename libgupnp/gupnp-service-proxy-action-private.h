@@ -137,6 +137,7 @@ struct _GUPnPServiceProxyAction {
         gint header_pos;
 
         SoupMessage *msg;
+        GBytes *response;
         GString *msg_str;
 
         GCancellable *cancellable;

@@ -65,7 +65,7 @@ check_action_response (G_GNUC_UNUSED GUPnPServiceProxy *proxy,
         xmlDoc *response;
         int code;
 
-        if (action->msg == NULL) {
+        if (action->msg == NULL || action->response == NULL) {
                 g_set_error (error,
                              GUPNP_SERVER_ERROR,
                              GUPNP_SERVER_ERROR_INVALID_RESPONSE,
@@ -74,8 +74,10 @@ check_action_response (G_GNUC_UNUSED GUPnPServiceProxy *proxy,
                 return NULL;
         }
 
+        SoupStatus status = soup_message_get_status (action->msg);
+
         /* Check for errors */
-        switch (action->msg->status_code) {
+        switch (status) {
         case SOUP_STATUS_OK:
         case SOUP_STATUS_INTERNAL_SERVER_ERROR:
                 break;
@@ -86,21 +88,24 @@ check_action_response (G_GNUC_UNUSED GUPnPServiceProxy *proxy,
         }
 
         /* Parse response */
-        response = xmlRecoverMemory (action->msg->response_body->data,
-                                     action->msg->response_body->length);
+        gconstpointer data;
+        gsize length;
+        data = g_bytes_get_data (action->response, &length);
+        response = xmlRecoverMemory (data, length);
+        g_clear_pointer (&action->response, g_bytes_unref);
 
         if (!response) {
-                if (action->msg->status_code == SOUP_STATUS_OK) {
+                if (status == SOUP_STATUS_OK) {
                         g_set_error (error,
                                      GUPNP_SERVER_ERROR,
                                      GUPNP_SERVER_ERROR_INVALID_RESPONSE,
                                      "Could not parse SOAP response");
                 } else {
-                        g_set_error_literal
-                                    (error,
-                                     GUPNP_SERVER_ERROR,
-                                     GUPNP_SERVER_ERROR_INTERNAL_SERVER_ERROR,
-                                     action->msg->reason_phrase);
+                        g_set_error_literal (
+                                error,
+                                GUPNP_SERVER_ERROR,
+                                GUPNP_SERVER_ERROR_INTERNAL_SERVER_ERROR,
+                                soup_message_get_reason_phrase (action->msg));
                 }
 
                 return NULL;
@@ -137,7 +142,7 @@ check_action_response (G_GNUC_UNUSED GUPnPServiceProxy *proxy,
         }
 
         /* Check whether we have a Fault */
-        if (action->msg->status_code == SOUP_STATUS_INTERNAL_SERVER_ERROR) {
+        if (status == SOUP_STATUS_INTERNAL_SERVER_ERROR) {
                 xmlNode *param;
                 char *desc;
 
@@ -175,7 +180,8 @@ check_action_response (G_GNUC_UNUSED GUPnPServiceProxy *proxy,
                 desc = xml_util_get_child_element_content_glib
                                         (param, "errorDescription");
                 if (desc == NULL)
-                        desc = g_strdup (action->msg->reason_phrase);
+                        desc = g_strdup (
+                                soup_message_get_reason_phrase (action->msg));
 
                 g_set_error_literal (error,
                                      GUPNP_CONTROL_ERROR,

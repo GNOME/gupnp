@@ -92,10 +92,7 @@ gupnp_root_device_dispose (GObject *object)
         device = GUPNP_ROOT_DEVICE (object);
         priv = gupnp_root_device_get_instance_private (device);
 
-        if (priv->group) {
-                g_object_unref (priv->group);
-                priv->group = NULL;
-        }
+        g_clear_object (&priv->group);
 
         /* Call super */
         object_class = G_OBJECT_CLASS (gupnp_root_device_parent_class);
@@ -288,10 +285,10 @@ gupnp_root_device_initable_init (GInitable     *initable,
         GUPnPRootDevice *device;
         GUPnPContext *context;
         const char *udn;
-        SoupURI *uri;
+        GUri *uri;
         char *desc_path, *location, *usn, *relative_location;
         xmlNode *root_element, *element;
-        SoupURI *url_base;
+        GUri *url_base;
         gboolean result = FALSE;
         GUPnPRootDevicePrivate *priv;
 
@@ -406,9 +403,10 @@ gupnp_root_device_initable_init (GInitable     *initable,
         gupnp_context_host_path (context, priv->description_dir, "");
 
         /* Generate full location */
-        soup_uri_set_path (uri, relative_location);
-        location = soup_uri_to_string (uri, FALSE);
-
+        GUri *new_uri =
+                soup_uri_copy (uri, SOUP_URI_PATH, relative_location, NULL);
+        location = g_uri_to_string_partial (new_uri, G_URI_HIDE_PASSWORD);
+        g_uri_unref (new_uri);
         g_free (relative_location);
 
         /* Save the URL base, if any */
@@ -416,15 +414,14 @@ gupnp_root_device_initable_init (GInitable     *initable,
                                                            "URLBase",
                                                            NULL);
         if (!url_base)
-                url_base = soup_uri_new (location);
+                url_base = g_uri_parse (location, G_URI_FLAGS_NONE, NULL);
 
         /* Set additional properties */
         g_object_set (G_OBJECT (device),
                       "location", location,
                       "url-base", url_base,
                       NULL);
-
-        soup_uri_free (url_base);
+        g_uri_unref (url_base);
 
         /* Create resource group */
         priv->group = gssdp_resource_group_new (GSSDP_CLIENT (context));
@@ -444,7 +441,7 @@ gupnp_root_device_initable_init (GInitable     *initable,
  DONE:
         /* Cleanup */
         if (uri)
-                soup_uri_free (uri);
+                g_uri_unref (uri);
 
         g_free (desc_path);
         g_free (location);

@@ -15,7 +15,7 @@
 
 G_BEGIN_DECLS
 
-G_GNUC_INTERNAL SoupURI *
+G_GNUC_INTERNAL GUri *
 _gupnp_context_get_server_uri (GUPnPContext *context);
 
 G_GNUC_INTERNAL void
@@ -23,9 +23,8 @@ _gupnp_context_add_server_handler_with_data (GUPnPContext *context,
                                              const char *path,
                                              AclServerHandler *data);
 
-G_GNUC_INTERNAL SoupURI *
-gupnp_context_rewrite_uri_to_uri (GUPnPContext *context,
-                                  const char   *uri);
+G_GNUC_INTERNAL GUri *
+gupnp_context_rewrite_uri_to_uri (GUPnPContext *context, const char *uri);
 
 G_GNUC_INTERNAL gboolean
 gupnp_context_validate_host_header (GUPnPContext *context, const char *host);

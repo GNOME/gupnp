@@ -19,7 +19,7 @@ struct _GUPnPServiceAction {
 
         char         *name;
 
-        SoupMessage  *msg;
+        SoupServerMessage *msg;
         gboolean      accept_gzip;
 
         GUPnPXMLDoc  *doc;

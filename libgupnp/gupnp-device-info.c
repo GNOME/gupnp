@@ -31,7 +31,7 @@ struct _GUPnPDeviceInfoPrivate {
         char *udn;
         char *device_type;
 
-        SoupURI *url_base;
+        GUri *url_base;
 
         GUPnPXMLDoc *doc;
 
@@ -177,7 +177,7 @@ gupnp_device_info_finalize (GObject *object)
         g_free (priv->udn);
         g_free (priv->device_type);
 
-        g_clear_pointer (&priv->url_base, soup_uri_free);
+        g_clear_pointer (&priv->url_base, g_uri_unref);
 
         G_OBJECT_CLASS (gupnp_device_info_parent_class)->finalize (object);
 }
@@ -290,18 +290,17 @@ gupnp_device_info_class_init (GUPnPDeviceInfoClass *klass)
          *
          * The URL base (#SoupURI).
          **/
-        g_object_class_install_property
-                (object_class,
-                 PROP_URL_BASE,
-                 g_param_spec_boxed ("url-base",
-                                     "URL base",
-                                     "The URL base",
-                                     SOUP_TYPE_URI,
-                                     G_PARAM_READWRITE |
-                                     G_PARAM_CONSTRUCT |
-                                     G_PARAM_STATIC_NAME |
-                                     G_PARAM_STATIC_NICK |
-                                     G_PARAM_STATIC_BLURB));
+        g_object_class_install_property (
+                object_class,
+                PROP_URL_BASE,
+                g_param_spec_boxed ("url-base",
+                                    "URL base",
+                                    "The URL base",
+                                    G_TYPE_URI,
+                                    G_PARAM_READWRITE | G_PARAM_CONSTRUCT |
+                                            G_PARAM_STATIC_NAME |
+                                            G_PARAM_STATIC_NICK |
+                                            G_PARAM_STATIC_BLURB));
 
         /**
          * GUPnPDeviceInfo:document:
@@ -413,7 +412,7 @@ gupnp_device_info_get_location (GUPnPDeviceInfo *info)
  *
  * Returns: A #SoupURI.
  **/
-const SoupURI *
+const GUri *
 gupnp_device_info_get_url_base (GUPnPDeviceInfo *info)
 {
         GUPnPDeviceInfoPrivate *priv;
@@ -910,12 +909,15 @@ gupnp_device_info_get_icon_url (GUPnPDeviceInfo *info,
                         *height = icon->height;
 
                 if (icon->url) {
-                        SoupURI *uri;
+                        GUri *uri;
 
-                        uri = soup_uri_new_with_base (priv->url_base,
-                                                      (const char *) icon->url);
-                        ret = soup_uri_to_string (uri, FALSE);
-                        soup_uri_free (uri);
+                        uri = g_uri_parse_relative (priv->url_base,
+                                                    (const char *) icon->url,
+                                                    G_URI_FLAGS_NONE,
+                                                    NULL);
+                        ret = g_uri_to_string_partial (uri,
+                                                       G_URI_HIDE_PASSWORD);
+                        g_uri_unref (uri);
                 } else
                         ret = NULL;
         } else {

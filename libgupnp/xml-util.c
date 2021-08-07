@@ -93,22 +93,27 @@ xml_util_get_child_element_content_glib (xmlNode    *node,
         return copy;
 }
 
-SoupURI *
-xml_util_get_child_element_content_uri (xmlNode    *node,
+GUri *
+xml_util_get_child_element_content_uri (xmlNode *node,
                                         const char *child_name,
-                                        SoupURI    *base)
+                                        GUri *base)
 {
         xmlChar *content;
-        SoupURI *uri;
+        GUri *uri;
 
         content = xml_util_get_child_element_content (node, child_name);
         if (!content)
                 return NULL;
 
         if (base != NULL)
-                uri = soup_uri_new_with_base (base, (const char *) content);
+                uri = g_uri_parse_relative (base,
+                                            (const char *) content,
+                                            G_URI_FLAGS_NONE,
+                                            NULL);
         else
-                uri = soup_uri_new ((const char *) content);
+                uri = g_uri_parse ((const char *) content,
+                                   G_URI_FLAGS_NONE,
+                                   NULL);
 
         xmlFree (content);
 
@@ -116,20 +121,19 @@ xml_util_get_child_element_content_uri (xmlNode    *node,
 }
 
 char *
-xml_util_get_child_element_content_url (xmlNode    *node,
+xml_util_get_child_element_content_url (xmlNode *node,
                                         const char *child_name,
-                                        SoupURI    *base)
+                                        GUri *base)
 {
-        SoupURI *uri;
+        GUri *uri;
         char *url;
 
         uri = xml_util_get_child_element_content_uri (node, child_name, base);
         if (!uri)
                 return NULL;
 
-        url = soup_uri_to_string (uri, FALSE);
-
-        soup_uri_free (uri);
+        url = g_uri_to_string_partial (uri, G_URI_HIDE_PASSWORD);
+        g_uri_unref (uri);
 
         return url;
 }

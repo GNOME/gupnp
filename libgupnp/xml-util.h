@@ -10,7 +10,6 @@
 #define GUPNP_XML_UTIL_H
 
 #include <libxml/tree.h>
-#include <libsoup/soup-uri.h>
 #include <stdarg.h>
 #include <glib-object.h>
 
@@ -31,15 +30,15 @@ G_GNUC_INTERNAL char *
 xml_util_get_child_element_content_glib (xmlNode    *node,
                                          const char *child_name);
 
-G_GNUC_INTERNAL SoupURI *
-xml_util_get_child_element_content_uri  (xmlNode    *node,
-                                         const char *child_name,
-                                         SoupURI    *base);
+G_GNUC_INTERNAL GUri *
+xml_util_get_child_element_content_uri (xmlNode *node,
+                                        const char *child_name,
+                                        GUri *base);
 
 G_GNUC_INTERNAL char *
-xml_util_get_child_element_content_url  (xmlNode    *node,
-                                         const char *child_name,
-                                         SoupURI    *base);
+xml_util_get_child_element_content_url (xmlNode *node,
+                                        const char *child_name,
+                                        GUri *base);
 G_GNUC_INTERNAL xmlChar *
 xml_util_get_attribute_contents         (xmlNode    *node,
                                          const char *attribute_name);

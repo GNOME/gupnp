@@ -43,10 +43,9 @@ typedef struct _AclServerHandler
 typedef struct _AclAsyncHandler
 {
         SoupServer *server;
-        SoupMessage *message;
+        SoupServerMessage *message;
         char *path;
         GHashTable *query;
-        SoupClientContext *client;
         AclServerHandler *handler;
 } AclAsyncHandler;
 
@@ -62,10 +61,9 @@ acl_server_handler_free (AclServerHandler *handler);
 
 G_GNUC_INTERNAL AclAsyncHandler *
 acl_async_handler_new (SoupServer *server,
-                       SoupMessage *message,
+                       SoupServerMessage *message,
                        const char *path,
                        GHashTable *query,
-                       SoupClientContext *client,
                        AclServerHandler *handler);
 
 G_GNUC_INTERNAL void
