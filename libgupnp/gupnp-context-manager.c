@@ -216,7 +216,7 @@ on_context_unavailable (GUPnPContextManager    *manager,
                         g_list_delete_link (priv->filtered, filtered_context);
         } else {
                 /* When UDA 1.0, ignore boot-id handling */
-                if (priv->uda_version > GSSDP_UDA_VERSION_1_0) {
+                if (priv->uda_version == GSSDP_UDA_VERSION_1_0) {
                         return;
                 }
                 /* We have lost a context, so we need to send ssdp:update and
