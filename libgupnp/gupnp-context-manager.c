@@ -271,6 +271,8 @@ gupnp_context_manager_filter_context (GUPnPContextFilter *context_filter,
                         match = gupnp_context_filter_check_context (
                                 context_filter,
                                 context);
+
+                        g_object_unref (context);
                 } else {
                         /* Re-activate all context, if needed */
                         match = TRUE;
