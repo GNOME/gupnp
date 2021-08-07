@@ -33,3 +33,5 @@
 .vscode
 /.flatpak-builder
 /build-dir
+*~
+*.orig
