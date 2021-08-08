@@ -353,7 +353,7 @@ gupnp_context_filter_remove_entry (GUPnPContextFilter *context_filter,
  *
  * Get the #GList of entries that compose the context filter. Do not free
  *
- * Return value: (element-type utf8) (transfer none)(nullable):  a #GList of entries
+ * Return value: (element-type utf8) (transfer container)(nullable):  a #GList of entries
  * used to filter networks, interfaces,... or %NULL.
  * Do not modify or free the list nor its elements.
  *
