@@ -24,7 +24,7 @@
 
 struct _GUPnPContextFilterPrivate {
         gboolean enabled;
-        GList *entries;
+        GHashTable *entries;
 };
 typedef struct _GUPnPContextFilterPrivate GUPnPContextFilterPrivate;
 
@@ -52,13 +52,6 @@ enum
         PROP_ENTRIES
 };
 
-enum
-{
-        ENTRY_CHANGE,
-        ENABLED,
-        SIGNAL_LAST
-};
-
 static void
 gupnp_context_filter_init (GUPnPContextFilter *list)
 {
@@ -66,7 +59,8 @@ gupnp_context_filter_init (GUPnPContextFilter *list)
 
         priv = gupnp_context_filter_get_instance_private (list);
 
-        priv->entries = NULL;
+        priv->entries =
+                g_hash_table_new_full (g_str_hash, g_str_equal, g_free, NULL);
 }
 
 static void
@@ -129,8 +123,7 @@ gupnp_context_filter_class_finalize (GObject *object)
         list = GUPNP_CONTEXT_FILTER (object);
         priv = gupnp_context_filter_get_instance_private (list);
 
-        g_list_free_full (priv->entries, g_free);
-        priv->entries = NULL;
+        g_clear_pointer (&priv->entries, g_hash_table_destroy);
 
         /* Call super */
         object_class = G_OBJECT_CLASS (gupnp_context_filter_parent_class);
@@ -282,7 +275,6 @@ gboolean
 gupnp_context_filter_add_entry (GUPnPContextFilter *context_filter,
                                 const gchar *entry)
 {
-        GList *s_entry;
         GUPnPContextFilterPrivate *priv;
 
         g_return_val_if_fail (GUPNP_IS_CONTEXT_FILTER (context_filter), FALSE);
@@ -290,17 +282,13 @@ gupnp_context_filter_add_entry (GUPnPContextFilter *context_filter,
 
         priv = gupnp_context_filter_get_instance_private (context_filter);
 
-        s_entry = g_list_find_custom (priv->entries,
-                                      entry,
-                                      (GCompareFunc) g_ascii_strcasecmp);
-
-        if (s_entry == NULL) {
-                priv->entries =
-                        g_list_prepend (priv->entries, g_strdup (entry));
+        if (g_hash_table_add (priv->entries, g_strdup (entry))) {
                 g_object_notify (G_OBJECT (context_filter), "entries");
+
+                return TRUE;
         }
 
-        return (s_entry == NULL);
+        return FALSE;
 }
 
 /**
@@ -343,7 +331,6 @@ gboolean
 gupnp_context_filter_remove_entry (GUPnPContextFilter *context_filter,
                                    const gchar *entry)
 {
-        GList *s_entry;
         GUPnPContextFilterPrivate *priv;
 
         g_return_val_if_fail (GUPNP_IS_CONTEXT_FILTER (context_filter), FALSE);
@@ -351,17 +338,13 @@ gupnp_context_filter_remove_entry (GUPnPContextFilter *context_filter,
 
         priv = gupnp_context_filter_get_instance_private (context_filter);
 
-        s_entry = g_list_find_custom (priv->entries,
-                                      entry,
-                                      (GCompareFunc) g_ascii_strcasecmp);
-
-        if (s_entry != NULL) {
-                priv->entries = g_list_remove_link (priv->entries, s_entry);
-                g_list_free_full (s_entry, g_free);
+        if (g_hash_table_remove (priv->entries, entry)) {
                 g_object_notify (G_OBJECT (context_filter), "entries");
+
+                return TRUE;
         }
 
-        return (s_entry != NULL);
+        return FALSE;
 }
 
 /**
@@ -385,7 +368,7 @@ gupnp_context_filter_get_entries (GUPnPContextFilter *context_filter)
 
         priv = gupnp_context_filter_get_instance_private (context_filter);
 
-        return priv->entries;
+        return g_hash_table_get_keys (priv->entries);
 }
 
 /**
@@ -406,8 +389,8 @@ gupnp_context_filter_clear (GUPnPContextFilter *context_filter)
         g_return_if_fail (GUPNP_IS_CONTEXT_FILTER (context_filter));
 
         priv = gupnp_context_filter_get_instance_private (context_filter);
-        g_list_free_full (priv->entries, g_free);
-        priv->entries = NULL;
+        g_hash_table_remove_all (priv->entries);
+
         g_object_notify (G_OBJECT (context_filter), "entries");
 }
 
@@ -448,7 +431,7 @@ gupnp_context_filter_check_context (GUPnPContextFilter *context_filter,
         host_ip = gssdp_client_get_host_ip (client);
         network = gssdp_client_get_network (client);
 
-        l = priv->entries;
+        GList *head = l = g_hash_table_get_keys (priv->entries);
 
         while (l && !match) {
                 match = (interface && !strcmp (l->data, interface)) ||
@@ -457,6 +440,8 @@ gupnp_context_filter_check_context (GUPnPContextFilter *context_filter,
 
                 l = l->next;
         }
+
+        g_list_free (head);
 
         return match;
 }
