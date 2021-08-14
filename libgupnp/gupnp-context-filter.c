@@ -171,7 +171,7 @@ gupnp_context_filter_class_init (GUPnPContextFilterClass *klass)
                 g_param_spec_pointer (
                         "entries",
                         "Entries",
-                        "GList of strings that compose the white list.",
+                        "GList of strings that compose the context filter.",
                         G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE |
                                 G_PARAM_STATIC_STRINGS));
 }

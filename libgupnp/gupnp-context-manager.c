@@ -115,7 +115,7 @@ on_context_available (GUPnPContextManager    *manager,
 
         context_filter = priv->context_filter;
 
-        /* Try to catch the notification, only if the white list
+        /* Try to catch the notification, only if the context filter
          * is enabled, not empty and the context doesn't match */
         if (!gupnp_context_filter_is_empty (context_filter) &&
             gupnp_context_filter_get_enabled (context_filter) &&
@@ -255,7 +255,7 @@ gupnp_context_manager_filter_context (GUPnPContextFilter *context_filter,
         iter = priv->filtered;
 
         while (obj != NULL) {
-                /* If the white list is empty, treat it as disabled */
+                /* If the context filter is empty, treat it as disabled */
                 if (check) {
                         GUPnPContext *context;
                         const char *property = "context";
@@ -295,7 +295,7 @@ gupnp_context_manager_filter_context (GUPnPContextFilter *context_filter,
         }
 
         while (iter != NULL) {
-                /* If the white list is empty, treat it as disabled */
+                /* If the context filter is empty, treat it as disabled */
                 if (check)
                         /* Filter out context */
                         match = gupnp_context_filter_check_context (
@@ -545,7 +545,7 @@ gupnp_context_manager_class_init (GUPnPContextManagerClass *klass)
         /**
          * GUPnPContextManager:context-filter:
          *
-         * The white list to use.
+         * The context filter to use.
          **/
         g_object_class_install_property (
                 object_class,
