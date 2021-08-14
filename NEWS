@@ -1,3 +1,16 @@
+1.3.1
+=====
+
+- Add ContextFilter class, deprecate WhiteList
+- Fix several reference leaks
+- Fix broken boot-id logic
+
+Bugs fixed in this release:
+ - https://gitlab.gnome.org/GNOME/gupnp/issues/56
+
+All contributors to this release:
+ - Jens Georg <mail@jensge.org>
+
 1.3.0
 =====
 
