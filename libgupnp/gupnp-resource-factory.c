@@ -114,9 +114,11 @@ gupnp_resource_factory_get_default (void)
 {
         static GUPnPResourceFactory *default_factory = NULL;
 
-        if (G_UNLIKELY (default_factory == NULL)) {
-                default_factory = g_object_new (GUPNP_TYPE_RESOURCE_FACTORY,
-                                                NULL);
+        if (g_once_init_enter (&default_factory)) {
+                GUPnPResourceFactory *factory =
+                        g_object_new (GUPNP_TYPE_RESOURCE_FACTORY, NULL);
+
+                g_once_init_leave (&default_factory, factory);
         }
 
         return default_factory;
