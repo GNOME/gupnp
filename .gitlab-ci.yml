@@ -61,12 +61,12 @@ check-merge-request:
 
 .gupnp.fedora@common:
   variables:
-    BASE_TAG: '2021-05-22.2'
+    BASE_TAG: '2021-08-14.0'
     FDO_UPSTREAM_REPO: GNOME/gupnp
     FDO_DISTRIBUTION_PACKAGES: 'clang clang-analyzer gcovr git libasan libubsan python3-gobject python3-pip xmlto gobject-introspection-devel gtk-doc libsoup-devel libuuid-devel libxml2-devel vala ninja-build'
     FDO_DISTRIBUTION_EXEC: |
       dnf clean all &&
-      pip3 install meson
+      pip3 install meson markdown toml typogrify
 
 .gupnp.fedora:34@x86_64:
   extends: .gupnp.fedora@common
