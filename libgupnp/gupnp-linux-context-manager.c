@@ -982,11 +982,11 @@ create_netlink_socket (GUPnPLinuxContextManager *self, GError **error)
         /* Listen for interface changes and IP address changes */
         sa.nl_groups = RTMGRP_LINK;
         if (gupnp_context_manager_get_socket_family (GUPNP_CONTEXT_MANAGER (self)) == G_SOCKET_FAMILY_INVALID) {
-                sa.nl_groups = RTMGRP_IPV6_IFADDR | RTMGRP_IPV4_IFADDR;
+                sa.nl_groups |= RTMGRP_IPV6_IFADDR | RTMGRP_IPV4_IFADDR;
         } else if (gupnp_context_manager_get_socket_family (GUPNP_CONTEXT_MANAGER (self)) == G_SOCKET_FAMILY_IPV4) {
-                sa.nl_groups = RTMGRP_IPV4_IFADDR;
+                sa.nl_groups |= RTMGRP_IPV4_IFADDR;
         } else if (gupnp_context_manager_get_socket_family (GUPNP_CONTEXT_MANAGER (self)) == G_SOCKET_FAMILY_IPV6) {
-                sa.nl_groups = RTMGRP_IPV6_IFADDR;
+                sa.nl_groups |= RTMGRP_IPV6_IFADDR;
         }
 
         status = bind (fd, (struct sockaddr *) &sa, sizeof (sa));
