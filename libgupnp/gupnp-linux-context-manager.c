@@ -818,7 +818,7 @@ receive_netlink_message (GUPnPLinuxContextManager *self, GError **error)
                 switch (header->nlmsg_type) {
                         /* RTM_NEWADDR and RTM_DELADDR are sent on real address
                          * changes.
-                         * RTM_NEWLINK is sent on varous occations:
+                         * RTM_NEWLINK is sent on various occasions:
                          *  - Creation of a new device
                          *  - Device goes up/down
                          *  - Wireless status changes
