@@ -107,6 +107,25 @@ gupnp_rootdevice_error_quark (void)
         return quark;
 }
 
+/**
+ * GUPNP_SERVICE_INTROSPECTION_ERROR:
+ *
+ * The #GQuark uniquely used by GUPnP ServiceIntrospection errors.
+ *
+ * Returns: a #GQuark uniquely used by GUPnP ServiceIntrospection creation errors.
+ */
+GQuark
+gupnp_service_introspection_error_quark (void)
+{
+        static GQuark quark = 0;
+
+        if (!quark)
+                quark = g_quark_from_static_string ("gupnp-root-device-error");
+
+        return quark;
+}
+
+
 /* Soup status code => GUPnPServerError */
 static int
 code_from_status_code (int status_code)

@@ -595,7 +595,7 @@ got_scpd_url (G_GNUC_UNUSED SoupSession *session,
                 scpd = xmlRecoverMemory (msg->response_body->data,
                                          msg->response_body->length);
                 if (scpd) {
-                        introspection = gupnp_service_introspection_new (scpd);
+                        introspection = gupnp_service_introspection_new (scpd, NULL);
 
                         xmlFreeDoc (scpd);
                 }

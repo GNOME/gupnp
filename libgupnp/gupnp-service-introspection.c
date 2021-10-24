@@ -37,6 +37,7 @@
 
 #include "gupnp-service-introspection.h"
 #include "gupnp-service-introspection-private.h"
+#include "gupnp-error.h"
 #include "xml-util.h"
 #include "gvalue-util.h"
 #include "gupnp-types.h"
@@ -49,6 +50,7 @@ struct _GUPnPServiceIntrospection {
 };
 
 struct _GUPnPServiceIntrospectionPrivate {
+        xmlDoc *scpd;
         GList *variables;
         GList *actions;
 
@@ -60,17 +62,27 @@ struct _GUPnPServiceIntrospectionPrivate {
 typedef struct _GUPnPServiceIntrospectionPrivate
                 GUPnPServiceIntrospectionPrivate;
 
-G_DEFINE_TYPE_WITH_PRIVATE (GUPnPServiceIntrospection,
-                            gupnp_service_introspection,
-                            G_TYPE_OBJECT)
+
+static GInitableIface *initable_parent_iface = NULL;
+static void
+gupnp_service_introspection_initable_iface_init (gpointer g_iface, gpointer iface_data);
+
+G_DEFINE_TYPE_EXTENDED (
+        GUPnPServiceIntrospection,
+        gupnp_service_introspection,
+        G_TYPE_OBJECT,
+        0,
+        G_ADD_PRIVATE (GUPnPServiceIntrospection) G_IMPLEMENT_INTERFACE (
+                G_TYPE_INITABLE,
+                gupnp_service_introspection_initable_iface_init))
 enum {
         PROP_0,
         PROP_SCPD
 };
 
-static void
+static gboolean
 construct_introspection_info (GUPnPServiceIntrospection *introspection,
-                              xmlDoc                    *scpd);
+                              GError                    **error);
 
 /**
  * gupnp_service_state_variable_info_free:
@@ -123,12 +135,12 @@ gupnp_service_introspection_set_property (GObject      *object,
         GUPnPServiceIntrospection *introspection;
 
         introspection = GUPNP_SERVICE_INTROSPECTION (object);
+        GUPnPServiceIntrospectionPrivate *priv =
+                gupnp_service_introspection_get_instance_private (introspection);
 
         switch (property_id) {
         case PROP_SCPD:
-                /* Construct introspection data */
-                construct_introspection_info (introspection,
-                                              g_value_get_pointer (value));
+                priv->scpd = g_value_get_pointer (value);
                 break;
         default:
                 G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -219,6 +231,42 @@ gupnp_service_introspection_finalize (GObject *object)
         if (priv->action_names)
                 g_list_free (priv->action_names);
 }
+
+static gboolean
+gupnp_service_introspection_initable_init (GInitable *initable,
+                                           GCancellable *cancellable,
+                                           GError **error)
+{
+        GUPnPServiceIntrospection *self =
+                GUPNP_SERVICE_INTROSPECTION (initable);
+        GUPnPServiceIntrospectionPrivate *priv =
+                gupnp_service_introspection_get_instance_private (self);
+
+        if (priv->scpd == NULL) {
+                g_set_error_literal (
+                        error,
+                        GUPNP_SERVICE_INTROSPECTION_ERROR,
+                        GUPNP_SERVICE_INTROSPECTION_ERROR_OTHER,
+                        "SCDP is required for creating a ServiceIntrospection");
+
+                return FALSE;
+        }
+
+        if (priv->actions != NULL || priv->variables != NULL)
+                return TRUE;
+
+        return construct_introspection_info (self, error);
+}
+
+static void
+gupnp_service_introspection_initable_iface_init (gpointer g_iface,
+                                                 gpointer iface_data)
+{
+        GInitableIface *iface = (GInitableIface *) g_iface;
+        initable_parent_iface = g_type_interface_peek_parent (iface);
+        iface->init = gupnp_service_introspection_initable_init;
+}
+
 
 static void
 gupnp_service_introspection_class_init (GUPnPServiceIntrospectionClass *klass)
@@ -687,19 +735,16 @@ get_state_variables (xmlNode *list_element)
  * Creates the #GHashTable's of action and state variable information
  *
  * */
-static void
+static gboolean
 construct_introspection_info (GUPnPServiceIntrospection *introspection,
-                              xmlDoc                    *scpd)
+                              GError **error)
 {
         xmlNode *element;
         GUPnPServiceIntrospectionPrivate *priv;
 
-        g_return_if_fail (scpd != NULL);
-
         priv = gupnp_service_introspection_get_instance_private (introspection);
-
         /* Get actionList element */
-        element = xml_util_get_element ((xmlNode *) scpd,
+        element = xml_util_get_element ((xmlNode *) priv->scpd,
                                         "scpd",
                                         "actionList",
                                         NULL);
@@ -707,12 +752,23 @@ construct_introspection_info (GUPnPServiceIntrospection *introspection,
                 priv->actions = get_actions (element);
 
         /* Get serviceStateTable element */
-        element = xml_util_get_element ((xmlNode *) scpd,
+        element = xml_util_get_element ((xmlNode *) priv->scpd,
                                         "scpd",
                                         "serviceStateTable",
                                         NULL);
         if (element)
                 priv->variables = get_state_variables (element);
+
+        if (priv->actions == NULL && priv->variables == NULL) {
+                g_set_error_literal (error,
+                                     GUPNP_SERVICE_INTROSPECTION_ERROR,
+                                     GUPNP_SERVICE_INTROSPECTION_ERROR_OTHER,
+                                     "Service description has neither actions "
+                                     "nor variables");
+                return FALSE;
+        }
+
+        return TRUE;
 }
 
 static void
@@ -746,26 +802,16 @@ collect_variable_names (gpointer data,
  * Return value: A new #GUPnPServiceIntrospection.
  **/
 GUPnPServiceIntrospection *
-gupnp_service_introspection_new (xmlDoc *scpd)
+gupnp_service_introspection_new (xmlDoc *scpd, GError **error)
 {
-        GUPnPServiceIntrospection *introspection;
-        GUPnPServiceIntrospectionPrivate *priv;
-
         g_return_val_if_fail (scpd != NULL, NULL);
 
-        introspection = g_object_new (GUPNP_TYPE_SERVICE_INTROSPECTION,
-                                      "scpd", scpd,
-                                      NULL);
-
-        priv = gupnp_service_introspection_get_instance_private (introspection);
-
-        if (priv->actions == NULL &&
-            priv->variables == NULL) {
-                g_object_unref (introspection);
-                introspection = NULL;
-        }
-
-        return introspection;
+        return g_initable_new (GUPNP_TYPE_SERVICE_INTROSPECTION,
+                                        NULL,
+                                        error,
+                                        "scpd",
+                                        scpd,
+                                        NULL);
 }
 
 /**

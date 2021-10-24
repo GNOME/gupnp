@@ -127,6 +127,20 @@ typedef enum {
         GUPNP_ROOT_DEVICE_ERROR_FAIL
 } GUPnPRootdeviceError;
 
+GQuark
+gupnp_service_introspection_error_quark (void) G_GNUC_CONST;
+
+#define GUPNP_SERVICE_INTROSPECTION_ERROR                                      \
+        (gupnp_service_introspection_error_quark ())
+
+/**
+ * GUPnPServiceIntrospectionError:
+ * @GUPNP_SERVICE_INTROSPECTION_ERROR_OTHER@: Unknown error
+ */
+typedef enum
+{
+        GUPNP_SERVICE_INTROSPECTION_ERROR_OTHER,
+} GUPnPServiceIntrospectionError;
 G_END_DECLS
 
 #endif /* GUPNP_ERROR_H */
