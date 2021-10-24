@@ -3,20 +3,20 @@
 
 <refentry id="gupnp-binding-tool" xmlns:xi="http://www.w3.org/2003/XInclude">
   <refmeta>
-    <refentrytitle>gupnp-binding-tool-1.2</refentrytitle>
+    <refentrytitle>gupnp-binding-tool-@GUPNP_API_VERSION@</refentrytitle>
     <manvolnum>1</manvolnum>
     <refmiscinfo class="source">GUPnP</refmiscinfo>
     <refmiscinfo class="version"><xi:include href="version.xml" parse="text"><xi:fallback /></xi:include></refmiscinfo>
   </refmeta>
   
   <refnamediv>
-    <refname>gupnp-binding-tool-1.2</refname>
+    <refname>gupnp-binding-tool-@GUPNP_API_VERSION@</refname>
     <refpurpose>creates C convenience wrappers for UPnP services</refpurpose>
   </refnamediv>
 
   <refsynopsisdiv>
     <cmdsynopsis>
-      <command>gupnp-binding-tool-1.2</command>
+      <command>gupnp-binding-tool-@GUPNP_API_VERSION@</command>
       <arg choice="opt">--prefix <arg choice="req">PREFIX</arg></arg>
       <arg choice="opt">--mode <arg choice="req">client|server</arg></arg>
       <arg choice="req">SCPD file</arg>
@@ -26,7 +26,7 @@
   <refsect1>
     <title>Description</title>
     <para>
-      <command>gupnp-binding-tool-1.2</command> takes a <glossterm
+      <command>gupnp-binding-tool-@GUPNP_API_VERSION@</command> takes a <glossterm
       linkend="scpd">SCPD file</glossterm> and generates convenience C functions
       which call the actual GUPnP functions. The client-side bindings can be seen
       as a service-specific version of the GUPnPServiceProxy API and the 
@@ -81,7 +81,7 @@ igd_delete_port_mapping (GUPnPServiceProxy *proxy,
       the argument direction. 
     </para>
     <para>
-      <command>gupnp-binding-tool-1.2</command> generates both synchronous and
+      <command>gupnp-binding-tool-@GUPNP_API_VERSION@</command> generates both synchronous and
       asynchronous wrappers.  The <function>igd_delete_port_mapping</function> example
       above is the synchronous form, the asynchronous form is as follows:
     </para>
@@ -126,7 +126,7 @@ igd_external_ip_address_add_notify (GUPnPServiceProxy *proxy,
                                     gpointer userdata);</programlisting>
     
     <para>
-      All of the examples were produced with <filename>gupnp-binding-tool-1.2
+      All of the examples were produced with <filename>gupnp-binding-tool-@GUPNP_API_VERSION@
       --prefix igd --mode client WANIPConnection.xml</filename>.
     </para>
   </refsect1>
@@ -169,7 +169,7 @@ igd_external_ip_address_variable_notify (GUPnPService *service,
       variable value.
     </para>
     <para>
-      All of the examples were produced with <filename>gupnp-binding-tool-1.2
+      All of the examples were produced with <filename>gupnp-binding-tool-@GUPNP_API_VERSION@
       --prefix igd --mode server WANIPConnection.xml</filename>.
     </para>
   </refsect1>

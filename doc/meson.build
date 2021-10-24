@@ -38,6 +38,13 @@ if get_option('gtk_doc')
              install : true)
 endif
 
+docbook_man_page = configure_file(
+  input: 'gupnp-binding-tool.xml.in',
+  output: 'gupnp-binding-tool.xml',
+  configuration: api_config,
+  install: false
+)
+
 xsltproc = find_program('xsltproc', required: false)
 if xsltproc.found()
     stylesheet = 'http://docbook.sourceforge.net/release/xsl/current/manpages/docbook.xsl'
@@ -67,15 +74,15 @@ if xsltproc.found()
             xlstproc_flags,
             '--noout',
             stylesheet,
-            'gupnp-binding-tool.xml'
+            docbook_man_page
         ]
     )
     if (stylesheet_check.returncode() == 0)
         message('Stylesheet ' + stylesheet + ' available')
         custom_target(
             'man 1 pages',
-            input: 'gupnp-binding-tool.xml',
-            output: 'gupnp-binding-tool-1.2.1',
+            input: docbook_man_page,
+            output: 'gupnp-binding-tool-@0@.1'.format(GUPNP_API_VERSION),
             command: xsltproc_args,
             depend_files : version_xml,
             install: true,

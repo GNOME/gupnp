@@ -26,7 +26,7 @@
 // OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
 // DAMAGE.
 
-imports.gi.versions.GUPnP = "1.2"
+imports.gi.versions.GUPnP = "1.6"
 imports.gi.versions.GSSDP = "1.2"
 
 const Mainloop = imports.mainloop;

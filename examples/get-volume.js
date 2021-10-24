@@ -21,7 +21,7 @@
 // OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
 // DAMAGE.
 
-imports.gi.versions.GUPnP = "1.2"
+imports.gi.versions.GUPnP = "1.6"
 
 const Mainloop = imports.mainloop;
 const GObject = imports.gi.GObject;

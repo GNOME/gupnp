@@ -1,8 +1,14 @@
-project('gupnp', 'c', version : '1.4.0', meson_version : '>= 0.54.0')
+project('gupnp', 'c', version : '1.5.0', meson_version : '>= 0.54.0')
 gnome = import('gnome')
 pkg = import('pkgconfig')
 
 cc = meson.get_compiler('c')
+
+GUPNP_API_VERSION='1.6'
+GUPNP_API_NAME='gupnp-@0@'.format(GUPNP_API_VERSION)
+api_config = configuration_data()
+api_config.set('GUPNP_API_VERSION', GUPNP_API_VERSION)
+api_config.set('GUPNP_API_NAME', GUPNP_API_NAME)
 
 netlink_available = cc.has_header('linux/rtnetlink.h')
 ifaddrs_available = cc.has_header('ifaddrs.h')
@@ -47,3 +53,14 @@ endif
 if get_option('examples')
     subdir('examples')
 endif
+
+summary(
+  {
+    'Version': meson.project_version(),
+    'API Version' : GUPNP_API_VERSION,
+    'Library version': version,
+    'Darwin version': darwin_versions
+  },
+  section: 'Versioning'
+)
+

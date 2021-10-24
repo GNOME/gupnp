@@ -23,7 +23,7 @@
 # DAMAGE.
 
 import gi
-gi.require_version('GUPnP', '1.2')
+gi.require_version('GUPnP', '1.6')
 
 from gi.repository import GUPnP
 from gi.repository import GLib

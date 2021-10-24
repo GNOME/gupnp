@@ -6,8 +6,8 @@ else
     gssdp_gir_dirs = []
 endif
 
-gnome.generate_vapi('gupnp-1.2',
-                    sources : [gir.get(0), 'gupnp-1.2-custom.vala'],
+gnome.generate_vapi(GUPNP_API_NAME,
+                    sources : [gir.get(0), 'gupnp-custom.vala'],
                     packages : [gssdp_vala_package, 'gio-2.0', 'libsoup-2.4', 'libxml-2.0'],
                     gir_dirs : gssdp_gir_dirs,
                     install : true

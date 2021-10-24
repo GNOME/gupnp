@@ -39,7 +39,7 @@ enums = gnome.mkenums(
     c_template : 'gupnp-enums.c.template',
     h_template : 'gupnp-enums.h.template',
     install_header : true,
-    install_dir : join_paths (get_option('includedir'), 'gupnp-1.2/libgupnp')
+    install_dir : join_paths (get_option('includedir'), GUPNP_API_NAME, 'libgupnp')
 )
 
 headers = files(
@@ -64,7 +64,7 @@ headers = files(
     'gupnp-white-list.h',
     'gupnp-xml-doc.h'
 )
-install_headers(headers, subdir : 'gupnp-1.2/libgupnp')
+install_headers(headers, subdir : GUPNP_API_NAME / 'libgupnp')
 
 sources = files(
     'gupnp-acl.c',
@@ -93,7 +93,7 @@ sources = files(
 )
 
 v = meson.project_version().split('.')
-soversion = 1
+soversion = 0
 library_minor = v[0].to_int() * 100 + v[1].to_int()
 library_micro = v[2].to_int()
 
@@ -107,7 +107,7 @@ interface_age = micro_version
 darwin_versions = [current, '@0@.@1@'.format(current, interface_age)]
 
 libgupnp = library(
-    'gupnp-1.2',
+    GUPNP_API_NAME,
     sources + context_manager_impl + enums,
     version : version,
     darwin_versions : darwin_versions,
@@ -123,16 +123,16 @@ gupnp = declare_dependency(
     dependencies : dependencies
 )
 
-meson.override_dependency('gupnp-1.2', gupnp)
+meson.override_dependency(GUPNP_API_NAME, gupnp)
 
 pkg.generate(
     libgupnp,
-    subdirs: 'gupnp-1.2',
-    name : 'gupnp-1.2',
+    subdirs: GUPNP_API_NAME,
+    name : GUPNP_API_NAME,
     requires : ['glib-2.0', 'gio-2.0', 'gssdp-1.2'],
     description : 'GObject-based UPnP library',
     version : meson.project_version(),
-    filebase : 'gupnp-1.2'
+    filebase : GUPNP_API_NAME
 )
 
 if get_option('introspection')
@@ -146,11 +146,11 @@ if get_option('introspection')
         libgupnp,
         sources : headers + sources + enums,
         namespace : 'GUPnP',
-        nsversion : '1.2',
+        nsversion : GUPNP_API_VERSION,
         header : 'libgupnp/gupnp.h',
         symbol_prefix : 'gupnp',
         identifier_prefix : 'GUPnP',
-        export_packages : 'gupnp-1.2',
+        export_packages : GUPNP_API_NAME,
         includes : gir_includes,
         install : true,
         extra_args : '-DGOBJECT_INTROSPECTION_SKIP'
