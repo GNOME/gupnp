@@ -27,7 +27,7 @@ conf.set('GLIB_VERSION_MAX_ALLOWED', 'GLIB_VERSION_' + glib_version.underscorify
 subdir('internal')
 guul = subproject('guul', default_options : ['default_library=static'])
 
-gssdp_dep = dependency('gssdp-1.2', version : '>= 1.3.0', default_options: ['sniffer=false'], fallback: 'gssdp-1.2')
+gssdp_dep = dependency('gssdp-1.6', version : '>= 1.5.0', default_options: ['sniffer=false'], fallback: 'gssdp-1.6')
 
 gio_unix = dependency('gio-unix-2.0', version: '>= 2.44', required: host_machine.system() != 'windows')
 

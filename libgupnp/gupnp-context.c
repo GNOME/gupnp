@@ -63,8 +63,6 @@ gupnp_context_initable_iface_init (gpointer g_iface,
                                    gpointer iface_data);
 
 struct _GUPnPContextPrivate {
-        guint        port;
-
         guint        subscription_timeout;
 
         SoupSession *session;
@@ -90,7 +88,6 @@ G_DEFINE_TYPE_EXTENDED (GUPnPContext,
 
 enum {
         PROP_0,
-        PROP_PORT,
         PROP_SERVER,
         PROP_SESSION,
         PROP_SUBSCRIPTION_TIMEOUT,
@@ -203,7 +200,9 @@ gupnp_context_initable_init (GInitable     *initable,
         }
 
         /* Create the server already if the port is not null*/
-        if (priv->port != 0) {
+        guint port = gssdp_client_get_port (GSSDP_CLIENT (context));
+        if (port != 0) {
+                // Create the server
                 gupnp_context_get_server (context);
 
                 if (priv->server == NULL) {
@@ -214,7 +213,7 @@ gupnp_context_initable_init (GInitable     *initable,
                                      GUPNP_SERVER_ERROR,
                                      GUPNP_SERVER_ERROR_OTHER,
                                      "Could not create HTTP server on port %d",
-                                     priv->port);
+                                     port);
 
                         return FALSE;
                 }
@@ -245,9 +244,6 @@ gupnp_context_set_property (GObject      *object,
         priv = gupnp_context_get_instance_private (context);
 
         switch (property_id) {
-        case PROP_PORT:
-                priv->port = g_value_get_uint (value);
-                break;
         case PROP_SUBSCRIPTION_TIMEOUT:
                 priv->subscription_timeout = g_value_get_uint (value);
                 break;
@@ -356,43 +352,6 @@ gupnp_context_finalize (GObject *object)
         object_class->finalize (object);
 }
 
-static GObject *
-gupnp_context_constructor (GType                  type,
-                           guint                  n_construct_params,
-                           GObjectConstructParam *construct_params)
-{
-        GObjectClass *object_class;
-        guint port = 0, msearch_port = 0;
-        guint i;
-        int msearch_idx = -1;
-
-        for (i = 0; i < n_construct_params; i++) {
-                const char *par_name;
-
-                par_name = construct_params[i].pspec->name;
-
-                if (strcmp (par_name, "port") == 0)
-                        port = g_value_get_uint (construct_params[i].value);
-                else if (strcmp (par_name, "msearch-port") == 0) {
-                        msearch_idx = i;
-                        msearch_port = g_value_get_uint
-                                        (construct_params[i].value);
-                }
-        }
-
-        object_class = G_OBJECT_CLASS (gupnp_context_parent_class);
-
-        /* Override msearch-port property if port is set, the property exists
-         * and wasn't provided otherwise */
-        if (port != 0 && msearch_idx != -1 && msearch_port == 0) {
-                g_value_set_uint (construct_params[msearch_idx].value, port);
-        }
-
-        return object_class->constructor (type,
-                                          n_construct_params,
-                                          construct_params);
-}
-
 
 static void
 gupnp_context_class_init (GUPnPContextClass *klass)
@@ -405,25 +364,6 @@ gupnp_context_class_init (GUPnPContextClass *klass)
         object_class->get_property = gupnp_context_get_property;
         object_class->dispose      = gupnp_context_dispose;
         object_class->finalize     = gupnp_context_finalize;
-        object_class->constructor  = gupnp_context_constructor;
-
-        /**
-         * GUPnPContext:port:
-         *
-         * The port to run on. Set to 0 if you don't care what port to run on.
-         **/
-        g_object_class_install_property
-                (object_class,
-                 PROP_PORT,
-                 g_param_spec_uint ("port",
-                                    "Port",
-                                    "Port to run on",
-                                    0, G_MAXUINT, SOUP_ADDRESS_ANY_PORT,
-                                    G_PARAM_READWRITE |
-                                    G_PARAM_CONSTRUCT_ONLY |
-                                    G_PARAM_STATIC_NAME |
-                                    G_PARAM_STATIC_NICK |
-                                    G_PARAM_STATIC_BLURB));
 
         /**
          * GUPnPContext:server:
@@ -590,25 +530,24 @@ gupnp_context_get_server (GUPnPContext *context)
 
                 ip = gssdp_client_get_host_ip (GSSDP_CLIENT (context));
                 inet_addr = gssdp_client_get_address (GSSDP_CLIENT (context));
+                guint port = gssdp_client_get_port (GSSDP_CLIENT (context));
                 if (g_inet_address_get_family (inet_addr) == G_SOCKET_FAMILY_IPV6 &&
                     g_inet_address_get_is_link_local (inet_addr)) {
-                        guint scope;
-
-                        scope = gssdp_client_get_index (GSSDP_CLIENT (context));
+                        guint scope =
+                                gssdp_client_get_index (GSSDP_CLIENT (context));
                         addr = g_object_new (G_TYPE_INET_SOCKET_ADDRESS,
                                              "address", inet_addr,
-                                             "port", priv->port,
+                                             "port", port,
                                              "scope-id", scope,
                                              NULL);
                 } else {
-                        addr = g_inet_socket_address_new (inet_addr,
-                                                          priv->port);
+                        addr = g_inet_socket_address_new (inet_addr, port);
                 }
                 g_object_unref (inet_addr);
 
                 if (! soup_server_listen (priv->server,
                                           addr, (SoupServerListenOptions) 0, &error)) {
-                        g_warning ("GUPnPContext: Unable to listen on %s:%u %s", ip, priv->port, error->message);
+                        g_warning ("GUPnPContext: Unable to listen on %s:%u %s", ip, port, error->message);
                         g_error_free (error);
                 }
 

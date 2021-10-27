@@ -4,5 +4,5 @@ revision = master
 depth = 1
  
 [provides]
-dependency_name = gssdp-1.2
+dependency_name = gssdp-1.6
 

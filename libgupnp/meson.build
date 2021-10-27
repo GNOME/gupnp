@@ -129,7 +129,7 @@ pkg.generate(
     libgupnp,
     subdirs: GUPNP_API_NAME,
     name : GUPNP_API_NAME,
-    requires : ['glib-2.0', 'gio-2.0', 'gssdp-1.2'],
+    requires : ['glib-2.0', 'gio-2.0', 'gssdp-1.6'],
     description : 'GObject-based UPnP library',
     version : meson.project_version(),
     filebase : GUPNP_API_NAME
@@ -138,9 +138,9 @@ pkg.generate(
 if get_option('introspection')
     gir_includes = ['GObject-2.0', 'Gio-2.0', 'Soup-2.4', 'libxml2-2.0']
     if gssdp_dep.type_name() == 'internal'
-        gir_includes += subproject('gssdp-1.2').get_variable('gir').get(0)
+        gir_includes += subproject('gssdp-1.6').get_variable('gir').get(0)
     else
-        gir_includes += 'GSSDP-1.2'
+        gir_includes += 'GSSDP-1.6'
     endif
     gir = gnome.generate_gir(
         libgupnp,

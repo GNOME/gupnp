@@ -1,8 +1,8 @@
 if gssdp_dep.type_name() == 'internal'
-    gssdp_vala_package = subproject('gssdp-1.2').get_variable('vapi')
-    gssdp_gir_dirs = subproject('gssdp-1.2').get_variable('gssdp_gir_dir')
+    gssdp_vala_package = subproject('gssdp-1.6').get_variable('vapi')
+    gssdp_gir_dirs = subproject('gssdp-1.6').get_variable('gssdp_gir_dir')
 else
-    gssdp_vala_package = 'gssdp-1.2'
+    gssdp_vala_package = 'gssdp-1.6'
     gssdp_gir_dirs = []
 endif
 
