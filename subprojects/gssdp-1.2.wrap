@@ -1,6 +1,6 @@
 [wrap-git]
 url = https://gitlab.gnome.org/GNOME/gssdp.git
-revision = master
+revision = gssdp-1.4
 depth = 1
  
 [provides]
