@@ -4,20 +4,26 @@ version_xml = configure_file(input: 'version.xml.in',
                output: 'version.xml', configuration:
                entities)
 
+docbook_man_page = configure_file(
+  input: 'gupnp-binding-tool.xml.in',
+  output: 'gupnp-binding-tool.xml',
+  configuration: api_config,
+  install: false
+)
+
 if get_option('gtk_doc')
     gnome.gtkdoc('gupnp',
              content_files : files(
                 'client-tutorial.xml',
                 'fdl-1.1.xml',
                 'glossary.xml',
-                'gupnp-binding-tool.xml',
                 'gupnp-docs.xml',
                 'overview.xml',
                 'server-tutorial.xml'
              ),
              main_xml : 'gupnp-docs.xml',
              src_dir : ['libgupnp'],
-             dependencies : libgupnp,
+             dependencies : [libgupnp, version_xml, docbook_man_page],
              scan_args : ['--ignore-decorators', 'G_DEPRECATED|G_GNUC_DEPRECATED,G_DEPRECATED_FOR'],
              ignore_headers : [
                  'gena-protocol.h',
@@ -37,13 +43,6 @@ if get_option('gtk_doc')
              ],
              install : true)
 endif
-
-docbook_man_page = configure_file(
-  input: 'gupnp-binding-tool.xml.in',
-  output: 'gupnp-binding-tool.xml',
-  configuration: api_config,
-  install: false
-)
 
 xsltproc = find_program('xsltproc', required: false)
 if xsltproc.found()
