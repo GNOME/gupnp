@@ -272,10 +272,6 @@ gupnp_context_get_property (GObject    *object,
         context = GUPNP_CONTEXT (object);
 
         switch (property_id) {
-        case PROP_PORT:
-                g_value_set_uint (value,
-                                  gupnp_context_get_port (context));
-                break;
         case PROP_SERVER:
                 g_value_set_object (value,
                                     gupnp_context_get_server (context));
