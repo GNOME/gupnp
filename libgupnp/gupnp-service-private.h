@@ -9,6 +9,11 @@
 #ifndef GUPNP_SERVICE_PRIVATE_H
 #define GUPNP_SERVICE_PRIVATE_H
 
+#include "gupnp-context.h"
+#include "gupnp-xml-doc.h"
+
+#include <libsoup/soup.h>
+
 struct _GUPnPServiceAction {
         GUPnPContext *context;
 

@@ -79,6 +79,7 @@ sources = files(
     'gupnp-resource-factory.c',
     'gupnp-root-device.c',
     'gupnp-service.c',
+    'gupnp-service-action.c',
     'gupnp-service-info.c',
     'gupnp-service-introspection.c',
     'gupnp-service-proxy.c',
