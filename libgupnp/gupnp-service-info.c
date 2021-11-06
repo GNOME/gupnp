@@ -684,7 +684,9 @@ introspection_error_cb (gpointer user_data)
  * Note that introspection object is created from the information in service
  * description document (SCPD) provided by the service so it can not be created
  * if the service does not provide a SCPD.
+ * Deprecated: 1.16.0. Use gupnp_service_info_introspect_async() instead.
  **/
+G_DEPRECATED_FOR (gupnp_service_info_introspect_async)
 void
 gupnp_service_info_get_introspection_async
                                 (GUPnPServiceInfo                 *info,
@@ -712,7 +714,9 @@ gupnp_service_info_get_introspection_async
  * error code %G_IO_ERROR_CANCELLED.
  *
  * Since: 0.20.9
+ * Deprecated: 1.16.0. Use gupnp_service_info_introspecct_async() instead.
  **/
+G_DEPRECATED_FOR (gupnp_service_info_introspect_async)
 void
 gupnp_service_info_get_introspection_async_full
                                 (GUPnPServiceInfo                 *info,
@@ -839,10 +843,12 @@ gupnp_service_info_introspect_async           (GUPnPServiceInfo    *info,
         GTask *task = g_task_new (info, cancellable, callback, user_data);
         g_task_set_name (task, "UPnP service introspection");
 
+        G_GNUC_BEGIN_IGNORE_DEPRECATIONS
         gupnp_service_info_get_introspection_async_full (info,
                                                          prv_introspection_cb,
                                                          cancellable,
                                                          task);
+        G_GNUC_END_IGNORE_DEPRECATIONS
 }
 
 /**
