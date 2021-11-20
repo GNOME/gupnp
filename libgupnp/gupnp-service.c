@@ -936,13 +936,10 @@ path_from_url (const char *url)
         return path;
 }
 
-static GObject *
-gupnp_service_constructor (GType                  type,
-                           guint                  n_construct_params,
-                           GObjectConstructParam *construct_params)
+static void
+gupnp_service_constructed (GObject *object)
 {
         GObjectClass *object_class;
-        GObject *object;
         GUPnPServiceInfo *info;
         GUPnPContext *context;
         AclServerHandler *handler;
@@ -952,9 +949,7 @@ gupnp_service_constructor (GType                  type,
         object_class = G_OBJECT_CLASS (gupnp_service_parent_class);
 
         /* Construct */
-        object = object_class->constructor (type,
-                                            n_construct_params,
-                                            construct_params);
+        object_class->constructed (object);
 
         info = GUPNP_SERVICE_INFO (object);
 
@@ -989,8 +984,6 @@ gupnp_service_constructor (GType                  type,
         _gupnp_context_add_server_handler_with_data (context, path, handler);
         g_free (path);
         g_free (url);
-
-        return object;
 }
 
 /* Root device availability changed. */
@@ -1165,7 +1158,7 @@ gupnp_service_class_init (GUPnPServiceClass *klass)
 
         object_class->set_property = gupnp_service_set_property;
         object_class->get_property = gupnp_service_get_property;
-        object_class->constructor  = gupnp_service_constructor;
+        object_class->constructed = gupnp_service_constructed;
         object_class->dispose      = gupnp_service_dispose;
         object_class->finalize     = gupnp_service_finalize;
 
