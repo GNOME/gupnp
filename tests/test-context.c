@@ -6,9 +6,7 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
-#ifdef HAVE_CONFIG_H
 #include <config.h>
-#endif
 
 #include <string.h>
 
@@ -215,10 +213,43 @@ test_gupnp_context_http_ranged_requests (void)
         g_mapped_file_unref (file);
 }
 
+static void
+test_gupnp_context_error_when_bound ()
+{
+        GError *error = NULL;
+        SoupServer *server = soup_server_new (NULL, NULL);
+        soup_server_listen_local (server, 0, 0, &error);
+        g_assert_no_error (error);
+
+        GSList *uris = soup_server_get_uris (server);
+
+        const char *address = g_uri_get_host (uris->data);
+        int port = g_uri_get_port (uris->data);
+
+        g_test_expect_message (
+                "gupnp-context",
+                G_LOG_LEVEL_WARNING,
+                "*Unable to listen*Could not listen*Address already in use*");
+        GUPnPContext *context = g_initable_new (GUPNP_TYPE_CONTEXT,
+                                                NULL,
+                                                &error,
+                                                "host-ip",
+                                                address,
+                                                "port",
+                                                port,
+                                                NULL);
+
+        g_test_assert_expected_messages ();
+        g_assert_error (error, GUPNP_SERVER_ERROR, GUPNP_SERVER_ERROR_OTHER);
+        g_assert_null (context);
+}
+
 int main (int argc, char *argv[]) {
         g_test_init (&argc, &argv, NULL);
         g_test_add_func ("/context/http/ranged-requests",
                          test_gupnp_context_http_ranged_requests);
+
+        g_test_add_func ("/context/creation/error-when-bound", test_gupnp_context_error_when_bound);
 
         g_test_run ();
 
