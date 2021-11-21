@@ -540,7 +540,8 @@ gupnp_context_get_server (GUPnPContext *context)
 
                 if (! soup_server_listen (priv->server,
                                           addr, (SoupServerListenOptions) 0, &error)) {
-                        g_warning ("GUPnPContext: Unable to listen on %s:%u %s", ip, port, error->message);
+                        g_clear_object (&priv->server);
+                        g_warning ("Unable to listen on %s:%u %s", ip, port, error->message);
                         g_error_free (error);
                 }
 
