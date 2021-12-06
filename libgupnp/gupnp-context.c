@@ -186,7 +186,7 @@ gupnp_context_initable_init (GInitable     *initable,
         priv->session = soup_session_new ();
 
         user_agent = g_strdup_printf ("%s GUPnP/" VERSION " DLNADOC/1.50",
-                                      g_get_prgname ()? : "");
+                                      g_get_prgname()? : "");
 
         soup_session_set_user_agent (priv->session, user_agent);
         g_free (user_agent);

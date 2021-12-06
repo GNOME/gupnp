@@ -63,7 +63,7 @@ request_range_and_compare (GMappedFile *file,
 
         soup_message_headers_set_range (request_headers, want_start, want_end);
 
-        /* interpretation according to SoupRange documentation */
+        // interpretation according to SoupRange documentation
         if (want_end == -1) {
                 if (want_start < 0) {
                         want_length = -want_start;
@@ -209,7 +209,12 @@ test_gupnp_context_http_ranged_requests (void)
 
         g_free (uri);
         g_object_unref (context);
+
+        // Make sure the source teardown handlers get run so we don't confuse valgrind
+        g_timeout_add (500, g_main_loop_quit, loop);
+        g_main_loop_run (loop);
         g_main_loop_unref (loop);
+        g_object_unref (session);
         g_mapped_file_unref (file);
 }
 
@@ -239,9 +244,13 @@ test_gupnp_context_error_when_bound ()
                                                 port,
                                                 NULL);
 
+        g_slist_free_full (uris, (GDestroyNotify) g_uri_unref);
+        g_object_unref (server);
+
         g_test_assert_expected_messages ();
         g_assert_error (error, GUPNP_SERVER_ERROR, GUPNP_SERVER_ERROR_OTHER);
         g_assert_null (context);
+        g_clear_error (&error);
 }
 
 int main (int argc, char *argv[]) {
