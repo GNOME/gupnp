@@ -16,7 +16,7 @@ create_context (guint16 port, GError **error)
                                               error,
                                               "host-ip",
                                               "127.0.0.1",
-                                              "msearch-port",
+                                              "port",
                                               port,
                                               NULL));
 }
@@ -63,9 +63,34 @@ on_finished (SoupServerMessage *msg, TestServiceNotificationCancelledData *data)
         g_main_loop_quit (data->loop);
 }
 
+static SoupMessage *
+prepare_subscribe_message (const char *subscription_uri, SoupServer *server)
+{
+        SoupMessage *msg = soup_message_new ("SUBSCRIBE", subscription_uri);
+
+        GSList *uris = soup_server_get_uris (server);
+        GUri *subscription =
+                soup_uri_copy (uris->data, SOUP_URI_PATH, "/Notify", NULL);
+        char *uri_string = g_uri_to_string (subscription);
+        char *callback = g_strdup_printf ("<%s>", uri_string);
+        g_free (uri_string);
+        g_slist_free_full (uris, (GDestroyNotify) g_uri_unref);
+        g_uri_unref (subscription);
+
+        SoupMessageHeaders *h = soup_message_get_request_headers (msg);
+        soup_message_headers_append (h, "Callback", callback);
+        g_free (callback);
+
+        soup_message_headers_append (h, "NT", "upnp:event");
+
+        return msg;
+}
+
 static void
 test_service_notification_cancelled ()
 {
+        // Check that the notification message is cancelled correctly if the service is
+        // Shut down during sending
         GUPnPContext *context = NULL;
         GError *error = NULL;
         GUPnPRootDevice *rd;
@@ -100,23 +125,8 @@ test_service_notification_cancelled ()
                 GUPNP_DEVICE_INFO (rd),
                 "urn:test-gupnp-org:service:TestService:1");
         char *url = gupnp_service_info_get_event_subscription_url (info);
-        SoupMessage *msg = soup_message_new ("SUBSCRIBE", url);
-        g_free (url);
 
-        GSList *uris = soup_server_get_uris (server);
-        GUri *subscription =
-                soup_uri_copy (uris->data, SOUP_URI_PATH, "/Notify", NULL);
-        char *uri_string = g_uri_to_string (subscription);
-        char *callback = g_strdup_printf ("<%s>", uri_string);
-        g_free (uri_string);
-        g_slist_free_full (uris, (GDestroyNotify) g_uri_unref);
-        g_uri_unref (subscription);
-
-        SoupMessageHeaders *h = soup_message_get_request_headers (msg);
-        soup_message_headers_append (h, "Callback", callback);
-        g_free (callback);
-
-        soup_message_headers_append (h, "NT", "upnp:event");
+        SoupMessage *msg = prepare_subscribe_message (url, server);
         SoupSession *session = soup_session_new ();
         // FIXME: Add timeout header
         soup_session_send_and_read_async (session,
