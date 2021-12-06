@@ -43,6 +43,9 @@
   </serviceStateTable>
   <actionList>
     <action>
+      <name>Ping</name>
+    </action>
+    <action>
       <name>Browse</name>
       <argumentList>
         <argument>
