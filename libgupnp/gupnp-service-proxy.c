@@ -922,7 +922,6 @@ gupnp_service_proxy_end_action (GUPnPServiceProxy       *proxy,
 
         g_return_val_if_fail (GUPNP_IS_SERVICE_PROXY (proxy), FALSE);
         g_return_val_if_fail (action, FALSE);
-        g_return_val_if_fail (proxy == action->proxy, FALSE);
 
         if (action->error) {
                 g_propagate_error (error, action->error);
@@ -964,7 +963,6 @@ gupnp_service_proxy_end_action_valist (GUPnPServiceProxy       *proxy,
 
         g_return_val_if_fail (GUPNP_IS_SERVICE_PROXY (proxy), FALSE);
         g_return_val_if_fail (action, FALSE);
-        g_return_val_if_fail (proxy == action->proxy, FALSE);
 
         if (action->error) {
                 g_propagate_error (error, action->error);
@@ -1013,7 +1011,6 @@ gupnp_service_proxy_end_action_list (GUPnPServiceProxy       *proxy,
 
         g_return_val_if_fail (GUPNP_IS_SERVICE_PROXY (proxy), FALSE);
         g_return_val_if_fail (action, FALSE);
-        g_return_val_if_fail (proxy == action->proxy, FALSE);
 
         /* Check for saved error from begin_action() */
         if (action->error) {
@@ -1058,7 +1055,6 @@ gupnp_service_proxy_end_action_hash
 
         g_return_val_if_fail (GUPNP_IS_SERVICE_PROXY (proxy), FALSE);
         g_return_val_if_fail (action, FALSE);
-        g_return_val_if_fail (proxy == action->proxy, FALSE);
 
         /* Check for saved error from begin_action() */
         if (action->error) {
@@ -1093,7 +1089,6 @@ gupnp_service_proxy_cancel_action (GUPnPServiceProxy       *proxy,
 {
         g_return_if_fail (GUPNP_IS_SERVICE_PROXY (proxy));
         g_return_if_fail (action);
-        g_return_if_fail (proxy == action->proxy);
 
         if (action->cancellable != NULL) {
                 g_cancellable_cancel (action->cancellable);
