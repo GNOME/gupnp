@@ -1,3 +1,15 @@
+1.4.1 (stable)
+=====
+
+- Fix regression in async deprecated API
+- Fix context creation not failing if the HTTP server fails to bind
+
+Bugs fixed in this release:
+ - https://gitlab.gnome.org/GNOME/gupnp/issues/58
+
+All contributors to this release:
+ - Jens Georg <mail@jensge.org>
+
 1.4.0 (stable)
 =====
 
