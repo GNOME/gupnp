@@ -589,7 +589,7 @@ test_ggo_58 ()
                           G_CALLBACK (test_ggo_58_on_ping_call),
                           &data);
 
-        test_run_loop (data.loop);
+        test_run_loop (data.loop, g_test_get_path());
         g_assert (data.proxy != NULL);
 
         G_GNUC_BEGIN_IGNORE_DEPRECATIONS
@@ -600,7 +600,7 @@ test_ggo_58 ()
                                                   &data,
                                                   NULL);
 
-        test_run_loop (data.loop);
+        test_run_loop (data.loop, g_test_get_path());
 
         gboolean success = gupnp_service_proxy_end_action (data.proxy,
                                                            action,
@@ -616,7 +616,7 @@ test_ggo_58 ()
                                                    &data,
                                                    NULL);
 
-        test_run_loop (data.loop);
+        test_run_loop (data.loop, g_test_get_path());
 
         GHashTable *result_hash = g_hash_table_new (g_str_hash, g_str_equal);
 
@@ -635,7 +635,7 @@ test_ggo_58 ()
                                                    &data,
                                                    NULL);
 
-        test_run_loop (data.loop);
+        test_run_loop (data.loop, g_test_get_path());
 
         GList *result_list = NULL;
         success = gupnp_service_proxy_end_action_list (data.proxy,
