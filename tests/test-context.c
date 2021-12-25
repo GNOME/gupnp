@@ -222,8 +222,10 @@ static void
 test_gupnp_context_error_when_bound ()
 {
         GError *error = NULL;
-        SoupServer *server = soup_server_new (NULL, NULL);
-        soup_server_listen_local (server, 0, 0, &error);
+
+        // IPv6
+        SoupServer *server = soup_server_new (NULL, NULL);        
+        soup_server_listen_local (server, 0, SOUP_SERVER_LISTEN_IPV4_ONLY, &error);
         g_assert_no_error (error);
 
         GSList *uris = soup_server_get_uris (server);
@@ -246,6 +248,36 @@ test_gupnp_context_error_when_bound ()
 
         g_slist_free_full (uris, (GDestroyNotify) g_uri_unref);
         g_object_unref (server);
+        g_test_assert_expected_messages ();
+        g_assert_error (error, GUPNP_SERVER_ERROR, GUPNP_SERVER_ERROR_OTHER);
+        g_assert_null (context);
+        g_clear_error (&error);
+
+        // IPv6
+        server = soup_server_new (NULL, NULL);
+        soup_server_listen_local (server, 0, SOUP_SERVER_LISTEN_IPV6_ONLY, &error);
+        g_assert_no_error (error);
+
+        uris = soup_server_get_uris (server);
+
+        address = g_uri_get_host (uris->data);
+        port = g_uri_get_port (uris->data);
+
+        g_test_expect_message (
+                "gupnp-context",
+                G_LOG_LEVEL_WARNING,
+                "*Unable to listen*Could not listen*Address already in use*");
+        context = g_initable_new (GUPNP_TYPE_CONTEXT,
+                                  NULL,
+                                  &error,
+                                  "host-ip",
+                                  address,
+                                  "port",
+                                  port,
+                                  NULL);
+
+        g_slist_free_full (uris, (GDestroyNotify) g_uri_unref);
+        g_object_unref (server);
 
         g_test_assert_expected_messages ();
         g_assert_error (error, GUPNP_SERVER_ERROR, GUPNP_SERVER_ERROR_OTHER);
@@ -253,12 +285,88 @@ test_gupnp_context_error_when_bound ()
         g_clear_error (&error);
 }
 
+void
+test_gupnp_context_rewrite_uri ()
+{
+        GUPnPContext *context = NULL;
+        GError *error = NULL;
+
+        // Create a v4 context
+        context = g_initable_new (GUPNP_TYPE_CONTEXT,
+                                  NULL,
+                                  &error,
+                                  "host-ip",
+                                  "127.0.0.1",
+                                  NULL);
+
+        g_assert_no_error (error);
+        g_assert_nonnull (context);
+
+        char *uri = gupnp_context_rewrite_uri (context, "http://127.0.0.1");
+        g_assert_cmpstr (uri, ==, "http://127.0.0.1");
+        g_free (uri);
+
+        // Rewriting a v6 uri on a v4 context should not work
+        g_test_expect_message ("gupnp-context",
+                               G_LOG_LEVEL_WARNING,
+                               "Address*family*mismatch*");
+        uri = gupnp_context_rewrite_uri (context, "http://[::1]");
+        g_assert_null (uri);
+        g_test_assert_expected_messages ();
+
+        g_object_unref (context);
+
+        // Create a v6 context
+        context = g_initable_new (GUPNP_TYPE_CONTEXT,
+                                  NULL,
+                                  &error,
+                                  "host-ip",
+                                  "::1",
+                                  NULL);
+
+        g_assert_no_error (error);
+        g_assert_nonnull (context);
+        // Rewriting a v6 uri on a v4 context should not work
+        uri = gupnp_context_rewrite_uri (context, "http://[fe80::1]");
+        char *expected = g_strdup_printf (
+                "http://[fe80::1%%25%d]",
+                gssdp_client_get_index (GSSDP_CLIENT (context)));
+        g_assert_cmpstr (uri, ==, expected);
+        g_free (expected);
+        g_free (uri);
+
+        g_test_expect_message ("gupnp-context",
+                               G_LOG_LEVEL_WARNING,
+                               "Address*family*mismatch*");
+        uri = gupnp_context_rewrite_uri (context, "http://127.0.0.1");
+        g_assert_null (uri);
+        g_test_assert_expected_messages ();
+
+        g_object_unref (context);
+}
+
+void
+test_gupnp_context_http_default_handler ()
+{
+        GError *error = NULL;
+        GUPnPContext *context = create_context (0, &error);
+
+        g_assert_no_error (error);
+        g_assert_nonnull (context);
+}
+
 int main (int argc, char *argv[]) {
         g_test_init (&argc, &argv, NULL);
         g_test_add_func ("/context/http/ranged-requests",
                          test_gupnp_context_http_ranged_requests);
 
-        g_test_add_func ("/context/creation/error-when-bound", test_gupnp_context_error_when_bound);
+        g_test_add_func ("/context/creation/error-when-bound",
+                         test_gupnp_context_error_when_bound);
+        g_test_add_func ("/context/http/default-handler",
+                         test_gupnp_context_http_default_handler);
+
+        g_test_add_func ("/context/utility/rewrite_uri",
+                         test_gupnp_context_rewrite_uri);
 
         g_test_run ();
 

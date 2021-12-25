@@ -21,6 +21,8 @@
  * exporting <envar>GUPNP_DEBUG</envar>.
  */
 
+#define G_LOG_DOMAIN "gupnp-context"
+
 #include <config.h>
 
 #define G_LOG_DOMAIN "gupnp-context"
@@ -1652,6 +1654,15 @@ gupnp_context_rewrite_uri_to_uri (GUPnPContext *context, const char *uri)
                 g_free (new_host);
                 g_uri_unref (soup_uri);
                 soup_uri = new_uri;
+        }
+
+        if (g_inet_address_get_family (addr) !=
+            gssdp_client_get_family (GSSDP_CLIENT (context))) {
+                g_warning ("Address family mismatch while trying to rewrite "
+                           "URI %s",
+                           uri);
+                g_uri_unref (soup_uri);
+                soup_uri = NULL;
         }
 
         g_object_unref (addr);
