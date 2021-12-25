@@ -346,13 +346,74 @@ test_gupnp_context_rewrite_uri ()
 }
 
 void
+test_default_handler_on_read_async (GObject *source,
+                                    GAsyncResult *res,
+                                    gpointer user_data)
+{
+        GError *error = NULL;
+        GBytes *response =
+                soup_session_send_and_read_finish (source, res, &error);
+        g_assert_nonnull (response);
+        g_assert_no_error (error);
+        g_bytes_unref (response);
+        g_main_loop_quit (user_data);
+}
+
+void
 test_gupnp_context_http_default_handler ()
 {
         GError *error = NULL;
         GUPnPContext *context = create_context (0, &error);
-
         g_assert_no_error (error);
         g_assert_nonnull (context);
+
+        GChecksum *checksum = g_checksum_new (G_CHECKSUM_SHA512);
+        GMainLoop *loop = g_main_loop_new (NULL, FALSE);
+
+        GSList *uris =
+                soup_server_get_uris (gupnp_context_get_server (context));
+        SoupSession *session = soup_session_new ();
+        for (int i = 0; i < 10; i++) {
+                guint32 random = g_random_int ();
+                g_checksum_update (checksum,
+                                   (const char *) &random,
+                                   sizeof (random));
+                char *base = g_uri_to_string (uris->data);
+                char *new_uri = g_uri_resolve_relative (
+                        base,
+                        g_checksum_get_string (checksum),
+                        G_URI_FLAGS_NONE,
+                        &error);
+                g_debug ("Trying to get URI %s", new_uri);
+                g_free (base);
+                g_assert_nonnull (new_uri);
+                g_assert_no_error (error);
+
+                SoupMessage *msg = soup_message_new (SOUP_METHOD_GET, new_uri);
+                g_free (new_uri);
+
+                g_checksum_reset (checksum);
+                soup_session_send_and_read_async (
+                        session,
+                        msg,
+                        G_PRIORITY_DEFAULT,
+                        NULL,
+                        test_default_handler_on_read_async,
+                        loop);
+                g_main_loop_run (loop);
+                g_assert_cmpint (soup_message_get_status (msg),
+                                 ==,
+                                 SOUP_STATUS_NOT_FOUND);
+                g_object_unref (msg);
+        }
+        g_slist_free_full (uris, g_uri_unref);
+        g_checksum_free (checksum);
+        g_object_unref (context);
+        // Make sure the source teardown handlers get run so we don't confuse valgrind
+        g_timeout_add (500, g_main_loop_quit, loop);
+        g_main_loop_run (loop);
+        g_main_loop_unref (loop);
+        g_object_unref (session);
 }
 
 int main (int argc, char *argv[]) {
