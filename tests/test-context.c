@@ -416,6 +416,134 @@ test_gupnp_context_http_default_handler ()
         g_object_unref (session);
 }
 
+void
+test_default_language_on_read_async (GObject *source,
+                                    GAsyncResult *res,
+                                    gpointer user_data)
+{
+        GError *error = NULL;
+        GBytes *response =
+                soup_session_send_and_read_finish (source, res, &error);
+        g_assert_no_error (error);
+        g_assert_nonnull (response);
+        g_bytes_unref (response);
+        g_main_loop_quit (user_data);
+}
+
+void
+test_gupnp_context_http_language_default ()
+{
+        GError *error = NULL;
+        GUPnPContext *context = create_context (0, &error);
+        GMainLoop *loop = g_main_loop_new (NULL, FALSE);
+
+        // Default default language
+        g_assert_cmpstr (gupnp_context_get_default_language (context),
+                         ==,
+                         "en");
+
+        GSList *uris =
+                soup_server_get_uris (gupnp_context_get_server (context));
+        gupnp_context_host_path (context, DATA_PATH "/random4k.bin", "/foo");
+        SoupSession *session = soup_session_new ();
+        char *base = g_uri_to_string (uris->data);
+        char *new_uri =
+                g_uri_resolve_relative (base, "foo", G_URI_FLAGS_NONE, &error);
+        g_free (base);
+
+        SoupMessage *msg = soup_message_new (SOUP_METHOD_GET, new_uri);
+        soup_session_set_accept_language (session, NULL);
+        g_free (new_uri);
+
+        soup_session_send_and_read_async (session,
+                                          msg,
+                                          G_PRIORITY_DEFAULT,
+                                          NULL,
+                                          test_default_language_on_read_async,
+                                          loop);
+        g_main_loop_run (loop);
+
+        SoupMessageHeaders *hdrs = soup_message_get_response_headers (msg);
+        g_assert_cmpint (soup_message_get_status (msg), ==, SOUP_STATUS_OK);
+        g_assert_null (soup_message_headers_get_one (hdrs, "Content-Language"));
+
+        soup_session_set_accept_language (session, "fr");
+        soup_session_send_and_read_async (session,
+                                          msg,
+                                          G_PRIORITY_DEFAULT,
+                                          NULL,
+                                          test_default_language_on_read_async,
+                                          loop);
+        g_main_loop_run (loop);
+
+        hdrs = soup_message_get_response_headers (msg);
+        g_assert_cmpint (soup_message_get_status (msg), ==, SOUP_STATUS_OK);
+        g_assert_cmpstr (soup_message_headers_get_one (hdrs, "Content-Language"), ==, "en");
+
+        g_object_unref (msg);
+
+        g_object_unref (context);
+        g_assert_no_error (error);
+        g_assert_nonnull (context);
+}
+
+void
+test_gupnp_context_http_language_serve_file ()
+{
+        GError *error = NULL;
+        GUPnPContext *context = create_context (0, &error);
+        GMainLoop *loop = g_main_loop_new (NULL, FALSE);
+
+        // Default default language
+        g_assert_cmpstr (gupnp_context_get_default_language (context),
+                         ==,
+                         "en");
+
+        GSList *uris =
+                soup_server_get_uris (gupnp_context_get_server (context));
+        gupnp_context_host_path (context, DATA_PATH "/random4k.bin", "/foo");
+        SoupSession *session = soup_session_new ();
+        char *base = g_uri_to_string (uris->data);
+        char *new_uri =
+                g_uri_resolve_relative (base, "foo", G_URI_FLAGS_NONE, &error);
+        g_free (base);
+
+        SoupMessage *msg = soup_message_new (SOUP_METHOD_GET, new_uri);
+        soup_session_set_accept_language (session, NULL);
+        g_free (new_uri);
+
+        soup_session_send_and_read_async (session,
+                                          msg,
+                                          G_PRIORITY_DEFAULT,
+                                          NULL,
+                                          test_default_language_on_read_async,
+                                          loop);
+        g_main_loop_run (loop);
+
+        SoupMessageHeaders *hdrs = soup_message_get_response_headers (msg);
+        g_assert_cmpint (soup_message_get_status (msg), ==, SOUP_STATUS_OK);
+        g_assert_null (soup_message_headers_get_one (hdrs, "Content-Language"));
+
+        soup_session_set_accept_language (session, "fr");
+        soup_session_send_and_read_async (session,
+                                          msg,
+                                          G_PRIORITY_DEFAULT,
+                                          NULL,
+                                          test_default_language_on_read_async,
+                                          loop);
+        g_main_loop_run (loop);
+
+        hdrs = soup_message_get_response_headers (msg);
+        g_assert_cmpint (soup_message_get_status (msg), ==, SOUP_STATUS_OK);
+        g_assert_cmpstr (soup_message_headers_get_one (hdrs, "Content-Language"), ==, "en");
+
+        g_object_unref (msg);
+
+        g_object_unref (context);
+        g_assert_no_error (error);
+        g_assert_nonnull (context);
+}
+
 int main (int argc, char *argv[]) {
         g_test_init (&argc, &argv, NULL);
         g_test_add_func ("/context/http/ranged-requests",
@@ -425,6 +553,9 @@ int main (int argc, char *argv[]) {
                          test_gupnp_context_error_when_bound);
         g_test_add_func ("/context/http/default-handler",
                          test_gupnp_context_http_default_handler);
+
+        g_test_add_func ("/context/http/language/default",
+                         test_gupnp_context_http_language_default);
 
         g_test_add_func ("/context/utility/rewrite_uri",
                          test_gupnp_context_rewrite_uri);
