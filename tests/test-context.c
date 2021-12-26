@@ -481,10 +481,35 @@ test_gupnp_context_http_language_default ()
         g_assert_cmpstr (soup_message_headers_get_one (hdrs, "Content-Language"), ==, "en");
 
         g_object_unref (msg);
+        g_slist_free_full (uris, (GDestroyNotify) g_uri_unref);
 
         g_object_unref (context);
+
+        // Make sure the source teardown handlers get run so we don't confuse valgrind
+        g_timeout_add (500, (GSourceFunc)g_main_loop_quit, loop);
+        g_main_loop_run (loop);
+        g_main_loop_unref (loop);
+        g_object_unref (session);
+}
+
+typedef struct _DefaultCallbackData {
+        GBytes *bytes;
+        GMainLoop *loop;
+} DefaultCallbackData;
+
+void
+soup_message_default_callback (GObject *source,
+                               GAsyncResult *res,
+                               gpointer user_data)
+{
+        DefaultCallbackData *d = user_data;
+        GError *error = NULL;
+        d->bytes = soup_session_send_and_read_finish (SOUP_SESSION (source),
+                                                      res,
+                                                      &error);
         g_assert_no_error (error);
-        g_assert_nonnull (context);
+        g_assert_nonnull (d->bytes);
+        g_main_loop_quit (d->loop);
 }
 
 void
@@ -492,16 +517,13 @@ test_gupnp_context_http_language_serve_file ()
 {
         GError *error = NULL;
         GUPnPContext *context = create_context (0, &error);
-        GMainLoop *loop = g_main_loop_new (NULL, FALSE);
+        DefaultCallbackData d = { .bytes = NULL, .loop = NULL };
 
-        // Default default language
-        g_assert_cmpstr (gupnp_context_get_default_language (context),
-                         ==,
-                         "en");
+        d.loop = g_main_loop_new (NULL, FALSE);
 
         GSList *uris =
                 soup_server_get_uris (gupnp_context_get_server (context));
-        gupnp_context_host_path (context, DATA_PATH "/random4k.bin", "/foo");
+        gupnp_context_host_path (context, DATA_PATH "/default", "/foo");
         SoupSession *session = soup_session_new ();
         char *base = g_uri_to_string (uris->data);
         char *new_uri =
@@ -510,38 +532,109 @@ test_gupnp_context_http_language_serve_file ()
 
         SoupMessage *msg = soup_message_new (SOUP_METHOD_GET, new_uri);
         soup_session_set_accept_language (session, NULL);
-        g_free (new_uri);
 
         soup_session_send_and_read_async (session,
                                           msg,
                                           G_PRIORITY_DEFAULT,
                                           NULL,
-                                          test_default_language_on_read_async,
-                                          loop);
-        g_main_loop_run (loop);
+                                          soup_message_default_callback,
+                                          &d);
+        g_main_loop_run (d.loop);
 
         SoupMessageHeaders *hdrs = soup_message_get_response_headers (msg);
         g_assert_cmpint (soup_message_get_status (msg), ==, SOUP_STATUS_OK);
         g_assert_null (soup_message_headers_get_one (hdrs, "Content-Language"));
+        g_assert_nonnull (d.bytes);
+        g_assert_cmpmem (g_bytes_get_data (d.bytes, NULL),
+                         g_bytes_get_size (d.bytes),
+                         "default\n",
+                         8);
+        g_bytes_unref (d.bytes);
 
+        g_object_unref (msg);
+        msg = soup_message_new (SOUP_METHOD_GET, new_uri);
+        soup_session_set_accept_language (session, "de");
+        soup_session_send_and_read_async (session,
+                                          msg,
+                                          G_PRIORITY_DEFAULT,
+                                          NULL,
+                                          soup_message_default_callback,
+                                          &d);
+        g_main_loop_run (d.loop);
+
+        hdrs = soup_message_get_response_headers (msg);
+        g_assert_cmpint (soup_message_get_status (msg), ==, SOUP_STATUS_OK);
+        g_assert_cmpstr (
+                soup_message_headers_get_one (hdrs, "Content-Language"),
+                ==,
+                "de");
+        g_assert_nonnull (d.bytes);
+        g_assert_cmpmem (g_bytes_get_data (d.bytes, NULL),
+                         g_bytes_get_size (d.bytes),
+                         "de\n",
+                         3);
+        g_bytes_unref (d.bytes);
+
+
+        g_object_unref (msg);
+        msg = soup_message_new (SOUP_METHOD_GET, new_uri);
         soup_session_set_accept_language (session, "fr");
         soup_session_send_and_read_async (session,
                                           msg,
                                           G_PRIORITY_DEFAULT,
                                           NULL,
-                                          test_default_language_on_read_async,
-                                          loop);
-        g_main_loop_run (loop);
+                                          soup_message_default_callback,
+                                          &d);
+        g_main_loop_run (d.loop);
 
         hdrs = soup_message_get_response_headers (msg);
         g_assert_cmpint (soup_message_get_status (msg), ==, SOUP_STATUS_OK);
-        g_assert_cmpstr (soup_message_headers_get_one (hdrs, "Content-Language"), ==, "en");
+        g_assert_cmpstr (
+                soup_message_headers_get_one (hdrs, "Content-Language"),
+                ==,
+                "fr");
+        g_assert_nonnull (d.bytes);
+        g_assert_cmpmem (g_bytes_get_data (d.bytes, NULL),
+                         g_bytes_get_size (d.bytes),
+                         "fr\n",
+                         3);
+        g_bytes_unref (d.bytes);
+
+        g_object_unref (msg);
+        msg = soup_message_new (SOUP_METHOD_GET, new_uri);
+        soup_session_set_accept_language (session, "it");
+        soup_session_send_and_read_async (session,
+                                          msg,
+                                          G_PRIORITY_DEFAULT,
+                                          NULL,
+                                          soup_message_default_callback,
+                                          &d);
+        g_main_loop_run (d.loop);
+
+        hdrs = soup_message_get_response_headers (msg);
+        g_assert_cmpint (soup_message_get_status (msg), ==, SOUP_STATUS_OK);
+        g_assert_cmpstr (
+                soup_message_headers_get_one (hdrs, "Content-Language"),
+                ==,
+                "en");
+        g_assert_nonnull (d.bytes);
+        g_assert_cmpmem (g_bytes_get_data (d.bytes, NULL),
+                         g_bytes_get_size (d.bytes),
+                         "default\n",
+                         8);
+        g_bytes_unref (d.bytes);
 
         g_object_unref (msg);
 
+        g_free (new_uri);
         g_object_unref (context);
-        g_assert_no_error (error);
-        g_assert_nonnull (context);
+        g_slist_free_full (uris, (GDestroyNotify) g_uri_unref);
+
+        // Make sure the source teardown handlers get run so we don't confuse valgrind
+        g_timeout_add (500, (GSourceFunc)g_main_loop_quit, d.loop);
+        g_main_loop_run (d.loop);
+        g_main_loop_unref (d.loop);
+        g_object_unref (session);
 }
 
 int main (int argc, char *argv[]) {
@@ -556,6 +649,9 @@ int main (int argc, char *argv[]) {
 
         g_test_add_func ("/context/http/language/default",
                          test_gupnp_context_http_language_default);
+
+        g_test_add_func ("/context/http/language/serve-file",
+                         test_gupnp_context_http_language_serve_file);
 
         g_test_add_func ("/context/utility/rewrite_uri",
                          test_gupnp_context_rewrite_uri);
