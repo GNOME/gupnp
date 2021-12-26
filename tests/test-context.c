@@ -211,7 +211,7 @@ test_gupnp_context_http_ranged_requests (void)
         g_object_unref (context);
 
         // Make sure the source teardown handlers get run so we don't confuse valgrind
-        g_timeout_add (500, g_main_loop_quit, loop);
+        g_timeout_add (500, (GSourceFunc) g_main_loop_quit, loop);
         g_main_loop_run (loop);
         g_main_loop_unref (loop);
         g_object_unref (session);
@@ -352,7 +352,7 @@ test_default_handler_on_read_async (GObject *source,
 {
         GError *error = NULL;
         GBytes *response =
-                soup_session_send_and_read_finish (source, res, &error);
+                soup_session_send_and_read_finish (SOUP_SESSION (source), res, &error);
         g_assert_nonnull (response);
         g_assert_no_error (error);
         g_bytes_unref (response);
@@ -376,7 +376,7 @@ test_gupnp_context_http_default_handler ()
         for (int i = 0; i < 10; i++) {
                 guint32 random = g_random_int ();
                 g_checksum_update (checksum,
-                                   (const char *) &random,
+                                   (const guchar *) &random,
                                    sizeof (random));
                 char *base = g_uri_to_string (uris->data);
                 char *new_uri = g_uri_resolve_relative (
@@ -406,11 +406,11 @@ test_gupnp_context_http_default_handler ()
                                  SOUP_STATUS_NOT_FOUND);
                 g_object_unref (msg);
         }
-        g_slist_free_full (uris, g_uri_unref);
+        g_slist_free_full (uris, (GDestroyNotify) g_uri_unref);
         g_checksum_free (checksum);
         g_object_unref (context);
         // Make sure the source teardown handlers get run so we don't confuse valgrind
-        g_timeout_add (500, g_main_loop_quit, loop);
+        g_timeout_add (500, (GSourceFunc) g_main_loop_quit, loop);
         g_main_loop_run (loop);
         g_main_loop_unref (loop);
         g_object_unref (session);
@@ -423,7 +423,7 @@ test_default_language_on_read_async (GObject *source,
 {
         GError *error = NULL;
         GBytes *response =
-                soup_session_send_and_read_finish (source, res, &error);
+                soup_session_send_and_read_finish (SOUP_SESSION (source), res, &error);
         g_assert_no_error (error);
         g_assert_nonnull (response);
         g_bytes_unref (response);
@@ -631,7 +631,7 @@ test_gupnp_context_http_language_serve_file ()
         g_slist_free_full (uris, (GDestroyNotify) g_uri_unref);
 
         // Make sure the source teardown handlers get run so we don't confuse valgrind
-        g_timeout_add (500, (GSourceFunc)g_main_loop_quit, d.loop);
+        g_timeout_add (500, (GSourceFunc) g_main_loop_quit, d.loop);
         g_main_loop_run (d.loop);
         g_main_loop_unref (d.loop);
         g_object_unref (session);
