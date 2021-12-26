@@ -756,12 +756,99 @@ test_gupnp_context_http_language_serve_folder ()
         g_slist_free_full (uris, (GDestroyNotify) g_uri_unref);
 
         // Make sure the source teardown handlers get run so we don't confuse valgrind
-        g_timeout_add (500, (GSourceFunc)g_main_loop_quit, d.loop);
+        g_timeout_add (500, (GSourceFunc) g_main_loop_quit, d.loop);
         g_main_loop_run (d.loop);
         g_main_loop_unref (d.loop);
         g_object_unref (session);
 }
 
+void
+test_gupnp_context_host_for_agent ()
+{
+        GError *error = NULL;
+        GUPnPContext *context = create_context (0, &error);
+        DefaultCallbackData d = { .bytes = NULL, .loop = NULL };
+
+        d.loop = g_main_loop_new (NULL, FALSE);
+
+        GSList *uris =
+                soup_server_get_uris (gupnp_context_get_server (context));
+        GRegex *user_agent =
+                g_regex_new ("GUPnP-Context-Test UA", 0, 0, &error);
+        g_assert_no_error (error);
+        g_assert_nonnull (user_agent);
+
+        // Cannot host path for a user agent if path is not hosted generally
+        g_assert_false (gupnp_context_host_path_for_agent (context,
+                                                           DATA_PATH "/default",
+                                                           "/foo",
+                                                           user_agent));
+
+        gupnp_context_host_path (context, DATA_PATH "/random4k.bin", "/foo");
+        // Hosting agent-specific path must now succeed
+        g_assert_true (gupnp_context_host_path_for_agent (context,
+                                                          DATA_PATH "/default",
+                                                          "/foo",
+                                                          user_agent));
+
+        SoupSession *session = soup_session_new ();
+        char *base = g_uri_to_string (uris->data);
+        char *new_uri =
+                g_uri_resolve_relative (base, "foo", G_URI_FLAGS_NONE, &error);
+        g_free (base);
+
+        // Checking wihtout user agent - should return the 4k file
+        SoupMessage *msg = soup_message_new (SOUP_METHOD_GET, new_uri);
+        soup_session_set_accept_language (session, NULL);
+
+        soup_session_send_and_read_async (session,
+                                          msg,
+                                          G_PRIORITY_DEFAULT,
+                                          NULL,
+                                          soup_message_default_callback,
+                                          &d);
+        g_main_loop_run (d.loop);
+
+        g_assert_cmpint (soup_message_get_status (msg), ==, SOUP_STATUS_OK);
+        g_assert_nonnull (d.bytes);
+        g_assert_nonnull (g_bytes_get_data (d.bytes, NULL));
+        g_assert_cmpint (g_bytes_get_size (d.bytes), ==, 4096);
+        g_bytes_unref (d.bytes);
+
+        // Checking with user agent - should return the small file
+        g_object_unref (msg);
+        msg = soup_message_new (SOUP_METHOD_GET, new_uri);
+        soup_session_set_user_agent (session, "GUPnP-Context-Test UA");
+        soup_session_set_accept_language (session, NULL);
+
+        soup_session_send_and_read_async (session,
+                                          msg,
+                                          G_PRIORITY_DEFAULT,
+                                          NULL,
+                                          soup_message_default_callback,
+                                          &d);
+        g_main_loop_run (d.loop);
+
+        g_assert_cmpint (soup_message_get_status (msg), ==, SOUP_STATUS_OK);
+        g_assert_nonnull (d.bytes);
+        g_assert_cmpmem (g_bytes_get_data (d.bytes, NULL),
+                         g_bytes_get_size (d.bytes),
+                         "default\n",
+                         8);
+        g_bytes_unref (d.bytes);
+
+        g_object_unref (msg);
+        g_slist_free_full (uris, (GDestroyNotify) g_uri_unref);
+        g_free (new_uri);
+        g_object_unref (context);
+        g_regex_unref (user_agent);
+
+        // Make sure the source teardown handlers get run so we don't confuse valgrind
+        g_timeout_add (500, (GSourceFunc)g_main_loop_quit, d.loop);
+        g_main_loop_run (d.loop);
+        g_main_loop_unref (d.loop);
+        g_object_unref (session);
+}
 
 int main (int argc, char *argv[]) {
         g_test_init (&argc, &argv, NULL);
@@ -781,6 +868,9 @@ int main (int argc, char *argv[]) {
 
         g_test_add_func ("/context/http/language/serve-folder",
                          test_gupnp_context_http_language_serve_folder);
+
+        g_test_add_func ("/context/http/host-for-agent",
+                         test_gupnp_context_host_for_agent);
 
         g_test_add_func ("/context/utility/rewrite_uri",
                          test_gupnp_context_rewrite_uri);
