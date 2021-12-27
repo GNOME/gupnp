@@ -37,3 +37,15 @@ a brief overview.
 
 The developer documentation is available at https://gnome.pages.gitlab.gnome.org/gupnp/docs/
 
+
+## Running the tests
+
+The tests usually work on localhost (127.0.0.1 and ::1).
+
+On start-up, the ests will check for a network device called "gupnp0". It it exists, it will
+additonally use that for running the tests.
+
+To create such a device you can use NetworkManager, for example:
+```
+$ nmcli c a ifname gupnp0 type dummy ipv4.method link-local ipv6.method link-local
+```
