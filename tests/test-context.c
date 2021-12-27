@@ -14,13 +14,59 @@
 #include "libgupnp/gupnp.h"
 
 static GUPnPContext *
-create_context (guint16 port, GError **error) {
+create_context (const char *localhost, guint16 port, GError **error)
+{
         return GUPNP_CONTEXT (g_initable_new (GUPNP_TYPE_CONTEXT,
                                               NULL,
                                               error,
-                                              "host-ip", "127.0.0.1",
-                                              "msearch-port", port,
+                                              "host-ip",
+                                              localhost,
+                                              "port",
+                                              port,
                                               NULL));
+}
+
+
+typedef struct {
+        GMainLoop *loop;
+        GUPnPContext *context;
+        SoupSession *session;
+        char *base_uri;
+} ContextTestFixture;
+
+static void
+test_fixture_setup (ContextTestFixture* tf, gconstpointer user_data)
+{
+        GError *error = NULL;
+
+        tf->context = create_context ((const char *)user_data, 0, &error);
+
+        g_assert_nonnull (tf->context);
+        g_assert_no_error (error);
+
+        tf->loop = g_main_loop_new (NULL, FALSE);
+        tf->session = soup_session_new ();
+
+        GSList *uris =
+                soup_server_get_uris (gupnp_context_get_server (tf->context));
+        g_assert_nonnull (uris);
+        g_assert_cmpint (g_slist_length (uris), ==, 1);
+
+        tf->base_uri = g_uri_to_string (uris->data);
+        g_slist_free_full (uris, (GDestroyNotify) g_uri_unref);
+}
+
+static void
+test_fixture_reardown (ContextTestFixture *tf, gconstpointer user_data)
+{
+        g_free (tf->base_uri);
+        g_object_unref (tf->context);
+
+        // Make sure the source teardown handlers get run so we don't confuse valgrind
+        g_timeout_add (500, (GSourceFunc) g_main_loop_quit, tf->loop);
+        g_main_loop_run (tf->loop);
+        g_main_loop_unref (tf->loop);
+        g_object_unref (tf->session);
 }
 
 typedef struct {
@@ -43,8 +89,7 @@ on_message_finished (GObject *source, GAsyncResult *res, gpointer user_data)
 
 static void
 request_range_and_compare (GMappedFile *file,
-                           SoupSession *session,
-                           GMainLoop   *loop,
+                           ContextTestFixture *tf,
                            const char  *uri,
                            goffset      want_start,
                            goffset      want_end)
@@ -77,15 +122,15 @@ request_range_and_compare (GMappedFile *file,
         } else
                 want_length = want_end - want_start + 1;
 
-        RangeHelper h = { loop, NULL, NULL };
-        soup_session_send_and_read_async (session,
+        RangeHelper h = { tf->loop, NULL, NULL };
+        soup_session_send_and_read_async (tf->session,
                                           message,
                                           G_PRIORITY_DEFAULT,
                                           NULL,
                                           on_message_finished,
                                           &h);
 
-        g_main_loop_run (loop);
+        g_main_loop_run (tf->loop);
         g_assert_no_error (h.error);
         g_assert_nonnull (h.body);
 
@@ -113,20 +158,14 @@ request_range_and_compare (GMappedFile *file,
 }
 
 static void
-test_gupnp_context_http_ranged_requests (void)
+test_gupnp_context_http_ranged_requests (ContextTestFixture *tf,
+                                         gconstpointer user_data)
 {
-        GUPnPContext *context = NULL;
         GError *error = NULL;
-        SoupSession *session = NULL;
         SoupMessage *message = NULL;
-        guint port = 0;
         char *uri = NULL;
-        GMainLoop *loop;
         GMappedFile *file;
         goffset file_length = 0;
-
-        loop = g_main_loop_new (NULL, FALSE);
-        g_assert (loop != NULL);
 
         file = g_mapped_file_new (DATA_PATH "/random4k.bin",
                                   FALSE,
@@ -135,68 +174,63 @@ test_gupnp_context_http_ranged_requests (void)
         g_assert (error == NULL);
         file_length = g_mapped_file_get_length (file);
 
-        context = create_context (0, &error);
-        g_assert (context != NULL);
-        g_assert (error == NULL);
-        port = gupnp_context_get_port (context);
+        char *new_uri =
+                g_uri_resolve_relative (tf->base_uri, "random4k.bin", G_URI_FLAGS_NONE, &error);
+        g_assert_no_error (error);
+        uri = gupnp_context_rewrite_uri (tf->context, new_uri);
+        g_free (new_uri);
 
-        gupnp_context_host_path (context,
+        gupnp_context_host_path (tf->context,
                                  DATA_PATH "/random4k.bin",
                                  "/random4k.bin");
 
-        uri = g_strdup_printf ("http://127.0.0.1:%u/random4k.bin", port);
-        g_assert (uri != NULL);
-
-        session = soup_session_new ();
-
         /* Corner cases: First byte */
-        request_range_and_compare (file, session, loop, uri, 0, 0);
+        request_range_and_compare (file, tf, uri, 0, 0);
 
         /* Corner cases: Last byte */
         request_range_and_compare (file,
-                                   session,
-                                   loop,
+                                   tf,
                                    uri,
                                    file_length - 1,
                                    file_length - 1);
 
         /* Examples from http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html */
         /* Request first 500 bytes */
-        request_range_and_compare (file, session, loop, uri, 0, 499);
+        request_range_and_compare (file, tf, uri, 0, 499);
 
         /* Request second 500 bytes */
-        request_range_and_compare (file, session, loop, uri, 500, 999);
+        request_range_and_compare (file, tf, uri, 500, 999);
 
         /* Request everything but the first 500 bytes */
-        request_range_and_compare (file, session, loop, uri, 500, file_length - 1);
+        request_range_and_compare (file, tf, uri, 500, file_length - 1);
 
         /* Request the last 500 bytes */
-        request_range_and_compare (file, session, loop, uri, file_length - 500, file_length - 1);
+        request_range_and_compare (file, tf, uri, file_length - 500, file_length - 1);
 
         /* Request the last 500 bytes by using negative requests: Range:
          * bytes: -500 */
-        request_range_and_compare (file, session, loop, uri, -500, -1);
+        request_range_and_compare (file, tf, uri, -500, -1);
 
         /* Request the last 1k bytes by using negative requests: Range:
          * bytes: 3072- */
-        request_range_and_compare (file, session, loop, uri, 3072, -1);
+        request_range_and_compare (file, tf, uri, 3072, -1);
 
         /* Try to get 1 byte after the end of the file */
         message = soup_message_new ("GET", uri);
 
-        RangeHelper h = { loop, NULL, NULL };
+        RangeHelper h = { tf->loop, NULL, NULL };
         soup_message_headers_set_range (
                 soup_message_get_request_headers (message),
                 file_length,
                 file_length);
-        soup_session_send_and_read_async (session,
+        soup_session_send_and_read_async (tf->session,
                                           message,
                                           G_PRIORITY_DEFAULT,
                                           NULL,
                                           on_message_finished,
                                           &h);
 
-        g_main_loop_run (loop);
+        g_main_loop_run (tf->loop);
 
         g_assert_no_error (h.error);
         g_assert_nonnull (h.body);
@@ -208,13 +242,6 @@ test_gupnp_context_http_ranged_requests (void)
         g_object_unref (message);
 
         g_free (uri);
-        g_object_unref (context);
-
-        // Make sure the source teardown handlers get run so we don't confuse valgrind
-        g_timeout_add (500, (GSourceFunc) g_main_loop_quit, loop);
-        g_main_loop_run (loop);
-        g_main_loop_unref (loop);
-        g_object_unref (session);
         g_mapped_file_unref (file);
 }
 
@@ -360,41 +387,37 @@ test_default_handler_on_read_async (GObject *source,
 }
 
 void
-test_gupnp_context_http_default_handler ()
+test_gupnp_context_http_default_handler (ContextTestFixture *tf,
+                                         gconstpointer user_data)
 {
         GError *error = NULL;
-        GUPnPContext *context = create_context (0, &error);
-        g_assert_no_error (error);
-        g_assert_nonnull (context);
-
         GChecksum *checksum = g_checksum_new (G_CHECKSUM_SHA512);
-        GMainLoop *loop = g_main_loop_new (NULL, FALSE);
+        GMainLoop *loop = tf->loop;
 
-        GSList *uris =
-                soup_server_get_uris (gupnp_context_get_server (context));
-        SoupSession *session = soup_session_new ();
         for (int i = 0; i < 10; i++) {
                 guint32 random = g_random_int ();
                 g_checksum_update (checksum,
                                    (const guchar *) &random,
                                    sizeof (random));
-                char *base = g_uri_to_string (uris->data);
                 char *new_uri = g_uri_resolve_relative (
-                        base,
+                        tf->base_uri,
                         g_checksum_get_string (checksum),
                         G_URI_FLAGS_NONE,
                         &error);
-                g_debug ("Trying to get URI %s", new_uri);
-                g_free (base);
+                char *rewritten_uri =
+                        gupnp_context_rewrite_uri (tf->context, new_uri);
                 g_assert_nonnull (new_uri);
                 g_assert_no_error (error);
-
-                SoupMessage *msg = soup_message_new (SOUP_METHOD_GET, new_uri);
                 g_free (new_uri);
+
+                g_debug ("Trying to get URI %s", rewritten_uri);
+
+                SoupMessage *msg = soup_message_new (SOUP_METHOD_GET, rewritten_uri);
+                g_free (rewritten_uri);
 
                 g_checksum_reset (checksum);
                 soup_session_send_and_read_async (
-                        session,
+                        tf->session,
                         msg,
                         G_PRIORITY_DEFAULT,
                         NULL,
@@ -406,14 +429,8 @@ test_gupnp_context_http_default_handler ()
                                  SOUP_STATUS_NOT_FOUND);
                 g_object_unref (msg);
         }
-        g_slist_free_full (uris, (GDestroyNotify) g_uri_unref);
+
         g_checksum_free (checksum);
-        g_object_unref (context);
-        // Make sure the source teardown handlers get run so we don't confuse valgrind
-        g_timeout_add (500, (GSourceFunc) g_main_loop_quit, loop);
-        g_main_loop_run (loop);
-        g_main_loop_unref (loop);
-        g_object_unref (session);
 }
 
 void
@@ -431,65 +448,58 @@ test_default_language_on_read_async (GObject *source,
 }
 
 void
-test_gupnp_context_http_language_default ()
+test_gupnp_context_http_language_default (ContextTestFixture *tf,
+                                          gconstpointer user_data)
 {
         GError *error = NULL;
-        GUPnPContext *context = create_context (0, &error);
-        GMainLoop *loop = g_main_loop_new (NULL, FALSE);
 
         // Default default language
-        g_assert_cmpstr (gupnp_context_get_default_language (context),
+        g_assert_cmpstr (gupnp_context_get_default_language (tf->context),
                          ==,
                          "en");
 
-        GSList *uris =
-                soup_server_get_uris (gupnp_context_get_server (context));
-        gupnp_context_host_path (context, DATA_PATH "/random4k.bin", "/foo");
-        SoupSession *session = soup_session_new ();
-        char *base = g_uri_to_string (uris->data);
-        char *new_uri =
-                g_uri_resolve_relative (base, "foo", G_URI_FLAGS_NONE, &error);
-        g_free (base);
+        gupnp_context_host_path (tf->context,
+                                 DATA_PATH "/random4k.bin",
+                                 "/foo");
+        char *new_uri = g_uri_resolve_relative (tf->base_uri,
+                                                "foo",
+                                                G_URI_FLAGS_NONE,
+                                                &error);
 
-        SoupMessage *msg = soup_message_new (SOUP_METHOD_GET, new_uri);
-        soup_session_set_accept_language (session, NULL);
+        g_assert_no_error (error);
+        char *rewritten_uri = gupnp_context_rewrite_uri (tf->context, new_uri);
         g_free (new_uri);
 
-        soup_session_send_and_read_async (session,
+        SoupMessage *msg = soup_message_new (SOUP_METHOD_GET, rewritten_uri);
+        soup_session_set_accept_language (tf->session, NULL);
+        g_free (rewritten_uri);
+
+        soup_session_send_and_read_async (tf->session,
                                           msg,
                                           G_PRIORITY_DEFAULT,
                                           NULL,
                                           test_default_language_on_read_async,
-                                          loop);
-        g_main_loop_run (loop);
+                                          tf->loop);
+        g_main_loop_run (tf->loop);
 
         SoupMessageHeaders *hdrs = soup_message_get_response_headers (msg);
         g_assert_cmpint (soup_message_get_status (msg), ==, SOUP_STATUS_OK);
         g_assert_null (soup_message_headers_get_one (hdrs, "Content-Language"));
 
-        soup_session_set_accept_language (session, "fr");
-        soup_session_send_and_read_async (session,
+        soup_session_set_accept_language (tf->session, "fr");
+        soup_session_send_and_read_async (tf->session,
                                           msg,
                                           G_PRIORITY_DEFAULT,
                                           NULL,
                                           test_default_language_on_read_async,
-                                          loop);
-        g_main_loop_run (loop);
+                                          tf->loop);
+        g_main_loop_run (tf->loop);
 
         hdrs = soup_message_get_response_headers (msg);
         g_assert_cmpint (soup_message_get_status (msg), ==, SOUP_STATUS_OK);
         g_assert_cmpstr (soup_message_headers_get_one (hdrs, "Content-Language"), ==, "en");
 
         g_object_unref (msg);
-        g_slist_free_full (uris, (GDestroyNotify) g_uri_unref);
-
-        g_object_unref (context);
-
-        // Make sure the source teardown handlers get run so we don't confuse valgrind
-        g_timeout_add (500, (GSourceFunc)g_main_loop_quit, loop);
-        g_main_loop_run (loop);
-        g_main_loop_unref (loop);
-        g_object_unref (session);
 }
 
 typedef struct _DefaultCallbackData {
@@ -513,288 +523,266 @@ soup_message_default_callback (GObject *source,
 }
 
 void
-test_gupnp_context_http_language_serve_file ()
+test_gupnp_context_http_language_serve_file (ContextTestFixture *tf,
+                                             gconstpointer user_data)
 {
         GError *error = NULL;
-        GUPnPContext *context = create_context (0, &error);
         DefaultCallbackData d = { .bytes = NULL, .loop = NULL };
 
-        d.loop = g_main_loop_new (NULL, FALSE);
+        d.loop = tf->loop;
 
-        GSList *uris =
-                soup_server_get_uris (gupnp_context_get_server (context));
-        gupnp_context_host_path (context, DATA_PATH "/default", "/foo");
-        SoupSession *session = soup_session_new ();
-        char *base = g_uri_to_string (uris->data);
+        gupnp_context_host_path (tf->context, DATA_PATH "/default", "/foo");
         char *new_uri =
-                g_uri_resolve_relative (base, "foo", G_URI_FLAGS_NONE, &error);
-        g_free (base);
-
-        SoupMessage *msg = soup_message_new (SOUP_METHOD_GET, new_uri);
-        soup_session_set_accept_language (session, NULL);
-
-        soup_session_send_and_read_async (session,
-                                          msg,
-                                          G_PRIORITY_DEFAULT,
-                                          NULL,
-                                          soup_message_default_callback,
-                                          &d);
-        g_main_loop_run (d.loop);
-
-        SoupMessageHeaders *hdrs = soup_message_get_response_headers (msg);
-        g_assert_cmpint (soup_message_get_status (msg), ==, SOUP_STATUS_OK);
-        g_assert_null (soup_message_headers_get_one (hdrs, "Content-Language"));
-        g_assert_nonnull (d.bytes);
-        g_assert_cmpmem (g_bytes_get_data (d.bytes, NULL),
-                         g_bytes_get_size (d.bytes),
-                         "default\n",
-                         8);
-        g_bytes_unref (d.bytes);
-
-        g_object_unref (msg);
-        msg = soup_message_new (SOUP_METHOD_GET, new_uri);
-        soup_session_set_accept_language (session, "de");
-        soup_session_send_and_read_async (session,
-                                          msg,
-                                          G_PRIORITY_DEFAULT,
-                                          NULL,
-                                          soup_message_default_callback,
-                                          &d);
-        g_main_loop_run (d.loop);
-
-        hdrs = soup_message_get_response_headers (msg);
-        g_assert_cmpint (soup_message_get_status (msg), ==, SOUP_STATUS_OK);
-        g_assert_cmpstr (
-                soup_message_headers_get_one (hdrs, "Content-Language"),
-                ==,
-                "de");
-        g_assert_nonnull (d.bytes);
-        g_assert_cmpmem (g_bytes_get_data (d.bytes, NULL),
-                         g_bytes_get_size (d.bytes),
-                         "de\n",
-                         3);
-        g_bytes_unref (d.bytes);
-
-
-        g_object_unref (msg);
-        msg = soup_message_new (SOUP_METHOD_GET, new_uri);
-        soup_session_set_accept_language (session, "fr");
-        soup_session_send_and_read_async (session,
-                                          msg,
-                                          G_PRIORITY_DEFAULT,
-                                          NULL,
-                                          soup_message_default_callback,
-                                          &d);
-        g_main_loop_run (d.loop);
-
-        hdrs = soup_message_get_response_headers (msg);
-        g_assert_cmpint (soup_message_get_status (msg), ==, SOUP_STATUS_OK);
-        g_assert_cmpstr (
-                soup_message_headers_get_one (hdrs, "Content-Language"),
-                ==,
-                "fr");
-        g_assert_nonnull (d.bytes);
-        g_assert_cmpmem (g_bytes_get_data (d.bytes, NULL),
-                         g_bytes_get_size (d.bytes),
-                         "fr\n",
-                         3);
-        g_bytes_unref (d.bytes);
-
-        g_object_unref (msg);
-        msg = soup_message_new (SOUP_METHOD_GET, new_uri);
-        soup_session_set_accept_language (session, "it");
-        soup_session_send_and_read_async (session,
-                                          msg,
-                                          G_PRIORITY_DEFAULT,
-                                          NULL,
-                                          soup_message_default_callback,
-                                          &d);
-        g_main_loop_run (d.loop);
-
-        hdrs = soup_message_get_response_headers (msg);
-        g_assert_cmpint (soup_message_get_status (msg), ==, SOUP_STATUS_OK);
-        g_assert_cmpstr (
-                soup_message_headers_get_one (hdrs, "Content-Language"),
-                ==,
-                "en");
-        g_assert_nonnull (d.bytes);
-        g_assert_cmpmem (g_bytes_get_data (d.bytes, NULL),
-                         g_bytes_get_size (d.bytes),
-                         "default\n",
-                         8);
-        g_bytes_unref (d.bytes);
-
-        g_object_unref (msg);
-
-        g_free (new_uri);
-        g_object_unref (context);
-        g_slist_free_full (uris, (GDestroyNotify) g_uri_unref);
-
-        // Make sure the source teardown handlers get run so we don't confuse valgrind
-        g_timeout_add (500, (GSourceFunc) g_main_loop_quit, d.loop);
-        g_main_loop_run (d.loop);
-        g_main_loop_unref (d.loop);
-        g_object_unref (session);
-}
-
-void
-test_gupnp_context_http_language_serve_folder ()
-{
-        GError *error = NULL;
-        GUPnPContext *context = create_context (0, &error);
-        DefaultCallbackData d = { .bytes = NULL, .loop = NULL };
-
-        d.loop = g_main_loop_new (NULL, FALSE);
-
-        GSList *uris =
-                soup_server_get_uris (gupnp_context_get_server (context));
-        gupnp_context_host_path (context, DATA_PATH "/locale/test", "/foo");
-        SoupSession *session = soup_session_new ();
-        char *base = g_uri_to_string (uris->data);
-        char *new_uri =
-                g_uri_resolve_relative (base, "foo/", G_URI_FLAGS_NONE, &error);
-        g_free (base);
-
-        SoupMessage *msg = soup_message_new (SOUP_METHOD_GET, new_uri);
-        soup_session_set_accept_language (session, NULL);
-
-        soup_session_send_and_read_async (session,
-                                          msg,
-                                          G_PRIORITY_DEFAULT,
-                                          NULL,
-                                          soup_message_default_callback,
-                                          &d);
-        g_main_loop_run (d.loop);
-
-        SoupMessageHeaders *hdrs = soup_message_get_response_headers (msg);
-        g_assert_cmpint (soup_message_get_status (msg), ==, SOUP_STATUS_OK);
-        g_assert_null (soup_message_headers_get_one (hdrs, "Content-Language"));
-        g_assert_nonnull (d.bytes);
-        g_assert_cmpmem (g_bytes_get_data (d.bytes, NULL),
-                         g_bytes_get_size (d.bytes),
-                         "default\n",
-                         8);
-        g_bytes_unref (d.bytes);
-
-        g_object_unref (msg);
-        msg = soup_message_new (SOUP_METHOD_GET, new_uri);
-        soup_session_set_accept_language (session, "de");
-        soup_session_send_and_read_async (session,
-                                          msg,
-                                          G_PRIORITY_DEFAULT,
-                                          NULL,
-                                          soup_message_default_callback,
-                                          &d);
-        g_main_loop_run (d.loop);
-
-        hdrs = soup_message_get_response_headers (msg);
-        g_assert_cmpint (soup_message_get_status (msg), ==, SOUP_STATUS_OK);
-        g_assert_cmpstr (
-                soup_message_headers_get_one (hdrs, "Content-Language"),
-                ==,
-                "de");
-        g_assert_nonnull (d.bytes);
-        g_assert_cmpmem (g_bytes_get_data (d.bytes, NULL),
-                         g_bytes_get_size (d.bytes),
-                         "de\n",
-                         3);
-        g_bytes_unref (d.bytes);
-
-
-        g_object_unref (msg);
-        msg = soup_message_new (SOUP_METHOD_GET, new_uri);
-        soup_session_set_accept_language (session, "fr");
-        soup_session_send_and_read_async (session,
-                                          msg,
-                                          G_PRIORITY_DEFAULT,
-                                          NULL,
-                                          soup_message_default_callback,
-                                          &d);
-        g_main_loop_run (d.loop);
-
-        hdrs = soup_message_get_response_headers (msg);
-        g_assert_cmpint (soup_message_get_status (msg), ==, SOUP_STATUS_OK);
-        g_assert_cmpstr (
-                soup_message_headers_get_one (hdrs, "Content-Language"),
-                ==,
-                "fr");
-        g_assert_nonnull (d.bytes);
-        g_assert_cmpmem (g_bytes_get_data (d.bytes, NULL),
-                         g_bytes_get_size (d.bytes),
-                         "fr\n",
-                         3);
-        g_bytes_unref (d.bytes);
-
-        g_object_unref (msg);
-        msg = soup_message_new (SOUP_METHOD_GET, new_uri);
-        soup_session_set_accept_language (session, "it");
-        soup_session_send_and_read_async (session,
-                                          msg,
-                                          G_PRIORITY_DEFAULT,
-                                          NULL,
-                                          soup_message_default_callback,
-                                          &d);
-        g_main_loop_run (d.loop);
-
-        hdrs = soup_message_get_response_headers (msg);
-        g_assert_cmpint (soup_message_get_status (msg), ==, SOUP_STATUS_OK);
-        g_assert_cmpstr (
-                soup_message_headers_get_one (hdrs, "Content-Language"),
-                ==,
-                "en");
-        g_assert_nonnull (d.bytes);
-        g_assert_cmpmem (g_bytes_get_data (d.bytes, NULL),
-                         g_bytes_get_size (d.bytes),
-                         "default\n",
-                         8);
-        g_bytes_unref (d.bytes);
-
-        g_object_unref (msg);
-
-        g_free (new_uri);
-        g_object_unref (context);
-        g_slist_free_full (uris, (GDestroyNotify) g_uri_unref);
-
-        // Make sure the source teardown handlers get run so we don't confuse valgrind
-        g_timeout_add (500, (GSourceFunc) g_main_loop_quit, d.loop);
-        g_main_loop_run (d.loop);
-        g_main_loop_unref (d.loop);
-        g_object_unref (session);
-}
-
-void
-test_gupnp_context_http_folder_redirect ()
-{
-        GError *error = NULL;
-        GUPnPContext *context = create_context (0, &error);
-        DefaultCallbackData d = { .bytes = NULL, .loop = NULL };
-
-        d.loop = g_main_loop_new (NULL, FALSE);
-
-        GSList *uris =
-                soup_server_get_uris (gupnp_context_get_server (context));
+                g_uri_resolve_relative (tf->base_uri, "foo", G_URI_FLAGS_NONE, &error);
         g_assert_no_error (error);
+        char *rewritten_uri = gupnp_context_rewrite_uri (tf->context, new_uri);
+        g_free (new_uri);
 
-        gupnp_context_host_path (context, DATA_PATH "/locale", "/foo");
+        SoupMessage *msg = soup_message_new (SOUP_METHOD_GET, rewritten_uri);
+        soup_session_set_accept_language (tf->session, NULL);
 
-        SoupSession *session = soup_session_new ();
-        char *base = g_uri_to_string (uris->data);
+        soup_session_send_and_read_async (tf->session,
+                                          msg,
+                                          G_PRIORITY_DEFAULT,
+                                          NULL,
+                                          soup_message_default_callback,
+                                          &d);
+        g_main_loop_run (d.loop);
+
+        SoupMessageHeaders *hdrs = soup_message_get_response_headers (msg);
+        g_assert_cmpint (soup_message_get_status (msg), ==, SOUP_STATUS_OK);
+        g_assert_null (soup_message_headers_get_one (hdrs, "Content-Language"));
+        g_assert_nonnull (d.bytes);
+        g_assert_cmpmem (g_bytes_get_data (d.bytes, NULL),
+                         g_bytes_get_size (d.bytes),
+                         "default\n",
+                         8);
+        g_bytes_unref (d.bytes);
+
+        g_object_unref (msg);
+        msg = soup_message_new (SOUP_METHOD_GET, rewritten_uri);
+        soup_session_set_accept_language (tf->session, "de");
+        soup_session_send_and_read_async (tf->session,
+                                          msg,
+                                          G_PRIORITY_DEFAULT,
+                                          NULL,
+                                          soup_message_default_callback,
+                                          &d);
+        g_main_loop_run (d.loop);
+
+        hdrs = soup_message_get_response_headers (msg);
+        g_assert_cmpint (soup_message_get_status (msg), ==, SOUP_STATUS_OK);
+        g_assert_cmpstr (
+                soup_message_headers_get_one (hdrs, "Content-Language"),
+                ==,
+                "de");
+        g_assert_nonnull (d.bytes);
+        g_assert_cmpmem (g_bytes_get_data (d.bytes, NULL),
+                         g_bytes_get_size (d.bytes),
+                         "de\n",
+                         3);
+        g_bytes_unref (d.bytes);
+
+
+        g_object_unref (msg);
+        msg = soup_message_new (SOUP_METHOD_GET, rewritten_uri);
+        soup_session_set_accept_language (tf->session, "fr");
+        soup_session_send_and_read_async (tf->session,
+                                          msg,
+                                          G_PRIORITY_DEFAULT,
+                                          NULL,
+                                          soup_message_default_callback,
+                                          &d);
+        g_main_loop_run (d.loop);
+
+        hdrs = soup_message_get_response_headers (msg);
+        g_assert_cmpint (soup_message_get_status (msg), ==, SOUP_STATUS_OK);
+        g_assert_cmpstr (
+                soup_message_headers_get_one (hdrs, "Content-Language"),
+                ==,
+                "fr");
+        g_assert_nonnull (d.bytes);
+        g_assert_cmpmem (g_bytes_get_data (d.bytes, NULL),
+                         g_bytes_get_size (d.bytes),
+                         "fr\n",
+                         3);
+        g_bytes_unref (d.bytes);
+
+        g_object_unref (msg);
+        msg = soup_message_new (SOUP_METHOD_GET, rewritten_uri);
+        soup_session_set_accept_language (tf->session, "it");
+        soup_session_send_and_read_async (tf->session,
+                                          msg,
+                                          G_PRIORITY_DEFAULT,
+                                          NULL,
+                                          soup_message_default_callback,
+                                          &d);
+        g_main_loop_run (d.loop);
+
+        hdrs = soup_message_get_response_headers (msg);
+        g_assert_cmpint (soup_message_get_status (msg), ==, SOUP_STATUS_OK);
+        g_assert_cmpstr (
+                soup_message_headers_get_one (hdrs, "Content-Language"),
+                ==,
+                "en");
+        g_assert_nonnull (d.bytes);
+        g_assert_cmpmem (g_bytes_get_data (d.bytes, NULL),
+                         g_bytes_get_size (d.bytes),
+                         "default\n",
+                         8);
+        g_bytes_unref (d.bytes);
+
+        g_object_unref (msg);
+
+        g_free (rewritten_uri);
+}
+
+void
+test_gupnp_context_http_language_serve_folder (ContextTestFixture *tf,
+                                               gconstpointer user_data)
+{
+        GError *error = NULL;
+        DefaultCallbackData d = { .bytes = NULL, .loop = NULL };
+
+        d.loop = tf->loop;
+
+        gupnp_context_host_path (tf->context, DATA_PATH "/locale/test", "/foo");
         char *new_uri =
-                g_uri_resolve_relative (base, "foo", G_URI_FLAGS_NONE, &error);
-        g_free (base);
+                g_uri_resolve_relative (tf->base_uri, "foo/", G_URI_FLAGS_NONE, &error);
+        g_assert_no_error (error);
+        char *rewritten_uri = gupnp_context_rewrite_uri (tf->context, new_uri);
+        g_free (new_uri);
 
-        SoupMessage *msg = soup_message_new (SOUP_METHOD_GET, new_uri);
+        SoupMessage *msg = soup_message_new (SOUP_METHOD_GET, rewritten_uri);
+        soup_session_set_accept_language (tf->session, NULL);
+
+        soup_session_send_and_read_async (tf->session,
+                                          msg,
+                                          G_PRIORITY_DEFAULT,
+                                          NULL,
+                                          soup_message_default_callback,
+                                          &d);
+        g_main_loop_run (d.loop);
+
+        SoupMessageHeaders *hdrs = soup_message_get_response_headers (msg);
+        g_assert_cmpint (soup_message_get_status (msg), ==, SOUP_STATUS_OK);
+        g_assert_null (soup_message_headers_get_one (hdrs, "Content-Language"));
+        g_assert_nonnull (d.bytes);
+        g_assert_cmpmem (g_bytes_get_data (d.bytes, NULL),
+                         g_bytes_get_size (d.bytes),
+                         "default\n",
+                         8);
+        g_bytes_unref (d.bytes);
+
+        g_object_unref (msg);
+        msg = soup_message_new (SOUP_METHOD_GET, rewritten_uri);
+        soup_session_set_accept_language (tf->session, "de");
+        soup_session_send_and_read_async (tf->session,
+                                          msg,
+                                          G_PRIORITY_DEFAULT,
+                                          NULL,
+                                          soup_message_default_callback,
+                                          &d);
+        g_main_loop_run (d.loop);
+
+        hdrs = soup_message_get_response_headers (msg);
+        g_assert_cmpint (soup_message_get_status (msg), ==, SOUP_STATUS_OK);
+        g_assert_cmpstr (
+                soup_message_headers_get_one (hdrs, "Content-Language"),
+                ==,
+                "de");
+        g_assert_nonnull (d.bytes);
+        g_assert_cmpmem (g_bytes_get_data (d.bytes, NULL),
+                         g_bytes_get_size (d.bytes),
+                         "de\n",
+                         3);
+        g_bytes_unref (d.bytes);
+
+
+        g_object_unref (msg);
+        msg = soup_message_new (SOUP_METHOD_GET, rewritten_uri);
+        soup_session_set_accept_language (tf->session, "fr");
+        soup_session_send_and_read_async (tf->session,
+                                          msg,
+                                          G_PRIORITY_DEFAULT,
+                                          NULL,
+                                          soup_message_default_callback,
+                                          &d);
+        g_main_loop_run (d.loop);
+
+        hdrs = soup_message_get_response_headers (msg);
+        g_assert_cmpint (soup_message_get_status (msg), ==, SOUP_STATUS_OK);
+        g_assert_cmpstr (
+                soup_message_headers_get_one (hdrs, "Content-Language"),
+                ==,
+                "fr");
+        g_assert_nonnull (d.bytes);
+        g_assert_cmpmem (g_bytes_get_data (d.bytes, NULL),
+                         g_bytes_get_size (d.bytes),
+                         "fr\n",
+                         3);
+        g_bytes_unref (d.bytes);
+
+        g_object_unref (msg);
+        msg = soup_message_new (SOUP_METHOD_GET, rewritten_uri);
+        soup_session_set_accept_language (tf->session, "it");
+        soup_session_send_and_read_async (tf->session,
+                                          msg,
+                                          G_PRIORITY_DEFAULT,
+                                          NULL,
+                                          soup_message_default_callback,
+                                          &d);
+        g_main_loop_run (d.loop);
+
+        hdrs = soup_message_get_response_headers (msg);
+        g_assert_cmpint (soup_message_get_status (msg), ==, SOUP_STATUS_OK);
+        g_assert_cmpstr (
+                soup_message_headers_get_one (hdrs, "Content-Language"),
+                ==,
+                "en");
+        g_assert_nonnull (d.bytes);
+        g_assert_cmpmem (g_bytes_get_data (d.bytes, NULL),
+                         g_bytes_get_size (d.bytes),
+                         "default\n",
+                         8);
+        g_bytes_unref (d.bytes);
+
+        g_object_unref (msg);
+        g_free (rewritten_uri);
+}
+
+void
+test_gupnp_context_http_folder_redirect (ContextTestFixture *tf,
+                                         gconstpointer user_data)
+{
+        GError *error = NULL;
+        DefaultCallbackData d = { .bytes = NULL, .loop = NULL };
+
+        d.loop = tf->loop;
+
+        gupnp_context_host_path (tf->context, DATA_PATH "/locale", "/foo");
+
+        char *new_uri = g_uri_resolve_relative (tf->base_uri,
+                                                "foo",
+                                                G_URI_FLAGS_NONE,
+                                                &error);
+        g_assert_no_error (error);
+        char *rewritten_uri = gupnp_context_rewrite_uri (tf->context, new_uri);
+        g_free (new_uri);
+
+        SoupMessage *msg = soup_message_new (SOUP_METHOD_GET, rewritten_uri);
+        g_free (rewritten_uri);
 
         // Do not automatically follow the redirect as we want to check if it happened
         soup_message_add_flags (msg, SOUP_MESSAGE_NO_REDIRECT);
 
-        soup_session_send_and_read_async (session,
+        soup_session_send_and_read_async (tf->session,
                                           msg,
                                           G_PRIORITY_DEFAULT,
                                           NULL,
                                           soup_message_default_callback,
                                           &d);
-        g_main_loop_run (d.loop);
+        g_main_loop_run (tf->loop);
 
         g_assert_cmpint (soup_message_get_status (msg),
                          ==,
@@ -802,66 +790,55 @@ test_gupnp_context_http_folder_redirect ()
         g_assert_nonnull (d.bytes);
         g_assert_null (g_bytes_get_data (d.bytes, NULL));
         g_bytes_unref (d.bytes);
-
-
-        g_slist_free_full (uris, (GDestroyNotify) g_uri_unref);
-        g_object_unref (context);
         g_object_unref (msg);
-        g_free (new_uri);
-
-        // Make sure the source teardown handlers get run so we don't confuse valgrind
-        g_timeout_add (500, (GSourceFunc) g_main_loop_quit, d.loop);
-        g_main_loop_run (d.loop);
-        g_main_loop_unref (d.loop);
-        g_object_unref (session);
 }
 
 void
-test_gupnp_context_host_for_agent ()
+test_gupnp_context_host_for_agent (ContextTestFixture *tf, gconstpointer user_data)
 {
         GError *error = NULL;
-        GUPnPContext *context = create_context (0, &error);
         DefaultCallbackData d = { .bytes = NULL, .loop = NULL };
 
-        d.loop = g_main_loop_new (NULL, FALSE);
+        d.loop = tf->loop;
 
-        GSList *uris =
-                soup_server_get_uris (gupnp_context_get_server (context));
         GRegex *user_agent =
                 g_regex_new ("GUPnP-Context-Test UA", 0, 0, &error);
         g_assert_no_error (error);
         g_assert_nonnull (user_agent);
 
         // Cannot host path for a user agent if path is not hosted generally
-        g_assert_false (gupnp_context_host_path_for_agent (context,
+        g_assert_false (gupnp_context_host_path_for_agent (tf->context,
                                                            DATA_PATH "/default",
                                                            "/foo",
                                                            user_agent));
 
-        gupnp_context_host_path (context, DATA_PATH "/random4k.bin", "/foo");
+        gupnp_context_host_path (tf->context, DATA_PATH "/random4k.bin", "/foo");
         // Hosting agent-specific path must now succeed
-        g_assert_true (gupnp_context_host_path_for_agent (context,
+        g_assert_true (gupnp_context_host_path_for_agent (tf->context,
                                                           DATA_PATH "/default",
                                                           "/foo",
                                                           user_agent));
 
-        SoupSession *session = soup_session_new ();
-        char *base = g_uri_to_string (uris->data);
-        char *new_uri =
-                g_uri_resolve_relative (base, "foo", G_URI_FLAGS_NONE, &error);
-        g_free (base);
+        char *new_uri = g_uri_resolve_relative (tf->base_uri,
+                                                "foo",
+                                                G_URI_FLAGS_NONE,
+                                                &error);
+
+        g_assert_no_error (error);
+        char *rewritten_uri = gupnp_context_rewrite_uri (tf->context, new_uri);
+        g_free (new_uri);
 
         // Checking wihtout user agent - should return the 4k file
-        SoupMessage *msg = soup_message_new (SOUP_METHOD_GET, new_uri);
-        soup_session_set_accept_language (session, NULL);
+        SoupMessage *msg = soup_message_new (SOUP_METHOD_GET, rewritten_uri);
+        soup_session_set_accept_language (tf->session, NULL);
 
-        soup_session_send_and_read_async (session,
+        soup_session_send_and_read_async (tf->session,
                                           msg,
                                           G_PRIORITY_DEFAULT,
                                           NULL,
                                           soup_message_default_callback,
                                           &d);
-        g_main_loop_run (d.loop);
+        g_main_loop_run (tf->loop);
 
         g_assert_cmpint (soup_message_get_status (msg), ==, SOUP_STATUS_OK);
         g_assert_nonnull (d.bytes);
@@ -871,16 +848,16 @@ test_gupnp_context_host_for_agent ()
 
         // Checking with user agent - should return the small file
         g_object_unref (msg);
-        msg = soup_message_new (SOUP_METHOD_GET, new_uri);
-        soup_session_set_user_agent (session, "GUPnP-Context-Test UA");
+        msg = soup_message_new (SOUP_METHOD_GET, rewritten_uri);
+        soup_session_set_user_agent (tf->session, "GUPnP-Context-Test UA");
 
-        soup_session_send_and_read_async (session,
+        soup_session_send_and_read_async (tf->session,
                                           msg,
                                           G_PRIORITY_DEFAULT,
                                           NULL,
                                           soup_message_default_callback,
                                           &d);
-        g_main_loop_run (d.loop);
+        g_main_loop_run (tf->loop);
 
         g_assert_cmpint (soup_message_get_status (msg), ==, SOUP_STATUS_OK);
         g_assert_nonnull (d.bytes);
@@ -892,19 +869,19 @@ test_gupnp_context_host_for_agent ()
 
         g_object_unref (msg);
 
-        gupnp_context_unhost_path (context, "/foo");
+        gupnp_context_unhost_path (tf->context, "/foo");
 
         // there should be no file anymore for the user agent
-        msg = soup_message_new (SOUP_METHOD_GET, new_uri);
-        soup_session_set_user_agent (session, "GUPnP-Context-Test UA");
+        msg = soup_message_new (SOUP_METHOD_GET, rewritten_uri);
+        soup_session_set_user_agent (tf->session, "GUPnP-Context-Test UA");
 
-        soup_session_send_and_read_async (session,
+        soup_session_send_and_read_async (tf->session,
                                           msg,
                                           G_PRIORITY_DEFAULT,
                                           NULL,
                                           soup_message_default_callback,
                                           &d);
-        g_main_loop_run (d.loop);
+        g_main_loop_run (tf->loop);
 
         g_assert_cmpint (soup_message_get_status (msg),
                          ==,
@@ -915,16 +892,16 @@ test_gupnp_context_host_for_agent ()
 
         g_object_unref (msg);
         // there should be no file anymore for the user agent
-        msg = soup_message_new (SOUP_METHOD_GET, new_uri);
-        soup_session_set_user_agent (session, NULL);
+        msg = soup_message_new (SOUP_METHOD_GET, rewritten_uri);
+        soup_session_set_user_agent (tf->session, NULL);
 
-        soup_session_send_and_read_async (session,
+        soup_session_send_and_read_async (tf->session,
                                           msg,
                                           G_PRIORITY_DEFAULT,
                                           NULL,
                                           soup_message_default_callback,
                                           &d);
-        g_main_loop_run (d.loop);
+        g_main_loop_run (tf->loop);
 
         g_assert_cmpint (soup_message_get_status (msg),
                          ==,
@@ -932,51 +909,146 @@ test_gupnp_context_host_for_agent ()
         g_assert_nonnull (d.bytes);
         g_assert_null (g_bytes_get_data(d.bytes, NULL));
         g_bytes_unref (d.bytes);
+        g_free (rewritten_uri);
 
         g_object_unref (msg);
 
-
-        g_slist_free_full (uris, (GDestroyNotify) g_uri_unref);
-        g_free (new_uri);
-        g_object_unref (context);
         g_regex_unref (user_agent);
-
-        // Make sure the source teardown handlers get run so we don't confuse valgrind
-        g_timeout_add (500, (GSourceFunc) g_main_loop_quit, d.loop);
-        g_main_loop_run (d.loop);
-        g_main_loop_unref (d.loop);
-        g_object_unref (session);
 }
 
-int main (int argc, char *argv[]) {
+int
+main (int argc, char *argv[])
+{
+        GError *error;
+
         g_test_init (&argc, &argv, NULL);
-        g_test_add_func ("/context/http/ranged-requests",
-                         test_gupnp_context_http_ranged_requests);
+
+        GPtrArray *addresses = g_ptr_array_sized_new (2);
+        g_ptr_array_add (addresses, g_strdup ("127.0.0.1"));
+        g_ptr_array_add (addresses, g_strdup ("::1"));
+
+        // Detect if there is a special network device with "proper" ip addresses to check also link-local addresses
+        GUPnPContext *c = g_initable_new (GUPNP_TYPE_CONTEXT,
+                                          NULL,
+                                          &error,
+                                          "interface",
+                                          "gupnp0",
+                                          "address-family",
+                                          G_SOCKET_FAMILY_IPV4,
+                                          NULL);
+
+        if (c != NULL) {
+                g_ptr_array_add (
+                        addresses,
+                        g_strdup (gssdp_client_get_host_ip (GSSDP_CLIENT (c))));
+                g_object_unref (c);
+        }
+
+        c = g_initable_new (GUPNP_TYPE_CONTEXT,
+                            NULL,
+                            &error,
+                            "interface",
+                            "gupnp0",
+                            "address-family",
+                            G_SOCKET_FAMILY_IPV6,
+                            NULL);
+
+        if (c != NULL) {
+                g_ptr_array_add (
+                        addresses,
+                        g_strdup (gssdp_client_get_host_ip (GSSDP_CLIENT (c))));
+                g_object_unref (c);
+        }
+
+        g_ptr_array_add (addresses, NULL);
 
         g_test_add_func ("/context/creation/error-when-bound",
                          test_gupnp_context_error_when_bound);
-        g_test_add_func ("/context/http/default-handler",
-                         test_gupnp_context_http_default_handler);
-
-        g_test_add_func ("/context/http/language/default",
-                         test_gupnp_context_http_language_default);
-
-        g_test_add_func ("/context/http/language/serve-file",
-                         test_gupnp_context_http_language_serve_file);
-
-        g_test_add_func ("/context/http/language/serve-folder",
-                         test_gupnp_context_http_language_serve_folder);
-
-        g_test_add_func ("/context/http/host/folder-rewrite",
-                         test_gupnp_context_http_folder_redirect);
-
-        g_test_add_func ("/context/http/host/for-agent",
-                         test_gupnp_context_host_for_agent);
 
         g_test_add_func ("/context/utility/rewrite_uri",
                          test_gupnp_context_rewrite_uri);
 
-        g_test_run ();
 
-        return 0;
+        char **data = (char **)g_ptr_array_free (addresses, FALSE);
+        char **it = data;
+        while (*it != NULL) {
+                char *name = NULL;
+
+                name = g_strdup_printf ("/context/http/ranged-requests/%s",
+                                        *it);
+                g_test_add (name,
+                            ContextTestFixture,
+                            *it,
+                            test_fixture_setup,
+                            test_gupnp_context_http_ranged_requests,
+                            test_fixture_reardown);
+                g_free (name);
+
+                name = g_strdup_printf ("/context/http/default-handler/%s",
+                                        *it);
+                g_test_add (name,
+                            ContextTestFixture,
+                            *it,
+                            test_fixture_setup,
+                            test_gupnp_context_http_default_handler,
+                            test_fixture_reardown);
+                g_free (name);
+
+                name = g_strdup_printf ("/context/http/language/default/%s",
+                                        *it);
+                g_test_add (name,
+                            ContextTestFixture,
+                            *it,
+                            test_fixture_setup,
+                            test_gupnp_context_http_language_default,
+                            test_fixture_reardown);
+                g_free (name);
+
+                name = g_strdup_printf ("/context/http/language/serve-file/%s",
+                                        *it);
+                g_test_add (name,
+                            ContextTestFixture,
+                            *it,
+                            test_fixture_setup,
+                            test_gupnp_context_http_language_serve_file,
+                            test_fixture_reardown);
+                g_free (name);
+
+                name = g_strdup_printf (
+                        "/context/http/language/serve-folder/%s",
+                        *it);
+                g_test_add (name,
+                            ContextTestFixture,
+                            *it,
+                            test_fixture_setup,
+                            test_gupnp_context_http_language_serve_folder,
+                            test_fixture_reardown);
+                g_free (name);
+
+                name = g_strdup_printf ("/context/http/host/folder-rewrite/%s",
+                                        *it);
+                g_test_add (name,
+                            ContextTestFixture,
+                            *it,
+                            test_fixture_setup,
+                            test_gupnp_context_http_folder_redirect,
+                            test_fixture_reardown);
+                g_free (name);
+
+                name = g_strdup_printf ("/context/http/host/for-agent/%s", *it);
+                g_test_add (name,
+                            ContextTestFixture,
+                            *it,
+                            test_fixture_setup,
+                            test_gupnp_context_host_for_agent,
+                            test_fixture_reardown);
+                g_free (name);
+                it++;
+        }
+
+        int result = g_test_run ();
+
+        g_strfreev (data);
+
+        return result;
 }
