@@ -819,7 +819,6 @@ test_gupnp_context_host_for_agent ()
         g_object_unref (msg);
         msg = soup_message_new (SOUP_METHOD_GET, new_uri);
         soup_session_set_user_agent (session, "GUPnP-Context-Test UA");
-        soup_session_set_accept_language (session, NULL);
 
         soup_session_send_and_read_async (session,
                                           msg,
@@ -838,13 +837,58 @@ test_gupnp_context_host_for_agent ()
         g_bytes_unref (d.bytes);
 
         g_object_unref (msg);
+
+        gupnp_context_unhost_path (context, "/foo");
+
+        // there should be no file anymore for the user agent
+        msg = soup_message_new (SOUP_METHOD_GET, new_uri);
+        soup_session_set_user_agent (session, "GUPnP-Context-Test UA");
+
+        soup_session_send_and_read_async (session,
+                                          msg,
+                                          G_PRIORITY_DEFAULT,
+                                          NULL,
+                                          soup_message_default_callback,
+                                          &d);
+        g_main_loop_run (d.loop);
+
+        g_assert_cmpint (soup_message_get_status (msg),
+                         ==,
+                         SOUP_STATUS_NOT_FOUND);
+        g_assert_nonnull (d.bytes);
+        g_assert_null (g_bytes_get_data(d.bytes, NULL));
+        g_bytes_unref (d.bytes);
+
+        g_object_unref (msg);
+        // there should be no file anymore for the user agent
+        msg = soup_message_new (SOUP_METHOD_GET, new_uri);
+        soup_session_set_user_agent (session, NULL);
+
+        soup_session_send_and_read_async (session,
+                                          msg,
+                                          G_PRIORITY_DEFAULT,
+                                          NULL,
+                                          soup_message_default_callback,
+                                          &d);
+        g_main_loop_run (d.loop);
+
+        g_assert_cmpint (soup_message_get_status (msg),
+                         ==,
+                         SOUP_STATUS_NOT_FOUND);
+        g_assert_nonnull (d.bytes);
+        g_assert_null (g_bytes_get_data(d.bytes, NULL));
+        g_bytes_unref (d.bytes);
+
+        g_object_unref (msg);
+
+
         g_slist_free_full (uris, (GDestroyNotify) g_uri_unref);
         g_free (new_uri);
         g_object_unref (context);
         g_regex_unref (user_agent);
 
         // Make sure the source teardown handlers get run so we don't confuse valgrind
-        g_timeout_add (500, (GSourceFunc)g_main_loop_quit, d.loop);
+        g_timeout_add (500, (GSourceFunc) g_main_loop_quit, d.loop);
         g_main_loop_run (d.loop);
         g_main_loop_unref (d.loop);
         g_object_unref (session);
