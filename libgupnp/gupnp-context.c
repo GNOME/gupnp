@@ -321,6 +321,7 @@ gupnp_context_dispose (GObject *object)
         }
 
         g_clear_object (&priv->server);
+        g_clear_object (&priv->acl);
 
         /* Call super */
         object_class = G_OBJECT_CLASS (gupnp_context_parent_class);
