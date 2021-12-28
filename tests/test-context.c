@@ -57,7 +57,7 @@ test_fixture_setup (ContextTestFixture* tf, gconstpointer user_data)
 }
 
 static void
-test_fixture_reardown (ContextTestFixture *tf, gconstpointer user_data)
+test_fixture_teardown (ContextTestFixture *tf, gconstpointer user_data)
 {
         g_free (tf->base_uri);
         g_object_unref (tf->context);
@@ -916,6 +916,175 @@ test_gupnp_context_host_for_agent (ContextTestFixture *tf, gconstpointer user_da
         g_regex_unref (user_agent);
 }
 
+void
+test_gupnp_context_host_path_user_agent_cache_filled_from_request (
+        ContextTestFixture *tf,
+        gconstpointer user_data)
+{
+        const char *user_agent = "GUPnP-Context Test UA";
+
+        GError *error = NULL;
+        DefaultCallbackData d = { .bytes = NULL, .loop = NULL };
+
+        d.loop = tf->loop;
+
+        gupnp_context_host_path (tf->context, DATA_PATH "/default", "/foo");
+        GRegex *agent = g_regex_new (user_agent, 0, 0, &error);
+        g_assert_nonnull (agent);
+        g_assert_no_error (error);
+
+        gupnp_context_host_path_for_agent (tf->context,
+                                           DATA_PATH "/default.de",
+                                           "/foo",
+                                           agent);
+        char *new_uri = g_uri_resolve_relative (tf->base_uri,
+                                                "foo",
+                                                G_URI_FLAGS_NONE,
+                                                &error);
+        g_assert_no_error (error);
+        char *rewritten_uri = gupnp_context_rewrite_uri (tf->context, new_uri);
+        g_free (new_uri);
+
+        SoupMessage *msg = soup_message_new (SOUP_METHOD_GET, rewritten_uri);
+
+        // First request with user agent
+        soup_session_set_user_agent (tf->session, user_agent);
+        soup_session_send_and_read_async (tf->session,
+                                          msg,
+                                          G_PRIORITY_DEFAULT,
+                                          NULL,
+                                          soup_message_default_callback,
+                                          &d);
+        g_main_loop_run (d.loop);
+        g_assert_nonnull (d.bytes);
+        g_assert_cmpmem (g_bytes_get_data (d.bytes, NULL),
+                         g_bytes_get_size (d.bytes),
+                         "de\n",
+                         3);
+        g_bytes_unref (d.bytes);
+        g_object_unref (msg);
+
+        // Second request without user agent - we should get the specific resource
+        msg = soup_message_new (SOUP_METHOD_GET, rewritten_uri);
+
+        // First request with user agent
+        soup_session_set_user_agent (tf->session, NULL);
+        soup_session_send_and_read_async (tf->session,
+                                          msg,
+                                          G_PRIORITY_DEFAULT,
+                                          NULL,
+                                          soup_message_default_callback,
+                                          &d);
+        g_main_loop_run (d.loop);
+        g_assert_nonnull (d.bytes);
+        g_assert_cmpmem (g_bytes_get_data (d.bytes, NULL),
+                         g_bytes_get_size (d.bytes),
+                         "de\n",
+                         3);
+        g_bytes_unref (d.bytes);
+        g_object_unref (msg);
+        g_free (rewritten_uri);
+        g_regex_unref (agent);
+}
+
+void
+test_gupnp_context_host_path_user_agent_cache_prefilled (
+        ContextTestFixture *tf,
+        gconstpointer user_data)
+{
+        const char *user_agent = "GUPnP-Context Test UA";
+
+        GError *error = NULL;
+        DefaultCallbackData d = { .bytes = NULL, .loop = NULL };
+
+        d.loop = tf->loop;
+
+        gupnp_context_host_path (tf->context, DATA_PATH "/default", "/foo");
+        GRegex *agent = g_regex_new (user_agent, 0, 0, &error);
+        g_assert_nonnull (agent);
+        g_assert_no_error (error);
+
+        gupnp_context_host_path_for_agent (tf->context,
+                                           DATA_PATH "/default.de",
+                                           "/foo",
+                                           agent);
+        char *new_uri = g_uri_resolve_relative (tf->base_uri,
+                                                "foo",
+                                                G_URI_FLAGS_NONE,
+                                                &error);
+        g_assert_no_error (error);
+        char *rewritten_uri = gupnp_context_rewrite_uri (tf->context, new_uri);
+        g_free (new_uri);
+
+        gssdp_client_add_cache_entry (GSSDP_CLIENT (tf->context),
+                                      user_data,
+                                      user_agent);
+
+        SoupMessage *msg = soup_message_new (SOUP_METHOD_GET, rewritten_uri);
+        soup_session_set_user_agent (tf->session, NULL);
+        soup_session_send_and_read_async (tf->session,
+                                          msg,
+                                          G_PRIORITY_DEFAULT,
+                                          NULL,
+                                          soup_message_default_callback,
+                                          &d);
+        g_main_loop_run (d.loop);
+        g_assert_nonnull (d.bytes);
+        g_assert_cmpmem (g_bytes_get_data (d.bytes, NULL),
+                         g_bytes_get_size (d.bytes),
+                         "de\n",
+                         3);
+        g_bytes_unref (d.bytes);
+        g_object_unref (msg);
+        g_free (rewritten_uri);
+        g_regex_unref (agent);
+}
+
+
+void
+test_gupnp_context_host_path_invalid_methods (ContextTestFixture *tf,
+                                              gconstpointer user_data)
+{
+        // FIXME: CONNECT does not seem to be forwarded to the handler by libsoup,
+        // causes the main loop not to quit
+        char *invalid_methods[] = { "POST",    "PUT",   "DELETE", /*"CONNECT",*/
+                                    "OPTIONS", "TRACE", "PATCH",  NULL };
+
+        GError *error = NULL;
+        DefaultCallbackData d = { .bytes = NULL, .loop = NULL };
+
+        d.loop = tf->loop;
+
+        gupnp_context_host_path (tf->context, DATA_PATH "/default", "/foo");
+
+        char *new_uri = g_uri_resolve_relative (tf->base_uri,
+                                                "foo",
+                                                G_URI_FLAGS_NONE,
+                                                &error);
+        char *rewritten_uri = gupnp_context_rewrite_uri (tf->context, new_uri);
+        g_free (new_uri);
+
+        char **it = invalid_methods;
+        while (*it != NULL) {
+                g_debug ("Trying %s on %s", *it, rewritten_uri);
+                SoupMessage *msg = soup_message_new (*it, rewritten_uri);
+                soup_session_set_user_agent (tf->session, NULL);
+                soup_session_send_and_read_async (tf->session,
+                                                  msg,
+                                                  G_PRIORITY_DEFAULT,
+                                                  NULL,
+                                                  soup_message_default_callback,
+                                                  &d);
+                g_main_loop_run (d.loop);
+                g_assert_cmpint (soup_message_get_status (msg),
+                                 ==,
+                                 SOUP_STATUS_NOT_IMPLEMENTED);
+                g_object_unref (msg);
+                g_bytes_unref (d.bytes);
+                it++;
+        }
+        g_free (rewritten_uri);
+}
 int
 main (int argc, char *argv[])
 {
@@ -981,7 +1150,7 @@ main (int argc, char *argv[])
                             *it,
                             test_fixture_setup,
                             test_gupnp_context_http_ranged_requests,
-                            test_fixture_reardown);
+                            test_fixture_teardown);
                 g_free (name);
 
                 name = g_strdup_printf ("/context/http/default-handler/%s",
@@ -991,7 +1160,7 @@ main (int argc, char *argv[])
                             *it,
                             test_fixture_setup,
                             test_gupnp_context_http_default_handler,
-                            test_fixture_reardown);
+                            test_fixture_teardown);
                 g_free (name);
 
                 name = g_strdup_printf ("/context/http/language/default/%s",
@@ -1001,7 +1170,7 @@ main (int argc, char *argv[])
                             *it,
                             test_fixture_setup,
                             test_gupnp_context_http_language_default,
-                            test_fixture_reardown);
+                            test_fixture_teardown);
                 g_free (name);
 
                 name = g_strdup_printf ("/context/http/language/serve-file/%s",
@@ -1011,7 +1180,7 @@ main (int argc, char *argv[])
                             *it,
                             test_fixture_setup,
                             test_gupnp_context_http_language_serve_file,
-                            test_fixture_reardown);
+                            test_fixture_teardown);
                 g_free (name);
 
                 name = g_strdup_printf (
@@ -1022,7 +1191,7 @@ main (int argc, char *argv[])
                             *it,
                             test_fixture_setup,
                             test_gupnp_context_http_language_serve_folder,
-                            test_fixture_reardown);
+                            test_fixture_teardown);
                 g_free (name);
 
                 name = g_strdup_printf ("/context/http/host/folder-rewrite/%s",
@@ -1032,7 +1201,7 @@ main (int argc, char *argv[])
                             *it,
                             test_fixture_setup,
                             test_gupnp_context_http_folder_redirect,
-                            test_fixture_reardown);
+                            test_fixture_teardown);
                 g_free (name);
 
                 name = g_strdup_printf ("/context/http/host/for-agent/%s", *it);
@@ -1041,8 +1210,35 @@ main (int argc, char *argv[])
                             *it,
                             test_fixture_setup,
                             test_gupnp_context_host_for_agent,
-                            test_fixture_reardown);
+                            test_fixture_teardown);
                 g_free (name);
+
+                name = g_strdup_printf ("/context/http/host/agent-cache-from-request/%s", *it);
+                g_test_add (name,
+                            ContextTestFixture,
+                            *it,
+                            test_fixture_setup,
+                            test_gupnp_context_host_path_user_agent_cache_filled_from_request,
+                            test_fixture_teardown);
+                g_free (name);
+
+                name = g_strdup_printf ("/context/http/host/agent-cache-from-prefill/%s", *it);
+                g_test_add (name,
+                            ContextTestFixture,
+                            *it,
+                            test_fixture_setup,
+                            test_gupnp_context_host_path_user_agent_cache_prefilled,
+                            test_fixture_teardown);
+                g_free (name);
+
+                name = g_strdup_printf ("/context/http/host/invalid-methods/%s", *it);
+                g_test_add (name,
+                            ContextTestFixture,
+                            *it,
+                            test_fixture_setup,
+                            test_gupnp_context_host_path_invalid_methods,
+                            test_fixture_teardown);
+
                 it++;
         }
 
