@@ -1105,10 +1105,7 @@ host_path_handler (G_GNUC_UNUSED SoupServer *server,
                 g_free (length);
 
         } else {
-                soup_server_message_set_status (msg,
-                                                SOUP_STATUS_METHOD_NOT_ALLOWED,
-                                                "Method not allowed");
-
+                g_assert_not_reached ();
                 goto DONE;
         }
 
