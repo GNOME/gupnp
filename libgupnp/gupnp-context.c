@@ -25,8 +25,6 @@
 
 #include <config.h>
 
-#define G_LOG_DOMAIN "gupnp-context"
-
 #include <errno.h>
 #include <string.h>
 #include <unistd.h>
