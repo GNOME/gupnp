@@ -1,4 +1,4 @@
-foreach program : ['context', 'bugs', 'service']
+foreach program : ['context', 'bugs', 'service', 'acl']
     test(
         program,
         executable(
