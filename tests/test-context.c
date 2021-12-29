@@ -56,6 +56,13 @@ test_fixture_setup (ContextTestFixture* tf, gconstpointer user_data)
         g_slist_free_full (uris, (GDestroyNotify) g_uri_unref);
 }
 
+static gboolean
+delayed_loop_quitter (gpointer user_data)
+{
+        g_main_loop_quit (user_data);
+        return G_SOURCE_REMOVE;
+}
+
 static void
 test_fixture_teardown (ContextTestFixture *tf, gconstpointer user_data)
 {
@@ -63,7 +70,7 @@ test_fixture_teardown (ContextTestFixture *tf, gconstpointer user_data)
         g_object_unref (tf->context);
 
         // Make sure the source teardown handlers get run so we don't confuse valgrind
-        g_timeout_add (500, (GSourceFunc) g_main_loop_quit, tf->loop);
+        g_timeout_add (500, (GSourceFunc) delayed_loop_quitter, tf->loop);
         g_main_loop_run (tf->loop);
         g_main_loop_unref (tf->loop);
         g_object_unref (tf->session);
