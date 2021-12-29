@@ -283,7 +283,11 @@ test_gupnp_context_acl (ContextTestFixture *tf, gconstpointer user_data)
                                           &destroy_called,
                                           destroy_server_handler_data);
 
-        char *uri = g_uri_resolve_relative (tf->base_uri, "/foo", 0, &error);
+        // pass on a query, to cover more branches
+        char *uri = g_uri_resolve_relative (tf->base_uri,
+                                            "/foo?foo=bar&bar=baz",
+                                            0,
+                                            &error);
         g_assert_nonnull (uri);
         g_assert_no_error (error);
 
@@ -307,13 +311,15 @@ test_gupnp_context_acl (ContextTestFixture *tf, gconstpointer user_data)
 
         soup_server_remove_handler (gupnp_context_get_server (tf->context),
                                     "/foo");
+        g_assert_cmpint (destroy_called, ==, 1);
+        destroy_called = FALSE;
 
         gupnp_context_add_server_handler (tf->context,
                                           TRUE,
                                           "/foo",
                                           acl_test_handler,
-                                          NULL,
-                                          NULL);
+                                          &destroy_called,
+                                          destroy_server_handler_data);
 
         g_object_unref (msg);
         msg = soup_message_new (SOUP_METHOD_HEAD, request_uri);
@@ -396,8 +402,6 @@ test_gupnp_context_acl (ContextTestFixture *tf, gconstpointer user_data)
 int
 main (int argc, char *argv[])
 {
-        GError *error;
-
         g_test_init (&argc, &argv, NULL);
 
         GPtrArray *addresses = g_ptr_array_sized_new (2);
