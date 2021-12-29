@@ -407,7 +407,7 @@ main (int argc, char *argv[])
         // Detect if there is a special network device with "proper" ip addresses to check also link-local addresses
         GUPnPContext *c = g_initable_new (GUPNP_TYPE_CONTEXT,
                                           NULL,
-                                          &error,
+                                          NULL,
                                           "interface",
                                           "gupnp0",
                                           "address-family",
@@ -423,7 +423,7 @@ main (int argc, char *argv[])
 
         c = g_initable_new (GUPNP_TYPE_CONTEXT,
                             NULL,
-                            &error,
+                            NULL,
                             "interface",
                             "gupnp0",
                             "address-family",
