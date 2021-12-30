@@ -120,7 +120,7 @@ gupnp_service_introspection_error_quark (void)
         static GQuark quark = 0;
 
         if (!quark)
-                quark = g_quark_from_static_string ("gupnp-root-device-error");
+                quark = g_quark_from_static_string ("gupnp-service-introspection-error");
 
         return quark;
 }
