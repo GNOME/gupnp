@@ -664,9 +664,24 @@ gupnp_root_device_get_available (GUPnPRootDevice *root_device)
  * Get the relative location of @root_device.
  *
  * Return value: The relative location of @root_device.
+ * Deprecated: 1.4.2: Use gupnp_root_device_get_description_document_name() instead.
  **/
 const char *
 gupnp_root_device_get_relative_location (GUPnPRootDevice *root_device)
+{
+        return gupnp_root_device_get_description_document_name (root_device);
+}
+
+/**
+ * gupnp_root_device_get_description_document_name:
+ * @root_device: A #GUPnPRootDevice
+ *
+ * Gets the name of the description document as hosted via HTTP.
+ *
+ * Return value: The relative location of @root_device.
+ **/
+const char *
+gupnp_root_device_get_description_document_name (GUPnPRootDevice *root_device)
 {
         GUPnPRootDevicePrivate *priv;
 
@@ -676,6 +691,7 @@ gupnp_root_device_get_relative_location (GUPnPRootDevice *root_device)
 
         return priv->relative_location;
 }
+
 
 /**
  * gupnp_root_device_get_description_path:
