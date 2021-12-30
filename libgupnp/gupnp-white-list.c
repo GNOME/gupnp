@@ -9,15 +9,7 @@
 
 /**
  * SECTION:gupnp-white-list
- * @short_description: Class for network filtering.
- *
- * #GUPnPWhiteList handles network filtering. It provides API to manage a list
- * of entries that will be used to filter networks.
- * The #GUPnPWhiteList could be enabled or not. If it's enabled but the entries
- * list is empty, it behaves as disabled.
- *
- * Since: 0.20.5
- * Deprecated: 1.4.0: Use #GUPnPContextFilter
+ * @short_description: Deprecated network filtering
  */
 
 #include <config.h>
@@ -25,6 +17,20 @@
 
 #include "gupnp-white-list.h"
 #include "gupnp-context-filter.h"
+
+/**
+ * GUPnPWhiteList:
+ *
+ * Utility class for context filtering in the context manager.
+ *
+ * It provides API to manage a list
+ * of entries that will be used to filter networks.
+ * The #GUPnPWhiteList could be enabled or not. If it's enabled but the entries
+ * list is empty, it behaves as disabled.
+ *
+ * Since: 0.20.5
+ * Deprecated: 1.4.0: Use #GUPnPContextFilter
+ */
 
 /**
  * gupnp_white_list_new:

@@ -430,6 +430,8 @@ GUPNP_CONTROL_ERROR
 GUPnPControlError
 GUPNP_XML_ERROR
 GUPnPXMLError
+GUPNP_ROOT_DEVICE_ERROR
+GUPnPRootDeviceError
 <SUBSECTION Private>
 gupnp_server_error_quark
 gupnp_eventing_error_quark
@@ -489,6 +491,25 @@ gupnp_windows_context_manager_get_type
 
 <SECTION>
 <FILE>gupnp-network-manager</FILE>
+</SECTION>
+
+<SECTION>
+<FILE>gupnp-context-filter</FILE>
+<TITLE>GUPnPContextFilter</TITLE>
+GUPnPContextFilter
+GUPnPContextFilterClass
+gupnp_context_filter_add_entry
+gupnp_context_filter_add_entryv
+gupnp_context_filter_check_context
+gupnp_context_filter_clear
+gupnp_context_filter_get_enabled
+gupnp_context_filter_get_entries
+gupnp_context_filter_is_empty
+gupnp_context_filter_remove_entry
+gupnp_context_filter_set_enabled
+gupnp_context_manager_get_context_filter
+<SUBSECTION Standard>
+GUPNP_TYPE_CONTEXT_FILTER
 </SECTION>
 
 <SECTION>
