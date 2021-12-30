@@ -141,6 +141,23 @@ typedef enum
 {
         GUPNP_SERVICE_INTROSPECTION_ERROR_OTHER,
 } GUPnPServiceIntrospectionError;
+
+
+GQuark
+gupnp_service_error_quark (void) G_GNUC_CONST;
+
+#define GUPNP_SERVICE_ERROR                                      \
+(gupnp_service_introspection_error_quark ())
+
+/**
+ * GUPnPServiceError:
+ * @GUPNP_SERVICE_ERROR_AUTOCONNECT@: [method@GUPnP.Service.signals_autoconnect] failed
+ */
+typedef enum
+{
+        GUPNP_SERVICE_ERROR_AUTOCONNECT,
+} GUPnPServiceError;
+
 G_END_DECLS
 
 #endif /* GUPNP_ERROR_H */

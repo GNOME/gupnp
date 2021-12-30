@@ -125,6 +125,23 @@ gupnp_service_introspection_error_quark (void)
         return quark;
 }
 
+/**
+ * GUPNP_SERVICE_ERROR:
+ *
+ * The #GQuark uniquely used by GUPnP Service errors.
+ *
+ * Returns: a #GQuark uniquely used by GUPnP Service creation errors.
+ */
+GQuark
+gupnp_service_error_quark (void)
+{
+        static GQuark quark = 0;
+
+        if (!quark)
+                quark = g_quark_from_static_string ("gupnp-service-error");
+
+        return quark;
+}
 
 /* Soup status code => GUPnPServerError */
 static int

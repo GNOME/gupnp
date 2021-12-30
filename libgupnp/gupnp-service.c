@@ -1804,7 +1804,11 @@ gupnp_service_signals_autoconnect (GUPnPService *service,
         /* Get a handle on the main executable -- use this to find symbols */
         module = g_module_open (NULL, 0);
         if (module == NULL) {
-                g_error ("Failed to open module: %s", g_module_error ());
+                g_warning ("Failed to open module: %s", g_module_error ());
+                g_set_error (error,
+                             GUPNP_SERVICE_ERROR,
+                             GUPNP_SERVICE_ERROR_AUTOCONNECT,
+                             "Failed to open module: %s", g_module_error ());
 
                 return;
         }
