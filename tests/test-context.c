@@ -64,7 +64,7 @@ delayed_loop_quitter (gpointer user_data)
 }
 
 static void
-test_fixture_teardown (ContextTestFixture *tf, gconstpointer user_data)
+test_fixture_teardown (ContextTestFixture *tf, G_GNUC_UNUSED gconstpointer user_data)
 {
         g_free (tf->base_uri);
         g_object_unref (tf->context);
@@ -166,7 +166,7 @@ request_range_and_compare (GMappedFile *file,
 
 static void
 test_gupnp_context_http_ranged_requests (ContextTestFixture *tf,
-                                         gconstpointer user_data)
+                                         G_GNUC_UNUSED gconstpointer user_data)
 {
         GError *error = NULL;
         SoupMessage *message = NULL;
@@ -395,7 +395,7 @@ test_default_handler_on_read_async (GObject *source,
 
 void
 test_gupnp_context_http_default_handler (ContextTestFixture *tf,
-                                         gconstpointer user_data)
+                                         G_GNUC_UNUSED gconstpointer user_data)
 {
         GError *error = NULL;
         GChecksum *checksum = g_checksum_new (G_CHECKSUM_SHA512);
@@ -456,7 +456,7 @@ test_default_language_on_read_async (GObject *source,
 
 void
 test_gupnp_context_http_language_default (ContextTestFixture *tf,
-                                          gconstpointer user_data)
+                                          G_GNUC_UNUSED gconstpointer user_data)
 {
         GError *error = NULL;
 
@@ -531,7 +531,7 @@ soup_message_default_callback (GObject *source,
 
 void
 test_gupnp_context_http_language_serve_file (ContextTestFixture *tf,
-                                             gconstpointer user_data)
+                                             G_GNUC_UNUSED gconstpointer user_data)
 {
         GError *error = NULL;
         DefaultCallbackData d = { .bytes = NULL, .loop = NULL };
@@ -646,7 +646,7 @@ test_gupnp_context_http_language_serve_file (ContextTestFixture *tf,
 
 void
 test_gupnp_context_http_language_serve_folder (ContextTestFixture *tf,
-                                               gconstpointer user_data)
+                                               G_GNUC_UNUSED gconstpointer user_data)
 {
         GError *error = NULL;
         DefaultCallbackData d = { .bytes = NULL, .loop = NULL };
@@ -760,7 +760,7 @@ test_gupnp_context_http_language_serve_folder (ContextTestFixture *tf,
 
 void
 test_gupnp_context_http_folder_redirect (ContextTestFixture *tf,
-                                         gconstpointer user_data)
+                                         G_GNUC_UNUSED gconstpointer user_data)
 {
         GError *error = NULL;
         DefaultCallbackData d = { .bytes = NULL, .loop = NULL };
@@ -801,7 +801,8 @@ test_gupnp_context_http_folder_redirect (ContextTestFixture *tf,
 }
 
 void
-test_gupnp_context_host_for_agent (ContextTestFixture *tf, gconstpointer user_data)
+test_gupnp_context_host_for_agent (ContextTestFixture *tf,
+                                   G_GNUC_UNUSED gconstpointer user_data)
 {
         GError *error = NULL;
         DefaultCallbackData d = { .bytes = NULL, .loop = NULL };
@@ -926,7 +927,7 @@ test_gupnp_context_host_for_agent (ContextTestFixture *tf, gconstpointer user_da
 void
 test_gupnp_context_host_path_user_agent_cache_filled_from_request (
         ContextTestFixture *tf,
-        gconstpointer user_data)
+        G_GNUC_UNUSED gconstpointer user_data)
 {
         const char *user_agent = "GUPnP-Context Test UA";
 
@@ -1047,10 +1048,10 @@ test_gupnp_context_host_path_user_agent_cache_prefilled (
         g_regex_unref (agent);
 }
 
-
 void
 test_gupnp_context_host_path_invalid_methods (ContextTestFixture *tf,
-                                              gconstpointer user_data)
+                                              G_GNUC_UNUSED gconstpointer
+                                                      user_data)
 {
         // FIXME: CONNECT does not seem to be forwarded to the handler by libsoup,
         // causes the main loop not to quit
@@ -1095,8 +1096,6 @@ test_gupnp_context_host_path_invalid_methods (ContextTestFixture *tf,
 int
 main (int argc, char *argv[])
 {
-        GError *error;
-
         g_test_init (&argc, &argv, NULL);
 
         GPtrArray *addresses = g_ptr_array_sized_new (2);
