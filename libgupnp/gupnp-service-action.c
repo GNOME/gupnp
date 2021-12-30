@@ -179,27 +179,9 @@ gupnp_service_action_get (GUPnPServiceAction *action, ...)
         g_return_if_fail (action != NULL);
 
         va_start (var_args, action);
-        gupnp_service_action_get_valist (action, var_args);
-        va_end (var_args);
-}
-
-/**
- * gupnp_service_action_get_valist:
- * @action: A #GUPnPServiceAction
- * @var_args: va_list of tuples of argument name, argument type, and argument
- * value location.
- *
- * See gupnp_service_action_get(); this version takes a va_list for
- * use by language bindings.
- **/
-void
-gupnp_service_action_get_valist (GUPnPServiceAction *action, va_list var_args)
-{
         const char *arg_name;
         GType arg_type;
-        GValue value = {
-                0,
-        };
+        GValue value = G_VALUE_INIT;
         char *copy_error;
 
         g_return_if_fail (action != NULL);
@@ -225,7 +207,9 @@ gupnp_service_action_get_valist (GUPnPServiceAction *action, va_list var_args)
 
                 arg_name = va_arg (var_args, const char *);
         }
+        va_end (var_args);
 }
+
 
 /**
  * gupnp_service_action_get_values:
@@ -371,27 +355,9 @@ gupnp_service_action_set (GUPnPServiceAction *action, ...)
         g_return_if_fail (action != NULL);
 
         va_start (var_args, action);
-        gupnp_service_action_set_valist (action, var_args);
-        va_end (var_args);
-}
-
-/**
- * gupnp_service_action_set_valist:
- * @action: A #GUPnPServiceAction
- * @var_args: va_list of tuples of return value name, return value type, and
- * actual return value.
- *
- * See gupnp_service_action_set(); this version takes a va_list for
- * use by language bindings.
- **/
-void
-gupnp_service_action_set_valist (GUPnPServiceAction *action, va_list var_args)
-{
         const char *arg_name;
         GType arg_type;
-        GValue value = {
-                0,
-        };
+        GValue value = G_VALUE_INIT;
         char *collect_error;
 
         g_return_if_fail (action != NULL);
@@ -423,6 +389,7 @@ gupnp_service_action_set_valist (GUPnPServiceAction *action, va_list var_args)
 
                 arg_name = va_arg (var_args, const char *);
         }
+        va_end (var_args);
 }
 
 /**

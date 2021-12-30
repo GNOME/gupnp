@@ -1321,23 +1321,6 @@ gupnp_service_notify (GUPnPService *service,
         g_return_if_fail (GUPNP_IS_SERVICE (service));
 
         va_start (var_args, service);
-        gupnp_service_notify_valist (service, var_args);
-        va_end (var_args);
-}
-
-/**
- * gupnp_service_notify_valist:
- * @service: A #GUPnPService
- * @var_args: A va_list of tuples of variable name, variable type, and variable
- * value, terminated with %NULL.
- *
- * See gupnp_service_notify(); this version takes a va_list for
- * use by language bindings.
- **/
-void
-gupnp_service_notify_valist (GUPnPService *service,
-                             va_list       var_args)
-{
         const char *var_name;
         GType var_type;
         GValue value = {0, };
@@ -1368,6 +1351,7 @@ gupnp_service_notify_valist (GUPnPService *service,
 
                 var_name = va_arg (var_args, const char *);
         }
+        va_end (var_args);
 }
 
 
