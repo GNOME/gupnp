@@ -62,10 +62,10 @@ gboolean
 gupnp_root_device_get_available   (GUPnPRootDevice      *root_device);
 
 const char *
-gupnp_root_device_get_descrliption_document_name
+gupnp_root_device_get_description_document_name
                                   (GUPnPRootDevice      *root_device);
 
-G_GNUC_DEPRECATED_FOR (gupnp_root_device_get_descrliption_document_name) const char *
+G_GNUC_DEPRECATED_FOR (gupnp_root_device_get_description_document_name) const char *
 gupnp_root_device_get_relative_location
                                   (GUPnPRootDevice      *root_device);
 
