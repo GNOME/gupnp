@@ -365,7 +365,9 @@ gupnp_service_action_get (GUPnPServiceAction *action,
         g_return_if_fail (action != NULL);
 
         va_start (var_args, action);
+        G_GNUC_BEGIN_IGNORE_DEPRECATIONS
         gupnp_service_action_get_valist (action, var_args);
+        G_GNUC_END_IGNORE_DEPRECATIONS
         va_end (var_args);
 }
 
@@ -557,7 +559,9 @@ gupnp_service_action_set (GUPnPServiceAction *action,
         g_return_if_fail (action != NULL);
 
         va_start (var_args, action);
+        G_GNUC_BEGIN_IGNORE_DEPRECATIONS
         gupnp_service_action_set_valist (action, var_args);
+        G_GNUC_END_IGNORE_DEPRECATIONS
         va_end (var_args);
 }
 
@@ -1872,7 +1876,9 @@ gupnp_service_notify (GUPnPService *service,
         g_return_if_fail (GUPNP_IS_SERVICE (service));
 
         va_start (var_args, service);
+        G_GNUC_BEGIN_IGNORE_DEPRECATIONS
         gupnp_service_notify_valist (service, var_args);
+        G_GNUC_END_IGNORE_DEPRECATIONS
         va_end (var_args);
 }
 

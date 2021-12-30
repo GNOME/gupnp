@@ -69,7 +69,7 @@ void
 gupnp_service_action_get          (GUPnPServiceAction *action,
                                    ...) G_GNUC_NULL_TERMINATED;
 
-void
+G_DEPRECATED void
 gupnp_service_action_get_valist   (GUPnPServiceAction *action,
                                    va_list             var_args);
 
@@ -92,7 +92,7 @@ void
 gupnp_service_action_set          (GUPnPServiceAction *action,
                                    ...) G_GNUC_NULL_TERMINATED;
 
-void
+G_DEPRECATED void
 gupnp_service_action_set_valist   (GUPnPServiceAction *action,
                                    va_list             var_args);
 
@@ -125,7 +125,7 @@ void
 gupnp_service_notify              (GUPnPService *service,
                                    ...) G_GNUC_NULL_TERMINATED;
 
-void
+G_DEPRECATED void
 gupnp_service_notify_valist       (GUPnPService *service,
                                    va_list       var_args);
 
