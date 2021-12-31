@@ -31,16 +31,13 @@ struct _GUPnPDeviceInfoClass {
         GObjectClass parent_class;
 
         /* vtable */
-        xmlNode          * (* get_element) (GUPnPDeviceInfo *info);
+        xmlNode *(*get_element) (GUPnPDeviceInfo *info);
 
-        /* FIXME: Once we can break API/ABI, clean-up and rename the
-         * _get_device/_get_service functions */
-#ifndef GOBJECT_INTROSPECTION_SKIP
-        GUPnPDeviceInfo  * (* get_device)  (GUPnPDeviceInfo *info,
-                                            xmlNode         *element);
-        GUPnPServiceInfo * (* get_service) (GUPnPDeviceInfo *info,
-                                            xmlNode         *element);
-#endif
+        GUPnPDeviceInfo *(*create_device_instance) (GUPnPDeviceInfo *info,
+                                                    xmlNode *element);
+        GUPnPServiceInfo *(*create_service_instance) (GUPnPDeviceInfo *info,
+                                                      xmlNode *element);
+
         /* future padding */
         void (* _gupnp_reserved1) (void);
         void (* _gupnp_reserved2) (void);

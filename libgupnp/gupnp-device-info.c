@@ -344,6 +344,61 @@ gupnp_device_info_class_init (GUPnPDeviceInfoClass *klass)
 }
 
 /**
+ * gupnp_device_info_get_element:
+ * @info: a #GUPnPDeviceInfo
+ *
+ * Returns: the xmlNode associated with this device info
+ */
+xmlNode *
+gupnp_device_info_get_element (GUPnPDeviceInfo *info)
+{
+        g_return_val_if_fail (GUPNP_IS_DEVICE_INFO (info), NULL);
+        GUPnPDeviceInfoClass *class = GUPNP_DEVICE_INFO_GET_CLASS (info);
+
+        g_return_val_if_fail (class->get_element, NULL);
+
+        return class->get_element (info);
+}
+
+/**
+ * gupnp_device_info_create_device_instance:
+ * @info: a #GUPnPDeviceInfo
+ *
+ * Returns: the xmlNode associated with this device info
+ */
+GUPnPDeviceInfo *
+gupnp_device_info_create_device_instance (GUPnPDeviceInfo *info,
+                                          xmlNode *element)
+{
+        g_return_val_if_fail (GUPNP_IS_DEVICE_INFO (info), NULL);
+        GUPnPDeviceInfoClass *class = GUPNP_DEVICE_INFO_GET_CLASS (info);
+
+        g_return_val_if_fail (class->create_device_instance, NULL);
+
+        return class->create_device_instance (info, element);
+
+}
+
+/**
+ * gupnp_device_info_create_service_instance:
+ * @info: a #GUPnPDeviceInfo
+ *
+ * Returns: the xmlNode associated with this device info
+ */
+GUPnPServiceInfo *
+gupnp_device_info_create_service_instance (GUPnPDeviceInfo *info,
+                                           xmlNode *element)
+{
+        g_return_val_if_fail (GUPNP_IS_DEVICE_INFO (info), NULL);
+        GUPnPDeviceInfoClass *class = GUPNP_DEVICE_INFO_GET_CLASS (info);
+
+        g_return_val_if_fail (class->create_service_instance, NULL);
+
+        return class->create_service_instance (info, element);
+
+}
+
+/**
  * gupnp_device_info_get_resource_factory:
  * @device_info: A #GUPnPDeviceInfo
  *
@@ -1156,7 +1211,7 @@ gupnp_device_info_list_devices (GUPnPDeviceInfo *info)
 
         class = GUPNP_DEVICE_INFO_GET_CLASS (info);
 
-        g_return_val_if_fail (class->get_device, NULL);
+        g_return_val_if_fail (class->create_device_instance != NULL, NULL);
 
         devices = NULL;
 
@@ -1172,7 +1227,7 @@ gupnp_device_info_list_devices (GUPnPDeviceInfo *info)
                 if (!strcmp ("device", (char *) element->name)) {
                         GUPnPDeviceInfo *child;
 
-                        child = class->get_device (info, element);
+                        child = gupnp_device_info_create_device_instance (info, element);
                         devices = g_list_prepend (devices, child);
                 }
         }
@@ -1254,7 +1309,7 @@ gupnp_device_info_get_device (GUPnPDeviceInfo *info,
 
         class = GUPNP_DEVICE_INFO_GET_CLASS (info);
 
-        g_return_val_if_fail (class->get_device, NULL);
+        g_return_val_if_fail (class->create_service_instance != NULL, NULL);
 
         device = NULL;
         priv = gupnp_device_info_get_instance_private (info);
@@ -1281,7 +1336,10 @@ gupnp_device_info_get_device (GUPnPDeviceInfo *info,
                                 continue;
 
                         if (resource_type_match (type, (char *) type_str))
-                                device = class->get_device (info, element);
+                                device =
+                                        gupnp_device_info_create_device_instance (
+                                                info,
+                                                element);
 
                         xmlFree (type_str);
 
@@ -1319,7 +1377,7 @@ gupnp_device_info_list_services (GUPnPDeviceInfo *info)
 
         class = GUPNP_DEVICE_INFO_GET_CLASS (info);
 
-        g_return_val_if_fail (class->get_service, NULL);
+        g_return_val_if_fail (class->create_service_instance, NULL);
 
         services = NULL;
 
@@ -1335,7 +1393,7 @@ gupnp_device_info_list_services (GUPnPDeviceInfo *info)
                 if (!strcmp ("service", (char *) element->name)) {
                         GUPnPServiceInfo *service;
 
-                        service = class->get_service (info, element);
+                        service = gupnp_device_info_create_service_instance (info, element);
                         services = g_list_prepend (services, service);
                 }
         }
@@ -1417,7 +1475,7 @@ gupnp_device_info_get_service (GUPnPDeviceInfo *info,
 
         class = GUPNP_DEVICE_INFO_GET_CLASS (info);
 
-        g_return_val_if_fail (class->get_service, NULL);
+        g_return_val_if_fail (class->create_service_instance, NULL);
 
         service = NULL;
 
@@ -1445,7 +1503,7 @@ gupnp_device_info_get_service (GUPnPDeviceInfo *info,
                                 continue;
 
                         if (resource_type_match (type, (char *) type_str))
-                                service = class->get_service (info, element);
+                                service = gupnp_device_info_create_service_instance (info, element);
 
                         xmlFree (type_str);
 

@@ -218,8 +218,8 @@ gupnp_device_class_init (GUPnPDeviceClass *klass)
 
         info_class = GUPNP_DEVICE_INFO_CLASS (klass);
 
-        info_class->get_device  = gupnp_device_get_device;
-        info_class->get_service = gupnp_device_get_service;
+        info_class->create_device_instance  = gupnp_device_get_device;
+        info_class->create_service_instance = gupnp_device_get_service;
 
         /**
          * GUPnPDevice:root-device:
