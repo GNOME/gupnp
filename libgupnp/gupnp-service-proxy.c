@@ -1738,6 +1738,8 @@ subscribe_got_response (GObject *source, GAsyncResult *res, gpointer user_data)
         GUPnPServiceProxyPrivate *priv;
         SubscriptionCallData *data = user_data;
 
+        priv = gupnp_service_proxy_get_instance_private (data->proxy);
+
         GBytes *body = soup_session_send_and_read_finish (SOUP_SESSION (source),
                                                           res,
                                                           &error);
@@ -1754,7 +1756,6 @@ subscribe_got_response (GObject *source, GAsyncResult *res, gpointer user_data)
         }
 
         /* Remove from pending messages list */
-        priv = gupnp_service_proxy_get_instance_private (data->proxy);
         priv->pending_messages =
                 g_list_remove (priv->pending_messages, data->msg);
 
