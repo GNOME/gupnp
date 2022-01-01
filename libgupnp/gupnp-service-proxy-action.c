@@ -776,6 +776,20 @@ gupnp_service_proxy_action_get_result_valist (GUPnPServiceProxyAction *action,
         return result;
 }
 
+/**
+ * gupnp_service_proxy_action_set:
+ * @action: the action to modify
+ * @key: the name of the value to modify
+ * @value: the new value of @key
+ * @error: (nullable): a return location for an #GError
+ *
+ * Update the value of @key to @value.
+ *
+ * @key needs to already exist in @action.
+ *
+ * Returns: true if successfully modified, false otherwise
+ * Since: 1.4.0
+ */
 gboolean
 gupnp_service_proxy_action_set (GUPnPServiceProxyAction *action,
                                 const char *key,
