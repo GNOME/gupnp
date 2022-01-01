@@ -691,10 +691,12 @@ prepare_action_msg (GUPnPServiceProxy *proxy,
 
         gupnp_service_proxy_action_serialize (action, service_type);
 
-        soup_message_set_request_body_from_bytes (
-                action->msg,
-                "text/xml; charset=\"utf-8\"",
-                g_string_free_to_bytes (action->msg_str));
+        GBytes *body = g_string_free_to_bytes (action->msg_str);
+
+        soup_message_set_request_body_from_bytes (action->msg,
+                                                  "text/xml; charset=\"utf-8\"",
+                                                  body);
+        g_bytes_unref (body);
         action->msg_str = NULL;
 
         return TRUE;
