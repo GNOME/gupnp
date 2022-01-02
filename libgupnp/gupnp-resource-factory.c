@@ -25,6 +25,7 @@
 #include <config.h>
 #include <string.h>
 
+#include "gupnp-device-info-private.h"
 #include "gupnp-resource-factory-private.h"
 #include "gupnp-root-device.h"
 
@@ -338,14 +339,25 @@ gupnp_resource_factory_create_device
                                                  element,
                                                  GUPNP_TYPE_DEVICE);
 
+        GUPnPXMLDoc *doc = _gupnp_device_info_get_document (
+                GUPNP_DEVICE_INFO (root_device));
         device = g_object_new (device_type,
-                               "resource-factory", factory,
-                               "context", context,
-                               "root-device", root_device,
-                               "location", location,
-                               "udn", udn,
-                               "url-base", url_base,
-                               "element", element,
+                               "resource-factory",
+                               factory,
+                               "context",
+                               context,
+                               "root-device",
+                               root_device,
+                               "location",
+                               location,
+                               "udn",
+                               udn,
+                               "url-base",
+                               url_base,
+                               "document",
+                               doc,
+                               "element",
+                               element,
                                NULL);
 
         return device;
@@ -395,13 +407,23 @@ gupnp_resource_factory_create_service
                                                   element,
                                                   GUPNP_TYPE_SERVICE);
 
+        GUPnPXMLDoc *doc = _gupnp_device_info_get_document (
+                GUPNP_DEVICE_INFO (root_device));
         service = g_object_new (service_type,
-                                "context", context,
-                                "root-device", root_device,
-                                "location", location,
-                                "udn", udn,
-                                "url-base", url_base,
-                                "element", element,
+                                "context",
+                                context,
+                                "root-device",
+                                root_device,
+                                "location",
+                                location,
+                                "udn",
+                                udn,
+                                "url-base",
+                                url_base,
+                                "document",
+                                doc,
+                                "element",
+                                element,
                                 NULL);
 
         return service;

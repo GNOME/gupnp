@@ -15,4 +15,7 @@
 G_GNUC_INTERNAL GUPnPXMLDoc *
 _gupnp_device_info_get_document (GUPnPDeviceInfo *info);
 
+G_GNUC_INTERNAL void
+_gupnp_device_info_set_document (GUPnPDeviceInfo *info, GUPnPXMLDoc *doc);
+
 #endif /* GUPNP_DEVICE_INFO_PRIVATE_H */

@@ -19,9 +19,10 @@
 
 #include <libgssdp/gssdp-resource-group.h>
 
-#include "gupnp-root-device.h"
 #include "gupnp-context-private.h"
+#include "gupnp-device-info-private.h"
 #include "gupnp-error.h"
+#include "gupnp-root-device.h"
 #include "http-headers.h"
 #include "xml-util.h"
 
@@ -35,8 +36,6 @@ gupnp_root_device_initable_init (GInitable     *initable,
                                  GError       **error);
 
 struct _GUPnPRootDevicePrivate {
-        GUPnPXMLDoc *description_doc;
-
         GSSDPResourceGroup *group;
 
         char  *description_path;
@@ -72,7 +71,6 @@ gupnp_root_device_finalize (GObject *object)
         device = GUPNP_ROOT_DEVICE (object);
         priv = gupnp_root_device_get_instance_private (device);
 
-        g_clear_object (&priv->description_doc);
         g_free (priv->description_path);
         g_free (priv->description_dir);
         g_free (priv->relative_location);
@@ -129,7 +127,8 @@ gupnp_root_device_set_property (GObject      *object,
 
         switch (property_id) {
         case PROP_DESCRIPTION_DOC:
-                priv->description_doc = g_value_dup_object (value);
+                _gupnp_device_info_set_document (GUPNP_DEVICE_INFO (device),
+                                                 g_value_get_object (value));
                 break;
         case PROP_DESCRIPTION_PATH:
                 priv->description_path = g_value_dup_string (value);
@@ -345,11 +344,13 @@ gupnp_root_device_initable_init (GInitable     *initable,
                                               priv->description_path,
                                               NULL);
 
+        GUPnPXMLDoc *description_doc =
+                _gupnp_device_info_get_document (GUPNP_DEVICE_INFO (device));
         /* Check whether we have a parsed description document */
-        if (priv->description_doc == NULL) {
+        if (description_doc == NULL) {
                 /* We don't, so load and parse it */
-                priv->description_doc = load_and_parse (desc_path);
-                if (priv->description_doc == NULL) {
+                description_doc = load_and_parse (desc_path);
+                if (description_doc == NULL) {
                         g_set_error_literal (error,
                                              GUPNP_XML_ERROR,
                                              GUPNP_XML_ERROR_PARSE,
@@ -357,13 +358,15 @@ gupnp_root_device_initable_init (GInitable     *initable,
 
                         goto DONE;
                 }
+        } else {
+                g_object_ref (description_doc);
         }
 
         /* Find correct element */
-        root_element = xml_util_get_element ((xmlNode *)
-                                             gupnp_xml_doc_get_doc (priv->description_doc),
-                                             "root",
-                                             NULL);
+        root_element = xml_util_get_element (
+                (xmlNode *) gupnp_xml_doc_get_doc (description_doc),
+                "root",
+                NULL);
         if (!root_element) {
                 g_set_error_literal (error,
                                      GUPNP_XML_ERROR,
@@ -420,8 +423,12 @@ gupnp_root_device_initable_init (GInitable     *initable,
 
         /* Set additional properties */
         g_object_set (G_OBJECT (device),
-                      "location", location,
-                      "url-base", url_base,
+                      "location",
+                      location,
+                      "url-base",
+                      url_base,
+                      "document",
+                      description_doc,
                       NULL);
 
         soup_uri_free (url_base);
@@ -445,6 +452,8 @@ gupnp_root_device_initable_init (GInitable     *initable,
         /* Cleanup */
         if (uri)
                 soup_uri_free (uri);
+
+        g_clear_object (&description_doc);
 
         g_free (desc_path);
         g_free (location);
@@ -470,6 +479,7 @@ gupnp_root_device_class_init (GUPnPRootDeviceClass *klass)
          * Device description document. Constructor property.
          *
          * Since: 0.14.0
+         * Deprecated: 1.14.2: Use GUPnPDeviceInfo::document instead
          **/
         g_object_class_install_property
                 (object_class,
@@ -605,12 +615,18 @@ gupnp_root_device_new_full (GUPnPContext         *context,
         return g_initable_new (GUPNP_TYPE_ROOT_DEVICE,
                                NULL,
                                error,
-                               "context", context,
-                               "resource-factory", factory,
-                               "root-device", NULL,
-                               "description-doc", description_doc,
-                               "description-path", description_path,
-                               "description-dir", description_dir,
+                               "context",
+                               context,
+                               "resource-factory",
+                               factory,
+                               "root-device",
+                               NULL,
+                               "document",
+                               description_doc,
+                               "description-path",
+                               description_path,
+                               "description-dir",
+                               description_dir,
                                NULL);
 }
 
