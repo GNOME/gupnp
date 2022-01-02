@@ -660,6 +660,33 @@ test_ggo_58 ()
         g_main_loop_unref (data.loop);
 }
 
+void
+test_ggo_42 ()
+{
+        GUPnPContext *context = NULL;
+        GError *error = NULL;
+        GUPnPRootDevice *rd;
+        GUPnPServiceInfo *info = NULL;
+
+        context = create_context (0, &error);
+        g_assert_no_error (error);
+        g_assert (context != NULL);
+
+        rd = gupnp_root_device_new (context,
+                                    "TestDevice.xml",
+                                    DATA_PATH,
+                                    &error);
+        g_assert_no_error (error);
+        g_assert (rd != NULL);
+        gupnp_root_device_set_available (rd, TRUE);
+        info = gupnp_device_info_get_service (
+                GUPNP_DEVICE_INFO (rd),
+                "urn:test-gupnp-org:service:TestService:1");
+
+        g_object_unref (rd);
+        g_object_unref (info);
+}
+
 int
 main (int argc, char *argv[]) {
     g_test_init (&argc, &argv, NULL);
@@ -670,6 +697,7 @@ main (int argc, char *argv[]) {
     g_test_add_func ("/bugs/bgo/743233", test_bgo_743233);
     g_test_add_func ("/bugs/ggo/24", test_ggo_24);
     g_test_add_func ("/bugs/ggo/58", test_ggo_58);
+    g_test_add_func ("/bugs/ggo/42", test_ggo_42);
 
     return g_test_run ();
 }
