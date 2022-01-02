@@ -123,6 +123,7 @@ gupnp_xml_doc_finalize (GObject *object)
         doc = GUPNP_XML_DOC (object);
 
         g_clear_pointer (&doc->doc, xmlFreeDoc);
+        g_free (doc->path);
 
         G_OBJECT_CLASS (gupnp_xml_doc_parent_class)->finalize (object);
 }
