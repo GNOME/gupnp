@@ -19,9 +19,10 @@
 
 #include <libgssdp/gssdp-resource-group.h>
 
-#include "gupnp-root-device.h"
 #include "gupnp-context-private.h"
+#include "gupnp-device-info-private.h"
 #include "gupnp-error.h"
+#include "gupnp-root-device.h"
 #include "http-headers.h"
 #include "xml-util.h"
 
@@ -35,8 +36,6 @@ gupnp_root_device_initable_init (GInitable     *initable,
                                  GError       **error);
 
 struct _GUPnPRootDevicePrivate {
-        GUPnPXMLDoc *description_doc;
-
         GSSDPResourceGroup *group;
 
         char  *description_path;
@@ -56,7 +55,6 @@ G_DEFINE_TYPE_EXTENDED (GUPnPRootDevice,
 
 enum {
         PROP_0,
-        PROP_DESCRIPTION_DOC,
         PROP_DESCRIPTION_PATH,
         PROP_DESCRIPTION_DIR,
         PROP_AVAILABLE
@@ -72,7 +70,6 @@ gupnp_root_device_finalize (GObject *object)
         device = GUPNP_ROOT_DEVICE (object);
         priv = gupnp_root_device_get_instance_private (device);
 
-        g_clear_object (&priv->description_doc);
         g_free (priv->description_path);
         g_free (priv->description_dir);
         g_free (priv->relative_location);
@@ -125,9 +122,6 @@ gupnp_root_device_set_property (GObject      *object,
         priv = gupnp_root_device_get_instance_private (device);
 
         switch (property_id) {
-        case PROP_DESCRIPTION_DOC:
-                priv->description_doc = g_value_dup_object (value);
-                break;
         case PROP_DESCRIPTION_PATH:
                 priv->description_path = g_value_dup_string (value);
                 break;
@@ -342,11 +336,13 @@ gupnp_root_device_initable_init (GInitable     *initable,
                                               priv->description_path,
                                               NULL);
 
+        GUPnPXMLDoc *description_doc =
+                _gupnp_device_info_get_document (GUPNP_DEVICE_INFO (device));
         /* Check whether we have a parsed description document */
-        if (priv->description_doc == NULL) {
+        if (description_doc == NULL) {
                 /* We don't, so load and parse it */
-                priv->description_doc = load_and_parse (desc_path);
-                if (priv->description_doc == NULL) {
+                description_doc = load_and_parse (desc_path);
+                if (description_doc == NULL) {
                         g_set_error_literal (error,
                                              GUPNP_XML_ERROR,
                                              GUPNP_XML_ERROR_PARSE,
@@ -354,13 +350,15 @@ gupnp_root_device_initable_init (GInitable     *initable,
 
                         goto DONE;
                 }
+        } else {
+                g_object_ref (description_doc);
         }
 
         /* Find correct element */
-        root_element = xml_util_get_element ((xmlNode *)
-                                             gupnp_xml_doc_get_doc (priv->description_doc),
-                                             "root",
-                                             NULL);
+        root_element = xml_util_get_element (
+                (xmlNode *) gupnp_xml_doc_get_doc (description_doc),
+                "root",
+                NULL);
         if (!root_element) {
                 g_set_error_literal (error,
                                      GUPNP_XML_ERROR,
@@ -418,8 +416,12 @@ gupnp_root_device_initable_init (GInitable     *initable,
 
         /* Set additional properties */
         g_object_set (G_OBJECT (device),
-                      "location", location,
-                      "url-base", url_base,
+                      "location",
+                      location,
+                      "url-base",
+                      url_base,
+                      "document",
+                      description_doc,
                       NULL);
         g_uri_unref (url_base);
 
@@ -443,6 +445,8 @@ gupnp_root_device_initable_init (GInitable     *initable,
         if (uri)
                 g_uri_unref (uri);
 
+        g_clear_object (&description_doc);
+
         g_free (desc_path);
         g_free (location);
 
@@ -460,26 +464,6 @@ gupnp_root_device_class_init (GUPnPRootDeviceClass *klass)
         object_class->get_property = gupnp_root_device_get_property;
         object_class->dispose      = gupnp_root_device_dispose;
         object_class->finalize     = gupnp_root_device_finalize;
-
-        /**
-         * GUPnPRootDevice:description-doc:
-         *
-         * Device description document. Constructor property.
-         *
-         * Since: 0.14.0
-         **/
-        g_object_class_install_property
-                (object_class,
-                 PROP_DESCRIPTION_DOC,
-                 g_param_spec_object ("description-doc",
-                                      "Description document",
-                                      "Device description document",
-                                      GUPNP_TYPE_XML_DOC,
-                                      G_PARAM_WRITABLE |
-                                      G_PARAM_CONSTRUCT_ONLY |
-                                      G_PARAM_STATIC_NAME |
-                                      G_PARAM_STATIC_NICK |
-                                      G_PARAM_STATIC_BLURB));
 
         /**
          * GUPnPRootDevice:description-path:
@@ -602,12 +586,18 @@ gupnp_root_device_new_full (GUPnPContext         *context,
         return g_initable_new (GUPNP_TYPE_ROOT_DEVICE,
                                NULL,
                                error,
-                               "context", context,
-                               "resource-factory", factory,
-                               "root-device", NULL,
-                               "description-doc", description_doc,
-                               "description-path", description_path,
-                               "description-dir", description_dir,
+                               "context",
+                               context,
+                               "resource-factory",
+                               factory,
+                               "root-device",
+                               NULL,
+                               "document",
+                               description_doc,
+                               "description-path",
+                               description_path,
+                               "description-dir",
+                               description_dir,
                                NULL);
 }
 

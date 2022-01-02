@@ -309,19 +309,18 @@ gupnp_device_info_class_init (GUPnPDeviceInfoClass *klass)
          *
          * Stability: Private
          **/
-        g_object_class_install_property
-                (object_class,
-                 PROP_DOCUMENT,
-                 g_param_spec_object ("document",
-                                      "Document",
-                                      "The XML document related to this "
-                                      "device",
-                                      GUPNP_TYPE_XML_DOC,
-                                      G_PARAM_READWRITE |
-                                      G_PARAM_CONSTRUCT_ONLY |
-                                      G_PARAM_STATIC_NAME |
-                                      G_PARAM_STATIC_NICK |
-                                      G_PARAM_STATIC_BLURB));
+        g_object_class_install_property (
+                object_class,
+                PROP_DOCUMENT,
+                g_param_spec_object ("document",
+                                     "Document",
+                                     "The XML document related to this "
+                                     "device",
+                                     GUPNP_TYPE_XML_DOC,
+                                     G_PARAM_READWRITE | G_PARAM_CONSTRUCT |
+                                             G_PARAM_STATIC_NAME |
+                                             G_PARAM_STATIC_NICK |
+                                             G_PARAM_STATIC_BLURB));
 
         /**
          * GUPnPDeviceInfo:element:
