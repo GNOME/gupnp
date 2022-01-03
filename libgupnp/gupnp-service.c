@@ -694,9 +694,22 @@ gupnp_service_action_set_value (GUPnPServiceAction *action,
  * @action: A #GUPnPServiceAction
  *
  * Return succesfully.
+ * Deprecated: 1.4.2: Use gupnp_service_action_return_success() instead
  **/
 void
 gupnp_service_action_return (GUPnPServiceAction *action)
+{
+        gupnp_service_action_return_success (action);
+}
+
+/**
+ * gupnp_service_action_return_success:
+ * @action: A #GUPnPServiceAction
+ *
+ * Return succesfully.
+ **/
+void
+gupnp_service_action_return_success (GUPnPServiceAction *action)
 {
         g_return_if_fail (action != NULL);
 
@@ -902,7 +915,7 @@ query_state_variable (GUPnPService       *service,
                 xmlFree (var_name);
         }
 
-        gupnp_service_action_return (action);
+        gupnp_service_action_return_success (action);
 }
 
 /* controlURL handler */
