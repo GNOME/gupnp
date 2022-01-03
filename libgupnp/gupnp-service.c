@@ -484,7 +484,8 @@ control_server_handler (SoupServer *server,
                 GQuark action_name_quark;
 
                 action_name_quark = g_quark_from_string (action_name);
-                if (g_signal_has_handler_pending (service,
+                if (GUPNP_SERVICE_GET_CLASS (service)->action_invoked != NULL ||
+                    g_signal_has_handler_pending (service,
                                                   signals[ACTION_INVOKED],
                                                   action_name_quark,
                                                   FALSE)) {
