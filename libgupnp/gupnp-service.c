@@ -306,7 +306,7 @@ query_state_variable (GUPnPService       *service,
                 xmlFree (var_name);
         }
 
-        gupnp_service_action_return (action);
+        gupnp_service_action_return_success (action);
 }
 
 /* controlURL handler */

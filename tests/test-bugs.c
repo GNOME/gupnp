@@ -88,7 +88,7 @@ test_bgo_696762_on_browse_call (G_GNUC_UNUSED GUPnPService *service,
     g_assert (node != NULL);
     g_assert_cmpstr ((const char *) node->name, ==, "SortCriteria");
     node = node->next;
-    gupnp_service_action_return (action);
+    gupnp_service_action_return_success (action);
 }
 
 static void
@@ -543,7 +543,7 @@ test_ggo_58_on_ping_call (GUPnPService *service,
                           GUPnPServiceAction *action,
                           gpointer user_data)
 {
-        gupnp_service_action_return (action);
+        gupnp_service_action_return_success (action);
 }
 
 static void

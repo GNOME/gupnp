@@ -473,13 +473,15 @@ gupnp_service_action_set_value (GUPnPServiceAction *action,
 }
 
 /**
- * gupnp_service_action_return:
+ * gupnp_service_action_return_success:
  * @action: A #GUPnPServiceAction
  *
  * Return succesfully.
+ *
+ * Since: 1.4.2
  **/
 void
-gupnp_service_action_return (GUPnPServiceAction *action)
+gupnp_service_action_return_success (GUPnPServiceAction *action)
 {
         g_return_if_fail (action != NULL);
 

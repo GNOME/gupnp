@@ -99,7 +99,7 @@ gupnp_service_action_set_value    (GUPnPServiceAction *action,
                                    const GValue       *value);
 
 void
-gupnp_service_action_return       (GUPnPServiceAction *action);
+gupnp_service_action_return_success (GUPnPServiceAction *action);
 
 void
 gupnp_service_action_return_error (GUPnPServiceAction *action,
