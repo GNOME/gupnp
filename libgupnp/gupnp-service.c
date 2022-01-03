@@ -7,13 +7,6 @@
  *
  */
 
-/**
- * SECTION:gupnp-service
- * @short_description: Class for service implementations.
- *
- * #GUPnPService allows for handling incoming actions and state variable
- * notification. #GUPnPService implements the #GUPnPServiceInfo interface.
- */
 
 #include <config.h>
 
@@ -59,6 +52,21 @@ struct _GUPnPServicePrivate {
 };
 typedef struct _GUPnPServicePrivate GUPnPServicePrivate;
 
+
+/**
+ * GUPnPService:
+ *
+ * Implementation of an UPnP service
+ *
+ * #GUPnPService allows for handling incoming actions and state variable
+ * notification. It implements the [class@GUPnP.ServiceInfo] interface.
+ *
+ * To implement a service, you can either connect to the [signal@GUPnP.Service::action-invoked]
+ * and [signal@GUPnP.Service::query-variable] or derive from the `GUPnPService` class and override
+ * the virtual functions [vfunc@GUPnP.Service.action_invoked] and  [vfunc@GUPnP.Service.query_variable].
+ *
+ * For more details, see the ["Implementing UPnP devices"](server-tutorial.html#implementing-a-service) document
+ */
 G_DEFINE_TYPE_WITH_PRIVATE (GUPnPService,
                             gupnp_service,
                             GUPNP_TYPE_SERVICE_INFO)
@@ -1236,12 +1244,12 @@ gupnp_service_class_init (GUPnPServiceClass *klass)
 
         /**
          * GUPnPService::action-invoked:
-         * @service: The #GUPnPService that received the signal
-         * @action: The invoked #GUPnPServiceAction
+         * @service: the #GUPnPService that received the signal
+         * @action: the invoked #GUPnPServiceAction
          *
          * Emitted whenever an action is invoked. Handler should process
-         * @action and must call either gupnp_service_action_return() or
-         * gupnp_service_action_return_error().
+         * @action and must call either [method@GUPnP.ServiceAction.return_success] or
+         * [method@GUPnP.ServiceAction.return_error].
          **/
         signals[ACTION_INVOKED] =
                 g_signal_new ("action-invoked",
@@ -1258,9 +1266,9 @@ gupnp_service_class_init (GUPnPServiceClass *klass)
 
         /**
          * GUPnPService::query-variable:
-         * @service: The #GUPnPService that received the signal
-         * @variable: The variable that is being queried
-         * @value: (type GValue)(inout):The location of the #GValue of the variable
+         * @service: the #GUPnPService that received the signal
+         * @variable: the variable that is being queried
+         * @value: (type GValue)(inout):the location of the #GValue of the variable
          *
          * Emitted whenever @service needs to know the value of @variable.
          * Handler should fill @value with the value of @variable.
@@ -1282,9 +1290,9 @@ gupnp_service_class_init (GUPnPServiceClass *klass)
 
         /**
          * GUPnPService::notify-failed:
-         * @service: The #GUPnPService that received the signal
-         * @callback_url: (type GList)(element-type GUri):A #GList of callback URLs
-         * @reason: (type GError): A pointer to a #GError describing why the notify failed
+         * @service: the #GUPnPService that received the signal
+         * @callback_url: (type GList)(element-type GUri):a #GList of callback URLs
+         * @reason: (type GError): a pointer to a #GError describing why the notify failed
          *
          * Emitted whenever notification of a client fails.
          **/
@@ -1306,11 +1314,18 @@ gupnp_service_class_init (GUPnPServiceClass *klass)
 /**
  * gupnp_service_notify:
  * @service: A #GUPnPService
- * @...: Tuples of variable name, variable type, and variable value,
+ * @...: a list of tuples, consisting of the variable name, variable type and variable value,
  * terminated with %NULL.
  *
- * Notifies listening clients that the properties listed in @Varargs
- * have changed to the specified values.
+ * Notifies remote clients that the properties have changed to the specified values.
+ *
+ * ```c
+ * gupnp_service_notify (service,
+ *                       "Volume", G_TYPE_FLOAT, 0.5,
+ *                       "PlaybackSpeed", G_TYPE_INT, -1,
+ *                       NULL);
+ *
+ * ```
  **/
 void
 gupnp_service_notify (GUPnPService *service,
@@ -1548,11 +1563,11 @@ flush_notifications (GUPnPService *service)
 
 /**
  * gupnp_service_notify_value:
- * @service: A #GUPnPService
- * @variable: The name of the variable to notify
- * @value: The value of the variable
+ * @service: a #GUPnPService
+ * @variable: the name of the variable to notify
+ * @value: the value of the variable
  *
- * Notifies listening clients that @variable has changed to @value.
+ * Notifies remote clients that @variable has changed to @value.
  **/
 void
 gupnp_service_notify_value (GUPnPService *service,
@@ -1585,10 +1600,11 @@ gupnp_service_notify_value (GUPnPService *service,
 
 /**
  * gupnp_service_freeze_notify:
- * @service: A #GUPnPService
+ * @service: a #GUPnPService
  *
- * Causes new notifications to be queued up until gupnp_service_thaw_notify()
- * is called.
+ * Stops sending out notifications to remote clients.
+ *
+ * It causes new notifications to be queued up until [method@GUPnP.Service.thaw_notify] is called.
  **/
 void
 gupnp_service_freeze_notify (GUPnPService *service)
@@ -1604,7 +1620,7 @@ gupnp_service_freeze_notify (GUPnPService *service)
 
 /**
  * gupnp_service_thaw_notify:
- * @service: A #GUPnPService
+ * @service: a #GUPnPService
  *
  * Sends out any pending notifications, and stops queuing of new ones.
  **/
@@ -1637,7 +1653,7 @@ strip_camel_case (char *camel_str)
 
         for (i = 0, j = 0; i <= strlen (camel_str); i++) {
                 /* Convert every upper case letter to lower case and unless
-                 * it's the first character, the last charachter, in the
+                 * it's the first character, the last character, in the
                  * middle of an abbreviation or there is already an underscore
                  * before it, add an underscore before it */
                 if (g_ascii_isupper (camel_str[i])) {
@@ -1745,35 +1761,39 @@ connect_names_to_signal_handlers (GUPnPService *service,
 }
 
 /**
- * gupnp_service_signals_autoconnect:
- * @service: A #GUPnPService
+ * gupnp_service_signals_autoconnect:(skip):
+ * @service: a #GUPnPService
  * @user_data: the data to pass to each of the callbacks
- * @error: (inout)(optional)(nullable): return location for a #GError, or %NULL
+ * @error: (inout)(optional)(nullable): the return location for a #GError
  *
- * A convenience function that attempts to connect all possible
- * #GUPnPService::action-invoked and #GUPnPService::query-variable signals to
- * appropriate callbacks for the service @service. It uses service introspection
- * and #GModule<!-- -->'s introspective features. It is very simillar to
- * gtk_builder_connect_signals() except that it attempts to guess the names of
- * the signal handlers on its own.
+ * Connects call-back functions to the corresponding signals for variables and actions.
+ *
+ * It attempts to connect all possible [signal@GUPnP.Service::action-invoked] and
+ * [signal@GUPnP.Service::query-variable] signals to appropriate callbacks for
+ * the service.
+ *
+ * It is very similar to [method@Gtk.Builder.connect_signals] except that it attempts
+ * to guess the names of the signal handlers on its own.
  *
  * For this function to do its magic, the application must name the callback
- * functions for #GUPnPService::action-invoked signals by striping the CamelCase
- * off the action names and either prepend "on_" or append "_cb" to them. Same
- * goes for #GUPnPService::query-variable signals, except that "query_" should
- * be prepended to the variable name. For example, callback function for
- * <varname>GetSystemUpdateID</varname> action should be either named as
- * "get_system_update_id_cb" or "on_get_system_update_id" and callback function
- * for the query of "SystemUpdateID" state variable should be named
- * <function>query_system_update_id_cb</function> or
- * <function>on_query_system_update_id</function>.
+ * functions for [signal@GUPnP.Service::action-invoked] signals by striping the CamelCase
+ * off the action names and either prefix them with `on_` or append `_cb` to them.
  *
- * <note>This function will not work correctly if #GModule is not supported
- * on the platform or introspection is not available for @service.</note>
+ * Similar, for [signal@GUPnP.Service::query-variable] signals, except that the functions
+ * shoul be prefixed with `query_` to the variable name.
  *
- * <warning>This function can not and therefore does not guarantee that the
+ * For example, the callback function for the `GetSystemUpdateID` action should be
+ * either named as
+ * `get_system_update_id_cb` or `on_get_system_update_id` and the callback function
+ * for the query of the `SystemUpdateID` state variable should be named
+ * `query_system_update_id_cb` or `on_query_system_update_id`.
+ *
+ * Note: This function will not work correctly if #GModule is not supported
+ * on the platform or introspection is not available for @service.
+ *
+ * Warning: This function can not and therefore does not guarantee that the
  * resulting signal connections will be correct as it depends heavily on a
- * particular naming schemes described above.</warning>
+ * particular naming schemes described above.
  **/
 void
 gupnp_service_signals_autoconnect (GUPnPService *service,
@@ -1831,4 +1851,64 @@ gupnp_service_signals_autoconnect (GUPnPService *service,
                                           user_data);
 
         g_module_close (module);
+}
+
+/**
+ * gupnp_service_action_invoked:
+ * @service: a `GUPnPService`
+ * @action: a `GUPnPServiceAction`
+ *
+ * Default handler for [signal@GUPnP.Service::action_invoked]. See its documentation for details.
+ *
+ * Can be overridden by child classes instead of connecting to the signal.
+ */
+void
+gupnp_service_action_invoked (GUPnPService *service, GUPnPServiceAction *action)
+{
+        g_return_if_fail (GUPNP_IS_SERVICE (service));
+
+        if (GUPNP_SERVICE_GET_CLASS (service)->action_invoked != NULL)
+                GUPNP_SERVICE_GET_CLASS (service)->action_invoked (service, action);
+}
+
+/**
+ * gupnp_service_query_variable:
+ * @service: a `GUPnPService`
+ * @variable: the name of the variable that was queried
+ * @value: a value that should be filled to the current value of @variable
+ *
+ * Default handler for [signal@GUPnP.Service::query_variable]. See its documentation for details.
+ *
+ * Can be overridden by child classes instead of connecting to the signal.
+ */
+void
+gupnp_service_query_variable (GUPnPService *service,
+                              const char *variable,
+                              GValue *value)
+{
+        g_return_if_fail (GUPNP_IS_SERVICE (service));
+
+        if (GUPNP_SERVICE_GET_CLASS (service)->query_variable != NULL)
+                GUPNP_SERVICE_GET_CLASS (service)->query_variable (service, variable, value);
+}
+
+/**
+ * gupnp_service_notify_failed:
+ * @service: a `GUPnPService`
+ * @callback_urls:(element-type GUri): a list of call-back urls that failed the notification
+ * @reason: An error that describes why the notification failed
+ *
+ * Default handler for [signal@GUPnP.Service::notify_failed]. See its documentation for details.
+ *
+ * Can be overridden by child classes instead of connecting to the signal.
+ */
+void
+gupnp_service_notify_failed (GUPnPService *service,
+                             const GList *callback_urls,
+                             const GError *reason)
+{
+        g_return_if_fail (GUPNP_IS_SERVICE (service));
+
+        if (GUPNP_SERVICE_GET_CLASS (service)->notify_failed != NULL)
+                GUPNP_SERVICE_GET_CLASS (service)->notify_failed (service, callback_urls, reason);
 }

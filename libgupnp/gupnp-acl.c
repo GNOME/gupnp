@@ -6,22 +6,22 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
-/**
- * SECTION:gupnp-acl
- * @short_description: Object providing a simple access control list for
- * GUPnP.
- *
- * #GUPnPAcl provides either synchronous or asynchronous functions to check
- * whether a peer sould be able to access a resource or not.
- *
- * Since: 0.20.11
- */
-
 #include <config.h>
 
 #include "gupnp-acl.h"
 #include "gupnp-acl-private.h"
 #include "gupnp-device.h"
+
+/**
+ * GUPnPAcl:
+ *
+ * Access control provider for [class@GUPnP.Context]
+ *
+ * GUPnPAcl provides either synchronous or asynchronous functions to check
+ * whether a peer should be able to access a resource that is hosted by GUPnP or not.
+ *
+ * Since: 0.20.11
+ */
 
 G_DEFINE_INTERFACE(GUPnPAcl, gupnp_acl, G_TYPE_OBJECT)
 
@@ -33,14 +33,13 @@ gupnp_acl_default_init (GUPnPAclInterface *klass)
 /**
  * gupnp_acl_is_allowed:
  * @self: an instance of #GUPnPAcl
- * @device: (nullable): The #GUPnPDevice associated with @path or %NULL if
+ * @device: (nullable): The [class@GUPnP.Device] associated with @path or %NULL if
  * unknown.
- * @service: (nullable): The #GUPnPService associated with @path or %NULL if
+ * @service: (nullable): The [class@GUPnP.Service] associated with @path or %NULL if
  * unknown.
  * @path: The path being served.
  * @address: IP address of the peer.
- * @agent: (nullable): The User-Agent header of the peer or %NULL if not
- * unknown.
+ * @agent: (nullable): The User-Agent header of the peer or %NULL if unknown.
  * @returns %TRUE if the peer is allowed, %FALSE otherwise
  *
  * Check whether an IP address is allowed to access this resource.
@@ -68,26 +67,30 @@ gupnp_acl_is_allowed (GUPnPAcl     *self,
 /**
  * gupnp_acl_is_allowed_async:
  * @self: a #GUPnPAcl
- * @device: (nullable): The #GUPnPDevice associated with @path or %NULL if
+ * @device: (nullable): The [class@GUPnP.Device] associated with @path or %NULL if
  * unknown.
- * @service: (nullable): The #GUPnPService associated with @path or %NULL if
+ * @service: (nullable): The [class@GUPnP.Service] associated with @path or %NULL if
  * unknown.
  * @path: The path being served.
  * @address: IP address of the peer
  * @agent: (nullable): The User-Agent header of the peer or %NULL if not
  * unknown.
- * @cancellable: (nullable): A #GCancellable which can be used to cancel the
+ * @cancellable: (nullable): A cancellable which can be used to cancel the
  * operation.
  * @callback: Callback to call after the function is done.
  * @user_data: Some user data.
  *
- * Optional. Check asynchronously whether an IP address is allowed to access
- * this resource. Use this function if the process of verifying the access right
+ * Check asynchronously whether an IP address is allowed to access
+ * this resource.
+ *
+ * This function is optional. [method@GUPnP.Acl.can_sync] should return %TRUE
+ * if the implementing class supports it. If it is supported, GUPnP will
+ * prefer to use this function over [method@GUPnP.Acl.is_allowed].
+ *
+ * Implement this function if the process of verifying the access right
  * is expected to take some time, for example when using D-Bus etc.
  *
- * If this function is supported, gupnp_acl_can_sync() should return %TRUE.
- *
- * Use gupnp_acl_is_allowed_finish() to retrieve the result.
+ * Use [method@GUPnP.Acl.is_allowed_finish] to retrieve the result.
  *
 * Since: 0.20.11
  */
@@ -118,10 +121,12 @@ gupnp_acl_is_allowed_async (GUPnPAcl           *self,
 /**
  * gupnp_acl_is_allowed_finish:
  * @self: An instance of #GUPnPAcl
- * @res: %GAsyncResult obtained from the callback in gupnp_acl_is_allowed_async()
+ * @res: [iface@Gio.AsyncResult] obtained from the callback passed to [method@GUPnP.Acl.is_allowed_async]
  * @error: (inout)(optional)(nullable): A return location for a #GError describing the failure
  * @returns %TRUE if the authentication was successful, %FALSE otherwise and on
  * error. Check @error for details.
+ *
+ * Get the result of [method@GUPnP.Acl.is_allowed_async].
  *
  * Since: 0.20.11
  */
@@ -143,7 +148,7 @@ gupnp_acl_is_allowed_finish (GUPnPAcl      *self,
  * @returns %TRUE, if gupnp_acl_is_allowed_async() is supported, %FALSE
  * otherwise.
  *
- * Check whether gupnp_acl_is_allowed_async() is supported.
+ * Check whether [method@GUPnP.Acl.is_allowed_async] is supported.
  *
  * Since: 0.20.11
  */
@@ -154,6 +159,10 @@ gupnp_acl_can_sync (GUPnPAcl *self)
 
         return GUPNP_ACL_GET_IFACE (self)->can_sync (self);
 }
+
+///////////////////////////////////////////////////////////////////
+// Internal helper functions
+//
 
 /**
  * acl_server_handler_new:

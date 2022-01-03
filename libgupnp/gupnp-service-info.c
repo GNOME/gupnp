@@ -8,15 +8,8 @@
  *
  */
 
-/**
- * SECTION:gupnp-service-info
- * @short_description: Base abstract class for querying service information.
- *
- * The #GUPnPDeviceInfo base abstract class provides methods for querying
- * service information.
- */
 
-#define G_LOG_DOMAIN "GUPnPServiceInfo"
+#define G_LOG_DOMAIN "gupnp-service-info"
 
 #include <config.h>
 #include <libsoup/soup.h>
@@ -50,6 +43,14 @@ struct _GUPnPServiceInfoPrivate {
 
 typedef struct _GUPnPServiceInfoPrivate GUPnPServiceInfoPrivate;
 
+
+/**
+ * GUPnPServiceInfo:
+ *
+ * Service information shared by local and remote services.
+ *
+ * A class that contains the common parts between local and remote services.
+ */
 G_DEFINE_ABSTRACT_TYPE_WITH_PRIVATE (GUPnPServiceInfo,
                                      gupnp_service_info,
                                      G_TYPE_OBJECT)
@@ -205,8 +206,7 @@ gupnp_service_info_dispose (GObject *object)
                 }
 
                 /* Unref context */
-                g_object_unref (priv->context);
-                priv->context = NULL;
+                g_clear_object (&priv->context);
         }
 
         g_clear_object (&priv->doc);
@@ -707,7 +707,7 @@ gupnp_service_info_get_introspection_async
  * gupnp_service_info_get_introspection_async_full:
  * @info: A #GUPnPServiceInfo
  * @callback: (scope async) : callback to be called when introspection object is ready.
- * @cancellable: GCancellable that can be used to cancel the call, or %NULL.
+ * @cancellable: (nullable): GCancellable that can be used to cancel the call.
  * @user_data: user_data to be passed to the callback.
  *
  * Note that introspection object is created from the information in service
@@ -777,8 +777,6 @@ gupnp_service_info_get_introspection_async_full
                                  g_main_context_get_thread_default ());
 
                 return;
-
-                return;
         }
 
 
@@ -827,8 +825,8 @@ prv_introspection_cb (GUPnPServiceInfo *info,
 /**
  * gupnp_service_info_introspect_async:
  * @info: A #GUPnPServiceInfo
- * @cancellable: (nullable) : #GCancellable that can be used to cancel the call, or %NULL.
- * @callback: (scope async) : callback to be called when introspeciton object is ready.
+ * @cancellable: (nullable) : a #GCancellable that can be used to cancel the call.
+ * @callback: (scope async) : callback to be called when introspection object is ready.
  * @user_data: user_data to be passed to the callback.
  *
  * Note that introspection object is created from the information in service
@@ -861,7 +859,7 @@ gupnp_service_info_introspect_async           (GUPnPServiceInfo    *info,
  * gupnp_service_info_introspect_finish:
  * @info: A GUPnPServiceInfo
  * @res: A #GAsyncResult
- * @error: (inout)(optional)(nullable): Return location for a #GError, or %NULL
+ * @error: (inout)(optional): Return location for a #GError, or %NULL
  *
  * Finish an asynchronous call initiated with
  * gupnp_service_info_introspect_async().

@@ -7,15 +7,6 @@
  *
  */
 
-/**
- * SECTION:gupnp-device
- * @short_description: Class for device implementations.
- *
- * #GUPnPDevice allows for retrieving a device's subdevices
- * and services. #GUPnPDevice implements the #GUPnPDeviceInfo
- * interface.
- */
-
 #include <config.h>
 #include <string.h>
 
@@ -30,6 +21,15 @@ struct _GUPnPDevicePrivate {
 };
 typedef struct _GUPnPDevicePrivate GUPnPDevicePrivate;
 
+/**
+ * GUPnPDevice:
+ *
+ * Base class for UPnP device implementations.
+ *
+ * #GUPnPDevice allows for retrieving a device's sub-devices
+ * and services. #GUPnPDevice implements the #GUPnPDeviceInfo
+ * interface.
+ */
 G_DEFINE_TYPE_WITH_PRIVATE (GUPnPDevice,
                             gupnp_device,
                             GUPNP_TYPE_DEVICE_INFO)

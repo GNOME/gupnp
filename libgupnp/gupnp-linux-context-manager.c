@@ -26,7 +26,7 @@
  * accordingly.
  */
 
-#define G_LOG_DOMAIN "GUPnP-ContextManager-Linux"
+#define G_LOG_DOMAIN "gupnp-context-manager"
 
 #include <config.h>
 

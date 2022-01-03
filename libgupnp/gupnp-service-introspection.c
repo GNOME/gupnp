@@ -9,27 +9,6 @@
  *
  */
 
-/**
- * SECTION:gupnp-service-introspection
- * @short_description: Service introspection class.
- *
- * The #GUPnPServiceIntrospection class provides methods for service
- * introspection based on information contained in its service description
- * document (SCPD). There is no constructor provided for this class, please use
- * #gupnp_service_info_get_introspection or
- * #gupnp_service_info_get_introspection_async to create an
- * #GUPnPServiceIntrospection object for a specific service.
- *
- * Note that all the introspection information is retreived from the service
- * description document (SCPD) provided by the service and hence can not be
- * guaranteed to be complete. A UPnP service is required to provide a SCPD but
- * unfortunately, many services either do not provide this document or the
- * document does not provide any or all of the introspection information.
- *
- * This class exposes internals of the UPnP protocol and should not need
- * to be used for regular device or control point development.
- *
- **/
 
 #include <config.h>
 #include <libsoup/soup.h>
@@ -67,6 +46,28 @@ static GInitableIface *initable_parent_iface = NULL;
 static void
 gupnp_service_introspection_initable_iface_init (gpointer g_iface, gpointer iface_data);
 
+
+/**
+ * GUPnPServiceIntrospection:
+ *
+ * Introspection of local and remote services..
+ *
+ * The #GUPnPServiceIntrospection class provides methods for service
+ * introspection based on information contained in its service description
+ * document (SCPD). There is no constructor provided for this class, please use
+ * [method@GUPnP.ServiceInfo.introspect_async] to create a
+ * #GUPnPServiceIntrospection object for a specific service.
+ *
+ * Note that all the introspection information is retrieved from the service
+ * description document (SCPD) provided by the service and hence can not be
+ * guaranteed to be complete. An UPnP service is required to provide a SCPD but
+ * unfortunately, many services either do not provide this document or the
+ * document does not provide any or all of the introspection information.
+ *
+ * This class exposes internals of the UPnP protocol and should not need
+ * to be used for regular device or control point development.
+ *
+ **/
 G_DEFINE_TYPE_EXTENDED (
         GUPnPServiceIntrospection,
         gupnp_service_introspection,

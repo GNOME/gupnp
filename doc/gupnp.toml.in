@@ -1,0 +1,54 @@
+[library]
+namespace = "GUPnP"
+version = "@VERSION@"
+browse_url = "https://gitlab.gnome.org/GNOME/gssdp/"
+repository_url = "https://gitlab.gnome.org/GNOME/gssdp.git"
+website_url = "https://gupnp.org"
+logo_url = "gupnp-logo-short.svg"
+license = "LGPL-2.1-or-later"
+description = "UPnP implementation using GObject"
+dependencies = [ "GObject-2.0", "GSSDP-1.2", "Soup-2.4", "libxml2-2.0" ]
+devhelp = true
+search_index = true
+authors = "The GUPnP developers"
+
+[theme]
+name="basic"
+show_index_summary = true
+
+[source-location]
+base_url = "https://gitlab.gnome.org/GNOME/gupnp/-/blob/master"
+
+[dependencies."GObject-2.0"]
+name = "GObject"
+description = "The base type system library"
+docs_url = "https://developer.gnome.org/gobject/stable"
+
+[dependencies."GSSDP-1.2"]
+name = "GSSDP"
+description = "SSDP implementation using GObject"
+docs_url = "https://gnome.pages.gitlab.gnome.org/gssdp/docs/"
+
+[dependencies."Soup-2.4"]
+name = "Soup"
+description = "A HTTP handling library"
+docs_url = "https://developer.gnome.org/libsoup/stable"
+
+[dependencies."libxml2-2.0"]
+name = "LibXML2"
+description = "A XML handling library"
+docs_url = "http://www.xmlsoft.org/html/index.html"
+
+[extra]
+content_files = [
+    "client-tutorial.md",
+    "server-tutorial.md",
+    "choosing-a-context-manager.md",
+    "glossary.md"
+]
+
+content_images = [
+    "images/gupnp-logo-short.svg"
+]
+
+urlmap_file = "urlmap.js"

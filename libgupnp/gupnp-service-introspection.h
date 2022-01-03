@@ -63,7 +63,7 @@ gupnp_service_action_arg_info_get_type (void);
 /**
  * GUPnPServiceActionInfo:
  * @name: The name of the action argument.
- * @arguments: (type GList) (element-type GUPnP.ServiceActionArgInfo):A GList of all the arguments
+ * @arguments:(element-type GUPnP.ServiceActionArgInfo):A GList of all the arguments
  * (of type #GUPnPServiceActionArgInfo) of this action.
  *
  * This structure contains information about a service action.

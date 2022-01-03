@@ -10,16 +10,19 @@
  */
 
 /**
- * SECTION:gupnp-resource-factory
- * @short_description: Class for resource and resource proxy object creation.
+ * GUPnPResourceFactory:
  *
- * #GUPnPResourceFactory objects are used by #GUPnPControlPoint,
- * #GUPnPDeviceProxy and #GUPnPDevice to create resource proxy and resource
- * objects. Register UPnP type - #GType pairs to have resource or resource proxy
+ * Associating custom Services, Devices, ServiceProxies and DeviceProxies with UPnP types.
+ *
+ * #GUPnPResourceFactory objects are used by [class@GUPnP.ControlPoint],
+ * [class@GUPnP.DeviceProxy] and [class@GUPnP.Device] to create resource proxy and resource
+ * objects.
+ *
+ * Register UPnP type - [alias@GLib.Type] pairs to have resource or resource proxy
  * objects created with the specified #GType whenever an object for a resource
- * of the specified UPnP type is requested. The #GType<!-- -->s need
+ * of the specified UPnP type is requested. The #GType needs
  * to be derived from the relevant resource or resource proxy type (e.g.
- * a device proxy type needs to be derived from #GUPnPDeviceProxy).
+ * a device proxy type needs to be derived from [class@GUPnP.DeviceProxy]).
  */
 
 #include <config.h>
@@ -186,7 +189,6 @@ lookup_type_with_fallback (GHashTable *resource_types,
  * @udn: The UDN of the device to create a proxy for
  * @location: The location of the device description file
  * @url_base: The URL base for this device, or %NULL if none
- *
  *
  * Create a #GUPnPDeviceProxy for the device with element @element, as
  * read from the device description file specified by @location.

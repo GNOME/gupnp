@@ -30,14 +30,21 @@ struct _GUPnPServiceProxyClass {
         GUPnPServiceInfoClass parent_class;
 
         /* signals */
+        /**
+         * subscription_lost:
+         *
+         * Test
+         */
         void (* subscription_lost) (GUPnPServiceProxy *proxy,
                                     const GError      *reason);
 
+#ifndef GOBJECT_INTROSPECTION_SKIP
         /* future padding */
         void (* _gupnp_reserved1) (void);
         void (* _gupnp_reserved2) (void);
         void (* _gupnp_reserved3) (void);
         void (* _gupnp_reserved4) (void);
+#endif
 };
 
 /**
@@ -55,6 +62,7 @@ typedef struct _GUPnPServiceProxyAction GUPnPServiceProxyAction;
  *
  * Callback notifying that @action on @proxy has returned and
  * gupnp_service_proxy_end_action() etc can be called.
+ * Deprecated: 1.2.0
  **/
 typedef void (* GUPnPServiceProxyActionCallback) (
                                      GUPnPServiceProxy       *proxy,

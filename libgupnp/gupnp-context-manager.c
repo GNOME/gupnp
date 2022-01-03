@@ -11,17 +11,6 @@
  *
  */
 
-/**
- * SECTION:gupnp-context-manager
- * @short_description: Manages GUPnPContext objects.
- *
- * A Utility class that takes care of creation and destruction of
- * #GUPnPContext objects for all available network interfaces as they go up
- * (connect) and down (disconnect), respectively.
- *
- * Since: 0.13.0
- */
-
 #define G_LOG_DOMAIN "gupnp-context-manager"
 
 #include <config.h>
@@ -65,6 +54,23 @@ struct _GUPnPContextManagerPrivate {
 };
 typedef struct _GUPnPContextManagerPrivate GUPnPContextManagerPrivate;
 
+/**
+ * GUPnPContextManager:
+ *
+ * A manager for [class@GUPnP.Context] instances.
+ *
+ * This utility class that takes care of dynamic creation and destruction of
+ * #GUPnPContext objects for all available network interfaces as they go up
+ * (connect) and down (disconnect), respectively.
+ *
+ * The final implementation depends either on the underlying operating system
+ * or can configured during compile time.
+ *
+ * It also provides a simple filtering facility if required. See [method@GUPnP.ContextManager.get_context_filter] and
+ * [class@GUPnP.ContextFilter] for details.
+ *
+ * Since: 0.14.0
+ */
 G_DEFINE_ABSTRACT_TYPE_WITH_PRIVATE (GUPnPContextManager,
                                      gupnp_context_manager,
                                      G_TYPE_OBJECT)
@@ -483,7 +489,7 @@ gupnp_context_manager_class_init (GUPnPContextManagerClass *klass)
         object_class->dispose      = gupnp_context_manager_dispose;
 
         /**
-         * GUPnPContextManager:port:
+         * GUPnPContextManager:port:(attributes org.gtk.Property.get=gupnp_context_manager_get_port)
          *
          * Port the contexts listen on, or 0 if you don't care what
          * port is used by #GUPnPContext objects created by this object.
@@ -502,7 +508,7 @@ gupnp_context_manager_class_init (GUPnPContextManagerClass *klass)
                                            G_PARAM_STATIC_NICK |
                                            G_PARAM_STATIC_BLURB));
         /**
-         * GUPnPContextManager:family:
+         * GUPnPContextManager:family:(attributes org.gtk.Property.get=gupnp_context_manager_get_socket_family)
          *
          * The socket family to create contexts for. Use %G_SOCKET_FAMILY_INVALID
          * for any or %G_SOCKET_FAMILY_IPV4 for IPv4 contexts or
@@ -523,7 +529,7 @@ gupnp_context_manager_class_init (GUPnPContextManagerClass *klass)
                                     G_PARAM_STATIC_STRINGS));
 
         /**
-         * GUPnPContextManager:uda-version:
+         * GUPnPContextManager:uda-version:(attributes org.gtk.Property.get=gupnp_context_manager_get_uda_version)
          *
          * The UDA version the contexts will support. Use %GSSDP_UDA_VERSION_UNSPECIFIED
          * for using the default UDA version.
@@ -543,7 +549,7 @@ gupnp_context_manager_class_init (GUPnPContextManagerClass *klass)
                                     G_PARAM_STATIC_STRINGS));
 
         /**
-         * GUPnPContextManager:context-filter:
+         * GUPnPContextManager:context-filter:(attributes org.gtk.Property.get=gupnp_context_manager_get_context_filter)
          *
          * The context filter to use.
          **/
@@ -606,7 +612,7 @@ gupnp_context_manager_class_init (GUPnPContextManagerClass *klass)
  *
  * Factory-method to create a new #GUPnPContextManager. The final type of the
  * #GUPnPContextManager depends on the compile-time selection or - in case of
- * NetworkManager - on its availability during runtime. If it is not available,
+ * NetworkManager - on its availability during run-time. If it is not available,
  * the implementation falls back to the basic Unix context manager instead.
  *
  * Equivalent to calling #gupnp_context_manager_create_full (%GSSDP_UDA_VERSION_1_0, %G_SOCKET_FAMILY_IPV4, port);
@@ -632,7 +638,7 @@ gupnp_context_manager_create (guint port)
  *
  * Factory-method to create a new #GUPnPContextManager. The final type of the
  * #GUPnPContextManager depends on the compile-time selection or - in case of
- * NetworkManager - on its availability during runtime. If it is not available,
+ * NetworkManager - on its availability during run-time. If it is not available,
  * the implementation falls back to the basic Unix context manager instead.
  *
  * Returns: (transfer full): A new #GUPnPContextManager object.
@@ -739,9 +745,23 @@ gupnp_context_manager_rescan_control_points (GUPnPContextManager *manager)
  *
  * By calling this function, you are asking @manager to keep a reference to
  * @control_point until its associated #GUPnPContext is no longer available.
- * You usually want to call this function from
- * #GUPnPContextManager::context-available handler after you create a
+ * You usually want to call this function from your
+ * [signal@GUPnP.ContextManager::context-available] handler after you create a
  * #GUPnPControlPoint object for the newly available context.
+ * You usually then give up your own reference to the control point so it will be
+ * automatically destroyed if its context is no longer available.
+ *
+ * This function is mainly useful when implementing an UPnP client.
+ *
+ * ```c
+ * void on_context_available (GUPnPContextManager *manager, GUPnPContext *context, gpointer user_data)
+ * {
+ *     GUPnPControlPoint *cp = gupnp_control_point_new (context, "urn:schemas-upnp-org:device:MediaRenderer:1");
+ *     gupnp_context_manager_manage_control_point (manager, cp);
+ *     // Subscribe to control point's signals etc.
+ *     g_object_unref (cp);
+ * }
+ * ```
  *
  * Since: 0.14.0
  **/
@@ -767,9 +787,25 @@ gupnp_context_manager_manage_control_point (GUPnPContextManager *manager,
  * By calling this function, you are asking @manager to keep a reference to
  * @root_device when its associated #GUPnPContext is no longer available. You
  * usually want to call this function from
- * #GUPnPContextManager::context-available handler after you create a
+ * [signal@GUPnP.ContextManager::context-available] handler after you create a
  * #GUPnPRootDevice object for the newly available context.
  *
+ * You usually then give up your own reference to the root device so it will be
+ * automatically destroyed if its context is no longer available.
+ *
+ * This function is mainly useful when implementing an UPnP client.
+ *
+ * ```c
+ * void on_context_available (GUPnPContextManager *manager, GUPnPContext *context, gpointer user_data)
+ * {
+ *     GError *error = NULL;
+ *
+ *     GUPnPRootDevice *rd = gupnp_root_device_new (context, "BasicLight1.xml", ".", &error);
+ *     gupnp_context_manager_manage_root_device (manager, rd);
+ *     // Subscribe to control point's signals etc.
+ *     g_object_unref (rd);
+ * }
+ * ```
  * Since: 0.14.0
  **/
 void
@@ -787,11 +823,11 @@ gupnp_context_manager_manage_root_device (GUPnPContextManager *manager,
 }
 
 /**
- * gupnp_context_manager_get_port:
+ * gupnp_context_manager_get_port:(attributes org.gtk.Method.get_property=port)
  * @manager: A #GUPnPContextManager
  *
  * Get the network port associated with this context manager.
- * Returns: The network port asssociated with this context manager.
+ * Returns: The network port associated with this context manager.
  *
  * Since: 0.20.0
  */
@@ -808,13 +844,15 @@ gupnp_context_manager_get_port (GUPnPContextManager *manager)
 }
 
 /**
- * gupnp_context_manager_get_context_filter:
+ * gupnp_context_manager_get_context_filter:(attributes org.gtk.Method.get_property=context-filter)
  * @manager: A #GUPnPContextManager
  *
  * Get the #GUPnPContextFilter associated with @manager.
  *
- * Returns: (transfer none):  The #GUPnPContextFilter asssociated with this
+ * Returns: (transfer none):  The #GUPnPContextFilter associated with this
  * context manager.
+ *
+ * Since: 1.4.0
  */
 GUPnPContextFilter *
 gupnp_context_manager_get_context_filter (GUPnPContextManager *manager)
@@ -834,9 +872,9 @@ gupnp_context_manager_get_context_filter (GUPnPContextManager *manager)
  *
  * Get the #GUPnPContextFilter associated with @manager.
  *
- * Returns: (transfer none):  The #GUPnPContextFilter asssociated with this
+ * Returns: (transfer none):  The #GUPnPContextFilter associated with this
  * context manager.
- * Deprecated: 1.4.0: Use gupnp_context_manager_get_context_filter() instead.
+ * Deprecated: 1.4.0: Use [method@GUPnP.ContextManager.get_context_filter] instead.
  */
 GUPnPWhiteList *
 gupnp_context_manager_get_white_list (GUPnPContextManager *manager)
@@ -845,7 +883,7 @@ gupnp_context_manager_get_white_list (GUPnPContextManager *manager)
 }
 
 /**
- * gupnp_context_manager_get_socket_family:
+ * gupnp_context_manager_get_socket_family:(attributes org.gtk.Method.get_property=family)
  * @manager: A #GUPnPContextManager
  *
  * Get the #GSocketFamily the contexts are created for. Can be
@@ -869,7 +907,7 @@ gupnp_context_manager_get_socket_family (GUPnPContextManager *manager)
 }
 
 /**
- * gupnp_context_manager_get_uda_version:
+ * gupnp_context_manager_get_uda_version:(attributes org.gtk.Method.get_property=uda-version)
  * @manager: A #GUPnPContextManager
  *
  * Get the UDA protocol version the contexts are implementing

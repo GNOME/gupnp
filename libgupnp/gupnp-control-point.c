@@ -8,13 +8,16 @@
  */
 
 /**
- * SECTION:gupnp-control-point
- * @short_description: Class for resource discovery.
+ * GUPnPControlPoint:
+ *
+ * Network resource discovery.
  *
  * #GUPnPControlPoint handles device and service discovery. After creating
- * a control point and activating it using gssdp_resource_browser_set_active(),
- * the ::device-proxy-available, ::service-proxy-available,
- * ::device-proxy-unavailable and ::service-proxy-unavailable signals will
+ * a control point and activating it using [method@GSSDP.ResourceBrowser.set_active],
+ * the [signal@GUPnP.ControlPoint::device-proxy-available],
+ * [signal@GUPnP.ControlPoint::service-proxy-available],
+ * [signal@GUPnP.ControlPoint::device-proxy-unavailable] and
+ * [signal@GUPnP.ControlPoint::service-proxy-unavailable] signals will
  * be emitted whenever the availability of a device or service matching
  * the specified discovery target changes.
  */
@@ -1044,7 +1047,7 @@ gupnp_control_point_class_init (GUPnPControlPointClass *klass)
                 gupnp_control_point_resource_unavailable;
 
         /**
-         * GUPnPControlPoint:resource-factory:
+         * GUPnPControlPoint:resource-factory:(attributes org.gtk.Property.get=gupnp_control_point_get_resource_factory)
          *
          * The resource factory to use. Set to NULL for default factory.
          **/
@@ -1154,8 +1157,8 @@ gupnp_control_point_class_init (GUPnPControlPointClass *klass)
  * Create a new #GUPnPControlPoint with the specified @context and @target.
  *
  * @target should be a service or device name, such as
- * <literal>urn:schemas-upnp-org:service:WANIPConnection:1</literal> or
- * <literal>urn:schemas-upnp-org:device:MediaRenderer:1</literal>.
+ * `urn:schemas-upnp-org:service:WANIPConnection:1` or
+ * `urn:schemas-upnp-org:device:MediaRenderer:1`.
  *
  * Return value: A new #GUPnPControlPoint object.
  **/
@@ -1182,8 +1185,12 @@ gupnp_control_point_new (GUPnPContext *context,
  * @target.
  *
  * @target should be a service or device name, such as
- * <literal>urn:schemas-upnp-org:service:WANIPConnection:1</literal> or
- * <literal>urn:schemas-upnp-org:device:MediaRenderer:1</literal>.
+ * `urn:schemas-upnp-org:service:WANIPConnection:1` or
+ * `urn:schemas-upnp-org:device:MediaRenderer:1`.
+ *
+ * By passing a custom `GUPnPResourceFactory`, the proxies handed out in ::device-available and
+ * ::service-available can be overridden to hand out custom classes instead of the generic
+ * [class@GUPnP.ServiceProxy] and [class@GUPnP.DeviceProxy].
  *
  * Return value: A new #GUPnPControlPoint object.
  **/
@@ -1211,6 +1218,7 @@ gupnp_control_point_new_full (GUPnPContext         *context,
  * Get the #GUPnPControlPoint associated with @control_point.
  *
  * Returns: (transfer none): The #GUPnPContext.
+ * Deprecated: 1.4.0: Use [method@GSSDP.ResourceBrowser.get_client] instead.
  **/
 GUPnPContext *
 gupnp_control_point_get_context (GUPnPControlPoint *control_point)
@@ -1229,11 +1237,17 @@ gupnp_control_point_get_context (GUPnPControlPoint *control_point)
  * gupnp_control_point_list_device_proxies:
  * @control_point: A #GUPnPControlPoint
  *
- * Get the #GList of discovered #GUPnPDeviceProxy objects. Do not free the list
- * nor its elements.
+ * Get the list of #GUPnPDeviceProxy objects the control point currently assumes to
+ * be active.
  *
- * Return value: (element-type GUPnP.DeviceProxy) (transfer none):  a #GList of
- * #GUPnPDeviceProxy objects.
+ * Since a device might have gone offline without signalizing it, but
+ * the automatic resource timeout has not happened yet, it is possible that some of
+ * the devices listed are not available anymore on the network.
+ *
+ * Do not free the list nor its elements.
+ *
+ * Return value: (element-type GUPnP.DeviceProxy) (transfer none): Device proxies
+ * currently assumed to be active.
  **/
 const GList *
 gupnp_control_point_list_device_proxies (GUPnPControlPoint *control_point)
@@ -1251,11 +1265,17 @@ gupnp_control_point_list_device_proxies (GUPnPControlPoint *control_point)
  * gupnp_control_point_list_service_proxies:
  * @control_point: A #GUPnPControlPoint
  *
- * Get the #GList of discovered #GUPnPServiceProxy objects. Do not free the
- * list nor its elements.
+ * Get the list of discovered #GUPnPServiceProxy objects the control point currently assumes to
+ * be active.
  *
- * Return value: (element-type GUPnP.ServiceProxy) (transfer none): a #GList
- * of #GUPnPServiceProxy objects.
+ * Since a device might have gone offline without signalizing it, but
+ * the automatic resource timeout has not happened yet, it is possible that some of
+ * the services listed are not available anymore on the network.
+ *
+ * Do not free the list nor its elements.
+ *
+ * Return value: (element-type GUPnP.ServiceProxy) (transfer none): Service proxies
+ * currently assumed to be active.
  **/
 const GList *
 gupnp_control_point_list_service_proxies (GUPnPControlPoint *control_point)
@@ -1270,12 +1290,14 @@ gupnp_control_point_list_service_proxies (GUPnPControlPoint *control_point)
 }
 
 /**
- * gupnp_control_point_get_resource_factory:
+ * gupnp_control_point_get_resource_factory:(attributes org.gtk.Method.get_property=resource-factory)
  * @control_point: A #GUPnPControlPoint
  *
- * Get the #GUPnPResourceFactory used by the @control_point.
+ * Get the #GUPnPResourceFactory used by the @control_point. If none was set during construction
+ * by calling [ctor@GUPnP.ControlPoint.new_full], equivalent to calling
+ * [func@GUPnP.ResourceFactory.get_default]
  *
- * Returns: (transfer none): A #GUPnPResourceFactory.
+ * Returns: (transfer none): The #GUPnPResourceFactory used by this control point
  **/
 GUPnPResourceFactory *
 gupnp_control_point_get_resource_factory (GUPnPControlPoint *control_point)

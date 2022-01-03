@@ -27,8 +27,7 @@ gupnp_server_error_quark (void) G_GNUC_CONST;
  * @GUPNP_SERVER_ERROR_INVALID_URL: Invalid URL.
  * @GUPNP_SERVER_ERROR_OTHER: Unknown/unhandled error.
  *
- * #GError codes used for errors in the #GUPNP_SERVER_ERROR domain, when there
- * is communication with another server.
+ * Error codes during communication with another server.
  */
 typedef enum {
         GUPNP_SERVER_ERROR_INTERNAL_SERVER_ERROR,
@@ -50,8 +49,7 @@ gupnp_eventing_error_quark (void) G_GNUC_CONST;
  * @GUPNP_EVENTING_ERROR_SUBSCRIPTION_LOST: The subscription was lost.
  * @GUPNP_EVENTING_ERROR_NOTIFY_FAILED: The notification failed.
  *
- * #GError codes used for errors in the #GUPNP_EVENTING_ERROR domain, during
- * eventing of state variables.
+ * Error codes during eventing of state variables.
  */
 typedef enum {
         GUPNP_EVENTING_ERROR_SUBSCRIPTION_FAILED,
@@ -71,8 +69,7 @@ gupnp_control_error_quark (void) G_GNUC_CONST;
  * @GUPNP_CONTROL_ERROR_OUT_OF_SYNC: Out of sync (deprecated).
  * @GUPNP_CONTROL_ERROR_ACTION_FAILED: The action failed.
  *
- * #GError codes used for errors in the #GUPNP_CONTROL_ERROR domain, during
- * invocation of service actions.
+ * Error codes used during invocation of service actions.
  */
 typedef enum {
         GUPNP_CONTROL_ERROR_INVALID_ACTION = 401,
@@ -94,8 +91,7 @@ gupnp_xml_error_quark (void) G_GNUC_CONST;
  * @GUPNP_XML_ERROR_INVALID_ATTRIBUTE: An XML node has an unknown attribute.
  * @GUPNP_XML_ERROR_OTHER: Unknown/unhandled XML related errors.
  *
- * #GError codes used for errors in the #GUPNP_XML_ERROR domain, during
- * processing of XML data.
+ * Errors during occuring during processing of XML data.
  */
 typedef enum {
         GUPNP_XML_ERROR_PARSE,
@@ -111,13 +107,13 @@ gupnp_rootdevice_error_quark (void) G_GNUC_CONST;
 #define GUPNP_ROOT_DEVICE_ERROR (gupnp_rootdevice_error_quark ())
 
 /**
- * GUPnPRootDeviceError:
+ * GUPnPRootdeviceError:
  * @GUPNP_ROOT_DEVICE_ERROR_NO_CONTEXT: No #GUPnPContext was passed to the root device.
  * @GUPNP_ROOT_DEVICE_ERROR_NO_DESCRIPTION_PATH: Device description path was missing
  * @GUPNP_ROOT_DEVICE_ERROR_NO_DESCRIPTION_FOLDER: Description folder was missing
  * @GUPNP_ROOT_DEVICE_ERROR_NO_NETWORK: Network interface is not usable
  *
- * #GError codes used for errors during #GUPnPRootDevice creation
+ * Errors during [class@GUPnP.RootDevice] creation
  */
 typedef enum {
         GUPNP_ROOT_DEVICE_ERROR_NO_CONTEXT,
@@ -135,7 +131,9 @@ gupnp_service_introspection_error_quark (void) G_GNUC_CONST;
 
 /**
  * GUPnPServiceIntrospectionError:
- * @GUPNP_SERVICE_INTROSPECTION_ERROR_OTHER@: Unknown error
+ * @GUPNP_SERVICE_INTROSPECTION_ERROR_OTHER: Unknown error
+ *
+ * Errors during service introspection
  */
 typedef enum
 {
@@ -151,7 +149,9 @@ gupnp_service_error_quark (void) G_GNUC_CONST;
 
 /**
  * GUPnPServiceError:
- * @GUPNP_SERVICE_ERROR_AUTOCONNECT@: [method@GUPnP.Service.signals_autoconnect] failed
+ * @GUPNP_SERVICE_ERROR_AUTOCONNECT: [method@GUPnP.Service.signals_autoconnect] failed
+ *
+ * Errors during service handling
  */
 typedef enum
 {

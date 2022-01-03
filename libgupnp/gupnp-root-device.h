@@ -43,7 +43,7 @@ struct _GUPnPRootDeviceClass {
 GUPnPRootDevice *
 gupnp_root_device_new             (GUPnPContext         *context,
                                    const char           *description_path,
-                                   const char           *description_dir,
+                                   const char           *description_folder,
                                    GError              **error);
 
 GUPnPRootDevice *
@@ -51,7 +51,7 @@ gupnp_root_device_new_full        (GUPnPContext         *context,
                                    GUPnPResourceFactory *factory,
                                    GUPnPXMLDoc          *description_doc,
                                    const char           *description_path,
-                                   const char           *description_dir,
+                                   const char           *description_folder,
                                    GError              **error);
 
 void
@@ -62,7 +62,7 @@ gboolean
 gupnp_root_device_get_available   (GUPnPRootDevice      *root_device);
 
 const char *
-gupnp_root_device_get_relative_location
+gupnp_root_device_get_description_document_name
                                   (GUPnPRootDevice      *root_device);
 
 const char *
