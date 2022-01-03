@@ -26,7 +26,16 @@ struct _GUPnPContextClass {
         GSSDPClientClass parent_class;
 
         /* future padding */
+        /*<private>*/
+        /**
+         * _gupnp_reserved1:(skip):
+         *
+         * Padding
+         */
         void (* _gupnp_reserved1) (void);
+        /**
+         * _gupnp_reserved2:(skip):
+         */
         void (* _gupnp_reserved2) (void);
         void (* _gupnp_reserved3) (void);
         void (* _gupnp_reserved4) (void);

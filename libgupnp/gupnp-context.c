@@ -11,14 +11,15 @@
  */
 
 /**
- * SECTION:gupnp-context
- * @short_description: Context object wrapping shared networking bits.
+ * GUPnPContext:
+ *
+ * Context object wrapping shared networking bits.
  *
  * #GUPnPContext wraps the networking bits that are used by the various
  * GUPnP classes. It automatically starts a web server on demand.
  *
  * For debugging, it is possible to see the messages being sent and received by
- * exporting <envar>GUPNP_DEBUG</envar>.
+ * setting the environment variable `GUPNP_DEBUG`.
  */
 
 #define G_LOG_DOMAIN "gupnp-context"
@@ -362,7 +363,7 @@ gupnp_context_class_init (GUPnPContextClass *klass)
         object_class->finalize     = gupnp_context_finalize;
 
         /**
-         * GUPnPContext:server:
+         * GUPnPContext:server:(attributes org.gtk.Property.get=gupnp_context_get_server)
          *
          * The #SoupServer HTTP server used by GUPnP.
          **/
@@ -379,7 +380,7 @@ gupnp_context_class_init (GUPnPContextClass *klass)
                                       G_PARAM_STATIC_BLURB));
 
         /**
-         * GUPnPContext:session:
+         * GUPnPContext:session:(attributes org.gtk.Property.get=gupnp_context_get_session)
          *
          * The #SoupSession object used by GUPnP.
          **/
@@ -396,7 +397,7 @@ gupnp_context_class_init (GUPnPContextClass *klass)
                                       G_PARAM_STATIC_BLURB));
 
         /**
-         * GUPnPContext:subscription-timeout:
+         * GUPnPContext:subscription-timeout:(attributes org.gtk.Property.get=gupnp_context_get_subscription_timeout org.gtk.Property.set=gupnp_context_set_subscription_timeout)
          *
          * The preferred subscription timeout: the number of seconds after
          * which subscriptions are renewed. Set to '0' if subscriptions 
@@ -417,7 +418,7 @@ gupnp_context_class_init (GUPnPContextClass *klass)
                                     G_PARAM_STATIC_NICK |
                                     G_PARAM_STATIC_BLURB));
         /**
-         * GUPnPContext:default-language:
+         * GUPnPContext:default-language:(attributes org.gtk.Property.get=gupnp_context_get_default_language org.gtk.Property.set=gupnp_context_set_default_language)
          *
          * The content of the Content-Language header id the client
          * sends Accept-Language and no language-specific pages to serve
@@ -439,7 +440,7 @@ gupnp_context_class_init (GUPnPContextClass *klass)
                                       G_PARAM_STATIC_BLURB));
 
         /**
-         * GUPnPContext:acl:
+         * GUPnPContext:acl:(attributes org.gtk.Property.get=gupnp_context_get_acl org.gtk.Property.set=gupnp_context_set_acl)
          *
          * An access control list.
          *
@@ -458,7 +459,7 @@ gupnp_context_class_init (GUPnPContextClass *klass)
 }
 
 /**
- * gupnp_context_get_session:
+ * gupnp_context_get_session:(attributes org.gtk.Method.get_property=session)
  * @context: A #GUPnPContext
  *
  * Get the #SoupSession object that GUPnP is using.
@@ -496,7 +497,7 @@ default_server_handler (G_GNUC_UNUSED SoupServer *server,
 }
 
 /**
- * gupnp_context_get_server:
+ * gupnp_context_get_server:(attributes org.gtk.Method.get_property=server)
  * @context: A #GUPnPContext
  *
  * Get the #SoupServer HTTP server that GUPnP is using.
@@ -613,6 +614,7 @@ gupnp_context_new (const char   *iface,
                                NULL);
 }
 
+\
 /**
  * gupnp_context_get_port:
  * @context: A #GUPnPContext
@@ -624,19 +626,16 @@ gupnp_context_new (const char   *iface,
 guint
 gupnp_context_get_port (GUPnPContext *context)
 {
-        GUPnPContextPrivate *priv;
-
         g_return_val_if_fail (GUPNP_IS_CONTEXT (context), 0);
-        priv = gupnp_context_get_instance_private (context);
 
-        if (priv->server_uri == NULL)
-                priv->server_uri = make_server_uri (context);
+        GUri *uri = _gupnp_context_get_server_uri (context);
+        g_uri_unref (uri);
 
-        return g_uri_get_port (priv->server_uri);
+        return g_uri_get_port (uri);
 }
 
 /**
- * gupnp_context_set_subscription_timeout:
+ * gupnp_context_set_subscription_timeout:(attributes org.gtk.Method.set_property=subscription-timeout)
  * @context: A #GUPnPContext
  * @timeout: Event subscription timeout in seconds
  *
@@ -659,7 +658,7 @@ gupnp_context_set_subscription_timeout (GUPnPContext *context,
 }
 
 /**
- * gupnp_context_get_subscription_timeout:
+ * gupnp_context_get_subscription_timeout:(attributes org.gtk.Method.get_property=subscription-timeout)
  * @context: A #GUPnPContext
  *
  * Get the event subscription timeout (in seconds), or 0 meaning there is no
@@ -693,7 +692,7 @@ host_path_data_set_language (HostPathData *data, const char *language)
 }
 
 /**
- * gupnp_context_set_default_language:
+ * gupnp_context_set_default_language:(attributes org.gtk.Method.set_property=default-language)
  * @context: A #GUPnPContext
  * @language: A language tag as defined in RFC 2616 3.10
  *
@@ -733,7 +732,7 @@ gupnp_context_set_default_language (GUPnPContext *context,
 }
 
 /**
- * gupnp_context_get_default_language:
+ * gupnp_context_get_default_language:(attributes org.gtk.Method.get_property=default-language)
  * @context: A #GUPnPContext
  *
  * Get the default Content-Language header for this context.
@@ -1334,7 +1333,7 @@ gupnp_context_unhost_path (GUPnPContext *context,
 }
 
 /**
- * gupnp_context_get_acl:
+ * gupnp_context_get_acl:(attributes org.gtk.Method.get_property=acl)
  * @context: A #GUPnPContext
  *
  * Access the #GUPnPAcl associated with this client. If there isn't any,
@@ -1357,7 +1356,7 @@ gupnp_context_get_acl (GUPnPContext *context)
 }
 
 /**
- * gupnp_context_set_acl:
+ * gupnp_context_set_acl:(attributes org.gtk.Method.set_property=acl)
  * @context: A #GUPnPContext
  * @acl: (nullable): The new access control list or %NULL to remove the
  * current list.

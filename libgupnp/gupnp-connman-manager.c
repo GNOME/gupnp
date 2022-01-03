@@ -54,6 +54,11 @@ struct _GUPnPConnmanManagerPrivate {
 
 typedef struct _GUPnPConnmanManagerPrivate GUPnPConnmanManagerPrivate;
 
+/**
+ * GUPnPConnmanManager:
+ *
+ * Connman-based implementation of a [class@GUPnP.ContextManager]
+ */
 struct _GUPnPConnmanManager {
         GUPnPContextManager             parent;
 };

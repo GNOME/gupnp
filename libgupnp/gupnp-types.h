@@ -105,9 +105,21 @@ gupnp_uri_get_type (void) G_GNUC_CONST; /* string */
 GType
 gupnp_uuid_get_type (void) G_GNUC_CONST; /* string */
 
+/**
+ * gupnp_value_get_xml_node:
+ * @value: a [GLib.Value]
+ *
+ * Helper macro to get the xmlNode* from a `GValue`
+ */
 #define gupnp_value_get_xml_node( value ) \
         (xmlNode *) g_value_get_boxed ((value))
 
+/**
+ * gupnp_value_get_string:
+ * @value: a [GLib.Value]
+ *
+ * Helper macro to get a char* from a `GValue`
+ */
 #define gupnp_value_get_string( value ) \
         (const char *) g_value_get_boxed ((value))
 

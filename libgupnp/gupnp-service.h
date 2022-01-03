@@ -133,6 +133,20 @@ gupnp_service_signals_autoconnect (GUPnPService *service,
                                    gpointer      user_data,
                                    GError      **error);
 
+void
+gupnp_service_action_invoked (GUPnPService *service,
+                              GUPnPServiceAction *action);
+
+void
+gupnp_service_query_variable (GUPnPService *service,
+                              const char *variable,
+                              GValue *value);
+
+void
+gupnp_service_notify_failed (GUPnPService *service,
+                             const GList *callback_urls,
+                             const GError *reason);
+
 G_END_DECLS
 
 #endif /* GUPNP_SERVICE_H */

@@ -476,14 +476,14 @@ gupnp_service_action_set_value (GUPnPServiceAction *action,
  * gupnp_service_action_return:
  * @action: A #GUPnPServiceAction
  *
- * Return succesfully.
+ * Return successfully.
  **/
 void
 gupnp_service_action_return (GUPnPServiceAction *action)
 {
         g_return_if_fail (action != NULL);
 
-        soup_server_message_set_status (action->msg, SOUP_STATUS_OK, "Ok");
+        soup_server_message_set_status (action->msg, SOUP_STATUS_OK, NULL);
 
         finalize_action (action);
 }

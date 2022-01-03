@@ -213,6 +213,16 @@ gupnp_service_proxy_action_new_internal (const char *action) {
         return ret;
 }
 
+
+/**
+ * gupnp_service_proxy_action_ref:
+ * @action: an action
+ *
+ * Increases reference count of `action`
+ *
+ * Returns: (nullable): @action with an increased reference count
+ * Since: 1.2.0
+ */
 GUPnPServiceProxyAction *
 gupnp_service_proxy_action_ref (GUPnPServiceProxyAction *action)
 {
@@ -246,6 +256,15 @@ action_dispose (GUPnPServiceProxyAction *action)
         g_free (action->name);
 }
 
+/**
+ * gupnp_service_proxy_action_unref:
+ * @action: an action
+ *
+ * Decreases reference count of `action`. If reference count drops to 0,
+ * the action and its contents will be freed.
+ *
+ * Since: 1.2.0
+ */
 void
 gupnp_service_proxy_action_unref (GUPnPServiceProxyAction *action)
 {
@@ -499,11 +518,11 @@ gupnp_service_proxy_action_serialize (GUPnPServiceProxyAction *action,
  * @error:(inout)(optional)(nullable): The location where to store any error, or %NULL
  *
  * A variant of gupnp_service_proxy_action_get_result() that takes lists of
- * out-parameter names, types and place-holders for values. The returned list
- * in @out_values must be freed using #g_list_free and each element in it using
- * #g_value_unset and #g_free.
- * <informalexample>
- * <programlisting>
+ * out-parameter names, types and place-holders for values.
+ *
+ * The returned list in @out_values must be freed using `g_list_free` and each element
+ * in it using `g_value_unset` and `g_free`.
+ * ```c
  * void on_action_finished(GObject *object, GAsyncResult *res, gpointer user_data)
  * {
  *     GUPnPServiceProxyAction *action;
@@ -547,8 +566,7 @@ gupnp_service_proxy_action_serialize (GUPnPServiceProxyAction *action,
  *     }
  *     g_list_free (out_values);
  * }
- * </programlisting>
- * </informalexample>
+ *```
  *
  * Return value : %TRUE on success.
  *

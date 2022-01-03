@@ -7,15 +7,6 @@
  *
  */
 
-/**
- * SECTION:gupnp-service-proxy
- * @short_description: Proxy class for remote services.
- *
- * #GUPnPServiceProxy sends commands to a remote UPnP service and handles
- * incoming event notifications. #GUPnPServiceProxy implements the
- * #GUPnPServiceInfo interface.
- */
-
 #include <config.h>
 #include <libsoup/soup.h>
 #include <gobject/gvaluecollector.h>
@@ -53,6 +44,14 @@ struct _GUPnPServiceProxyPrivate {
 };
 typedef struct _GUPnPServiceProxyPrivate GUPnPServiceProxyPrivate;
 
+/**
+ * GUPnPServiceProxy:
+ *
+ * Proxy class for remote services.
+ *
+ * #GUPnPServiceProxy sends commands to a remote UPnP service and handles
+ * incoming event notifications.
+ */
 G_DEFINE_TYPE_WITH_PRIVATE (GUPnPServiceProxy,
                             gupnp_service_proxy,
                             GUPNP_TYPE_SERVICE_INFO)
@@ -375,10 +374,12 @@ gupnp_service_proxy_class_init (GUPnPServiceProxyClass *klass)
  * out parameter type, and out parameter value location, terminated with %NULL
  *
  * Sends action @action with parameters @Varargs to the service exposed by
- * @proxy synchronously. If an error occurred, @error will be set. In case of
- * an UPnPError the error code will be the same in @error.
+ * @proxy synchronously.
  *
- * Return value: %TRUE if sending the action was succesful.
+ * If an error occurred, @error will be set. In case of
+ * an UPnP error the error code will be the same in @error.
+ *
+ * Return value: %TRUE if sending the action was successful.
  *
  * Deprecated: 1.2.0: Use gupnp_service_proxy_action_new() and
  * gupnp_service_proxy_call_action()
@@ -415,7 +416,7 @@ gupnp_service_proxy_send_action (GUPnPServiceProxy *proxy,
  *
  * See gupnp_service_proxy_send_action().
  *
- * Return value: %TRUE if sending the action was succesful.
+ * Return value: %TRUE if sending the action was successful.
  *
  * Deprecated: 1.2.0
  **/
@@ -486,10 +487,10 @@ out:
  * (as #GValue) that line up with @out_names and @out_types.
  * @error: (inout)(optional)(nullable): The location where to store any error, or %NULL
  *
- * The synchronous variant of #gupnp_service_proxy_begin_action_list and
- * #gupnp_service_proxy_end_action_list.
+ * The synchronous variant of [class@GUPnP.ServiceProxy.begin_action_list] and
+ * [class@GUPnP.ServiceProxy.end_action_list].
  *
- * Return value: %TRUE if sending the action was succesful.
+ * Return value: %TRUE if sending the action was successful.
  *
  * Deprecated: 1.2.0: Use gupnp_service_proxy_action_new_from_list() and gupnp_service_proxy_call_action()
  *
@@ -994,7 +995,9 @@ gupnp_service_proxy_end_action_valist (GUPnPServiceProxy       *proxy,
  * (as #GValue) that line up with @out_names and @out_types.
  *
  * A variant of #gupnp_service_proxy_end_action that takes lists of
- * out-parameter names, types and place-holders for values. The returned list
+ * out-parameter names, types and place-holders for values.
+ *
+ * The returned list
  * in @out_values must be freed using #g_list_free and each element in it using
  * #g_value_unset and #g_slice_free.
  *
@@ -1212,8 +1215,9 @@ gupnp_service_proxy_add_notify_full (GUPnPServiceProxy              *proxy,
  * @user_data: User data for @callback
  * @notify: (allow-none): A #GDestroyNotify for @user_data
  *
- * Get a notification for anything that happens on the peer. @value in
- * @callback will be of type #G_TYPE_POINTER and contain the pre-parsed
+ * Get a notification for anything that happens on the peer.
+ *
+ * @value in @callback will be of type #G_TYPE_POINTER and contain the pre-parsed
  * #xmlDoc. Do NOT free or modify this document.
  *
  * Return value: %TRUE on success.

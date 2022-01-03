@@ -7,13 +7,6 @@
  *
  */
 
-/**
- * SECTION:gupnp-device-proxy
- * @short_description: Proxy class for remote devices.
- *
- * #GUPnPDeviceProxy allows for retrieving proxies for a device's subdevices
- * and services. #GUPnPDeviceProxy implements the #GUPnPDeviceInfo interface.
- */
 
 #include <config.h>
 #include <string.h>
@@ -23,6 +16,14 @@
 #include "gupnp-resource-factory-private.h"
 #include "xml-util.h"
 
+/**
+ * GUPnPDeviceProxy:
+ *
+ * Interaction with remote UPnP devices.
+ *
+ * #GUPnPDeviceProxy allows for retrieving proxies for a device's sub-devices
+ * and services. It implements the [class@GUPnP.DeviceInfo] abstract class.
+ */
 G_DEFINE_TYPE (GUPnPDeviceProxy,
                gupnp_device_proxy,
                GUPNP_TYPE_DEVICE_INFO)

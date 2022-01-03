@@ -16,8 +16,7 @@
 
 G_BEGIN_DECLS
 
-#define GUPNP_TYPE_SERVICE_INFO \
-                (gupnp_service_info_get_type ())
+#define GUPNP_TYPE_SERVICE_INFO (gupnp_service_info_get_type ())
 
 G_DECLARE_DERIVABLE_TYPE (GUPnPServiceInfo,
                           gupnp_service_info,
@@ -38,8 +37,8 @@ struct _GUPnPServiceInfoClass {
 /**
  * GUPnPServiceIntrospectionCallback:
  * @info: The #GUPnPServiceInfo introspection was requested for
- * @introspection: (nullable): The new #GUPnPServiceIntrospection object, or NULL
- * @error: (nullable): The #GError that occurred, or NULL
+ * @introspection: (nullable): The new #GUPnPServiceIntrospection object
+ * @error: (nullable): The #GError that occurred
  * @user_data: User data
  *
  * Callback notifying that @introspection for @info has been obtained.

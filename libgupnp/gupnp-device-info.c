@@ -7,13 +7,7 @@
  *
  */
 
-/**
- * SECTION:gupnp-device-info
- * @short_description: Base abstract class for querying device information.
- *
- * The #GUPnPDeviceInfo base abstract class provides methods for querying
- * device information.
- */
+
 
 #include <config.h>
 #include <string.h>
@@ -38,6 +32,15 @@ struct _GUPnPDeviceInfoPrivate {
         xmlNode *element;
 };
 typedef struct _GUPnPDeviceInfoPrivate GUPnPDeviceInfoPrivate;
+
+/**
+ * GUPnPDeviceInfo:
+ *
+ * Device information shared by local and remote devices
+ *
+ * This class aggregates the information that is shared between remote and local
+ * devices.
+ */
 
 G_DEFINE_ABSTRACT_TYPE_WITH_PRIVATE (GUPnPDeviceInfo,
                                      gupnp_device_info,
@@ -195,98 +198,87 @@ gupnp_device_info_class_init (GUPnPDeviceInfoClass *klass)
         object_class->finalize     = gupnp_device_info_finalize;
 
         /**
-         * GUPnPDeviceInfo:resource-factory:
+         * GUPnPDeviceInfo:resource-factory:(attributes org.gtk.Property.get=gupnp_device_info_get_resource_factory):
          *
          * The resource factory to use. Set to NULL for default factory.
          **/
-        g_object_class_install_property
-                (object_class,
-                 PROP_RESOURCE_FACTORY,
-                 g_param_spec_object ("resource-factory",
-                                      "Resource Factory",
-                                      "The resource factory to use",
-                                      GUPNP_TYPE_RESOURCE_FACTORY,
-                                      G_PARAM_READWRITE |
-                                      G_PARAM_CONSTRUCT_ONLY |
-                                      G_PARAM_STATIC_NAME |
-                                      G_PARAM_STATIC_NICK |
-                                      G_PARAM_STATIC_BLURB));
+        g_object_class_install_property (
+                object_class,
+                PROP_RESOURCE_FACTORY,
+                g_param_spec_object ("resource-factory",
+                                     "Resource Factory",
+                                     "The resource factory to use",
+                                     GUPNP_TYPE_RESOURCE_FACTORY,
+                                     G_PARAM_READWRITE |
+                                             G_PARAM_CONSTRUCT_ONLY |
+                                             G_PARAM_STATIC_STRINGS));
 
         /**
-         * GUPnPDeviceInfo:context:
+         * GUPnPDeviceInfo:context:(attributes org.gtk.Property.get=gupnp_device_info_get_context):
          *
          * The #GUPnPContext to use.
          **/
-        g_object_class_install_property
-                (object_class,
-                 PROP_CONTEXT,
-                 g_param_spec_object ("context",
-                                      "Context",
-                                      "The GUPnPContext",
-                                      GUPNP_TYPE_CONTEXT,
-                                      G_PARAM_READWRITE |
-                                      G_PARAM_CONSTRUCT_ONLY |
-                                      G_PARAM_STATIC_NAME |
-                                      G_PARAM_STATIC_NICK |
-                                      G_PARAM_STATIC_BLURB));
+        g_object_class_install_property (
+                object_class,
+                PROP_CONTEXT,
+                g_param_spec_object ("context",
+                                     "Context",
+                                     "The GUPnPContext",
+                                     GUPNP_TYPE_CONTEXT,
+                                     G_PARAM_READWRITE |
+                                             G_PARAM_CONSTRUCT_ONLY |
+                                             G_PARAM_STATIC_STRINGS));
 
         /**
-         * GUPnPDeviceInfo:location:
+         * GUPnPDeviceInfo:location:(attributes org.gtk.Property.get=gupnp_device_info_get_location):
          *
          * The location of the device description file.
          **/
-        g_object_class_install_property
-                (object_class,
-                 PROP_LOCATION,
-                 g_param_spec_string ("location",
-                                      "Location",
-                                      "The location of the device description "
-                                      "file",
-                                      NULL,
-                                      G_PARAM_READWRITE |
-                                      G_PARAM_CONSTRUCT |
-                                      G_PARAM_STATIC_NAME |
-                                      G_PARAM_STATIC_NICK |
-                                      G_PARAM_STATIC_BLURB));
+        g_object_class_install_property (
+                object_class,
+                PROP_LOCATION,
+                g_param_spec_string ("location",
+                                     "Location",
+                                     "The location of the device description "
+                                     "file",
+                                     NULL,
+                                     G_PARAM_READWRITE | G_PARAM_CONSTRUCT |
+                                             G_PARAM_STATIC_STRINGS));
 
         /**
-         * GUPnPDeviceInfo:udn:
+         * GUPnPDeviceInfo:udn:(attributes org.gtk.Property.get=gupnp_device_info_get_udn):
          *
          * The UDN of this device.
          **/
-        g_object_class_install_property
-                (object_class,
-                 PROP_UDN,
-                 g_param_spec_string ("udn",
-                                      "UDN",
-                                      "The UDN",
-                                      NULL,
-                                      G_PARAM_READWRITE |
-                                      G_PARAM_CONSTRUCT_ONLY |
-                                      G_PARAM_STATIC_NAME |
-                                      G_PARAM_STATIC_NICK |
-                                      G_PARAM_STATIC_BLURB));
+        g_object_class_install_property (
+                object_class,
+                PROP_UDN,
+                g_param_spec_string ("udn",
+                                     "UDN",
+                                     "The Unique Device Name",
+                                     NULL,
+                                     G_PARAM_READWRITE |
+                                             G_PARAM_CONSTRUCT_ONLY |
+                                             G_PARAM_STATIC_STRINGS));
 
         /**
-         * GUPnPDeviceInfo:device-type:
+         * GUPnPDeviceInfo:device-type:(attributes org.gtk.Property.get=gupnp_device_info_get_device_type):
          *
-         * The device type.
+         * The device type, e.g. `urn:schemas-upnp-org:device:InternetGatewayDevice:1`
          **/
-        g_object_class_install_property
-                (object_class,
-                 PROP_DEVICE_TYPE,
-                 g_param_spec_string ("device-type",
-                                      "Device type",
-                                      "The device type",
-                                      NULL,
-                                      G_PARAM_READWRITE |
-                                      G_PARAM_CONSTRUCT_ONLY |
-                                      G_PARAM_STATIC_NAME |
-                                      G_PARAM_STATIC_NICK |
-                                      G_PARAM_STATIC_BLURB));
+        g_object_class_install_property (
+                object_class,
+                PROP_DEVICE_TYPE,
+                g_param_spec_string ("device-type",
+                                     "Device type",
+                                     "The device type",
+                                     NULL,
+                                     G_PARAM_READWRITE |
+                                             G_PARAM_CONSTRUCT_ONLY |
+                                             G_PARAM_STATIC_STRINGS));
 
         /**
-         * GUPnPDeviceInfo:url-base:
+         * GUPnPDeviceInfo:url-base:(attributes org.gtk.Property.get=gupnp_device_info_get_url_base):
          *
          * The URL base (#SoupURI).
          **/
@@ -298,9 +290,7 @@ gupnp_device_info_class_init (GUPnPDeviceInfoClass *klass)
                                     "The URL base",
                                     G_TYPE_URI,
                                     G_PARAM_READWRITE | G_PARAM_CONSTRUCT |
-                                            G_PARAM_STATIC_NAME |
-                                            G_PARAM_STATIC_NICK |
-                                            G_PARAM_STATIC_BLURB));
+                                            G_PARAM_STATIC_STRINGS));
 
         /**
          * GUPnPDeviceInfo:document:
@@ -318,9 +308,7 @@ gupnp_device_info_class_init (GUPnPDeviceInfoClass *klass)
                                      "device",
                                      GUPNP_TYPE_XML_DOC,
                                      G_PARAM_READWRITE | G_PARAM_CONSTRUCT |
-                                             G_PARAM_STATIC_NAME |
-                                             G_PARAM_STATIC_NICK |
-                                             G_PARAM_STATIC_BLURB));
+                                             G_PARAM_STATIC_STRINGS));
 
         /**
          * GUPnPDeviceInfo:element:
@@ -329,18 +317,15 @@ gupnp_device_info_class_init (GUPnPDeviceInfoClass *klass)
          *
          * Stability: Private
          **/
-        g_object_class_install_property
-                (object_class,
-                 PROP_ELEMENT,
-                 g_param_spec_pointer ("element",
-                                       "Element",
-                                       "The XML element related to this "
-                                       "device",
-                                       G_PARAM_WRITABLE |
-                                       G_PARAM_CONSTRUCT |
-                                       G_PARAM_STATIC_NAME |
-                                       G_PARAM_STATIC_NICK |
-                                       G_PARAM_STATIC_BLURB));
+        g_object_class_install_property (
+                object_class,
+                PROP_ELEMENT,
+                g_param_spec_pointer ("element",
+                                      "Element",
+                                      "The XML element related to this "
+                                      "device",
+                                      G_PARAM_WRITABLE | G_PARAM_CONSTRUCT |
+                                              G_PARAM_STATIC_STRINGS));
 }
 
 /**
@@ -399,7 +384,7 @@ gupnp_device_info_create_service_instance (GUPnPDeviceInfo *info,
 }
 
 /**
- * gupnp_device_info_get_resource_factory:
+ * gupnp_device_info_get_resource_factory:(attributes org.gtk.Method.get_property=resource-factory):
  * @device_info: A #GUPnPDeviceInfo
  *
  * Get the #GUPnPResourceFactory used by the @device_info.
@@ -419,12 +404,12 @@ gupnp_device_info_get_resource_factory (GUPnPDeviceInfo *info)
 }
 
 /**
- * gupnp_device_info_get_context:
+ * gupnp_device_info_get_context:(attributes org.gtk.Method.get_property=context):
  * @info: A #GUPnPDeviceInfo
  *
  * Get the associated #GUPnPContext.
  *
- * Returns: (transfer none): A #GUPnPContext.
+ * Returns: (transfer none): The #GUPnPContext the devices is operating on.
  **/
 GUPnPContext *
 gupnp_device_info_get_context (GUPnPDeviceInfo *info)
@@ -442,9 +427,9 @@ gupnp_device_info_get_context (GUPnPDeviceInfo *info)
  * gupnp_device_info_get_location:
  * @info: A #GUPnPDeviceInfo
  *
- * Get the location of the device description file.
+ * Get the URL of the device file
  *
- * Returns: A constant string.
+ * Returns: A s
  **/
 const char *
 gupnp_device_info_get_location (GUPnPDeviceInfo *info)
@@ -459,7 +444,7 @@ gupnp_device_info_get_location (GUPnPDeviceInfo *info)
 }
 
 /**
- * gupnp_device_info_get_url_base:
+ * gupnp_device_info_get_url_base:(attributes org.gtk.Method.get_property=url-base):
  * @info: A #GUPnPDeviceInfo
  *
  * Get the URL base of this device.
@@ -479,7 +464,7 @@ gupnp_device_info_get_url_base (GUPnPDeviceInfo *info)
 }
 
 /**
- * gupnp_device_info_get_udn:
+ * gupnp_device_info_get_udn:(attributes org.gtk.Method.get_property=udn):
  * @info: A #GUPnPDeviceInfo
  *
  * Get the Unique Device Name of the device.
@@ -504,10 +489,10 @@ gupnp_device_info_get_udn (GUPnPDeviceInfo *info)
 }
 
 /**
- * gupnp_device_info_get_device_type:
+ * gupnp_device_info_get_device_type:(attributes org.gtk.Method.get_property=device-type):
  * @info: A #GUPnPDeviceInfo
  *
- * Get the UPnP device type.
+ * Get the UPnP device type of this #GUPnPDeviceInfo, e.g. `urn:schemas-upnp-org:device:InternetGatewayDevice:1`
  *
  * Returns: A constant string, or %NULL.
  **/
@@ -534,7 +519,8 @@ gupnp_device_info_get_device_type (GUPnPDeviceInfo *info)
  *
  * Get the friendly name of the device.
  *
- * Return value: A string, or %NULL. g_free() after use.
+ * Return value:(nullable)(transfer full):A newly allocated string containing the
+ * "friendly name" of the device, or %NULL if not available. g_free() after use.
  **/
 char *
 gupnp_device_info_get_friendly_name (GUPnPDeviceInfo *info)
@@ -555,7 +541,8 @@ gupnp_device_info_get_friendly_name (GUPnPDeviceInfo *info)
  *
  * Get the manufacturer of the device.
  *
- * Return value:(nullable)(transfer full): A string, or %NULL. g_free() after use.
+ * Return value:(nullable)(transfer full): A newly allocated string containing the
+ * manufacturer of the device, or %NULL if not available. g_free() after use.
  **/
 char *
 gupnp_device_info_get_manufacturer (GUPnPDeviceInfo *info)
@@ -724,7 +711,7 @@ gupnp_device_info_get_upc (GUPnPDeviceInfo *info)
  * @info: A #GUPnPDeviceInfo
  *
  * Get an URL pointing to the device's presentation page, for web-based
- * administration.
+ * administration, if available.
  *
  * Return value:(nullable)(transfer full): A string, or %NULL. g_free() after use.
  **/
@@ -776,12 +763,8 @@ icon_parse (xmlNode *element)
 static void
 icon_free (Icon *icon)
 {
-        if (icon->mime_type)
-                xmlFree (icon->mime_type);
-
-        if (icon->url)
-                xmlFree (icon->url);
-
+        g_clear_pointer (&icon->mime_type, xmlFree);
+        g_clear_pointer (&icon->url, xmlFree);
         g_slice_free (Icon, icon);
 }
 
@@ -806,7 +789,9 @@ icon_free (Icon *icon)
  * returned icon, or %NULL
  *
  * Get an URL pointing to the icon most closely matching the
- * given criteria, or %NULL. If @requested_mime_type is set, only icons with
+ * given criteria, or %NULL.
+ *
+ * If @requested_mime_type is set, only icons with
  * this mime type will be returned. If @requested_depth is set, only icons with
  * this or lower depth will be returned. If @requested_width and/or
  * @requested_height are set, only icons that are this size or smaller are
@@ -1053,11 +1038,12 @@ resource_type_match (const char *query,
  * gupnp_device_info_list_dlna_device_class_identifier:
  * @info: A #GUPnPDeviceInfo
  *
- * Get a #GList of strings that represent the device class and version as
- * announced in the device description file using the &lt;dlna:X_DLNADOC&gt;
- * element.
+ * Get a list of strings that represent the device class and version as
+ * announced in the device description file using the `<dlna:X_DLNADOC>`
+ * element, e.g. `DMS-1.51`, `M-DMS-1.51` and so on.
+ *
  * Returns:(nullable)(transfer full) (element-type utf8): a #GList of newly allocated strings or
- * %NULL if the device description doesn't contain the &lt;dlna:X_DLNADOC&gt;
+ * %NULL if the device description doesn't contain any `<dlna:X_DLNADOC>`
  * element.
  *
  * Since: 0.20.4
@@ -1163,8 +1149,8 @@ gupnp_device_info_list_dlna_capabilities (GUPnPDeviceInfo *info)
  * This function provides generic access to the contents of arbitrary elements
  * in the device description file.
  *
- * Return value:(nullable)(transfer full): a newly allocated string or %NULL if the device
- *               description doesn't contain the given @element
+ * Return value:(nullable)(transfer full): a newly allocated string containing the
+ * requested value or %NULL if the device description doesn't contain the given @element
  *
  * Since: 0.14.0
  **/
@@ -1188,8 +1174,7 @@ gupnp_device_info_get_description_value (GUPnPDeviceInfo *info,
  * @info: A #GUPnPDeviceInfo
  *
  * Get a #GList of new objects implementing #GUPnPDeviceInfo
- * representing the devices directly contained in @info. The returned list
- * should be g_list_free()'d and the elements should be g_object_unref()'d.
+ * representing the devices directly contained in @info, excluding itself.
  *
  * Note that devices are not cached internally, so that every time you
  * call this function new objects are created. The application
@@ -1197,7 +1182,7 @@ gupnp_device_info_get_description_value (GUPnPDeviceInfo *info,
  * them.
  *
  * Return value:(nullable)(element-type GUPnP.DeviceInfo) (transfer full): a #GList of
- * new #GUPnPDeviceInfo objects.
+ * new #GUPnPDeviceInfo objects or %NULL if no devices are
  **/
 GList *
 gupnp_device_info_list_devices (GUPnPDeviceInfo *info)
@@ -1285,7 +1270,7 @@ gupnp_device_info_list_device_types (GUPnPDeviceInfo *info)
  * @info: A #GUPnPDeviceInfo
  * @type: The type of the device to be retrieved.
  *
- * Get the service with type @type directly contained in @info as
+ * Get the device with type @type directly contained in @info as
  * a new object implementing #GUPnPDeviceInfo, or %NULL if no such device
  * was found. The returned object should be unreffed when done.
  *
@@ -1406,7 +1391,7 @@ gupnp_device_info_list_services (GUPnPDeviceInfo *info)
  * @info: A #GUPnPDeviceInfo
  *
  * Get a #GList of strings representing the types of the services
- * directly contained in @info.
+ * directly contained in @info, but not in its subdevices.
  *
  * Return value: (nullable)(element-type utf8) (transfer full): A #GList of strings. The
  * elements should be g_free()'d and the list should be g_list_free()'d.
@@ -1452,8 +1437,7 @@ gupnp_device_info_list_service_types (GUPnPDeviceInfo *info)
  * @type: The type of the service to be retrieved.
  *
  * Get the service with type @type directly contained in @info as a new object
- * implementing #GUPnPServiceInfo, or %NULL if no such device was found. The
- * returned object should be unreffed when done.
+ * implementing #GUPnPServiceInfo, or %NULL if no such device was found.
  *
  * Note that services are not cached internally, so that every time you call
  * this function a new object is created. The application must cache any used
