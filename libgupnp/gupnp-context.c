@@ -1537,8 +1537,6 @@ _gupnp_context_add_server_handler_with_data (GUPnPContext *context,
 
         g_return_if_fail (GUPNP_IS_CONTEXT (context));
 
-        g_print ("Adding ACL-Protected handler for %s\n", path);
-
         priv = gupnp_context_get_instance_private (context);
         soup_server_add_handler (priv->server,
                                  path,

@@ -823,8 +823,6 @@ subscription_server_handler (G_GNUC_UNUSED SoupServer *server,
         SoupMessageHeaders *request_headers =
                 soup_server_message_get_request_headers (msg);
 
-        g_print ("Got SUBSCRIBE handler request\n");
-
         const char *host =
                 soup_message_headers_get_one (request_headers, "Host");
         GUPnPContext *context = gupnp_service_info_get_context (user_data);

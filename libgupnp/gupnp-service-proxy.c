@@ -1906,7 +1906,6 @@ subscribe (GUPnPServiceProxy *proxy)
                 char *local_sub_url = NULL;
 
                 local_sub_url = gupnp_context_rewrite_uri (context, sub_url);
-                g_print ("local_sub_uri: %s\n", local_sub_url);
                 g_free (sub_url);
 
                 msg = soup_message_new (GENA_METHOD_SUBSCRIBE, local_sub_url);
