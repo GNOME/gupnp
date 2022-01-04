@@ -188,7 +188,7 @@ on_context_unavailable (GUPnPContextManager    *manager,
                         GUPnPControlPoint *cp;
 
                         cp = GUPNP_CONTROL_POINT (l->data);
-                        obj_context = gupnp_control_point_get_context (cp);
+                        obj_context = GUPNP_CONTEXT (gssdp_resource_group_get_client (GSSDP_RESOURCE_GROUP (cp)));
                 } else if (GUPNP_IS_ROOT_DEVICE (l->data)) {
                         GUPnPDeviceInfo *info;
 
@@ -864,22 +864,6 @@ gupnp_context_manager_get_context_filter (GUPnPContextManager *manager)
         priv = gupnp_context_manager_get_instance_private (manager);
 
         return priv->context_filter;
-}
-
-/**
- * gupnp_context_manager_get_white_list:
- * @manager: A #GUPnPContextManager
- *
- * Get the #GUPnPContextFilter associated with @manager.
- *
- * Returns: (transfer none):  The #GUPnPContextFilter associated with this
- * context manager.
- * Deprecated: 1.4.0: Use [method@GUPnP.ContextManager.get_context_filter] instead.
- */
-GUPnPWhiteList *
-gupnp_context_manager_get_white_list (GUPnPContextManager *manager)
-{
-        return gupnp_context_manager_get_context_filter (manager);
 }
 
 /**

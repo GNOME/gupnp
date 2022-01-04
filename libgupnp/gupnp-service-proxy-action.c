@@ -57,8 +57,7 @@ read_out_parameter (const char *arg_name,
 /* Checks an action response for errors and returns the parsed
  * xmlDoc object. */
 static xmlDoc *
-check_action_response (G_GNUC_UNUSED GUPnPServiceProxy *proxy,
-                       GUPnPServiceProxyAction         *action,
+check_action_response (GUPnPServiceProxyAction         *action,
                        xmlNode                        **params,
                        GError                         **error)
 {
@@ -245,7 +244,6 @@ action_dispose (GUPnPServiceProxyAction *action)
                                           action->cancellable_connection_id);
         }
         g_clear_object (&action->cancellable);
-        g_clear_error (&action->error);
         g_clear_object (&action->msg);
         if (action->msg_str != NULL) {
                 g_string_free (action->msg_str, TRUE);
@@ -590,18 +588,9 @@ gupnp_service_proxy_action_get_result_list (GUPnPServiceProxyAction *action,
 
         g_return_val_if_fail (action, FALSE);
 
-        /* Check for saved error from begin_action() */
-        if (action->error) {
-                g_propagate_error (error, g_error_copy (action->error));
-
-                return FALSE;
-        }
-
         /* Check response for errors and do initial parsing */
-        response = check_action_response (NULL, action, &params, &action->error);
+        response = check_action_response (action, &params, error);
         if (response == NULL) {
-                g_propagate_error (error, g_error_copy (action->error));
-
                 return FALSE;
         }
 
@@ -698,18 +687,9 @@ gupnp_service_proxy_action_get_result_hash (GUPnPServiceProxyAction *action,
 
         g_return_val_if_fail (action, FALSE);
 
-        /* Check for saved error from begin_action() */
-        if (action->error) {
-                g_propagate_error (error, g_error_copy (action->error));
-
-                return FALSE;
-        }
-
         /* Check response for errors and do initial parsing */
-        response = check_action_response (NULL, action, &params, &action->error);
+        response = check_action_response (action, &params, error);
         if (response == NULL) {
-                g_propagate_error (error, g_error_copy (action->error));
-
                 return FALSE;
         }
 

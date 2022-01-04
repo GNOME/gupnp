@@ -87,18 +87,26 @@ test_bgo_696762_on_browse_call (G_GNUC_UNUSED GUPnPService *service,
 
     g_assert (node != NULL);
     g_assert_cmpstr ((const char *) node->name, ==, "SortCriteria");
-    node = node->next;
     gupnp_service_action_return_success (action);
 }
 
 static void
-test_bgo_696762_on_browse (G_GNUC_UNUSED GUPnPServiceProxy       *proxy,
-                           G_GNUC_UNUSED GUPnPServiceProxyAction *action,
+test_bgo_696762_on_browse (GObject        *object,
+                           GAsyncResult *res,
                            gpointer                               user_data)
 {
-    TestServiceProxyData *data = (TestServiceProxyData *) user_data;
+        TestServiceProxyData *data = (TestServiceProxyData *) user_data;
+        GError *error = NULL;
 
-    g_main_loop_quit (data->loop);
+        GUPnPServiceProxyAction *action =
+                gupnp_service_proxy_call_action_finish (
+                        GUPNP_SERVICE_PROXY (object),
+                        res,
+                        &error);
+        g_assert_nonnull (action);
+        g_assert_no_error (error);
+
+        g_main_loop_quit (data->loop);
 }
 
 static void
@@ -221,19 +229,33 @@ test_bgo_696762 (void)
     test_run_loop (data.loop, g_test_get_path ());
     g_assert (data.proxy != NULL);
 
-    G_GNUC_BEGIN_IGNORE_DEPRECATIONS
-    gupnp_service_proxy_begin_action (data.proxy,
-                                      "Browse",
-                                      test_bgo_696762_on_browse,
-                                      &data,
-                                      "ObjectID", G_TYPE_STRING, "0",
-                                      "BrowseFlag", G_TYPE_STRING, "BrowseDirectChildren",
-                                      "Filter", G_TYPE_STRING, "res,dc:date,res@size",
-                                      "StartingIndex", G_TYPE_UINT, 0,
-                                      "RequestedCount", G_TYPE_UINT, 0,
-                                      "SortCriteria", G_TYPE_STRING, "",
-                                      NULL);
-    G_GNUC_END_IGNORE_DEPRECATIONS
+    GUPnPServiceProxyAction *action;
+    action = gupnp_service_proxy_action_new ("Browse",
+                                             "ObjectID",
+                                             G_TYPE_STRING,
+                                             "0",
+                                             "BrowseFlag",
+                                             G_TYPE_STRING,
+                                             "BrowseDirectChildren",
+                                             "Filter",
+                                             G_TYPE_STRING,
+                                             "res,dc:date,res@size",
+                                             "StartingIndex",
+                                             G_TYPE_UINT,
+                                             0,
+                                             "RequestedCount",
+                                             G_TYPE_UINT,
+                                             0,
+                                             "SortCriteria",
+                                             G_TYPE_STRING,
+                                             "",
+                                             NULL);
+
+    gupnp_service_proxy_call_action_async (data.proxy,
+                                           action,
+                                           NULL,
+                                           test_bgo_696762_on_browse,
+                                           &data);
 
     test_run_loop (data.loop, g_test_get_path ());
 
@@ -522,143 +544,6 @@ test_ggo_24 (void)
                 validate_host_header ("[fe80::01%eth0]", "fe80::acab", 4711));
 }
 
-/*
- * Test that the legacy async _end_action calls still work
- *
- * https://gitlab.gnome.org/GNOME/gupnp/-/issues/58
- */
-
-static void
-test_ggo_58_on_ping (GUPnPServiceProxy *proxy,
-                     GUPnPServiceProxyAction *action,
-                     gpointer user_data)
-{
-        TestServiceProxyData *data = (TestServiceProxyData *) user_data;
-
-        g_main_loop_quit (data->loop);
-}
-
-static void
-test_ggo_58_on_ping_call (GUPnPService *service,
-                          GUPnPServiceAction *action,
-                          gpointer user_data)
-{
-        gupnp_service_action_return_success (action);
-}
-
-static void
-test_ggo_58 ()
-{
-        GUPnPContext *context = NULL;
-        GError *error = NULL;
-        GUPnPControlPoint *cp = NULL;
-        GUPnPRootDevice *rd;
-        TestServiceProxyData data = { NULL, NULL };
-        GUPnPServiceInfo *info = NULL;
-
-        data.loop = g_main_loop_new (NULL, FALSE);
-
-        context = create_context (0, &error);
-        g_assert_no_error (error);
-        g_assert (context != NULL);
-
-        cp = gupnp_control_point_new (
-                context,
-                "urn:test-gupnp-org:service:TestService:1");
-
-        gssdp_resource_browser_set_active (GSSDP_RESOURCE_BROWSER (cp), TRUE);
-
-        g_signal_connect (G_OBJECT (cp),
-                          "service-proxy-available",
-                          G_CALLBACK (test_on_sp_available),
-                          &data);
-
-
-        rd = gupnp_root_device_new (context,
-                                    "TestDevice.xml",
-                                    DATA_PATH,
-                                    &error);
-        g_assert_no_error (error);
-        g_assert (rd != NULL);
-        gupnp_root_device_set_available (rd, TRUE);
-        info = gupnp_device_info_get_service (
-                GUPNP_DEVICE_INFO (rd),
-                "urn:test-gupnp-org:service:TestService:1");
-        g_signal_connect (G_OBJECT (info),
-                          "action-invoked::Ping",
-                          G_CALLBACK (test_ggo_58_on_ping_call),
-                          &data);
-
-        test_run_loop (data.loop, g_test_get_path());
-        g_assert (data.proxy != NULL);
-
-        G_GNUC_BEGIN_IGNORE_DEPRECATIONS
-        GUPnPServiceProxyAction *action =
-                gupnp_service_proxy_begin_action (data.proxy,
-                                                  "Ping",
-                                                  test_ggo_58_on_ping,
-                                                  &data,
-                                                  NULL);
-
-        test_run_loop (data.loop, g_test_get_path());
-
-        gboolean success = gupnp_service_proxy_end_action (data.proxy,
-                                                           action,
-                                                           &error,
-                                                           NULL);
-
-        g_assert (success);
-        g_assert_no_error (error);
-
-        action = gupnp_service_proxy_begin_action (data.proxy,
-                                                   "Ping",
-                                                   test_ggo_58_on_ping,
-                                                   &data,
-                                                   NULL);
-
-        test_run_loop (data.loop, g_test_get_path());
-
-        GHashTable *result_hash = g_hash_table_new (g_str_hash, g_str_equal);
-
-        success = gupnp_service_proxy_end_action_hash (data.proxy,
-                                                       action,
-                                                       result_hash,
-                                                       &error);
-        g_hash_table_destroy (result_hash);
-
-        g_assert (success);
-        g_assert_no_error (error);
-
-        action = gupnp_service_proxy_begin_action (data.proxy,
-                                                   "Ping",
-                                                   test_ggo_58_on_ping,
-                                                   &data,
-                                                   NULL);
-
-        test_run_loop (data.loop, g_test_get_path());
-
-        GList *result_list = NULL;
-        success = gupnp_service_proxy_end_action_list (data.proxy,
-                                                       action,
-                                                       NULL,
-                                                       NULL,
-                                                       &result_list,
-                                                       &error);
-
-        g_assert (success);
-        g_assert_no_error (error);
-
-        G_GNUC_END_IGNORE_DEPRECATIONS
-
-        g_object_unref (info);
-        g_object_unref (data.proxy);
-        g_object_unref (cp);
-        g_object_unref (rd);
-        g_object_unref (context);
-
-        g_main_loop_unref (data.loop);
-}
-
 void
 test_ggo_42 ()
 {
@@ -695,7 +580,6 @@ main (int argc, char *argv[]) {
     g_test_add_func ("/bugs/bgo/722696", test_bgo_722696);
     g_test_add_func ("/bugs/bgo/743233", test_bgo_743233);
     g_test_add_func ("/bugs/ggo/24", test_ggo_24);
-    g_test_add_func ("/bugs/ggo/58", test_ggo_58);
     g_test_add_func ("/bugs/ggo/42", test_ggo_42);
 
     return g_test_run ();

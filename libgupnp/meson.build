@@ -61,7 +61,6 @@ headers = files(
     'gupnp-service-proxy.h',
     'gupnp-types.h',
     'gupnp-uuid.h',
-    'gupnp-white-list.h',
     'gupnp-xml-doc.h'
 )
 install_headers(headers, subdir : GUPNP_API_NAME / 'libgupnp')
@@ -86,7 +85,6 @@ sources = files(
     'gupnp-service-proxy-action.c',
     'gupnp-simple-context-manager.c',
     'gupnp-types.c',
-    'gupnp-white-list.c',
     'gupnp-xml-doc.c',
     'gvalue-util.c',
     'http-headers.c',

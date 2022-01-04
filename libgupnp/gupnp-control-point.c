@@ -23,13 +23,15 @@
  */
 
 #include <config.h>
-#include <string.h>
 
 #include "gupnp-control-point.h"
 #include "gupnp-context-private.h"
 #include "gupnp-resource-factory-private.h"
 #include "http-headers.h"
 #include "xml-util.h"
+
+#include <string.h>
+#include <libgssdp/gssdp-resource-group.h>
 
 #define GUPNP_MAX_DESCRIPTION_DOWNLOAD_RETRIES 4
 #define GUPNP_INITIAL_DESCRIPTION_RETRY_TIMEOUT 5
@@ -308,7 +310,7 @@ create_and_report_service_proxy (GUPnPControlPoint *control_point,
 
         priv = gupnp_control_point_get_instance_private (control_point);
         factory = gupnp_control_point_get_resource_factory (control_point);
-        context = gupnp_control_point_get_context (control_point);
+        context = GUPNP_CONTEXT (gssdp_resource_group_get_client (GSSDP_RESOURCE_GROUP (control_point)));
 
         /* Create proxy */
         proxy = gupnp_resource_factory_create_service_proxy (factory,
@@ -347,7 +349,7 @@ create_and_report_device_proxy (GUPnPControlPoint *control_point,
 
         priv = gupnp_control_point_get_instance_private (control_point);
         factory = gupnp_control_point_get_resource_factory (control_point);
-        context = gupnp_control_point_get_context (control_point);
+        context = GUPNP_CONTEXT (gssdp_resource_group_get_client (GSSDP_RESOURCE_GROUP (control_point)));
 
         proxy = gupnp_resource_factory_create_device_proxy (factory,
                                                             context,
@@ -721,7 +723,8 @@ load_description (GUPnPControlPoint *control_point,
                 GetDescriptionURLData *data;
                 char *local_description = NULL;
 
-                context = gupnp_control_point_get_context (control_point);
+                context = GUPNP_CONTEXT (gssdp_resource_group_get_client (
+                        GSSDP_RESOURCE_GROUP (control_point)));
 
                 session = gupnp_context_get_session (context);
 
@@ -1211,27 +1214,6 @@ gupnp_control_point_new_full (GUPnPContext         *context,
                              NULL);
 }
 
-/**
- * gupnp_control_point_get_context:
- * @control_point: A #GUPnPControlPoint
- *
- * Get the #GUPnPControlPoint associated with @control_point.
- *
- * Returns: (transfer none): The #GUPnPContext.
- * Deprecated: 1.4.0: Use [method@GSSDP.ResourceBrowser.get_client] instead.
- **/
-GUPnPContext *
-gupnp_control_point_get_context (GUPnPControlPoint *control_point)
-{
-        GSSDPClient *client;
-
-        g_return_val_if_fail (GUPNP_IS_CONTROL_POINT (control_point), NULL);
-
-        client = gssdp_resource_browser_get_client
-                                (GSSDP_RESOURCE_BROWSER (control_point));
-
-        return GUPNP_CONTEXT (client);
-}
 
 /**
  * gupnp_control_point_list_device_proxies:
