@@ -79,7 +79,6 @@ if xsltproc.found()
             xsltproc,
             xlstproc_flags,
             '--noout',
-            '--nowrite',
             stylesheet,
             docbook_man_page
         ]
