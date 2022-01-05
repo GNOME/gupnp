@@ -1191,6 +1191,7 @@ gupnp_control_point_new_full (GUPnPContext         *context,
  * Get the #GUPnPControlPoint associated with @control_point.
  *
  * Returns: (transfer none): The #GUPnPContext.
+ * Deprecated: 1.4.1: Use gssdp_resource_browser_get_client() instead.
  **/
 GUPnPContext *
 gupnp_control_point_get_context (GUPnPControlPoint *control_point)

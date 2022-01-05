@@ -58,7 +58,7 @@ gupnp_control_point_new_full             (GUPnPContext         *context,
                                           GUPnPResourceFactory *factory,
                                           const char           *target);
 
-GUPnPContext *
+G_DEPRECATED_FOR (gssdp_resource_browser_get_client) GUPnPContext *
 gupnp_control_point_get_context          (GUPnPControlPoint    *control_point);
 
 const GList *
