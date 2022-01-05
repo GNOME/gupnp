@@ -756,6 +756,7 @@ action_task_got_response (GObject *source,
                                  "POST")) {
                         g_debug ("POST returned with METHOD_NOT_ALLOWED, "
                                  "trying with M-POST");
+                        g_bytes_unref (action->response);
                         if (!prepare_action_msg (action->proxy,
                                                  action,
                                                  "M-POST",
@@ -2294,6 +2295,8 @@ gupnp_service_proxy_call_action (GUPnPServiceProxy       *proxy,
                                         action,
                                         "M-POST",
                                         &internal_error)) {
+                        g_bytes_unref (action->response);
+
                         action->response =
                                 soup_session_send_and_read (session,
                                                             action->msg,
