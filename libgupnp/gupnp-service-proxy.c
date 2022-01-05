@@ -719,27 +719,6 @@ prepare_action_msg (GUPnPServiceProxy *proxy,
 }
 
 static void
-update_message_after_not_allowed (SoupMessage *msg)
-{
-        const char *full_action;
-
-        /* Retry with M-POST */
-        soup_message_set_method (msg, "M-POST");
-
-        SoupMessageHeaders *headers = soup_message_get_request_headers (msg);
-
-        soup_message_headers_append (
-                headers,
-                "Man",
-                "\"http://schemas.xmlsoap.org/soap/envelope/\"; ns=s");
-
-        /* Rename "SOAPAction" to "s-SOAPAction" */
-        full_action = soup_message_headers_get_one (headers, "SOAPAction");
-        soup_message_headers_append (headers, "s-SOAPAction", full_action);
-        soup_message_headers_remove (headers, "SOAPAction");
-}
-
-static void
 gupnp_service_proxy_action_queue_task (GTask *task);
 
 static void
@@ -2276,6 +2255,7 @@ gupnp_service_proxy_call_action (GUPnPServiceProxy       *proxy,
 {
         GUPnPContext *context = NULL;
         SoupSession *session = NULL;
+        GError *internal_error = NULL;
 
         g_return_val_if_fail (GUPNP_IS_SERVICE_PROXY (proxy), NULL);
         g_return_val_if_fail (!action->pending, NULL);
@@ -2299,29 +2279,40 @@ gupnp_service_proxy_call_action (GUPnPServiceProxy       *proxy,
         action->response = soup_session_send_and_read (session,
                                                        action->msg,
                                                        action->cancellable,
-                                                       error);
+                                                       &internal_error);
 
-        if (error != NULL && *error != NULL)
-                return NULL;
+        if (internal_error != NULL) {
+                g_propagate_error (error, internal_error);
+
+                goto out;
+        }
 
         /* If not allowed, try again */
         if (soup_message_get_status (action->msg) ==
             SOUP_STATUS_METHOD_NOT_ALLOWED) {
-                update_message_after_not_allowed (action->msg);
-                action->response =
-                        soup_session_send_and_read (session,
-                                                    action->msg,
-                                                    action->cancellable,
-                                                    error);
+                if (prepare_action_msg (proxy,
+                                        action,
+                                        "M-POST",
+                                        &internal_error)) {
+                        action->response =
+                                soup_session_send_and_read (session,
+                                                            action->msg,
+                                                            action->cancellable,
+                                                            error);
+                }
         }
 
+out:
         g_cancellable_disconnect (action->cancellable,
                                   action->cancellable_connection_id);
         action->cancellable_connection_id = 0;
         g_clear_object (&action->cancellable);
 
-        if (error != NULL && *error != NULL)
+        if (internal_error != NULL) {
+                g_propagate_error (error, internal_error);
+
                 return NULL;
+        }
 
         return action;
 }
