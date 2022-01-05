@@ -183,7 +183,9 @@ on_context_unavailable (GUPnPContextManager    *manager,
                         GUPnPControlPoint *cp;
 
                         cp = GUPNP_CONTROL_POINT (l->data);
+                        G_GNUC_BEGIN_IGNORE_DEPRECATIONS
                         obj_context = gupnp_control_point_get_context (cp);
+                        G_GNUC_END_IGNORE_DEPRECATIONS
                 } else if (GUPNP_IS_ROOT_DEVICE (l->data)) {
                         GUPnPDeviceInfo *info;
 

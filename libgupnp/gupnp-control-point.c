@@ -87,8 +87,9 @@ get_description_url_data_free (GetDescriptionURLData *data)
                 GUPnPContext *context;
                 SoupSession *session;
 
-
+                G_GNUC_BEGIN_IGNORE_DEPRECATIONS
                 context = gupnp_control_point_get_context (data->control_point);
+                G_GNUC_END_IGNORE_DEPRECATIONS
                 session = gupnp_context_get_session (context);
 
                 soup_session_cancel_message (session,
@@ -303,7 +304,9 @@ create_and_report_service_proxy (GUPnPControlPoint  *control_point,
 
         priv = gupnp_control_point_get_instance_private (control_point);
         factory = gupnp_control_point_get_resource_factory (control_point);
+        G_GNUC_BEGIN_IGNORE_DEPRECATIONS
         context = gupnp_control_point_get_context (control_point);
+        G_GNUC_END_IGNORE_DEPRECATIONS
 
         /* Create proxy */
         proxy = gupnp_resource_factory_create_service_proxy (factory,
@@ -342,7 +345,9 @@ create_and_report_device_proxy (GUPnPControlPoint  *control_point,
 
         priv = gupnp_control_point_get_instance_private (control_point);
         factory = gupnp_control_point_get_resource_factory (control_point);
+        G_GNUC_BEGIN_IGNORE_DEPRECATIONS
         context = gupnp_control_point_get_context (control_point);
+        G_GNUC_END_IGNORE_DEPRECATIONS
 
         proxy = gupnp_resource_factory_create_device_proxy (factory,
                                                             context,
@@ -700,7 +705,9 @@ load_description (GUPnPControlPoint *control_point,
                 GetDescriptionURLData *data;
                 char *local_description = NULL;
 
+                G_GNUC_BEGIN_IGNORE_DEPRECATIONS
                 context = gupnp_control_point_get_context (control_point);
+                G_GNUC_END_IGNORE_DEPRECATIONS
 
                 session = gupnp_context_get_session (context);
 
