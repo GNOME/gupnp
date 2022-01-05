@@ -253,6 +253,8 @@ action_dispose (GUPnPServiceProxyAction *action)
         }
         g_hash_table_destroy (action->arg_map);
         g_ptr_array_unref (action->args);
+        g_clear_pointer (&action->response, g_bytes_unref);
+
         g_free (action->name);
 }
 
