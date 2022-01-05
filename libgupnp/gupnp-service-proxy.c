@@ -813,10 +813,6 @@ gupnp_service_proxy_action_queue_task (GTask *task)
         SoupSession *session;
         GUPnPServiceProxyAction *action = g_task_get_task_data (task);
 
-        /* We need to keep our own reference to the message as well,
-         * in order for send_action() to work. */
-        g_object_ref (action->msg);
-
         /* Send the message */
         context = gupnp_service_info_get_context
                                 (GUPNP_SERVICE_INFO (action->proxy));
