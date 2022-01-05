@@ -721,6 +721,9 @@ update_message_after_not_allowed (SoupMessage *msg)
 }
 
 static void
+gupnp_service_proxy_action_queue_task (GTask *task);
+
+static void
 action_task_got_response (SoupSession *session,
                           SoupMessage *msg,
                           gpointer    user_data)
@@ -744,10 +747,23 @@ action_task_got_response (SoupSession *session,
                 break;
 
         case SOUP_STATUS_METHOD_NOT_ALLOWED:
-                /* And re-queue */
-                update_message_after_not_allowed (msg);
-                soup_session_requeue_message (session, msg);
+                if (g_str_equal (msg->method, "POST")) {
+                        update_message_after_not_allowed (msg);
+                        gupnp_service_proxy_action_queue_task (task);
 
+                } else {
+                        if (action->cancellable != NULL && action->cancellable_connection_id != 0) {
+                                g_cancellable_disconnect (action->cancellable,
+                                                          action->cancellable_connection_id);
+                                action->cancellable_connection_id = 0;
+                        }
+
+                        g_task_return_new_error (task,
+                                                 GUPNP_SERVER_ERROR,
+                                                 GUPNP_SERVER_ERROR_OTHER,
+                                                 "Server does not allow any POST messages");
+                        g_object_unref (task);
+                }
                 break;
 
         default:
