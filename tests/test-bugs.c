@@ -6,11 +6,13 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
-#include <config.h>
-
 #include <libgupnp/gupnp.h>
 #include <libgupnp/gupnp-service-private.h>
 #include <libgupnp/gupnp-context-private.h>
+
+#include <libgssdp/gssdp-resource-group.h>
+#include <libsoup/soup.h>
+
 
 static GUPnPContext *
 create_context (guint16 port, GError **error) {
@@ -686,6 +688,160 @@ test_ggo_42 ()
         g_object_unref (info);
 }
 
+void
+on_control (SoupServer *server,
+            SoupServerMessage *msg,
+            const char *path,
+            GHashTable *query,
+            gpointer user_data)
+{
+        SoupMessageBody *b = soup_server_message_get_response_body (msg);
+
+        g_print ("On Control\n");
+
+        soup_message_body_append (b, SOUP_MEMORY_COPY, "<html>\0", 7);
+        soup_server_message_set_status (msg, SOUP_STATUS_METHOD_NOT_ALLOWED, NULL);
+}
+
+void
+on_event (SoupServer *server,
+          SoupServerMessage *msg,
+          const char *path,
+          GHashTable *query,
+          gpointer user_data)
+{
+        soup_server_message_set_status (msg, SOUP_STATUS_OK, NULL);
+}
+
+typedef struct {
+        GUPnPServiceProxy *p;
+        GMainLoop *loop;
+} TestGGO63Data;
+
+void
+on_proxy (GUPnPControlPoint *cp, GUPnPServiceProxy *p, gpointer user_data)
+{
+        g_print ("Got proxy....\n");
+        TestGGO63Data *d = (TestGGO63Data *) user_data;
+        d->p = g_object_ref (p);
+
+        g_main_loop_quit (d->loop);
+}
+
+void
+on_ping (GObject *object, GAsyncResult *res, gpointer user_data)
+{
+        g_print ("On PIng\n");
+
+        TestGGO63Data *d = (TestGGO63Data *) user_data;
+        GError *error = NULL;
+
+        GUPnPServiceProxyAction *action =
+                gupnp_service_proxy_call_action_finish (
+                        GUPNP_SERVICE_PROXY (object),
+                        res,
+                        &error);
+
+        g_assert_null (action);
+        g_assert_error (error, GUPNP_SERVER_ERROR, GUPNP_SERVER_ERROR_OTHER);
+
+        g_error_free (error);
+
+        g_main_loop_quit (d->loop);
+}
+
+void
+test_ggo_63 ()
+{
+        GUPnPContext *context = NULL;
+        GError *error = NULL;
+
+        context = create_context (0, &error);
+        g_assert_no_error (error);
+        g_assert (context != NULL);
+
+        SoupServer *server = gupnp_context_get_server (context);
+        GSList *uris = soup_server_get_uris (server);
+        GSSDPResourceGroup *rg =
+                gssdp_resource_group_new (GSSDP_CLIENT (context));
+
+        char *server_uri = g_uri_to_string (uris->data);
+        char *resource_path = g_strconcat (server_uri, "TestDevice.xml", NULL);
+        g_free (server_uri);
+        g_slist_free_full (uris, (GDestroyNotify) g_uri_unref);
+
+        gssdp_resource_group_add_resource_simple (rg,
+                                                  "upnp:rootdevice",
+                                                  "uuid:1234::upnp:rootdevice",
+                                                  resource_path);
+
+        gssdp_resource_group_add_resource_simple (rg,
+                                                  "uuid:1234",
+                                                  "uuid:1234",
+                                                  resource_path);
+
+        gssdp_resource_group_add_resource_simple (
+                rg,
+                "urn:test-gupnp-org:device:TestDevice:1",
+                "uuid:1234::urn:test-gupnp-org:device:TestDevice:1",
+                resource_path);
+
+        gssdp_resource_group_add_resource_simple (
+                rg,
+                "urn:test-gupnp-org:service:TestService:1",
+                "uuid:1234::urn:test-gupnp-org:service:TestService:1",
+                resource_path);
+
+        g_free (resource_path);
+
+        gupnp_context_host_path (context,
+                                 DATA_PATH "/TestDevice.xml",
+                                 "/TestDevice.xml");
+
+        soup_server_add_handler (server,
+                                 "/TestService/Control",
+                                 on_control,
+                                 NULL,
+                                 NULL);
+
+        soup_server_add_handler (server,
+                                 "/TestService/Event",
+                                 on_event,
+                                 NULL,
+                                 NULL);
+
+        gssdp_resource_group_set_available (rg, TRUE);
+
+
+        GUPnPControlPoint *cp = gupnp_control_point_new (
+                context,
+                "urn:test-gupnp-org:service:TestService:1");
+
+        TestGGO63Data d = { .loop = g_main_loop_new (NULL, FALSE), .p = NULL };
+        g_signal_connect (G_OBJECT (cp),
+                          "service-proxy-available",
+                          G_CALLBACK (on_proxy),
+                          &d);
+
+        gssdp_resource_browser_set_active (GSSDP_RESOURCE_BROWSER (cp), TRUE);
+
+        g_main_loop_run (d.loop);
+
+        GUPnPServiceProxyAction *a =
+                gupnp_service_proxy_action_new ("Ping", NULL);
+
+        gupnp_service_proxy_call_action_async (d.p, a, NULL, on_ping, &d);
+
+        g_main_loop_run (d.loop);
+        gupnp_service_proxy_action_unref (a);
+
+        g_object_unref (d.p);
+        g_object_unref (cp);
+        g_object_unref (rg);
+        g_object_unref (context);
+        g_main_loop_unref (d.loop);
+}
+
 int
 main (int argc, char *argv[]) {
     g_test_init (&argc, &argv, NULL);
@@ -697,6 +853,7 @@ main (int argc, char *argv[]) {
     g_test_add_func ("/bugs/ggo/24", test_ggo_24);
     g_test_add_func ("/bugs/ggo/58", test_ggo_58);
     g_test_add_func ("/bugs/ggo/42", test_ggo_42);
+    g_test_add_func ("/bugs/ggo/63", test_ggo_63);
 
     return g_test_run ();
 }

@@ -633,6 +633,7 @@ on_action_cancelled (GCancellable *cancellable, gpointer user_data)
 static gboolean
 prepare_action_msg (GUPnPServiceProxy *proxy,
                     GUPnPServiceProxyAction *action,
+                    const char *method,
                     GError **error)
 {
         char *control_url, *full_action;
@@ -673,7 +674,7 @@ prepare_action_msg (GUPnPServiceProxy *proxy,
         g_free (control_url);
 
         g_clear_object (&action->msg);
-        action->msg = soup_message_new (SOUP_METHOD_POST, local_control_url);
+        action->msg = soup_message_new (method, local_control_url);
         g_free (local_control_url);
 
         SoupMessageHeaders *headers =
@@ -681,7 +682,21 @@ prepare_action_msg (GUPnPServiceProxy *proxy,
 
         /* Specify action */
         full_action = g_strdup_printf ("\"%s#%s\"", service_type, action->name);
-        soup_message_headers_append (headers, "SOAPAction", full_action);
+
+        // This is internal API, it should either be that constant or the string "M-POST"
+        if (method == SOUP_METHOD_POST) {
+                soup_message_headers_append (headers,
+                                             "SOAPAction",
+                                             full_action);
+        } else {
+                soup_message_headers_append (headers,
+                                             "s-SOAPAction",
+                                             full_action);
+                soup_message_headers_append (
+                        headers,
+                        "Man",
+                        "\"http://schemas.xmlsoap.org/soap/envelope/\"; ns=s");
+        }
         g_free (full_action);
 
         /* Specify language */
@@ -725,6 +740,9 @@ update_message_after_not_allowed (SoupMessage *msg)
 }
 
 static void
+gupnp_service_proxy_action_queue_task (GTask *task);
+
+static void
 action_task_got_response (GObject *source,
                           GAsyncResult *res,
                           gpointer user_data)
@@ -755,10 +773,40 @@ action_task_got_response (GObject *source,
 
         switch (soup_message_get_status (action->msg)) {
         case SOUP_STATUS_METHOD_NOT_ALLOWED:
-                /* And re-queue */
-                update_message_after_not_allowed (action->msg);
-                // FIXME: soup_session_requeue_message (session, msg);
+                if (g_str_equal (soup_message_get_method (action->msg),
+                                 "POST")) {
+                        g_debug ("POST returned with METHOD_NOT_ALLOWED, "
+                                 "trying with M-POST");
+                        if (!prepare_action_msg (action->proxy,
+                                                 action,
+                                                 "M-POST",
+                                                 &error)) {
+                                if (action->cancellable != NULL && action->cancellable_connection_id != 0) {
+                                        g_cancellable_disconnect (action->cancellable,
+                                                                  action->cancellable_connection_id);
+                                        action->cancellable_connection_id = 0;
+                                }
 
+                                g_task_return_error (task, error);
+
+                                g_object_unref (task);
+                        } else {
+                                gupnp_service_proxy_action_queue_task (task);
+                        }
+
+                } else {
+                        if (action->cancellable != NULL && action->cancellable_connection_id != 0) {
+                                g_cancellable_disconnect (action->cancellable,
+                                                          action->cancellable_connection_id);
+                                action->cancellable_connection_id = 0;
+                        }
+
+                        g_task_return_new_error (task,
+                                                 GUPNP_SERVER_ERROR,
+                                                 GUPNP_SERVER_ERROR_OTHER,
+                                                 "Server does not allow any POST messages");
+                        g_object_unref (task);
+                }
                 break;
 
         default:
@@ -2155,7 +2203,7 @@ gupnp_service_proxy_call_action_async (GUPnPServiceProxy       *proxy,
                               gupnp_service_proxy_action_ref (action),
                               (GDestroyNotify) gupnp_service_proxy_action_unref);
 
-        prepare_action_msg (proxy, action, &error);
+        prepare_action_msg (proxy, action, SOUP_METHOD_POST, &error);
 
         if (error != NULL) {
                 g_task_return_error (task, error);
@@ -2232,7 +2280,7 @@ gupnp_service_proxy_call_action (GUPnPServiceProxy       *proxy,
         g_return_val_if_fail (GUPNP_IS_SERVICE_PROXY (proxy), NULL);
         g_return_val_if_fail (!action->pending, NULL);
 
-        if (!prepare_action_msg (proxy, action, error)) {
+        if (!prepare_action_msg (proxy, action, SOUP_METHOD_POST, error)) {
                 return NULL;
         }
 
