@@ -752,7 +752,6 @@ action_task_got_response (SoupSession *session,
                         GUPNP_SERVER_ERROR,
                         GUPNP_SERVER_ERROR_OTHER,
                         "Server does not allow any POST messages");
-                g_object_unref (task);
         }
 
         switch (msg->status_code) {
