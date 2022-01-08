@@ -1244,6 +1244,9 @@ host_path_data_free (HostPathData *path_data)
  * Start hosting @local_path at @server_path. Files with the path
  * @local_path.LOCALE (if they exist) will be served up when LOCALE is
  * specified in the request's Accept-Language header.
+ *
+ * @note: Paths added to the HTTP server using gupnp_context_host_path()
+ * are not subject to handling by #GUPnPAcl.
  **/
 void
 gupnp_context_host_path (GUPnPContext *context,
