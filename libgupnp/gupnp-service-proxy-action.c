@@ -78,6 +78,7 @@ check_action_response (G_GNUC_UNUSED GUPnPServiceProxy *proxy,
         switch (action->msg->status_code) {
         case SOUP_STATUS_OK:
         case SOUP_STATUS_INTERNAL_SERVER_ERROR:
+                // This indicates a SOAP error that needs to be evaluated
                 break;
         default:
                 _gupnp_error_set_server_error (error, action->msg);
@@ -96,6 +97,7 @@ check_action_response (G_GNUC_UNUSED GUPnPServiceProxy *proxy,
                                      GUPNP_SERVER_ERROR_INVALID_RESPONSE,
                                      "Could not parse SOAP response");
                 } else {
+                        // INTERNALL_SERVER_ERROR was not a SOAP error but something else
                         g_set_error_literal
                                     (error,
                                      GUPNP_SERVER_ERROR,

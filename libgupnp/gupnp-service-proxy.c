@@ -731,56 +731,47 @@ action_task_got_response (SoupSession *session,
         GTask *task = G_TASK (user_data);
         GUPnPServiceProxyAction *action = (GUPnPServiceProxyAction *) g_task_get_task_data (task);
 
+        // Re-send the message with method M-POST and s-SOAPAction
+        if (msg->status_code == SOUP_STATUS_METHOD_NOT_ALLOWED &&
+            g_str_equal ("POST", msg->method)) {
+                update_message_after_not_allowed (msg);
+                gupnp_service_proxy_action_queue_task (task);
+
+                return;
+        }
+
+        if (action->cancellable != NULL && action->cancellable_connection_id != 0) {
+                g_cancellable_disconnect (action->cancellable,
+                                          action->cancellable_connection_id);
+                action->cancellable_connection_id = 0;
+        }
+
+        if (SOUP_STATUS_IS_TRANSPORT_ERROR (msg->status_code)) {
+                g_task_return_new_error (
+                        task,
+                        GUPNP_SERVER_ERROR,
+                        GUPNP_SERVER_ERROR_OTHER,
+                        "Server does not allow any POST messages");
+                g_object_unref (task);
+        }
+
         switch (msg->status_code) {
         case SOUP_STATUS_CANCELLED:
-                if (action->cancellable != NULL && action->cancellable_connection_id != 0) {
-                        g_cancellable_disconnect (action->cancellable,
-                                        action->cancellable_connection_id);
-                        action->cancellable_connection_id = 0;
-                }
-
                 g_task_return_new_error (task,
                                          G_IO_ERROR,
                                          G_IO_ERROR_CANCELLED,
                                          "Action message was cancelled");
-                g_object_unref (task);
                 break;
-
-        case SOUP_STATUS_METHOD_NOT_ALLOWED:
-                if (g_str_equal (msg->method, "POST")) {
-                        update_message_after_not_allowed (msg);
-                        gupnp_service_proxy_action_queue_task (task);
-
-                } else {
-                        if (action->cancellable != NULL && action->cancellable_connection_id != 0) {
-                                g_cancellable_disconnect (action->cancellable,
-                                                          action->cancellable_connection_id);
-                                action->cancellable_connection_id = 0;
-                        }
-
-                        g_task_return_new_error (task,
-                                                 GUPNP_SERVER_ERROR,
-                                                 GUPNP_SERVER_ERROR_OTHER,
-                                                 "Server does not allow any POST messages");
-                        g_object_unref (task);
-                }
-                break;
-
         default:
-                if (action->cancellable != NULL && action->cancellable_connection_id != 0) {
-                        g_cancellable_disconnect (action->cancellable,
-                                        action->cancellable_connection_id);
-                        action->cancellable_connection_id = 0;
-                }
-
                 g_task_return_pointer (task,
                                        g_task_get_task_data (task),
                                        NULL);
 
-                g_object_unref (task);
 
                 break;
         }
+
+        g_object_unref (task);
 }
 
 static void
@@ -2117,6 +2108,9 @@ gupnp_service_proxy_call_action_async (GUPnPServiceProxy       *proxy,
  *
  * Finish an asynchronous call initiated with
  * gupnp_service_proxy_call_action_async().
+ *
+ * Note: This will only signalize transport errors to the caller, such as the action being cancelled
+ * or lost connection etc. SOAP call errors are only returned by gupnp_service_proxy_action_get() and such.
  *
  * Returns: (nullable) (transfer none): %NULL, if the call had an error, the action otherwise.
  * Since: 1.2.0

@@ -745,7 +745,10 @@ on_ping (GObject *object, GAsyncResult *res, gpointer user_data)
                         res,
                         &error);
 
-        g_assert_null (action);
+        g_assert_nonnull (action);
+        g_assert_no_error (error);
+
+        gupnp_service_proxy_action_get_result (action, &error, NULL);
         g_assert_error (error, GUPNP_SERVER_ERROR, GUPNP_SERVER_ERROR_OTHER);
 
         g_error_free (error);
