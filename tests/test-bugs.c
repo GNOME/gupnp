@@ -926,6 +926,74 @@ test_ggo_63 ()
         g_main_loop_unref (d.loop);
 }
 
+void
+test_ggo_60_call_ready (GObject *source, GAsyncResult *res, gpointer user_data)
+{
+        g_main_loop_quit ((GMainLoop *) user_data);
+}
+
+void
+test_ggo_60_no_crash ()
+{
+        // Test that there is no crash if not calling call_finish() on call_async()
+        GUPnPContext *context = NULL;
+        GError *error = NULL;
+        GUPnPControlPoint *cp = NULL;
+        GUPnPRootDevice *rd;
+        TestServiceProxyData data = { .proxy = NULL,
+                                      .loop = g_main_loop_new (NULL, FALSE) };
+
+        context = create_context (0, &error);
+        g_assert_no_error (error);
+        g_assert (context != NULL);
+
+        cp = gupnp_control_point_new (
+                context,
+                "urn:test-gupnp-org:service:TestService:1");
+
+        gssdp_resource_browser_set_active (GSSDP_RESOURCE_BROWSER (cp), TRUE);
+
+        g_signal_connect (G_OBJECT (cp),
+                          "service-proxy-available",
+                          G_CALLBACK (test_on_sp_available),
+                          &data);
+
+
+        rd = gupnp_root_device_new (context,
+                                    "TestDevice.xml",
+                                    DATA_PATH,
+                                    &error);
+        g_assert_no_error (error);
+        g_assert (rd != NULL);
+        gupnp_root_device_set_available (rd, TRUE);
+        test_run_loop (data.loop, g_test_get_path ());
+        g_assert (data.proxy != NULL);
+
+        // We just use the default of "Action not implemented" response, since
+        // it does not matter for the actual test
+
+        GUPnPServiceProxyAction *action =
+                gupnp_service_proxy_action_new ("Ping", NULL);
+        gupnp_service_proxy_call_action_async (data.proxy,
+                                               action,
+                                               NULL,
+                                               test_ggo_60_call_ready,
+                                               data.loop);
+
+        test_run_loop (data.loop, g_test_get_path());
+        gupnp_service_proxy_action_unref (action);
+        g_object_unref (data.proxy);
+        g_object_unref (rd);
+        g_object_unref (cp);
+        g_object_unref (context);
+
+        // Make sure the source teardown handlers get run so we don't confuse valgrind
+        g_timeout_add (500, (GSourceFunc) delayed_loop_quitter, data.loop);
+        g_main_loop_run (data.loop);
+
+        g_main_loop_unref (data.loop);
+}
+
 int
 main (int argc, char *argv[]) {
     g_test_init (&argc, &argv, NULL);
@@ -938,6 +1006,7 @@ main (int argc, char *argv[]) {
     g_test_add_func ("/bugs/ggo/58", test_ggo_58);
     g_test_add_func ("/bugs/ggo/42", test_ggo_42);
     g_test_add_func ("/bugs/ggo/63", test_ggo_63);
+    g_test_add_func ("/bugs/ggo/60", test_ggo_60_no_crash);
 
     return g_test_run ();
 }
