@@ -752,22 +752,15 @@ action_task_got_response (SoupSession *session,
                         GUPNP_SERVER_ERROR,
                         GUPNP_SERVER_ERROR_OTHER,
                         "Server does not allow any POST messages");
-        }
-
-        switch (msg->status_code) {
-        case SOUP_STATUS_CANCELLED:
+        } else if (msg->status_code == SOUP_STATUS_CANCELLED) {
                 g_task_return_new_error (task,
                                          G_IO_ERROR,
                                          G_IO_ERROR_CANCELLED,
                                          "Action message was cancelled");
-                break;
-        default:
+        } else {
                 g_task_return_pointer (task,
                                        g_task_get_task_data (task),
                                        NULL);
-
-
-                break;
         }
 
         g_object_unref (task);
