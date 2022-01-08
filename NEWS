@@ -1,3 +1,29 @@
+1.4.2 (stable)
+=====
+
+- Context: Fix a memory leak if ACL was used
+- Doc: Add missing ContextFilter description
+- RootDevice: Deprecate get_relative_location call
+- Service: Declare _valist functions deprecated
+- ServiceProxyAction: add _set() to the public API
+- RootDevice, Device & Service: Fix use-after-free if Service lives
+  longer than RootDevice
+- ServiceAction: Deprecate _return() call
+- ControlPoint: Deprecate get_context() call
+- ServiceProxy: Fix re-queueing the message if POST fails
+- ServiceProxy: Fix double-free on ProxyAction
+- Doc: Add note regarding ACL and host_path()
+- Doc: Add note regarding error handling of call API
+
+Bugs fixed in this release:
+ - https://gitlab.gnome.org/GNOME/gupnp/issues/42
+ - https://gitlab.gnome.org/GNOME/gupnp/issues/42
+ - https://gitlab.gnome.org/GNOME/gupnp/issues/63
+ - https://gitlab.gnome.org/GNOME/gupnp/issues/60
+
+All contributors to this release:
+ - Jens Georg <mail@jensge.org>
+
 1.4.1 (stable)
 =====
 
