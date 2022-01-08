@@ -775,7 +775,7 @@ action_task_got_response (SoupSession *session,
 
                 g_task_return_pointer (task,
                                        g_task_get_task_data (task),
-                                       (GDestroyNotify) gupnp_service_proxy_action_unref);
+                                       NULL);
 
                 g_object_unref (task);
 
