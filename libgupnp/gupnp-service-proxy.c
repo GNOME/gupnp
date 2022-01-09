@@ -746,18 +746,18 @@ action_task_got_response (SoupSession *session,
                 action->cancellable_connection_id = 0;
         }
 
-        if (SOUP_STATUS_IS_TRANSPORT_ERROR (msg->status_code)) {
-                g_task_return_new_error (
-                        task,
-                        GUPNP_SERVER_ERROR,
-                        GUPNP_SERVER_ERROR_OTHER,
-                        "Server does not allow any POST messages");
-        } else if (msg->status_code == SOUP_STATUS_CANCELLED) {
+        if (msg->status_code == SOUP_STATUS_CANCELLED) {
                 g_task_return_new_error (task,
                                          G_IO_ERROR,
                                          G_IO_ERROR_CANCELLED,
                                          "Action message was cancelled");
-        } else {
+        } else if (SOUP_STATUS_IS_TRANSPORT_ERROR (msg->status_code)) {
+                g_task_return_new_error (task,
+                                         GUPNP_SERVER_ERROR,
+                                         GUPNP_SERVER_ERROR_OTHER,
+                                         "%s",
+                                         msg->reason_phrase);
+        } else  {
                 g_task_return_pointer (task,
                                        g_task_get_task_data (task),
                                        NULL);
