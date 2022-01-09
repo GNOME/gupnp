@@ -724,6 +724,15 @@ load_description (GUPnPControlPoint *control_point,
                 data->timeout = timeout;
                 local_description = gupnp_context_rewrite_uri (context,
                                                                description_url);
+                if (local_description == NULL) {
+                        g_warning ("Invalid description URL: %s",
+                                   description_url);
+
+                        g_slice_free (GetDescriptionURLData, data);
+
+                        return;
+                }
+
                 data->message = soup_message_new (SOUP_METHOD_GET,
                                                   local_description);
                 g_free (local_description);
