@@ -912,34 +912,41 @@ subscription_server_handler (G_GNUC_UNUSED SoupServer *server,
 }
 
 static void
-got_introspection (GUPnPServiceInfo          *info,
-                   GUPnPServiceIntrospection *introspection,
-                   const GError              *error,
+got_introspection (GObject          *source,
+                   GAsyncResult *res,
                    G_GNUC_UNUSED gpointer     user_data)
 {
-        GUPnPService *service = GUPNP_SERVICE (info);
+        GError *error = NULL;
+        GUPnPServicePrivate *priv =
+                gupnp_service_get_instance_private (GUPNP_SERVICE (source));
         const GList *state_variables, *l;
         GHashTableIter iter;
         gpointer data;
-        GUPnPServicePrivate *priv;
 
-        priv = gupnp_service_get_instance_private (service);
+        priv->introspection = gupnp_service_info_introspect_finish (
+                GUPNP_SERVICE_INFO (source),
+                res,
+                &error);
 
-        if (introspection) {
+        if (error != NULL) {
+                g_warning ("Failed to get SCPD: %s\n"
+                           "The initial event message will not be sent.",
+                           error->message);
+                g_clear_error (&error);
+        } else {
                 /* Handle pending auto-connects */
-                priv->introspection  = g_object_ref (introspection);
-
+                g_object_ref (priv->introspection);
                 /* _autoconnect() just calls prepend() so we reverse the list
                  * here.
                  */
                 priv->pending_autoconnect =
-                            g_list_reverse (priv->pending_autoconnect);
+                        g_list_reverse (priv->pending_autoconnect);
 
                 /* Re-call _autoconnect(). This will not fill
                  * pending_autoconnect because we set the introspection member
                  * variable before */
                 for (l = priv->pending_autoconnect; l; l = l->next)
-                        gupnp_service_signals_autoconnect (service,
+                        gupnp_service_signals_autoconnect (GUPNP_SERVICE (source),
                                                            l->data,
                                                            NULL);
 
@@ -947,8 +954,8 @@ got_introspection (GUPnPServiceInfo          *info,
                 priv->pending_autoconnect = NULL;
 
                 state_variables =
-                        gupnp_service_introspection_list_state_variables
-                                (introspection);
+                        gupnp_service_introspection_list_state_variables (
+                                priv->introspection);
 
                 for (l = state_variables; l; l = l->next) {
                         GUPnPServiceStateVariableInfo *variable;
@@ -963,11 +970,8 @@ got_introspection (GUPnPServiceInfo          *info,
                                                 g_strdup (variable->name));
                 }
 
-                g_object_unref (introspection);
-        } else
-                g_warning ("Failed to get SCPD: %s\n"
-                           "The initial event message will not be sent.",
-                           error ? error->message : "No error");
+                g_object_unref (priv->introspection);
+        }
 
         g_hash_table_iter_init (&iter, priv->subscriptions);
 
@@ -1015,9 +1019,10 @@ gupnp_service_constructed (GObject *object)
         info = GUPNP_SERVICE_INFO (object);
 
         /* Get introspection and save state variable names */
-        gupnp_service_info_get_introspection_async (info,
-                                                    got_introspection,
-                                                    NULL);
+        gupnp_service_info_introspect_async (info,
+                                             NULL,
+                                             got_introspection,
+                                             NULL);
 
         /* Get server */
         context = gupnp_service_info_get_context (info);

@@ -185,22 +185,26 @@ print_state_variables (GUPnPServiceIntrospection *introspection)
 }
 
 static void
-got_introspection (GUPnPServiceInfo          *info,
-                   GUPnPServiceIntrospection *introspection,
-                   const GError              *error,
+got_introspection (GObject           *source,
+                   GAsyncResult *res,
                    G_GNUC_UNUSED gpointer     user_data)
 {
+        GError *error = NULL;
+        GUPnPServiceIntrospection *introspection =
+                gupnp_service_info_introspect_finish (GUPNP_SERVICE_INFO (GUPNP_SERVICE_INFO (source)),
+                                                      res,
+                                                      &error);
         if (error) {
                 g_warning ("Failed to create introspection for '%s': %s",
-                           gupnp_service_info_get_udn (info),
+                           gupnp_service_info_get_udn (GUPNP_SERVICE_INFO (source)),
                            error->message);
 
                 return;
         }
 
         g_print ("service:  %s\nlocation: %s\n",
-                gupnp_service_info_get_udn (info),
-                gupnp_service_info_get_location (info));
+                 gupnp_service_info_get_udn (GUPNP_SERVICE_INFO (source)),
+                gupnp_service_info_get_location (GUPNP_SERVICE_INFO (source)));
         print_actions (introspection);
         print_state_variables (introspection);
         g_object_unref (introspection);
@@ -214,10 +218,10 @@ service_proxy_available_cb (G_GNUC_UNUSED GUPnPControlPoint *cp,
 
         info = GUPNP_SERVICE_INFO (proxy);
 
-        gupnp_service_info_get_introspection_async_full (info,
-                                                         got_introspection,
-                                                         cancellable,
-                                                         NULL);
+        gupnp_service_info_introspect_async (info,
+                                             cancellable,
+                                             got_introspection,
+                                             NULL);
 }
 
 static void

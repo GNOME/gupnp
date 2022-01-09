@@ -37,8 +37,7 @@ struct _GUPnPServiceInfoPrivate {
 
         xmlNode *element;
 
-        /* For async downloads */
-        GList *pending_gets;
+        GCancellable *pending_downloads_cancellable;
 };
 
 typedef struct _GUPnPServiceInfoPrivate GUPnPServiceInfoPrivate;
@@ -66,31 +65,13 @@ enum {
         PROP_ELEMENT
 };
 
-typedef struct {
-        GUPnPServiceInfo                 *info;
-
-        GUPnPServiceIntrospectionCallback callback;
-        gpointer                          user_data;
-
-        GCancellable                     *cancellable;
-        gulong                            cancelled_id;
-
-        SoupMessage                      *message;
-        GError                           *error;
-} GetSCPDURLData;
-
-static void
-get_scpd_url_data_free (GetSCPDURLData *data)
-{
-        g_clear_object (&data->cancellable);
-        g_clear_object (&data->message);
-
-        g_slice_free (GetSCPDURLData, data);
-}
-
 static void
 gupnp_service_info_init (GUPnPServiceInfo *info)
 {
+        GUPnPServiceInfoPrivate *priv;
+        priv = gupnp_service_info_get_instance_private (info);
+
+        priv->pending_downloads_cancellable = g_cancellable_new ();
 }
 
 static void
@@ -178,37 +159,11 @@ gupnp_service_info_dispose (GObject *object)
         priv = gupnp_service_info_get_instance_private (info);
 
         /* Cancel any pending SCPD GETs */
-        if (priv->context) {
-                // SoupSession *session;
-
-                // session = gupnp_context_get_session (priv->context);
-
-                while (priv->pending_gets) {
-                        GetSCPDURLData *data;
-
-                        data = priv->pending_gets->data;
-
-                        if (data->cancellable)
-                                g_cancellable_disconnect (data->cancellable,
-                                                          data->cancelled_id);
-
-                        /*
-                        soup_session_cancel_message (session,
-                                                     data->message,
-                                                     SOUP_STATUS_CANCELLED);
-                       */
-
-                        get_scpd_url_data_free (data);
-
-                        priv->pending_gets =
-                                g_list_delete_link (priv->pending_gets,
-                                                    priv->pending_gets);
-                }
-
-                /* Unref context */
-                g_clear_object (&priv->context);
+        if (!g_cancellable_is_cancelled (priv->pending_downloads_cancellable)) {
+                g_cancellable_cancel (priv->pending_downloads_cancellable);
         }
 
+        g_clear_object (&priv->context);
         g_clear_object (&priv->doc);
 
         G_OBJECT_CLASS (gupnp_service_info_parent_class)->dispose (object);
@@ -223,6 +178,7 @@ gupnp_service_info_finalize (GObject *object)
         info = GUPNP_SERVICE_INFO (object);
         priv = gupnp_service_info_get_instance_private (info);
 
+        g_clear_object (&priv->pending_downloads_cancellable);
         g_free (priv->location);
         g_free (priv->udn);
         g_free (priv->service_type);
@@ -569,257 +525,64 @@ gupnp_service_info_get_event_subscription_url (GUPnPServiceInfo *info)
                                                        priv->url_base);
 }
 
-/*
- * SCPD URL downloaded.
- */
 static void
-got_scpd_url (GObject *source, GAsyncResult *res, GetSCPDURLData *data)
+get_scpd_document_finished (GObject *source,
+                            GAsyncResult *res,
+                            gpointer user_data)
 {
-        GUPnPServiceIntrospection *introspection;
-        GError *error;
-        GUPnPServiceInfoPrivate *priv;
+        GError *error = NULL;
+        GTask *task = G_TASK (user_data);
 
-        introspection = NULL;
-        error = NULL;
+        GBytes *bytes =
+                soup_session_send_and_read_finish (SOUP_SESSION (source),
+                                                   res,
+                                                   &error);
 
-        GBytes *body = soup_session_send_and_read_finish (SOUP_SESSION (source),
-                                                          res,
-                                                          &error);
+        if (error != NULL) {
+                g_task_return_error (task, error);
 
-        SoupStatus status = soup_message_get_status (data->message);
+                goto out;
+        }
 
-        if (g_error_matches (error, G_IO_ERROR, G_IO_ERROR_CANCELLED))
-                return;
+        SoupMessage *message =
+                soup_session_get_async_result_message (SOUP_SESSION (source),
+                                                       res);
+        if (!SOUP_STATUS_IS_SUCCESSFUL (soup_message_get_status (message))) {
+                g_task_return_error (task,
+                                     _gupnp_error_new_server_error (message));
 
-        if (SOUP_STATUS_IS_SUCCESSFUL (status)) {
-                xmlDoc *scpd;
-                gsize length;
+                goto out;
+        }
 
-                gconstpointer data = g_bytes_get_data (body, &length);
-
-                scpd = xmlRecoverMemory (data, length);
-                if (scpd) {
-                        introspection = gupnp_service_introspection_new (scpd, NULL);
-
-                        xmlFreeDoc (scpd);
-                }
-
-                if (!introspection) {
-                        error = g_error_new
-                                        (GUPNP_SERVER_ERROR,
+        gsize length;
+        gconstpointer data = g_bytes_get_data (bytes, &length);
+        xmlDoc *scpd = NULL;
+        scpd = xmlRecoverMemory (data, length);
+        if (scpd == NULL) {
+                g_task_return_new_error (task,
+                                         GUPNP_SERVER_ERROR,
                                          GUPNP_SERVER_ERROR_INVALID_RESPONSE,
                                          "Could not parse SCPD");
-                }
-        } else
-                error = _gupnp_error_new_server_error (data->message);
 
-        /* prevent the callback from canceling the cancellable
-         * (and so freeing data just before we do) */
-        if (data->cancellable)
-                g_cancellable_disconnect (data->cancellable,
-                                          data->cancelled_id);
-
-        priv = gupnp_service_info_get_instance_private (data->info);
-        priv->pending_gets = g_list_remove (priv->pending_gets, data);
-
-        data->callback (data->info, introspection, error, data->user_data);
-
-        g_clear_error (&error);
-        g_clear_pointer (&body, g_bytes_unref);
-
-        get_scpd_url_data_free (data);
-}
-
-static void
-cancellable_cancelled_cb (GCancellable *cancellable,
-                          gpointer user_data)
-{
-        GUPnPServiceInfo *info;
-        GetSCPDURLData *data;
-        // SoupSession *session;
-        GError *error;
-        GUPnPServiceInfoPrivate *priv;
-
-        data = user_data;
-        info = data->info;
-
-        priv = gupnp_service_info_get_instance_private (info);
-
-        /*
-        FIXME: Should have been part of the cancellable
-        session = gupnp_context_get_session (priv->context);
-        soup_session_cancel_message (session,
-                                     data->message,
-                                     SOUP_STATUS_CANCELLED);
-                                     */
-
-        priv->pending_gets = g_list_remove (priv->pending_gets, data);
-
-        error = g_error_new (G_IO_ERROR,
-                             G_IO_ERROR_CANCELLED,
-                             "The call was canceled");
-
-        data->callback (data->info,
-                        NULL,
-                        error,
-                        data->user_data);
-
-        get_scpd_url_data_free (data);
-}
-
-static gboolean
-introspection_error_cb (gpointer user_data)
-{
-        GetSCPDURLData *data = (GetSCPDURLData *)user_data;
-
-        data->callback (data->info, NULL, data->error, data->user_data);
-        g_error_free (data->error);
-        g_slice_free (GetSCPDURLData, data);
-
-        return FALSE;
-}
-
-/**
- * gupnp_service_info_get_introspection_async:
- * @info: A #GUPnPServiceInfo
- * @callback: (scope async) : callback to be called when introspection object is ready.
- * @user_data: user_data to be passed to the callback.
- *
- * Note that introspection object is created from the information in service
- * description document (SCPD) provided by the service so it can not be created
- * if the service does not provide a SCPD.
- * Deprecated: 1.16.0. Use gupnp_service_info_introspect_async() instead.
- **/
-G_DEPRECATED_FOR (gupnp_service_info_introspect_async)
-void
-gupnp_service_info_get_introspection_async
-                                (GUPnPServiceInfo                 *info,
-                                 GUPnPServiceIntrospectionCallback callback,
-                                 gpointer                          user_data)
-{
-        gupnp_service_info_get_introspection_async_full (info,
-                                                         callback,
-                                                         NULL,
-                                                         user_data);
-}
-
-/**
- * gupnp_service_info_get_introspection_async_full:
- * @info: A #GUPnPServiceInfo
- * @callback: (scope async) : callback to be called when introspection object is ready.
- * @cancellable: (nullable): GCancellable that can be used to cancel the call.
- * @user_data: user_data to be passed to the callback.
- *
- * Note that introspection object is created from the information in service
- * description document (SCPD) provided by the service so it can not be created
- * if the service does not provide a SCPD.
- *
- * If @cancellable is used to cancel the call, @callback will be called with
- * error code %G_IO_ERROR_CANCELLED.
- *
- * Since: 0.20.9
- * Deprecated: 1.16.0. Use gupnp_service_info_introspecct_async() instead.
- **/
-G_DEPRECATED_FOR (gupnp_service_info_introspect_async)
-void
-gupnp_service_info_get_introspection_async_full
-                                (GUPnPServiceInfo                 *info,
-                                 GUPnPServiceIntrospectionCallback callback,
-                                 GCancellable                     *cancellable,
-                                 gpointer                          user_data)
-{
-        GetSCPDURLData *data;
-        char *scpd_url;
-        SoupSession *session;
-        GUPnPServiceInfoPrivate *priv;
-
-        g_return_if_fail (GUPNP_IS_SERVICE_INFO (info));
-        g_return_if_fail (callback != NULL);
-
-        data = g_slice_new (GetSCPDURLData);
-
-        scpd_url = gupnp_service_info_get_scpd_url (info);
-
-        data->message = NULL;
-        if (scpd_url != NULL) {
-                GUPnPContext *context = NULL;
-                char *local_scpd_url = NULL;
-
-                context = gupnp_service_info_get_context (info);
-
-                local_scpd_url = gupnp_context_rewrite_uri (context, scpd_url);
-                g_free (scpd_url);
-
-                data->message = soup_message_new (SOUP_METHOD_GET,
-                                                  local_scpd_url);
-                g_free (local_scpd_url);
+                goto out;
         }
 
-        data->info      = info;
-        data->callback  = callback;
-        data->user_data = user_data;
+        GUPnPServiceIntrospection *introspection =
+                gupnp_service_introspection_new (scpd, &error);
 
-        if (data->message == NULL) {
-                GError *error;
-                GSource *idle_source;
-
-                error = g_error_new
-                                (GUPNP_SERVER_ERROR,
-                                 GUPNP_SERVER_ERROR_INVALID_URL,
-                                 "No valid SCPD URL defined");
-                data->error = error;
-
-                idle_source = g_idle_source_new ();
-                g_source_set_callback (idle_source,
-                                       introspection_error_cb,
-                                       data, NULL);
-                g_source_attach (idle_source,
-                                 g_main_context_get_thread_default ());
-
-                return;
-        }
-
-
-        /* Send off the message */
-        priv = gupnp_service_info_get_instance_private (info);
-        priv->pending_gets = g_list_prepend (priv->pending_gets, data);
-
-        session = gupnp_context_get_session (priv->context);
-
-        soup_session_send_and_read_async (session,
-                                          data->message,
-                                          G_PRIORITY_DEFAULT,
-                                          cancellable,
-                                          (GAsyncReadyCallback) got_scpd_url,
-                                          data);
-
-        data->cancellable = cancellable;
-        if (data->cancellable) {
-                g_object_ref (cancellable);
-                data->cancelled_id = g_cancellable_connect
-                                (data->cancellable,
-                                 G_CALLBACK (cancellable_cancelled_cb),
-                                 data,
-                                 NULL);
-        }
-}
-
-static void
-prv_introspection_cb (GUPnPServiceInfo *info,
-                      GUPnPServiceIntrospection *introspection,
-                      const GError *error,
-                      gpointer user_data)
-{
         if (error != NULL) {
-                g_task_return_error (G_TASK (user_data),
-                                     g_error_copy (error));
-        } else {
-                g_task_return_pointer (G_TASK (user_data),
-                                       introspection,
-                                       g_object_unref);
+                g_task_return_error (task, error);
+
+                goto out;
         }
 
-        g_object_unref (G_OBJECT (user_data));
+        g_task_return_pointer (task, introspection, g_object_unref);
+
+out:
+        g_clear_pointer (&scpd, xmlFreeDoc);
+        g_clear_pointer (&bytes, g_bytes_unref);
+        g_clear_error (&error);
+        g_object_unref (task);
 }
 
 /**
@@ -847,12 +610,52 @@ gupnp_service_info_introspect_async           (GUPnPServiceInfo    *info,
         GTask *task = g_task_new (info, cancellable, callback, user_data);
         g_task_set_name (task, "UPnP service introspection");
 
-        G_GNUC_BEGIN_IGNORE_DEPRECATIONS
-        gupnp_service_info_get_introspection_async_full (info,
-                                                         prv_introspection_cb,
-                                                         cancellable,
-                                                         task);
-        G_GNUC_END_IGNORE_DEPRECATIONS
+        char *scpd_url = gupnp_service_info_get_scpd_url (info);
+        if (scpd_url == NULL) {
+                g_task_return_new_error (task,
+                                         GUPNP_SERVER_ERROR,
+                                         GUPNP_SERVER_ERROR_INVALID_URL,
+                                         "%s",
+                                         "No valid SCPD URL defined");
+                g_object_unref (task);
+
+                return;
+        }
+
+
+        SoupMessage *message = soup_message_new (SOUP_METHOD_GET, scpd_url);
+        g_free (scpd_url);
+        if (message == NULL) {
+                g_task_return_new_error (task,
+                                         GUPNP_SERVER_ERROR,
+                                         GUPNP_SERVER_ERROR_INVALID_URL,
+                                         "%s",
+                                         "No valid SCPD URL defined");
+                g_object_unref (task);
+
+                return;
+        }
+
+        GCancellable *internal_cancellable = g_cancellable_new ();
+        if (cancellable != NULL) {
+                g_cancellable_connect (cancellable,
+                                       G_CALLBACK (g_cancellable_cancel),
+                                       internal_cancellable,
+                                       NULL);
+        }
+
+        /* Send off the message */
+        GUPnPServiceInfoPrivate *priv =
+                gupnp_service_info_get_instance_private (info);
+        soup_session_send_and_read_async (
+                gupnp_context_get_session (priv->context),
+                message,
+                G_PRIORITY_DEFAULT,
+                internal_cancellable,
+                get_scpd_document_finished,
+                task);
+        g_object_unref (message);
+        g_object_unref (internal_cancellable);
 }
 
 /**

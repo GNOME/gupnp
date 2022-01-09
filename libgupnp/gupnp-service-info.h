@@ -77,19 +77,6 @@ char *
 gupnp_service_info_get_event_subscription_url (GUPnPServiceInfo *info);
 
 void
-gupnp_service_info_get_introspection_async
-                              (GUPnPServiceInfo                 *info,
-                               GUPnPServiceIntrospectionCallback callback,
-                               gpointer                          user_data);
-
-void
-gupnp_service_info_get_introspection_async_full
-                              (GUPnPServiceInfo                 *info,
-                               GUPnPServiceIntrospectionCallback callback,
-                               GCancellable                     *cancellable,
-                               gpointer                          user_data);
-
-void
 gupnp_service_info_introspect_async           (GUPnPServiceInfo    *info,
                                                GCancellable        *cancellable,
                                                GAsyncReadyCallback  callback,
