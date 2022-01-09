@@ -174,11 +174,26 @@ test_on_timeout (gpointer user_data)
 static void
 test_run_loop (GMainLoop *loop, const char *name)
 {
-    guint timeout_id = 0;
+        guint timeout_id = 0;
+        int timeout = 2;
 
-    timeout_id = g_timeout_add_seconds (2, test_on_timeout, (gpointer) name);
-    g_main_loop_run (loop);
-    g_source_remove (timeout_id);
+        const char *timeout_str = g_getenv ("GUPNP_TEST_TIMEOUT");
+        if (timeout_str != NULL) {
+                long t = atol (timeout_str);
+                if (t != 0)
+                        timeout = t;
+        }
+
+        timeout_id = g_timeout_add_seconds (timeout, test_on_timeout, NULL);
+        g_main_loop_run (loop);
+        g_source_remove (timeout_id);
+}
+
+static gboolean
+delayed_loop_quitter (gpointer user_data)
+{
+        g_main_loop_quit (user_data);
+        return G_SOURCE_REMOVE;
 }
 
 /* Test if a call on a service proxy keeps argument order */
@@ -186,6 +201,7 @@ static void
 test_bgo_696762 (void)
 {
     GUPnPContext *context = NULL;
+    GUPnPContext *server_context = NULL;
     GError *error = NULL;
     GUPnPControlPoint *cp = NULL;
     GUPnPRootDevice *rd;
@@ -198,6 +214,10 @@ test_bgo_696762 (void)
     g_assert_no_error (error);
     g_assert (context != NULL);
 
+    server_context = create_context (0, &error);
+    g_assert_no_error (error);
+    g_assert (server_context != NULL);
+
     cp = gupnp_control_point_new (context,
                                   "urn:test-gupnp-org:service:TestService:1");
 
@@ -209,7 +229,7 @@ test_bgo_696762 (void)
                       &data);
 
 
-    rd = gupnp_root_device_new (context, "TestDevice.xml", DATA_PATH, &error);
+    rd = gupnp_root_device_new (server_context, "TestDevice.xml", DATA_PATH, &error);
     g_assert_no_error (error);
     g_assert (rd != NULL);
     gupnp_root_device_set_available (rd, TRUE);
@@ -224,26 +244,50 @@ test_bgo_696762 (void)
     g_assert (data.proxy != NULL);
 
     G_GNUC_BEGIN_IGNORE_DEPRECATIONS
-    gupnp_service_proxy_begin_action (data.proxy,
-                                      "Browse",
-                                      test_bgo_696762_on_browse,
-                                      &data,
-                                      "ObjectID", G_TYPE_STRING, "0",
-                                      "BrowseFlag", G_TYPE_STRING, "BrowseDirectChildren",
-                                      "Filter", G_TYPE_STRING, "res,dc:date,res@size",
-                                      "StartingIndex", G_TYPE_UINT, 0,
-                                      "RequestedCount", G_TYPE_UINT, 0,
-                                      "SortCriteria", G_TYPE_STRING, "",
-                                      NULL);
+    GUPnPServiceProxyAction *a =
+            gupnp_service_proxy_begin_action (data.proxy,
+                                              "Browse",
+                                              test_bgo_696762_on_browse,
+                                              &data,
+                                              "ObjectID",
+                                              G_TYPE_STRING,
+                                              "0",
+                                              "BrowseFlag",
+                                              G_TYPE_STRING,
+                                              "BrowseDirectChildren",
+                                              "Filter",
+                                              G_TYPE_STRING,
+                                              "res,dc:date,res@size",
+                                              "StartingIndex",
+                                              G_TYPE_UINT,
+                                              0,
+                                              "RequestedCount",
+                                              G_TYPE_UINT,
+                                              0,
+                                              "SortCriteria",
+                                              G_TYPE_STRING,
+                                              "",
+                                              NULL);
     G_GNUC_END_IGNORE_DEPRECATIONS
 
     test_run_loop (data.loop, g_test_get_path ());
 
-    g_main_loop_unref (data.loop);
+    gupnp_service_proxy_action_unref (a);
+
+    // tear-down
+    g_object_unref (info);
     g_object_unref (data.proxy);
+
     g_object_unref (cp);
     g_object_unref (rd);
+    g_object_unref (server_context);
     g_object_unref (context);
+
+    // Make sure the source teardown handlers get run so we don't confuse valgrind
+    g_timeout_add (500, (GSourceFunc) delayed_loop_quitter, data.loop);
+    g_main_loop_run (data.loop);
+
+    g_main_loop_unref (data.loop);
 }
 
 /* Test that proxies created by ResourceFactory are of the GType
@@ -299,11 +343,20 @@ test_bgo_678701 (void)
                                           "urn:test-gupnp-org:device:TestSubDevice:1");
     g_assert_cmpstr(G_OBJECT_TYPE_NAME (dev_info), ==, "TestBgo678701Device");
 
-    g_main_loop_unref (data.loop);
     g_object_unref (data.proxy);
     g_object_unref (cp);
+    g_object_unref (info);
+    g_object_unref (dev_info);
     g_object_unref (rd);
     g_object_unref (context);
+
+
+    // Make sure the source teardown handlers get run so we don't confuse valgrind
+    g_timeout_add (500, (GSourceFunc) delayed_loop_quitter, data.loop);
+    g_main_loop_run (data.loop);
+
+    g_main_loop_unref (data.loop);
+
 }
 
 /* Test that removing a notify-callback from the callback itself works
@@ -360,12 +413,17 @@ test_bgo_690400 (void)
 
     test_run_loop (data.loop, "690400 - waiting for event");
 
-    g_main_loop_unref (data.loop);
     g_object_unref (data.proxy);
     g_object_unref (cp);
     g_object_unref (service);
     g_object_unref (rd);
     g_object_unref (context);
+
+    // Make sure the source teardown handlers get run so we don't confuse valgrind
+    g_timeout_add (500, (GSourceFunc) delayed_loop_quitter, data.loop);
+    g_main_loop_run (data.loop);
+
+    g_main_loop_unref (data.loop);
 }
 
 /* Test that correct icons are returned for various size requests.
@@ -658,6 +716,10 @@ test_ggo_58 ()
         g_object_unref (rd);
         g_object_unref (context);
 
+        // Make sure the source teardown handlers get run so we don't confuse valgrind
+        g_timeout_add (500, (GSourceFunc) delayed_loop_quitter, data.loop);
+        g_main_loop_run (data.loop);
+
         g_main_loop_unref (data.loop);
 }
 
@@ -684,8 +746,24 @@ test_ggo_42 ()
                 GUPNP_DEVICE_INFO (rd),
                 "urn:test-gupnp-org:service:TestService:1");
 
+        GMainLoop *loop = g_main_loop_new (NULL, FALSE);
         g_object_unref (rd);
+        g_timeout_add (500, (GSourceFunc) delayed_loop_quitter, loop);
+        g_main_loop_run (loop);
+
         g_object_unref (info);
+
+        // Make sure the source teardown handlers get run so we don't confuse valgrind
+        g_timeout_add (500, (GSourceFunc) delayed_loop_quitter, loop);
+        g_main_loop_run (loop);
+
+        g_object_unref (context);
+
+        // Make sure the source teardown handlers get run so we don't confuse valgrind
+        g_timeout_add (500, (GSourceFunc) delayed_loop_quitter, loop);
+        g_main_loop_run (loop);
+
+        g_main_loop_unref (loop);
 }
 
 void
@@ -839,6 +917,12 @@ test_ggo_63 ()
         g_object_unref (cp);
         g_object_unref (rg);
         g_object_unref (context);
+
+
+        // Make sure the source teardown handlers get run so we don't confuse valgrind
+        g_timeout_add (500, (GSourceFunc) delayed_loop_quitter, d.loop);
+        g_main_loop_run (d.loop);
+
         g_main_loop_unref (d.loop);
 }
 
