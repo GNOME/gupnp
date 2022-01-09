@@ -2010,15 +2010,6 @@ subscribe (GUPnPServiceProxy *proxy)
                                           data);
 }
 
-static void
-soup_message_dont_care_for_result (GObject *source,
-                                   GAsyncResult *res,
-                                   gpointer user_data)
-{
-        GInputStream *s =
-                soup_session_send_finish (SOUP_SESSION (source), res, NULL);
-        g_clear_object (&s);
-}
 /*
  * Unsubscribe from this service.
  */
@@ -2061,13 +2052,15 @@ unsubscribe (GUPnPServiceProxy *proxy)
                         /* And queue it */
                         session = gupnp_context_get_session (context);
 
+                        // We do not care about the result of that message
                         soup_session_send_async (
                                 session,
                                 msg,
                                 G_PRIORITY_DEFAULT,
                                 NULL,
-                                soup_message_dont_care_for_result,
+                                NULL,
                                 NULL);
+                        g_object_unref (msg);
                 }
 
                 /* Reset SID */
