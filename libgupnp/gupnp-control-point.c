@@ -74,6 +74,7 @@ typedef struct {
 
         SoupMessage *message;
         GSource *timeout_source;
+        GCancellable *cancellable;
         int tries;
         int timeout;
 } GetDescriptionURLData;
@@ -86,29 +87,21 @@ static void
 get_description_url_data_free (GetDescriptionURLData *data)
 {
         gupnp_control_point_remove_pending_get (data->control_point, data);
-        if (data->message) {
-#if 0
-                GUPnPContext *context;
-                SoupSession *session;
-
-
-                context = gupnp_control_point_get_context (data->control_point);
-                session = gupnp_context_get_session (context);
-
-                soup_session_cancel_message (session,
-                                             data->message,
-                                             SOUP_STATUS_CANCELLED);
-#endif
-        }
 
         if (data->timeout_source) {
                 g_source_destroy (data->timeout_source);
                 g_source_unref (data->timeout_source);
         }
 
+        /* Cancel any pending description file GETs */
+        if (!g_cancellable_is_cancelled (data->cancellable)) {
+                g_cancellable_cancel (data->cancellable);
+        }
+
         g_free (data->udn);
         g_free (data->service_type);
         g_free (data->description_url);
+        g_object_unref (data->control_point);
 
         g_slice_free (GetDescriptionURLData, data);
 }
@@ -197,10 +190,7 @@ gupnp_control_point_dispose (GObject *object)
 
         gssdp_resource_browser_set_active (browser, FALSE);
 
-        if (priv->factory) {
-                g_object_unref (priv->factory);
-                priv->factory = NULL;
-        }
+        g_clear_object (&priv->factory);
 
         /* Cancel any pending description file GETs */
         while (priv->pending_gets) {
@@ -587,7 +577,9 @@ got_description_url (GObject *source,
         GUPnPXMLDoc *doc;
         GUPnPControlPointPrivate *priv;
         GError *error = NULL;
-        SoupMessage *message = data->message;
+        SoupMessage *message =
+                soup_session_get_async_result_message (SOUP_SESSION (source),
+                                                       res);
 
         GBytes *body = soup_session_send_and_read_finish (SOUP_SESSION (source),
                                                           res,
@@ -596,9 +588,10 @@ got_description_url (GObject *source,
         if (g_error_matches (error, G_IO_ERROR, G_IO_ERROR_CANCELLED))
                 goto out;
 
-        // FIXME: What to do on other errors...
+        // FIXME: This needs better handling
+        if (error != NULL)
+                g_assert_not_reached ();
 
-        data->message = NULL;
         priv = gupnp_control_point_get_instance_private (data->control_point);
 
         /* Now, make sure again this document is not already cached. If it is,
@@ -611,8 +604,6 @@ got_description_url (GObject *source,
                                     data->udn,
                                     data->service_type,
                                     data->description_url);
-
-                get_description_url_data_free (data);
 
                 goto out;
         }
@@ -652,7 +643,6 @@ got_description_url (GObject *source,
                 } else
                         g_warning ("Failed to parse %s", data->description_url);
 
-                get_description_url_data_free (data);
         } else {
                 GMainContext *async_context =
                         g_main_context_get_thread_default ();
@@ -675,12 +665,15 @@ got_description_url (GObject *source,
                                                NULL);
                         g_source_attach (data->timeout_source, async_context);
                         data->timeout <<= 1;
+                        return;
                 } else {
                         g_warning ("Maximum number of retries failed, not trying again");
                 }
         }
 
 out:
+        g_clear_error (&error);
+        get_description_url_data_free (data);
         g_bytes_unref (body);
         g_object_unref (message);
 }
@@ -746,13 +739,12 @@ load_description (GUPnPControlPoint *control_point,
 
                 http_request_set_accept_language (data->message);
 
-                data->control_point   = control_point;
-
+                data->control_point = g_object_ref (control_point);
+                data->cancellable = g_cancellable_new ();
                 data->udn             = g_strdup (udn);
                 data->service_type    = g_strdup (service_type);
                 data->description_url = g_strdup (description_url);
                 data->timeout_source  = NULL;
-
                 priv->pending_gets = g_list_prepend (priv->pending_gets,
                                                      data);
 
@@ -760,7 +752,7 @@ load_description (GUPnPControlPoint *control_point,
                         session,
                         data->message,
                         G_PRIORITY_DEFAULT,
-                        NULL,
+                        data->cancellable,
                         (GAsyncReadyCallback) got_description_url,
                         data);
         }
@@ -964,7 +956,8 @@ gupnp_control_point_resource_unavailable
                                                   service_type);
 
         if (get_data) {
-                get_description_url_data_free (get_data);
+                if (!g_cancellable_is_cancelled (get_data->cancellable))
+                        g_cancellable_cancel (get_data->cancellable);
         }
 
         g_free (udn);
