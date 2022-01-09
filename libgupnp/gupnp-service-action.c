@@ -106,9 +106,9 @@ finalize_action (GUPnPServiceAction *action)
         } else {
                 SoupMessageBody *msg_body =
                         soup_server_message_get_response_body (action->msg);
-                soup_message_body_append_bytes (
-                        msg_body,
-                        g_string_free_to_bytes (action->response_str));
+                GBytes *bytes = g_string_free_to_bytes (action->response_str);
+                soup_message_body_append_bytes (msg_body, bytes);
+                g_bytes_unref (bytes);
         }
         action->response_str = NULL;
 
