@@ -1,3 +1,16 @@
+1.4.3 (stable)
+=====
+
+- ServiceProxy: Properly propagate cancelled actions in
+  deprecated calls
+- ServiceProxy: Fix deprecated async calls, again.
+
+Bugs fixed in this release:
+- https://gitlab.gnome.org/GNOME/gupnp/issues/67
+
+All contributors to this release:
+- Jens Georg <mail@jensge.org>
+
 1.4.2 (stable)
 =====
 
