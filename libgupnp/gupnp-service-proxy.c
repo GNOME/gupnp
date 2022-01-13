@@ -539,7 +539,9 @@ on_legacy_async_callback (GObject *source, GAsyncResult *res, gpointer user_data
             !g_error_matches (error, G_IO_ERROR, G_IO_ERROR_CANCELLED)) {
                 if (error != NULL)
                         g_propagate_error (&action->error, error);
-                action->callback (action->proxy, action, action->user_data);
+                // action's proxy will be NULL now due to call_action_finish. So
+                // we use the one from our callback
+                action->callback (GUPNP_SERVICE_PROXY (source), action, action->user_data);
         }
 
         g_clear_error (&error);
