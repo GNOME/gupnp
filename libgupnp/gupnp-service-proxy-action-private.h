@@ -143,8 +143,6 @@ struct _GUPnPServiceProxyAction {
         GCancellable *cancellable;
         gulong cancellable_connection_id;
 
-        // Support for legacy async calls
-        GUPnPServiceProxyActionCallback callback;
         gpointer user_data;
         GError *error; /* If non-NULL, description of error that
                           occurred when preparing message */
