@@ -35,7 +35,9 @@ struct _GUPnPServiceProxyPrivate {
 
         GHashTable *notify_hash;
 
-        GList *pending_messages; /* Pending SoupMessages from this proxy */
+        // GCancellable that is used to all SoupMessages that are neither
+        // notifies nor proxy calls
+        GCancellable *pending_messages;
 
         GList *pending_notifies; /* Pending notifications to be sent (xmlDoc) */
         GSource *notify_idle_src; /* Idle handler src of notification emiter */
@@ -155,6 +157,7 @@ gupnp_service_proxy_init (GUPnPServiceProxy *proxy)
                                        g_str_equal,
                                        g_free,
                                        (GDestroyNotify) notify_data_free);
+        priv->pending_messages = g_cancellable_new ();
 }
 
 static void
@@ -230,22 +233,9 @@ gupnp_service_proxy_dispose (GObject *object)
         }
 
 
-        while (priv->pending_messages) {
-                /*
-                SoupMessage *msg;
-
-                msg = priv->pending_messages->data;
-
-                 * FIXME: Porbably cancelled above...
-                soup_session_cancel_message (session,
-                                             msg,
-                                             SOUP_STATUS_CANCELLED);
-                                             */
-
-                priv->pending_messages =
-                        g_list_delete_link (priv->pending_messages,
-                                            priv->pending_messages);
-        }
+        if (priv->pending_messages)
+                g_cancellable_cancel (priv->pending_messages);
+        g_clear_object (&priv->pending_messages);
 
         /* Cancel pending notifications */
         g_clear_pointer (&priv->notify_idle_src, g_source_destroy);
@@ -1118,22 +1108,18 @@ subscription_expire (gpointer user_data)
         g_free (timeout);
 
         /* And send it off */
-        priv->pending_messages =
-                g_list_prepend (priv->pending_messages, msg);
-
         session = gupnp_context_get_session (context);
 
         SubscriptionCallData *data = g_new0 (SubscriptionCallData, 1);
         data->msg = msg;
         data->proxy = proxy;
 
-        soup_session_send_and_read_async (
-                session,
-                msg,
-                G_PRIORITY_DEFAULT,
-                NULL,
-                (GAsyncReadyCallback) subscribe_got_response,
-                data);
+        soup_session_send_async (session,
+                                 msg,
+                                 G_PRIORITY_DEFAULT,
+                                 priv->pending_messages,
+                                 subscribe_got_response,
+                                 data);
 
         return FALSE;
 }
@@ -1165,9 +1151,6 @@ subscribe_got_response (GObject *source, GAsyncResult *res, gpointer user_data)
                 goto hdr_err;
         }
 
-        /* Remove from pending messages list */
-        priv->pending_messages =
-                g_list_remove (priv->pending_messages, data->msg);
 
         /* Remove subscription timeout */
         g_clear_pointer (&priv->subscription_timeout_src, g_source_destroy);
@@ -1372,9 +1355,6 @@ subscribe (GUPnPServiceProxy *proxy)
                                  NULL);
 
         /* And send our subscription message off */
-        priv->pending_messages =
-                g_list_prepend (priv->pending_messages, msg);
-
         session = gupnp_context_get_session (context);
 
         SubscriptionCallData *data = g_new0 (SubscriptionCallData, 1);
@@ -1385,7 +1365,7 @@ subscribe (GUPnPServiceProxy *proxy)
         soup_session_send_and_read_async (session,
                                           msg,
                                           G_PRIORITY_DEFAULT,
-                                          NULL,
+                                          priv->pending_messages,
                                           subscribe_got_response,
                                           data);
 }
