@@ -431,6 +431,7 @@ action_task_got_response (GObject *source,
 
 
         if (error != NULL) {
+                action->error = g_error_copy (error);
                 g_task_return_error (task, error);
                 g_object_unref (task);
 
