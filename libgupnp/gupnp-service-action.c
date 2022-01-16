@@ -33,6 +33,8 @@ action_dispose (GUPnPServiceAction *action)
         g_object_unref (action->msg);
         g_object_unref (action->context);
         g_object_unref (action->doc);
+        if (action->response_str)
+                g_string_free (action->response_str, TRUE);
 }
 
 void
