@@ -39,7 +39,7 @@ struct _GUPnPServiceProxyPrivate {
         // notifies nor proxy calls
         GCancellable *pending_messages;
 
-        GList *pending_notifies; /* Pending notifications to be sent (xmlDoc) */
+        GQueue *pending_notifies; /* Pending notifications to be sent (xmlDoc) */
         GSource *notify_idle_src; /* Idle handler src of notification emiter */
 };
 typedef struct _GUPnPServiceProxyPrivate GUPnPServiceProxyPrivate;
@@ -157,7 +157,9 @@ gupnp_service_proxy_init (GUPnPServiceProxy *proxy)
                                        g_str_equal,
                                        g_free,
                                        (GDestroyNotify) notify_data_free);
+
         priv->pending_messages = g_cancellable_new ();
+        priv->pending_notifies = g_queue_new ();
 }
 
 static void
@@ -240,9 +242,8 @@ gupnp_service_proxy_dispose (GObject *object)
         /* Cancel pending notifications */
         g_clear_pointer (&priv->notify_idle_src, g_source_destroy);
 
-        g_list_free_full (priv->pending_notifies,
+        g_queue_free_full (g_steal_pointer(&priv->pending_notifies),
                           (GDestroyNotify) emit_notify_data_free);
-        priv->pending_notifies = NULL;
 
         /* Call super */
         object_class = G_OBJECT_CLASS (gupnp_service_proxy_parent_class);
@@ -846,7 +847,7 @@ emit_notifications (gpointer user_data)
                         /* subscription in progress, delay emision! */
                         return TRUE;
 
-        for (pending_notify = priv->pending_notifies;
+        for (pending_notify = priv->pending_notifies->head;
              pending_notify != NULL;
              pending_notify = pending_notify->next) {
                 EmitNotifyData *emit_notify_data;
@@ -880,11 +881,8 @@ emit_notifications (gpointer user_data)
         }
 
         /* Cleanup */
-        g_list_free_full (priv->pending_notifies,
-                          (GDestroyNotify) emit_notify_data_free);
-        priv->pending_notifies = NULL;
-
-        priv->notify_idle_src = NULL;
+        g_queue_clear_full (priv->pending_notifies,
+                            (GDestroyNotify) emit_notify_data_free);
 
         if (resubscribe) {
                 unsubscribe (proxy);
@@ -1022,8 +1020,7 @@ server_handler (G_GNUC_UNUSED SoupServer *soup_server,
          */
         emit_notify_data = emit_notify_data_new (hdr, seq, doc);
 
-        priv->pending_notifies =
-                g_list_append (priv->pending_notifies, emit_notify_data);
+        g_queue_push_tail (priv->pending_notifies, emit_notify_data);
         if (!priv->notify_idle_src) {
                 priv->notify_idle_src = g_idle_source_new();
                 g_source_set_callback (priv->notify_idle_src,
