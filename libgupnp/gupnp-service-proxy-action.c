@@ -234,11 +234,6 @@ gupnp_service_proxy_action_ref (GUPnPServiceProxyAction *action)
 static void
 action_dispose (GUPnPServiceProxyAction *action)
 {
-        if (action->proxy != NULL) {
-                g_object_remove_weak_pointer (G_OBJECT (action->proxy),
-                                (gpointer *)&(action->proxy));
-                gupnp_service_proxy_remove_action (action->proxy, action);
-        }
 
         if (action->cancellable != NULL && action->cancellable_connection_id != 0) {
                 g_cancellable_disconnect (action->cancellable,

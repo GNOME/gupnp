@@ -96,18 +96,6 @@ subscribe (GUPnPServiceProxy *proxy);
 static void
 unsubscribe (GUPnPServiceProxy *proxy);
 
-void
-gupnp_service_proxy_remove_action (GUPnPServiceProxy       *proxy,
-                                   GUPnPServiceProxyAction *action)
-{
-        GUPnPServiceProxyPrivate *priv;
-
-        priv = gupnp_service_proxy_get_instance_private (proxy);
-
-        priv->pending_actions = g_list_remove (priv->pending_actions,
-                                               action);
-}
-
 static void
 callback_data_free (CallbackData *data)
 {
@@ -480,7 +468,7 @@ prepare_action_msg (GUPnPServiceProxy *proxy,
 }
 
 static void
-gupnp_service_proxy_action_queue_task (GTask *task);
+gupnp_service_proxy_action_queue_task (GUPnPServiceProxy *proxy, GTask *task);
 
 static void
 action_task_got_response (GObject *source,
@@ -490,6 +478,7 @@ action_task_got_response (GObject *source,
         GTask *task = G_TASK (user_data);
         GError *error = NULL;
         GUPnPServiceProxyAction *action = (GUPnPServiceProxyAction *) g_task_get_task_data (task);
+        GUPnPServiceProxy *proxy = GUPNP_SERVICE_PROXY(g_task_get_source_object (task));
 
         action->response =
                 soup_session_send_and_read_finish (SOUP_SESSION (source),
@@ -518,7 +507,7 @@ action_task_got_response (GObject *source,
                         g_debug ("POST returned with METHOD_NOT_ALLOWED, "
                                  "trying with M-POST");
                         g_bytes_unref (action->response);
-                        if (!prepare_action_msg (action->proxy,
+                        if (!prepare_action_msg (proxy,
                                                  action,
                                                  "M-POST",
                                                  &error)) {
@@ -532,7 +521,7 @@ action_task_got_response (GObject *source,
 
                                 g_object_unref (task);
                         } else {
-                                gupnp_service_proxy_action_queue_task (task);
+                                gupnp_service_proxy_action_queue_task (proxy, task);
                         }
 
                 } else {
@@ -568,7 +557,7 @@ action_task_got_response (GObject *source,
 }
 
 static void
-gupnp_service_proxy_action_queue_task (GTask *task)
+gupnp_service_proxy_action_queue_task (GUPnPServiceProxy *proxy, GTask *task)
 {
         GUPnPContext *context;
         SoupSession *session;
@@ -576,7 +565,7 @@ gupnp_service_proxy_action_queue_task (GTask *task)
 
         /* Send the message */
         context = gupnp_service_info_get_context
-                                (GUPNP_SERVICE_INFO (action->proxy));
+                                (GUPNP_SERVICE_INFO (proxy));
         session = gupnp_context_get_session (context);
 
         soup_session_send_and_read_async (
@@ -1642,8 +1631,6 @@ gupnp_service_proxy_call_action_async (GUPnPServiceProxy       *proxy,
                 g_task_return_error (task, error);
                 g_object_unref (task);
         } else {
-                action->proxy = proxy;
-                g_object_add_weak_pointer (G_OBJECT (proxy), (gpointer *)&(action->proxy));
 
                 priv->pending_actions = g_list_prepend (priv->pending_actions, action);
 
@@ -1657,7 +1644,7 @@ gupnp_service_proxy_call_action_async (GUPnPServiceProxy       *proxy,
                                                                            action,
                                                                            NULL);
 
-                gupnp_service_proxy_action_queue_task (task);
+                gupnp_service_proxy_action_queue_task (proxy, task);
         }
 }
 
@@ -1681,8 +1668,6 @@ gupnp_service_proxy_call_action_finish (GUPnPServiceProxy *proxy,
         g_return_val_if_fail (g_task_is_valid (G_TASK (result), proxy), NULL);
 
         GUPnPServiceProxyAction *action = g_task_get_task_data (G_TASK (result));
-        gupnp_service_proxy_remove_action (action->proxy, action);
-        g_clear_weak_pointer (&action->proxy);
         action->pending = FALSE;
 
         return g_task_propagate_pointer (G_TASK (result), error);
