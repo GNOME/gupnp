@@ -745,41 +745,16 @@ gupnp_service_proxy_action_get_result (GUPnPServiceProxyAction *action,
                                        GError                 **error,
                                        ...)
 {
+        g_return_val_if_fail (action, FALSE);
+
         va_list var_args;
-        gboolean ret;
 
         va_start (var_args, error);
-        ret = gupnp_service_proxy_action_get_result_valist (action,
-                                                            error,
-                                                            var_args);
-        va_end (var_args);
-
-        return ret;
-}
-
-/**
- * gupnp_service_proxy_action_get_result_valist:
- * @action: A #GUPnPServiceProxyAction handle
- * @error: (inout)(optional)(nullable): The location where to store any error, or %NULL
- * @var_args: A va_list of tuples of out parameter name, out parameter type,
- * and out parameter value location. The out parameter values should be
- * freed after use
- *
- * See gupnp_service_proxy_action_get_result().
- *
- * Return value: %TRUE on success.
- **/
-gboolean
-gupnp_service_proxy_action_get_result_valist (GUPnPServiceProxyAction *action,
-                                              GError                 **error,
-                                              va_list                  var_args)
-{
         GHashTable *out_hash;
         va_list var_args_copy;
         gboolean result;
         GError *local_error;
 
-        g_return_val_if_fail (action, FALSE);
 
         out_hash = g_hash_table_new_full (g_str_hash,
                                           g_str_equal,
@@ -799,6 +774,7 @@ gupnp_service_proxy_action_get_result_valist (GUPnPServiceProxyAction *action,
         }
         va_end (var_args_copy);
         g_hash_table_unref (out_hash);
+        va_end (var_args);
 
         return result;
 }
