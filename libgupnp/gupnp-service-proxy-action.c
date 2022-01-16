@@ -234,12 +234,6 @@ gupnp_service_proxy_action_ref (GUPnPServiceProxyAction *action)
 static void
 action_dispose (GUPnPServiceProxyAction *action)
 {
-
-        if (action->cancellable != NULL && action->cancellable_connection_id != 0) {
-                g_cancellable_disconnect (action->cancellable,
-                                          action->cancellable_connection_id);
-        }
-        g_clear_object (&action->cancellable);
         g_clear_error (&action->error);
         g_clear_object (&action->msg);
 

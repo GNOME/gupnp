@@ -26,8 +26,6 @@
 struct _GUPnPServiceProxyPrivate {
         gboolean subscribed;
 
-        GList *pending_actions;
-
         char *path; /* Path to this proxy */
 
         char *sid; /* Subscription ID */
@@ -231,25 +229,6 @@ gupnp_service_proxy_dispose (GObject *object)
             soup_server_remove_handler (server, priv->path);
         }
 
-        /* Cancel pending actions */
-        while (priv->pending_actions) {
-                GUPnPServiceProxyAction *action;
-
-                action = priv->pending_actions->data;
-                priv->pending_actions =
-                        g_list_delete_link (priv->pending_actions,
-                                            priv->pending_actions);
-
-                g_cancellable_cancel (action->cancellable);
-        }
-
-        /* Cancel pending messages */
-#if 0
-        if (context)
-                session = gupnp_context_get_session (context);
-        else
-                session = NULL; /* Not the first time dispose is called. */
-#endif
 
         while (priv->pending_messages) {
                 /*
@@ -351,32 +330,6 @@ gupnp_service_proxy_class_init (GUPnPServiceProxyClass *klass)
                               1,
                               G_TYPE_POINTER);
 }
-
-
-static void
-on_action_cancelled (GCancellable *cancellable, gpointer user_data)
-{
-        GUPnPServiceProxyAction *action = (GUPnPServiceProxyAction *) user_data;
-
-        //        GUPnPContext *context;
-        //        SoupSession *session;
-
-        if (action->msg != NULL && action->proxy != NULL) {
-#if 0
-                context = gupnp_service_info_get_context
-                                        (GUPNP_SERVICE_INFO (action->proxy));
-                session = gupnp_context_get_session (context);
-
-                FIXME: Cancellable?
-                soup_session_cancel_message (session,
-                                             action->msg,
-                                             SOUP_STATUS_CANCELLED);
-#endif
-                action->cancellable_connection_id = 0;
-        }
-}
-
-
 
 /* Begins a basic action message */
 static gboolean
@@ -485,13 +438,6 @@ action_task_got_response (GObject *source,
                                                    res,
                                                    &error);
 
-        if (g_error_matches (error, G_IO_ERROR, G_IO_ERROR_CANCELLED)) {
-                if (action->cancellable != NULL && action->cancellable_connection_id != 0) {
-                        g_cancellable_disconnect (action->cancellable,
-                                        action->cancellable_connection_id);
-                        action->cancellable_connection_id = 0;
-                }
-        }
 
         if (error != NULL) {
                 g_task_return_error (task, error);
@@ -511,11 +457,6 @@ action_task_got_response (GObject *source,
                                                  action,
                                                  "M-POST",
                                                  &error)) {
-                                if (action->cancellable != NULL && action->cancellable_connection_id != 0) {
-                                        g_cancellable_disconnect (action->cancellable,
-                                                                  action->cancellable_connection_id);
-                                        action->cancellable_connection_id = 0;
-                                }
 
                                 g_task_return_error (task, error);
 
@@ -525,12 +466,6 @@ action_task_got_response (GObject *source,
                         }
 
                 } else {
-                        if (action->cancellable != NULL && action->cancellable_connection_id != 0) {
-                                g_cancellable_disconnect (action->cancellable,
-                                                          action->cancellable_connection_id);
-                                action->cancellable_connection_id = 0;
-                        }
-
                         g_task_return_new_error (task,
                                                  GUPNP_SERVER_ERROR,
                                                  GUPNP_SERVER_ERROR_OTHER,
@@ -540,15 +475,7 @@ action_task_got_response (GObject *source,
                 break;
 
         default:
-                if (action->cancellable != NULL && action->cancellable_connection_id != 0) {
-                        g_cancellable_disconnect (action->cancellable,
-                                        action->cancellable_connection_id);
-                        action->cancellable_connection_id = 0;
-                }
-
-                g_task_return_pointer (task,
-                                       g_task_get_task_data (task),
-                                       NULL);
+                g_task_return_pointer (task, g_task_get_task_data (task), NULL);
 
                 g_object_unref (task);
 
@@ -572,7 +499,7 @@ gupnp_service_proxy_action_queue_task (GUPnPServiceProxy *proxy, GTask *task)
                 session,
                 action->msg,
                 G_PRIORITY_DEFAULT,
-                action->cancellable,
+                g_task_get_cancellable (task),
                 (GAsyncReadyCallback) action_task_got_response,
                 task);
         action->pending = TRUE;
@@ -1611,12 +1538,10 @@ gupnp_service_proxy_call_action_async (GUPnPServiceProxy       *proxy,
                                        gpointer                user_data)
 {
         GTask *task;
-        GUPnPServiceProxyPrivate *priv;
         GError *error = NULL;
 
         g_return_if_fail (GUPNP_IS_SERVICE_PROXY (proxy));
 
-        priv = gupnp_service_proxy_get_instance_private (proxy);
         task = g_task_new (proxy, cancellable, callback, user_data);
         char *task_name = g_strdup_printf ("UPnP Call \"%s\"", action->name);
         g_task_set_name (task, task_name);
@@ -1631,19 +1556,6 @@ gupnp_service_proxy_call_action_async (GUPnPServiceProxy       *proxy,
                 g_task_return_error (task, error);
                 g_object_unref (task);
         } else {
-
-                priv->pending_actions = g_list_prepend (priv->pending_actions, action);
-
-                if (cancellable != NULL) {
-                        action->cancellable = g_object_ref (cancellable);
-                } else {
-                        action->cancellable = g_cancellable_new ();
-                }
-                action->cancellable_connection_id = g_cancellable_connect (action->cancellable,
-                                                                           G_CALLBACK (on_action_cancelled),
-                                                                           action,
-                                                                           NULL);
-
                 gupnp_service_proxy_action_queue_task (proxy, task);
         }
 }
@@ -1703,21 +1615,11 @@ gupnp_service_proxy_call_action (GUPnPServiceProxy       *proxy,
                 return NULL;
         }
 
-        if (cancellable != NULL) {
-                action->cancellable = g_object_ref (cancellable);
-        } else {
-                action->cancellable = g_cancellable_new ();
-        }
-        action->cancellable_connection_id = g_cancellable_connect (action->cancellable,
-                                                                   G_CALLBACK (on_action_cancelled),
-                                                                   action,
-                                                                   NULL);
-
         context = gupnp_service_info_get_context (GUPNP_SERVICE_INFO (proxy));
         session = gupnp_context_get_session (context);
         action->response = soup_session_send_and_read (session,
                                                        action->msg,
-                                                       action->cancellable,
+                                                       cancellable,
                                                        &internal_error);
 
         if (internal_error != NULL) {
@@ -1738,17 +1640,12 @@ gupnp_service_proxy_call_action (GUPnPServiceProxy       *proxy,
                         action->response =
                                 soup_session_send_and_read (session,
                                                             action->msg,
-                                                            action->cancellable,
+                                                            cancellable,
                                                             error);
                 }
         }
 
 out:
-        g_cancellable_disconnect (action->cancellable,
-                                  action->cancellable_connection_id);
-        action->cancellable_connection_id = 0;
-        g_clear_object (&action->cancellable);
-
         if (internal_error != NULL) {
                 g_propagate_error (error, internal_error);
 

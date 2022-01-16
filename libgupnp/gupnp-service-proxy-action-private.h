@@ -139,7 +139,6 @@ struct _GUPnPServiceProxyAction {
         GBytes *response;
         GString *msg_str;
 
-        GCancellable *cancellable;
         gulong cancellable_connection_id;
 
         gpointer user_data;
