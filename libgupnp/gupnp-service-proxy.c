@@ -1034,7 +1034,7 @@ server_handler (G_GNUC_UNUSED SoupServer *soup_server,
         }
 
         /* Everything went OK */
-        soup_server_message_set_status (msg, SOUP_STATUS_OK, "Ok");
+        soup_server_message_set_status (msg, SOUP_STATUS_OK, NULL);
 }
 
 /*
