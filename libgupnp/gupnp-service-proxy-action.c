@@ -310,8 +310,7 @@ write_footer (GUPnPServiceProxyAction *action)
  * gupnp_service_proxy_action_get_result_list() or
  * gupnp_service_proxy_action_get_result_hash()
  *
- * <informalexample>
- * <programlisting>
+ * ```c
  * GUPnPServiceProxyAction *action =
  *         gupnp_service_proxy_action_new ("GetVolume",
  *                                         // Parameters
@@ -337,8 +336,7 @@ write_footer (GUPnPServiceProxyAction *action)
  * }
  *
  * gupnp_service_proxy_action_unref (action);
- * </programlisting>
- * </informalexample>
+ * ```
  *
  * Returns: A newly created #GUPnPServiceProxyAction
  */
@@ -403,8 +401,7 @@ gupnp_service_proxy_action_new (const char *action,
  * gupnp_service_proxy_action_get_result(),
  * gupnp_service_proxy_action_get_result_list() or
  * gupnp_service_proxy_action_get_result_hash()
- * <informalexample>
- * <programlisting>
+ * ```c
  * GList *in_args = NULL;
  * in_args = g_list_append (in_args, "InstanceID");
  * in_args = g_list_append (in_args, "Unit");
@@ -428,8 +425,7 @@ gupnp_service_proxy_action_new (const char *action,
  * GError *error = NULL;
  * gupnp_service_proxy_call_action_async (proxy, action, NULL, on_action_finished, NULL);
  * gupnp_service_proxy_action_unref (action);
- * </programlisting>
- * </informalexample>
+ * ```
  *
  * Returns: A newly created #GUPnPServiceProxyAction
  */
@@ -634,8 +630,7 @@ gupnp_service_proxy_action_get_result_list (GUPnPServiceProxyAction *action,
  * The @out_hash needs to be pre-initialized with key value pairs denoting the argument
  * to retrieve and an empty #GValue initialized to hold the wanted type with g_value_init().
  *
- * <informalexample>
- * <programlisting>
+ *```c
  * void on_action_finished(GObject *object, GAsyncResult *res, gpointer user_data)
  * {
  *     GUPnPServiceProxyAction *action;
@@ -673,8 +668,7 @@ gupnp_service_proxy_action_get_result_list (GUPnPServiceProxyAction *action,
  *
  *     g_hash_table_unref (out_args);
  * }
- * </programlisting>
- * </informalexample>
+ * ```
  *
  * Return value: %TRUE on success.
  *
