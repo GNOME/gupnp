@@ -1157,8 +1157,7 @@ subscribe_got_response (GObject *source, GAsyncResult *res, gpointer user_data)
         }
 
         /* Reset SID */
-        g_free (priv->sid);
-        priv->sid = NULL;
+        g_clear_pointer (&priv->sid, g_free);
 
         SoupStatus status = soup_message_get_status (data->msg);
         SoupMessageHeaders *response_headers =
