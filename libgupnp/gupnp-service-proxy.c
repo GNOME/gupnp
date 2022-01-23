@@ -1134,12 +1134,8 @@ subscribe_got_response (GObject *source, GAsyncResult *res, gpointer user_data)
 
         priv = gupnp_service_proxy_get_instance_private (data->proxy);
 
-        GBytes *body = soup_session_send_and_read_finish (SOUP_SESSION (source),
-                                                          res,
-                                                          &error);
-
-        // We don't need the body, it should be empty anyway
-        g_clear_pointer (&body, g_bytes_unref);
+        GInputStream *is =
+                soup_session_send_finish (SOUP_SESSION (source), res, &error);
 
         /* Cancelled? */
         if (g_error_matches (error, G_IO_ERROR, G_IO_ERROR_CANCELLED)) {
@@ -1149,6 +1145,8 @@ subscribe_got_response (GObject *source, GAsyncResult *res, gpointer user_data)
                 goto hdr_err;
         }
 
+        // We don't need the body, it should be empty anyway
+        g_input_stream_close (is, NULL, NULL);
 
         /* Remove subscription timeout */
         g_clear_pointer (&priv->subscription_timeout_src, g_source_destroy);
@@ -1360,12 +1358,12 @@ subscribe (GUPnPServiceProxy *proxy)
         data->msg = msg;
         data->proxy = proxy;
 
-        soup_session_send_and_read_async (session,
-                                          msg,
-                                          G_PRIORITY_DEFAULT,
-                                          priv->pending_messages,
-                                          subscribe_got_response,
-                                          data);
+        soup_session_send_async (session,
+                                 msg,
+                                 G_PRIORITY_DEFAULT,
+                                 priv->pending_messages,
+                                 subscribe_got_response,
+                                 data);
 }
 
 /*
