@@ -1599,8 +1599,6 @@ gupnp_service_proxy_call_action (GUPnPServiceProxy       *proxy,
                                                        &internal_error);
 
         if (internal_error != NULL) {
-                g_propagate_error (error, internal_error);
-
                 goto out;
         }
 
@@ -1623,6 +1621,7 @@ gupnp_service_proxy_call_action (GUPnPServiceProxy       *proxy,
 
 out:
         if (internal_error != NULL) {
+                action->error = g_error_copy (internal_error);
                 g_propagate_error (error, internal_error);
 
                 return NULL;
