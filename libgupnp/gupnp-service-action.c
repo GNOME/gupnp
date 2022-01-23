@@ -38,7 +38,7 @@ action_dispose (GUPnPServiceAction *action)
 }
 
 void
-gupnp_service_action_unref (GUPnPServiceAction *action)
+gupnp_service_action_unref (struct _GUPnPServiceAction *action)
 {
         g_return_if_fail (action);
 

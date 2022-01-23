@@ -30,4 +30,7 @@ struct _GUPnPServiceAction {
         guint         argument_count;
 };
 
+void
+gupnp_service_action_unref (struct _GUPnPServiceAction *action);
+
 #endif
