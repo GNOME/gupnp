@@ -79,7 +79,7 @@ typedef struct {
         GUPnPServiceProxyNotifyCallback callback;
         GDestroyNotify notify;
         gpointer user_data;
-} CallbackData;
+} NotifyCallbackData;
 
 typedef struct {
         char *sid;
@@ -97,12 +97,12 @@ static void
 unsubscribe (GUPnPServiceProxy *proxy);
 
 static void
-callback_data_free (CallbackData *data)
+callback_data_free (NotifyCallbackData *data)
 {
         if (data->notify)
                 data->notify (data->user_data);
 
-        g_slice_free (CallbackData, data);
+        g_slice_free (NotifyCallbackData, data);
 }
 
 static void
@@ -552,7 +552,7 @@ gupnp_service_proxy_add_notify_full (GUPnPServiceProxy              *proxy,
                                      GDestroyNotify                  notify)
 {
         NotifyData *data;
-        CallbackData *callback_data;
+        NotifyCallbackData *callback_data;
         GUPnPServiceProxyPrivate *priv;
 
         g_return_val_if_fail (GUPNP_IS_SERVICE_PROXY (proxy), FALSE);
@@ -589,7 +589,7 @@ gupnp_service_proxy_add_notify_full (GUPnPServiceProxy              *proxy,
         }
 
         /* Append callback */
-        callback_data = g_slice_new (CallbackData);
+        callback_data = g_slice_new (NotifyCallbackData);
 
         callback_data->callback  = callback;
         callback_data->user_data = user_data;
@@ -681,7 +681,7 @@ gupnp_service_proxy_remove_notify (GUPnPServiceProxy              *proxy,
         found = FALSE;
 
         for (l = data->callbacks; l; l = l->next) {
-                CallbackData *callback_data;
+                NotifyCallbackData *callback_data;
 
                 callback_data = l->data;
 
@@ -766,7 +766,7 @@ emit_notification (GUPnPServiceProxy *proxy,
         /* Call callbacks. Note that data->next_emit may change if
          * callback calls remove_notify() or add_notify() */
         for (l = data->callbacks; l; l = data->next_emit) {
-                CallbackData *callback_data;
+                NotifyCallbackData *callback_data;
 
                 callback_data = l->data;
                 data->next_emit = l->next;
@@ -818,7 +818,7 @@ emit_notifications_for_doc (GUPnPServiceProxy *proxy,
                 g_value_set_pointer (&value, doc);
 
                 for (it = data->callbacks; it != NULL; it = it->next) {
-                        CallbackData *callback_data = it->data;
+                        NotifyCallbackData *callback_data = it->data;
 
                         callback_data->callback (proxy,
                                                  "*",
