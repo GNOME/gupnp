@@ -234,7 +234,6 @@ gupnp_service_proxy_dispose (GObject *object)
             soup_server_remove_handler (server, priv->path);
         }
 
-
         if (priv->pending_messages)
                 g_cancellable_cancel (priv->pending_messages);
         g_clear_object (&priv->pending_messages);
@@ -889,6 +888,8 @@ emit_notifications (gpointer user_data)
                 unsubscribe (proxy);
                 subscribe (proxy);
         }
+
+        priv->notify_idle_src = NULL;
 
         return FALSE;
 }
