@@ -52,6 +52,7 @@ if get_option('gtk_doc')
           'choosing-a-context-manager.md',
           'glossary.md',
       ],
+      depend_files : gupnp_toml,
       build_by_default: true,
       install: true,
       install_dir : docs_dir,
