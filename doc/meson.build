@@ -21,7 +21,13 @@ if get_option('gtk_doc')
       configuration: entities
   )
 
-  docs_dir = join_paths(get_option('prefix'), get_option('datadir')) / 'doc/gupnp-1.2/reference'
+  docs_dir = join_paths(get_option('prefix'), get_option('datadir')) / 'doc' / GUPNP_API_NAME / 'reference'
+
+  if gssdp_dep.type_name() == 'internal'
+    gssdp_gir_dirs = subproject('gssdp-1.6').get_variable('gssdp_gir_dir')
+  else
+    gssdp_gir_dirs = ''
+  endif
 
   custom_target(
       'gupnp-doc',
@@ -32,6 +38,7 @@ if get_option('gtk_doc')
           'generate',
           '--quiet',
           '--add-include-path=@0@'.format(meson.current_build_dir() / '../libgupnp'),
+          '--add-include-path=@0@'.format(gssdp_gir_dirs),
           '--config', gupnp_toml,
           '--output-dir=@OUTPUT@',
           '--no-namespace-dir',
