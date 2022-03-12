@@ -197,7 +197,7 @@ pages:
       - meson doc-build -Dgtk_doc=true
       - ninja -C doc-build doc/GUPnP
       - mkdir -p public
-      - mv doc-build/doc/html public/docs
+      - mv doc-build/doc/GUPnP public/docs
   artifacts:
     paths:
       - public
