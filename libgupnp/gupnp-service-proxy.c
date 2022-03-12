@@ -890,7 +890,8 @@ emit_notifications (gpointer user_data)
                 subscribe (proxy);
         }
 
-        return FALSE;
+        priv->notify_idle_src = NULL;
+        return G_SOURCE_REMOVE;
 }
 
 /*
