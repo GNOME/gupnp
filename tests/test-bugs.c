@@ -315,7 +315,8 @@ test_bgo_678701 (void)
     g_assert_no_error (error);
     g_assert (context != NULL);
 
-    factory = gupnp_resource_factory_get_default ();
+    // Do not pollute the default factory with this test
+    factory = gupnp_resource_factory_new ();
     gupnp_resource_factory_register_resource_proxy_type (factory,
                                                          "urn:test-gupnp-org:service:TestService:1",
                                                          test_bgo_678701_service_get_type ());
@@ -328,8 +329,10 @@ test_bgo_678701 (void)
     g_assert (rd != NULL);
     gupnp_root_device_set_available (rd, TRUE);
 
-    cp = gupnp_control_point_new (context,
-                                  "urn:test-gupnp-org:device:TestDevice:1");
+    cp = gupnp_control_point_new_full (
+            context,
+            factory,
+            "urn:test-gupnp-org:device:TestDevice:1");
     gssdp_resource_browser_set_active (GSSDP_RESOURCE_BROWSER (cp), TRUE);
     g_signal_connect (G_OBJECT (cp),
                       "device-proxy-available",
@@ -353,7 +356,7 @@ test_bgo_678701 (void)
     g_object_unref (dev_info);
     g_object_unref (rd);
     g_object_unref (context);
-
+    g_object_unref (factory);
 
     // Make sure the source teardown handlers get run so we don't confuse valgrind
     g_timeout_add (500, (GSourceFunc) delayed_loop_quitter, data.loop);
