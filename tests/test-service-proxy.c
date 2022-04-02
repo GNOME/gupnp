@@ -222,12 +222,12 @@ void
 on_test_async_call (GObject *source, GAsyncResult *res, gpointer user_data)
 {
         GError *error = NULL;
-        g_assert_no_error (error);
         g_assert_nonnull (user_data);
 
         gupnp_service_proxy_call_action_finish (GUPNP_SERVICE_PROXY (source),
                                                 res,
                                                 &error);
+        g_assert_no_error (error);
 
         ProxyTestFixture *tf = (ProxyTestFixture *) user_data;
         g_main_loop_quit (tf->loop);
@@ -242,6 +242,11 @@ test_async_call (ProxyTestFixture *tf, G_GNUC_UNUSED gconstpointer user_data)
 
         g_signal_connect (tf->service,
                           "action-invoked::Ping",
+                          G_CALLBACK (on_test_async_call_ping_success),
+                          tf);
+
+        g_signal_connect (tf->service,
+                          "action-invoked::Browse",
                           G_CALLBACK (on_test_async_call_ping_success),
                           tf);
 
