@@ -413,6 +413,7 @@ typedef struct {
         GMainContext *outer_context;
         const char *address;
         GCancellable *cancellable;
+        GError expected_error;
 } ThreadData;
 
 typedef struct {
@@ -471,10 +472,10 @@ thread_func (gpointer data)
         gupnp_service_proxy_call_action (gpd.p, action, d->cancellable, &error);
         gupnp_service_proxy_action_unref (action);
 
-        if (d->cancellable == NULL)
-                g_assert_no_error (error);
-        else
-                g_assert_error (error, G_IO_ERROR, G_IO_ERROR_CANCELLED);
+        if (d->expected_error.domain != 0)
+                g_error_matches (error,
+                                 d->expected_error.domain,
+                                 d->expected_error.code);
 
         g_object_unref (gpd.p);
         g_object_unref (cp);
@@ -505,6 +506,7 @@ test_sync_call (ProxyTestFixture *tf, gconstpointer user_data)
         d.outer_context = g_main_context_get_thread_default ();
         d.outer_loop = tf->loop;
         d.cancellable = NULL;
+        d.expected_error.domain = 0;
 
         GThread *t = g_thread_new ("Sync call test", thread_func, &d);
         test_run_loop (tf->loop, g_test_get_path());
@@ -538,6 +540,8 @@ test_cancel_sync_call (ProxyTestFixture *tf, gconstpointer user_data)
         d.outer_context = g_main_context_get_thread_default ();
         d.outer_loop = tf->loop;
         d.cancellable = g_cancellable_new ();
+        d.expected_error.domain = G_IO_ERROR;
+        d.expected_error.code = G_IO_ERROR_CANCELLED;
 
         GThread *t = g_thread_new ("Sync call cancel test", thread_func, &d);
         test_run_loop (tf->loop, g_test_get_path());
@@ -575,6 +579,8 @@ on_test_soap_error (GObject *source, GAsyncResult *res, gpointer user_data)
                         GUPNP_CONTROL_ERROR,
                         GUPNP_CONTROL_ERROR_OUT_OF_SYNC);
 
+        g_clear_error (&error);
+
         ProxyTestFixture *tf = (ProxyTestFixture *) user_data;
         g_main_loop_quit (tf->loop);
 }
@@ -598,6 +604,30 @@ test_finish_soap_error (ProxyTestFixture *tf, gconstpointer user_data)
 
         gupnp_service_proxy_action_unref (action);
         test_run_loop (tf->loop, g_test_get_path ());
+
+        // Spin the loop for a bit...
+        g_timeout_add (500, (GSourceFunc) delayed_loop_quitter, tf->loop);
+        g_main_loop_run (tf->loop);
+}
+
+void
+test_finish_soap_error_sync (ProxyTestFixture *tf, gconstpointer user_data)
+{
+        g_signal_connect (tf->service,
+                          "action-invoked::Ping",
+                          G_CALLBACK (on_test_async_call_ping_error),
+                          tf);
+        ThreadData d;
+        d.address = (const char *) user_data;
+        d.outer_context = g_main_context_get_thread_default ();
+        d.outer_loop = tf->loop;
+        d.cancellable = NULL;
+        d.expected_error.domain = GUPNP_CONTROL_ERROR;
+        d.expected_error.code = GUPNP_CONTROL_ERROR_OUT_OF_SYNC;
+
+        GThread *t = g_thread_new ("Sync call test", thread_func, &d);
+        test_run_loop (tf->loop, g_test_get_path ());
+        g_thread_join (t);
 
         // Spin the loop for a bit...
         g_timeout_add (500, (GSourceFunc) delayed_loop_quitter, tf->loop);
@@ -637,6 +667,13 @@ main (int argc, char *argv[])
                     test_async_call_destroy_with_pending,
                     test_fixture_teardown);
 
+        g_test_add ("/service-proxy/async/soap-error-in-finish",
+                    ProxyTestFixture,
+                    "127.0.0.1",
+                    test_fixture_setup,
+                    test_finish_soap_error,
+                    test_fixture_teardown);
+
         g_test_add ("/service-proxy/sync/call",
                     ProxyTestFixture,
                     "127.0.0.1",
@@ -651,11 +688,11 @@ main (int argc, char *argv[])
                     test_cancel_sync_call,
                     test_fixture_teardown);
 
-        g_test_add ("/service-proxy/async/soap-error-in-finish",
+        g_test_add ("/service-proxy/sync/soap-error-in-finish",
                     ProxyTestFixture,
                     "127.0.0.1",
                     test_fixture_setup,
-                    test_finish_soap_error,
+                    test_finish_soap_error_sync,
                     test_fixture_teardown);
 
         return g_test_run ();
