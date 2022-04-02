@@ -552,6 +552,58 @@ test_cancel_sync_call (ProxyTestFixture *tf, gconstpointer user_data)
         g_main_loop_run (tf->loop);
 }
 
+void
+on_test_async_call_ping_error (G_GNUC_UNUSED GUPnPService *service,
+                               GUPnPServiceAction *action,
+                               gpointer user_data)
+{
+        gupnp_service_action_return_error (action,
+                                           GUPNP_CONTROL_ERROR_OUT_OF_SYNC,
+                                           "Test error");
+}
+
+void
+on_test_soap_error (GObject *source, GAsyncResult *res, gpointer user_data)
+{
+        GError *error = NULL;
+        g_assert_nonnull (user_data);
+
+        gupnp_service_proxy_call_action_finish (GUPNP_SERVICE_PROXY (source),
+                                                res,
+                                                &error);
+        g_assert_error (error,
+                        GUPNP_CONTROL_ERROR,
+                        GUPNP_CONTROL_ERROR_OUT_OF_SYNC);
+
+        ProxyTestFixture *tf = (ProxyTestFixture *) user_data;
+        g_main_loop_quit (tf->loop);
+}
+
+void
+test_finish_soap_error (ProxyTestFixture *tf, gconstpointer user_data)
+{
+        g_signal_connect (tf->service,
+                          "action-invoked::Ping",
+                          G_CALLBACK (on_test_async_call_ping_error),
+                          tf);
+
+        GUPnPServiceProxyAction *action =
+                gupnp_service_proxy_action_new ("Ping", NULL);
+
+        gupnp_service_proxy_call_action_async (tf->proxy,
+                                               action,
+                                               NULL,
+                                               on_test_soap_error,
+                                               tf);
+
+        gupnp_service_proxy_action_unref (action);
+        test_run_loop (tf->loop, g_test_get_path ());
+
+        // Spin the loop for a bit...
+        g_timeout_add (500, (GSourceFunc) delayed_loop_quitter, tf->loop);
+        g_main_loop_run (tf->loop);
+}
+
 int
 main (int argc, char *argv[])
 {
@@ -597,6 +649,13 @@ main (int argc, char *argv[])
                     "127.0.0.1",
                     test_fixture_setup,
                     test_cancel_sync_call,
+                    test_fixture_teardown);
+
+        g_test_add ("/service-proxy/async/soap-error-in-finish",
+                    ProxyTestFixture,
+                    "127.0.0.1",
+                    test_fixture_setup,
+                    test_finish_soap_error,
                     test_fixture_teardown);
 
         return g_test_run ();
