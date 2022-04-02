@@ -14,14 +14,16 @@
 #include <locale.h>
 #include <errno.h>
 
+#include "gena-protocol.h"
+#include "gupnp-context-private.h"
+#include "gupnp-error-private.h"
+#include "gupnp-error.h"
 #include "gupnp-service-proxy.h"
 #include "gupnp-service-proxy-action-private.h"
-#include "gupnp-context-private.h"
-#include "gupnp-error.h"
 #include "gupnp-types.h"
-#include "gena-protocol.h"
-#include "http-headers.h"
 #include "gvalue-util.h"
+#include "http-headers.h"
+#include "xml-util.h"
 
 struct _GUPnPServiceProxyPrivate {
         gboolean subscribed;
@@ -466,7 +468,15 @@ action_task_got_response (GObject *source,
                 break;
 
         default:
-                g_task_return_pointer (task, g_task_get_task_data (task), NULL);
+                gupnp_service_proxy_action_check_response (action);
+                if (action->error != NULL) {
+                        g_task_return_error (task,
+                                             g_error_copy (action->error));
+                } else {
+                        g_task_return_pointer (task,
+                                               g_task_get_task_data (task),
+                                               NULL);
+                }
 
                 g_object_unref (task);
 

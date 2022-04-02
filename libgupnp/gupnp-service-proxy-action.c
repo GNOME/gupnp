@@ -54,151 +54,6 @@ read_out_parameter (const char *arg_name,
 }
 
 
-/* Checks an action response for errors and returns the parsed
- * xmlDoc object. */
-static xmlDoc *
-check_action_response (G_GNUC_UNUSED GUPnPServiceProxy *proxy,
-                       GUPnPServiceProxyAction         *action,
-                       xmlNode                        **params,
-                       GError                         **error)
-{
-        xmlDoc *response;
-        int code;
-
-        if (action->msg == NULL || action->response == NULL) {
-                g_set_error (error,
-                             GUPNP_SERVER_ERROR,
-                             GUPNP_SERVER_ERROR_INVALID_RESPONSE,
-                             "No message, the action was not sent?");
-
-                return NULL;
-        }
-
-        SoupStatus status = soup_message_get_status (action->msg);
-
-        /* Check for errors */
-        switch (status) {
-        case SOUP_STATUS_OK:
-        case SOUP_STATUS_INTERNAL_SERVER_ERROR:
-                break;
-        default:
-                _gupnp_error_set_server_error (error, action->msg);
-
-                return NULL;
-        }
-
-        /* Parse response */
-        gconstpointer data;
-        gsize length;
-        data = g_bytes_get_data (action->response, &length);
-        response = xmlRecoverMemory (data, length);
-        g_clear_pointer (&action->response, g_bytes_unref);
-
-        if (!response) {
-                if (status == SOUP_STATUS_OK) {
-                        g_set_error (error,
-                                     GUPNP_SERVER_ERROR,
-                                     GUPNP_SERVER_ERROR_INVALID_RESPONSE,
-                                     "Could not parse SOAP response");
-                } else {
-                        g_set_error_literal (
-                                error,
-                                GUPNP_SERVER_ERROR,
-                                GUPNP_SERVER_ERROR_INTERNAL_SERVER_ERROR,
-                                soup_message_get_reason_phrase (action->msg));
-                }
-
-                return NULL;
-        }
-
-        /* Get parameter list */
-        *params = xml_util_get_element ((xmlNode *) response,
-                                        "Envelope",
-                                        NULL);
-        if (*params != NULL)
-                *params = xml_util_real_node ((*params)->children);
-
-        if (*params != NULL) {
-                if (strcmp ((const char *) (*params)->name, "Header") == 0)
-                        *params = xml_util_real_node ((*params)->next);
-
-                if (*params != NULL)
-                        if (strcmp ((const char *) (*params)->name, "Body") != 0)
-                                *params = NULL;
-        }
-
-        if (*params != NULL)
-                *params = xml_util_real_node ((*params)->children);
-
-        if (*params == NULL) {
-                g_set_error (error,
-                             GUPNP_SERVER_ERROR,
-                             GUPNP_SERVER_ERROR_INVALID_RESPONSE,
-                             "Invalid Envelope");
-
-                xmlFreeDoc (response);
-
-                return NULL;
-        }
-
-        /* Check whether we have a Fault */
-        if (status == SOUP_STATUS_INTERNAL_SERVER_ERROR) {
-                xmlNode *param;
-                char *desc;
-
-                param = xml_util_get_element (*params,
-                                              "detail",
-                                              "UPnPError",
-                                              NULL);
-
-                if (!param) {
-                        g_set_error (error,
-                                     GUPNP_SERVER_ERROR,
-                                     GUPNP_SERVER_ERROR_INVALID_RESPONSE,
-                                     "Invalid Fault");
-
-                        xmlFreeDoc (response);
-
-                        return NULL;
-                }
-
-                /* Code */
-                code = xml_util_get_child_element_content_int
-                                        (param, "errorCode");
-                if (code == -1) {
-                        g_set_error (error,
-                                     GUPNP_SERVER_ERROR,
-                                     GUPNP_SERVER_ERROR_INVALID_RESPONSE,
-                                     "Invalid Fault");
-
-                        xmlFreeDoc (response);
-
-                        return NULL;
-                }
-
-                /* Description */
-                desc = xml_util_get_child_element_content_glib
-                                        (param, "errorDescription");
-                if (desc == NULL)
-                        desc = g_strdup (
-                                soup_message_get_reason_phrase (action->msg));
-
-                g_set_error_literal (error,
-                                     GUPNP_CONTROL_ERROR,
-                                     code,
-                                     desc);
-
-                g_free (desc);
-
-                xmlFreeDoc (response);
-
-                return NULL;
-        }
-
-        return response;
-}
-
-
 GUPnPServiceProxyAction *
 gupnp_service_proxy_action_new_internal (const char *action) {
         GUPnPServiceProxyAction *ret;
@@ -244,6 +99,7 @@ action_dispose (GUPnPServiceProxyAction *action)
         g_hash_table_destroy (action->arg_map);
         g_ptr_array_unref (action->args);
         g_clear_pointer (&action->response, g_bytes_unref);
+        g_clear_pointer (&action->doc, xmlFreeDoc);
 
         g_free (action->name);
 }
@@ -494,6 +350,151 @@ gupnp_service_proxy_action_serialize (GUPnPServiceProxyAction *action,
         g_string_insert (action->msg_str, action->header_pos, "\">");
 }
 
+/* Checks an action response for errors and returns the parsed
+ * xmlDoc object. */
+void
+gupnp_service_proxy_action_check_response (GUPnPServiceProxyAction *action)
+{
+        xmlDoc *response;
+        int code;
+
+        if (action->doc != NULL) {
+                return;
+        }
+
+        if (action->error != NULL) {
+                return;
+        }
+
+        if (action->msg == NULL || action->response == NULL) {
+                g_set_error_literal (&action->error,
+                                     GUPNP_SERVER_ERROR,
+                                     GUPNP_SERVER_ERROR_INVALID_RESPONSE,
+                                     "No message, the action was not sent?");
+
+                return;
+        }
+
+        SoupStatus status = soup_message_get_status (action->msg);
+
+        if (status != SOUP_STATUS_OK &&
+            status != SOUP_STATUS_INTERNAL_SERVER_ERROR) {
+                _gupnp_error_set_server_error (&action->error, action->msg);
+                return;
+        }
+
+        /* Parse response */
+        gconstpointer data;
+        gsize length;
+        data = g_bytes_get_data (action->response, &length);
+        response = xmlRecoverMemory (data, length);
+        g_clear_pointer (&action->response, g_bytes_unref);
+
+        if (!response) {
+                if (status == SOUP_STATUS_OK) {
+                        g_set_error_literal (
+                                &action->error,
+                                GUPNP_SERVER_ERROR,
+                                GUPNP_SERVER_ERROR_INVALID_RESPONSE,
+                                "Could not parse SOAP response");
+                } else {
+                        g_set_error_literal (
+                                &action->error,
+                                GUPNP_SERVER_ERROR,
+                                GUPNP_SERVER_ERROR_INTERNAL_SERVER_ERROR,
+                                soup_message_get_reason_phrase (action->msg));
+                }
+
+                return;
+        }
+
+        xmlNodePtr params = NULL;
+        /* Get parameter list */
+        params = xml_util_get_element ((xmlNode *) response, "Envelope", NULL);
+        if (params != NULL)
+                params = xml_util_real_node (params->children);
+
+        if (params != NULL) {
+                if (strcmp ((const char *) params->name, "Header") == 0)
+                        params = xml_util_real_node (params->next);
+
+                if (params != NULL)
+                        if (strcmp ((const char *) params->name, "Body") != 0)
+                                params = NULL;
+        }
+
+        if (params != NULL)
+                params = xml_util_real_node (params->children);
+
+        if (params == NULL) {
+                g_set_error (&action->error,
+                             GUPNP_SERVER_ERROR,
+                             GUPNP_SERVER_ERROR_INVALID_RESPONSE,
+                             "Invalid Envelope");
+
+                xmlFreeDoc (response);
+
+                return;
+        }
+
+        /* Check whether we have a Fault */
+        if (status == SOUP_STATUS_INTERNAL_SERVER_ERROR) {
+                xmlNode *param;
+                char *desc;
+
+                param = xml_util_get_element (params,
+                                              "detail",
+                                              "UPnPError",
+                                              NULL);
+
+                if (!param) {
+                        g_set_error (&action->error,
+                                     GUPNP_SERVER_ERROR,
+                                     GUPNP_SERVER_ERROR_INVALID_RESPONSE,
+                                     "Invalid Fault");
+
+                        xmlFreeDoc (response);
+
+                        return;
+                }
+
+                /* Code */
+                code = xml_util_get_child_element_content_int (param,
+                                                               "errorCode");
+                if (code == -1) {
+                        g_set_error (&action->error,
+                                     GUPNP_SERVER_ERROR,
+                                     GUPNP_SERVER_ERROR_INVALID_RESPONSE,
+                                     "Invalid Fault");
+
+                        xmlFreeDoc (response);
+
+                        return;
+                }
+
+                /* Description */
+                desc = xml_util_get_child_element_content_glib (
+                        param,
+                        "errorDescription");
+                if (desc == NULL)
+                        desc = g_strdup (
+                                soup_message_get_reason_phrase (action->msg));
+
+                g_set_error_literal (&action->error,
+                                     GUPNP_CONTROL_ERROR,
+                                     code,
+                                     desc);
+
+                g_free (desc);
+
+                xmlFreeDoc (response);
+
+                return;
+        }
+
+        action->doc = response;
+}
+
 /**
  * gupnp_service_proxy_action_get_result_list:
  * @action: A #GUPnPServiceProxyAction handle
@@ -568,8 +569,6 @@ gupnp_service_proxy_action_get_result_list (GUPnPServiceProxyAction *action,
                                             GList                  **out_values,
                                             GError                 **error)
 {
-        xmlDoc *response;
-        xmlNode *params;
         GList *names;
         GList *types;
         GList *out_values_list;
@@ -586,8 +585,8 @@ gupnp_service_proxy_action_get_result_list (GUPnPServiceProxyAction *action,
         }
 
         /* Check response for errors and do initial parsing */
-        response = check_action_response (NULL, action, &params, &action->error);
-        if (response == NULL) {
+        gupnp_service_proxy_action_check_response (action);
+        if (action->error != NULL) {
                 g_propagate_error (error, g_error_copy (action->error));
 
                 return FALSE;
@@ -601,7 +600,7 @@ gupnp_service_proxy_action_get_result_list (GUPnPServiceProxyAction *action,
                 val = g_new0 (GValue, 1);
                 g_value_init (val, (GType) types->data);
 
-                read_out_parameter (names->data, val, params);
+                read_out_parameter (names->data, val, action->params);
 
                 out_values_list = g_list_append (out_values_list, val);
 
@@ -609,9 +608,6 @@ gupnp_service_proxy_action_get_result_list (GUPnPServiceProxyAction *action,
         }
 
         *out_values = out_values_list;
-
-        /* Cleanup */
-        xmlFreeDoc (response);
 
         return TRUE;
 
@@ -679,9 +675,6 @@ gupnp_service_proxy_action_get_result_hash (GUPnPServiceProxyAction *action,
                                             GHashTable              *hash,
                                             GError                 **error)
 {
-        xmlDoc *response;
-        xmlNode *params;
-
         g_return_val_if_fail (action, FALSE);
 
         /* Check for saved error from begin_action() */
@@ -692,18 +685,17 @@ gupnp_service_proxy_action_get_result_hash (GUPnPServiceProxyAction *action,
         }
 
         /* Check response for errors and do initial parsing */
-        response = check_action_response (NULL, action, &params, &action->error);
-        if (response == NULL) {
+        gupnp_service_proxy_action_check_response (action);
+        if (action->error != NULL) {
                 g_propagate_error (error, g_error_copy (action->error));
 
                 return FALSE;
         }
 
         /* Read arguments */
-        g_hash_table_foreach (hash, (GHFunc) read_out_parameter, params);
-
-        /* Cleanup */
-        xmlFreeDoc (response);
+        g_hash_table_foreach (hash,
+                              (GHFunc) read_out_parameter,
+                              action->params);
 
         return TRUE;
 
