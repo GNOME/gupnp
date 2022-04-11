@@ -4,6 +4,9 @@ pkg = import('pkgconfig')
 
 cc = meson.get_compiler('c')
 
+prefix = get_option('prefix')
+bindir = join_paths(prefix, get_option('bindir'))
+
 netlink_available = cc.has_header('linux/rtnetlink.h')
 ifaddrs_available = cc.has_header('ifaddrs.h')
 
