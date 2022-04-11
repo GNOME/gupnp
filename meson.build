@@ -10,6 +10,9 @@ api_config = configuration_data()
 api_config.set('GUPNP_API_VERSION', GUPNP_API_VERSION)
 api_config.set('GUPNP_API_NAME', GUPNP_API_NAME)
 
+prefix = get_option('prefix')
+bindir = join_paths(prefix, get_option('bindir'))
+
 netlink_available = cc.has_header('linux/rtnetlink.h')
 ifaddrs_available = cc.has_header('ifaddrs.h')
 
