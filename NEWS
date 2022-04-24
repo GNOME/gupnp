@@ -1,3 +1,55 @@
+1.5.0 (development)
+===================
+
+ - Port to libsoup3
+ - API bump (1.6)
+ - Improved test coverage
+ - All _valist functions have been removed
+ - The documentation is now provided by gi-docgen
+ - All API that was marked as deprecated up until 1.4 has been removed
+
+ServiceIntrospection:
+ - is now a GInitable
+
+Context:
+ - Uses GSSDP.Client:port
+ - Fix reference leak when using ACL
+
+DeviceInfo:
+ - The get_device() and get_service() virtual functions have been renamed
+
+ServiceAction:
+ - ServiceAction::return() was renamed to ServiceAction::return_success() to
+   avoid issues with languages such as python
+
+ServiceInfo:
+ - Non-gio style introspection functions are now deprecated
+
+Service:
+ - Returns a proper error instead of calling g_error when autoconnect fails
+
+ServiceProxy:
+ - Fixes an issue with M-POST fall-back if POST calls failed
+ - There is no need anymore to call ServiceProxyAction::get() to get SOAP
+   transport errors; those will now be already presented by the
+   ServiceProxy::call_action_finish() call.
+
+
+Bugs fixed in this release:
+ - https://gitlab.gnome.org/GNOME/gupnp/issues/58
+ - https://gitlab.gnome.org/GNOME/gupnp/issues/42
+ - https://gitlab.gnome.org/GNOME/gupnp/issues/52
+ - https://gitlab.gnome.org/GNOME/gupnp/issues/53
+ - https://gitlab.gnome.org/GNOME/gupnp/issues/54
+ - https://gitlab.gnome.org/GNOME/gupnp/issues/58
+ - https://gitlab.gnome.org/GNOME/gupnp/issues/60
+ - https://gitlab.gnome.org/GNOME/gupnp/issues/61
+ - https://gitlab.gnome.org/GNOME/gupnp/issues/63
+
+All contributors to this release:
+ - Jens Georg <mail@jensge.org>
+ - Marvin Schmidt <marv@exherbo.org>
+
 1.4.0 (stable)
 =====
 
