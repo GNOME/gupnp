@@ -4,7 +4,6 @@ Acl
     .is_allowed_finish skip
 DeviceInfo
     .element skip
-    .document skip
 Service
     .notify skip=false
     .signals_autoconnect skip

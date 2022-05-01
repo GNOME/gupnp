@@ -295,9 +295,7 @@ gupnp_device_info_class_init (GUPnPDeviceInfoClass *klass)
         /**
          * GUPnPDeviceInfo:document:
          *
-         * Private property.
-         *
-         * Stability: Private
+         * The description document
          **/
         g_object_class_install_property (
                 object_class,
