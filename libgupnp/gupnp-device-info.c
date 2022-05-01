@@ -280,7 +280,7 @@ gupnp_device_info_class_init (GUPnPDeviceInfoClass *klass)
         /**
          * GUPnPDeviceInfo:url-base:(attributes org.gtk.Property.get=gupnp_device_info_get_url_base):
          *
-         * The URL base (#SoupURI).
+         * The URL base (#GUri).
          **/
         g_object_class_install_property (
                 object_class,
