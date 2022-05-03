@@ -492,6 +492,7 @@ gupnp_service_proxy_action_check_response (GUPnPServiceProxyAction *action)
                 return;
         }
 
+        action->params = params;
         action->doc = response;
 }
 
