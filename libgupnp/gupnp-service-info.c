@@ -532,6 +532,7 @@ get_scpd_document_finished (GObject *source,
 {
         GError *error = NULL;
         GTask *task = G_TASK (user_data);
+        xmlDoc *scpd = NULL;
 
         GBytes *bytes =
                 soup_session_send_and_read_finish (SOUP_SESSION (source),
@@ -556,7 +557,6 @@ get_scpd_document_finished (GObject *source,
 
         gsize length;
         gconstpointer data = g_bytes_get_data (bytes, &length);
-        xmlDoc *scpd = NULL;
         scpd = xmlRecoverMemory (data, length);
         if (scpd == NULL) {
                 g_task_return_new_error (task,
