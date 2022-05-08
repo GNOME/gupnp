@@ -581,7 +581,6 @@ get_scpd_document_finished (GObject *source,
 out:
         g_clear_pointer (&scpd, xmlFreeDoc);
         g_clear_pointer (&bytes, g_bytes_unref);
-        g_clear_error (&error);
         g_object_unref (task);
 }
 
