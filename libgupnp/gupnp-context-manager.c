@@ -867,22 +867,6 @@ gupnp_context_manager_get_context_filter (GUPnPContextManager *manager)
 }
 
 /**
- * gupnp_context_manager_get_white_list:
- * @manager: A #GUPnPContextManager
- *
- * Get the #GUPnPContextFilter associated with @manager.
- *
- * Returns: (transfer none):  The #GUPnPContextFilter associated with this
- * context manager.
- * Deprecated: 1.4.0: Use [method@GUPnP.ContextManager.get_context_filter] instead.
- */
-GUPnPWhiteList *
-gupnp_context_manager_get_white_list (GUPnPContextManager *manager)
-{
-        return gupnp_context_manager_get_context_filter (manager);
-}
-
-/**
  * gupnp_context_manager_get_socket_family:(attributes org.gtk.Method.get_property=family)
  * @manager: A #GUPnPContextManager
  *

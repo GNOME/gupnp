@@ -15,7 +15,6 @@
 #include "gupnp-context.h"
 #include "gupnp-control-point.h"
 #include "gupnp-root-device.h"
-#include "gupnp-white-list.h"
 #include <glib.h>
 
 G_BEGIN_DECLS
@@ -66,10 +65,6 @@ gupnp_context_manager_get_port          (GUPnPContextManager *manager);
 
 GUPnPContextFilter *
 gupnp_context_manager_get_context_filter (GUPnPContextManager *manager);
-
-G_GNUC_DEPRECATED_FOR (gupnp_context_manager_get_context_filter)
-GUPnPWhiteList *
-gupnp_context_manager_get_white_list (GUPnPContextManager *manager);
 
 GSocketFamily
 gupnp_context_manager_get_socket_family (GUPnPContextManager *manager);
