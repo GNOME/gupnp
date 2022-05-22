@@ -23,5 +23,4 @@
 #include <libgupnp/gupnp-service.h>
 #include <libgupnp/gupnp-types.h>
 #include <libgupnp/gupnp-uuid.h>
-#include <libgupnp/gupnp-white-list.h>
 #include <libgupnp/gupnp-xml-doc.h>
