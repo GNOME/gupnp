@@ -290,33 +290,35 @@ test_gupnp_context_error_when_bound ()
         // IPv6
         server = soup_server_new (NULL, NULL);
         soup_server_listen_local (server, 0, SOUP_SERVER_LISTEN_IPV6_ONLY, &error);
-        g_assert_no_error (error);
+        if (error == NULL) {
+                uris = soup_server_get_uris (server);
 
-        uris = soup_server_get_uris (server);
+                address = g_uri_get_host (uris->data);
+                port = g_uri_get_port (uris->data);
 
-        address = g_uri_get_host (uris->data);
-        port = g_uri_get_port (uris->data);
+                g_test_expect_message ("gupnp-context",
+                                       G_LOG_LEVEL_WARNING,
+                                       "*Unable to listen*Could not "
+                                       "listen*Address already in use*");
+                context = g_initable_new (GUPNP_TYPE_CONTEXT,
+                                          NULL,
+                                          &error,
+                                          "host-ip",
+                                          address,
+                                          "port",
+                                          port,
+                                          NULL);
 
-        g_test_expect_message (
-                "gupnp-context",
-                G_LOG_LEVEL_WARNING,
-                "*Unable to listen*Could not listen*Address already in use*");
-        context = g_initable_new (GUPNP_TYPE_CONTEXT,
-                                  NULL,
-                                  &error,
-                                  "host-ip",
-                                  address,
-                                  "port",
-                                  port,
-                                  NULL);
+                g_slist_free_full (uris, (GDestroyNotify) g_uri_unref);
 
-        g_slist_free_full (uris, (GDestroyNotify) g_uri_unref);
+                g_test_assert_expected_messages ();
+                g_assert_error (error,
+                                GUPNP_SERVER_ERROR,
+                                GUPNP_SERVER_ERROR_OTHER);
+                g_assert_null (context);
+                g_clear_error (&error);
+        }
         g_object_unref (server);
-
-        g_test_assert_expected_messages ();
-        g_assert_error (error, GUPNP_SERVER_ERROR, GUPNP_SERVER_ERROR_OTHER);
-        g_assert_null (context);
-        g_clear_error (&error);
 }
 
 void
