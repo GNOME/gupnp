@@ -264,7 +264,7 @@ gupnp_resource_factory_create_service_proxy (GUPnPResourceFactory *factory,
                                              const GUri *url_base)
 {
         GUPnPServiceProxy *proxy;
-        GType              proxy_type = GUPNP_TYPE_SERVICE_PROXY;
+        GType proxy_type;
         GUPnPResourceFactoryPrivate *priv;
 
         g_return_val_if_fail (GUPNP_IS_RESOURCE_FACTORY (factory), NULL);
@@ -320,7 +320,7 @@ gupnp_resource_factory_create_device (GUPnPResourceFactory *factory,
                                       const GUri *url_base)
 {
         GUPnPDevice *device;
-        GType        device_type = GUPNP_TYPE_DEVICE;
+        GType device_type;
         GUPnPResourceFactoryPrivate *priv;
 
         g_return_val_if_fail (GUPNP_IS_RESOURCE_FACTORY (factory), NULL);
@@ -386,7 +386,7 @@ gupnp_resource_factory_create_service (GUPnPResourceFactory *factory,
                                        const GUri *url_base)
 {
         GUPnPService *service;
-        GType         service_type = GUPNP_TYPE_SERVICE;
+        GType service_type;
         GUPnPResourceFactoryPrivate *priv;
 
         g_return_val_if_fail (GUPNP_IS_RESOURCE_FACTORY (factory), NULL);
