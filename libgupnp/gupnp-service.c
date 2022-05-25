@@ -1428,10 +1428,17 @@ notify_got_response (GObject *source, GAsyncResult *res, gpointer user_data)
                         /* Emit 'notify-failed' signal */
                         GError *inner_error;
 
-                        inner_error = g_error_new_literal (
-                                GUPNP_EVENTING_ERROR,
-                                GUPNP_EVENTING_ERROR_NOTIFY_FAILED,
-                                soup_message_get_reason_phrase (data->msg));
+                        // We have an error, so just propagate that
+                        if (error != NULL) {
+                                g_propagate_error (&inner_error,
+                                                   g_steal_pointer (&error));
+                        } else {
+                                inner_error = g_error_new_literal (
+                                        GUPNP_EVENTING_ERROR,
+                                        GUPNP_EVENTING_ERROR_NOTIFY_FAILED,
+                                        soup_message_get_reason_phrase (
+                                                data->msg));
+                        }
 
                         g_signal_emit (data->data->service,
                                        signals[NOTIFY_FAILED],
