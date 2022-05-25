@@ -1100,17 +1100,32 @@ main (int argc, char *argv[])
 
         GPtrArray *addresses = g_ptr_array_sized_new (2);
         g_ptr_array_add (addresses, g_strdup ("127.0.0.1"));
-        g_ptr_array_add (addresses, g_strdup ("::1"));
+
 
         // Detect if there is a special network device with "proper" ip addresses to check also link-local addresses
         GUPnPContext *c = g_initable_new (GUPNP_TYPE_CONTEXT,
                                           NULL,
                                           NULL,
-                                          "interface",
-                                          "gupnp0",
-                                          "address-family",
-                                          G_SOCKET_FAMILY_IPV4,
+                                          "host-ip",
+                                          "::1",
                                           NULL);
+
+        if (c != NULL) {
+                g_ptr_array_add (
+                        addresses,
+                        g_strdup (gssdp_client_get_host_ip (GSSDP_CLIENT (c))));
+                g_object_unref (c);
+        }
+
+        // Detect if there is a special network device with "proper" ip addresses to check also link-local addresses
+        c = g_initable_new (GUPNP_TYPE_CONTEXT,
+                            NULL,
+                            NULL,
+                            "interface",
+                            "gupnp0",
+                            "address-family",
+                            G_SOCKET_FAMILY_IPV4,
+                            NULL);
 
         if (c != NULL) {
                 g_debug ("Adding address %s from device gupnp0",
