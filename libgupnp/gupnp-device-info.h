@@ -100,6 +100,25 @@ gupnp_device_info_get_icon_url           (GUPnPDeviceInfo *info,
                                           int             *width,
                                           int             *height);
 
+void
+gupnp_device_info_get_icon_async (GUPnPDeviceInfo *info,
+                                  const char *requested_mime_type,
+                                  int requested_depth,
+                                  int requested_width,
+                                  int requested_height,
+                                  gboolean prefer_bigger,
+                                  GCancellable *cancellable,
+                                  GAsyncReadyCallback callback,
+                                  gpointer user_data);
+
+GBytes *
+gupnp_device_info_get_icon_finish (GUPnPDeviceInfo *info,
+                                   GAsyncResult *res,
+                                   char **mime,
+                                   int *depth,
+                                   int *width,
+                                   int *height,
+                                   GError **error);
 char *
 gupnp_device_info_get_presentation_url   (GUPnPDeviceInfo *info);
 

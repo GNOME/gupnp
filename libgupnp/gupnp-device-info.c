@@ -12,8 +12,9 @@
 #include <config.h>
 #include <string.h>
 
-#include "gupnp-device-info.h"
+#include "gupnp-context-private.h"
 #include "gupnp-device-info-private.h"
+#include "gupnp-device-info.h"
 #include "gupnp-resource-factory-private.h"
 #include "xml-util.h"
 
@@ -32,6 +33,21 @@ struct _GUPnPDeviceInfoPrivate {
         xmlNode *element;
 };
 typedef struct _GUPnPDeviceInfoPrivate GUPnPDeviceInfoPrivate;
+
+struct _GetIconData {
+        char *mime;
+        int depth;
+        int width;
+        int height;
+};
+typedef struct _GetIconData GetIconData;
+
+static void
+get_icon_data_free (GetIconData *data)
+{
+        g_clear_pointer (&data->mime, g_free);
+        g_free (data);
+}
 
 /**
  * GUPnPDeviceInfo:
@@ -1507,4 +1523,173 @@ _gupnp_device_info_get_document (GUPnPDeviceInfo *info)
         priv = gupnp_device_info_get_instance_private (info);
 
         return priv->doc;
+}
+
+static void
+on_get_icon_async (GObject *source, GAsyncResult *res, gpointer user_data)
+{
+        GTask *task = G_TASK (user_data);
+        GError *error = NULL;
+
+        GBytes *data = soup_session_send_and_read_finish (SOUP_SESSION (source),
+                                                          res,
+                                                          &error);
+        SoupMessage *message =
+                soup_session_get_async_result_message (SOUP_SESSION (source),
+                                                       res);
+
+        if (error != NULL) {
+                g_task_return_error (task, error);
+        } else {
+                if (SOUP_STATUS_IS_SUCCESSFUL (
+                            soup_message_get_status (message))) {
+                        g_task_return_pointer (task,
+                                               g_steal_pointer (&data),
+                                               (GDestroyNotify) g_bytes_unref);
+                } else {
+                        g_bytes_unref (data);
+
+                        g_task_return_new_error (
+                                task,
+                                G_IO_ERROR,
+                                G_IO_ERROR_FAILED,
+                                "Unable to download icon: %s",
+                                soup_message_get_reason_phrase (message));
+                }
+        }
+
+        g_clear_pointer (&data, g_bytes_unref);
+        g_object_unref (task);
+}
+
+/**
+ * gupnp_device_info_get_icon_async:
+ * @info: A #GUPnPDeviceInfo
+ * @requested_mime_type: (nullable) (transfer none): The requested file
+ * format, or %NULL for any
+ * @requested_depth: The requested color depth, or -1 for any
+ * @requested_width: The requested width, or -1 for any
+ * @requested_height: The requested height, or -1 for any
+ * @prefer_bigger: %TRUE if a bigger, rather than a smaller icon should be
+ * returned if no exact match could be found
+ *
+ * Download the device icon matching the request parameters. For details on
+ * the lookup procedure, see [method@GUPnP.DeviceInfo.get_icon_url]
+ **/
+void
+gupnp_device_info_get_icon_async (GUPnPDeviceInfo *info,
+                                  const char *requested_mime_type,
+                                  int requested_depth,
+                                  int requested_width,
+                                  int requested_height,
+                                  gboolean prefer_bigger,
+                                  GCancellable *cancellable,
+                                  GAsyncReadyCallback callback,
+                                  gpointer user_data)
+{
+        g_return_if_fail (GUPNP_IS_DEVICE_INFO (info));
+
+        GTask *task = g_task_new (info, cancellable, callback, user_data);
+        char *mime = NULL;
+        int depth = -1;
+        int width = -1;
+        int height = -1;
+
+        char *url = gupnp_device_info_get_icon_url (info,
+                                                    requested_mime_type,
+                                                    requested_depth,
+                                                    requested_width,
+                                                    requested_height,
+                                                    prefer_bigger,
+                                                    &mime,
+                                                    &depth,
+                                                    &width,
+                                                    &height);
+
+        if (url == NULL) {
+                g_task_return_pointer (task, NULL, NULL);
+                g_object_unref (task);
+                g_clear_pointer (&mime, g_free);
+
+                return;
+        }
+
+        GUPnPContext *context = gupnp_device_info_get_context (info);
+        SoupSession *session = gupnp_context_get_session (context);
+        GUri *rewritten_url = gupnp_context_rewrite_uri_to_uri (context, url);
+        g_free (url);
+
+        GetIconData *data = g_new0 (GetIconData, 1);
+        data->mime = g_steal_pointer (&mime);
+        data->depth = depth;
+        data->width = width;
+        data->height = height;
+        g_task_set_task_data (task, data, (GDestroyNotify) get_icon_data_free);
+
+        SoupMessage *message =
+                soup_message_new_from_uri (SOUP_METHOD_GET, rewritten_url);
+        g_uri_unref (rewritten_url);
+
+        soup_session_send_and_read_async (session,
+                                          message,
+                                          G_PRIORITY_DEFAULT_IDLE,
+                                          g_task_get_cancellable (task),
+                                          on_get_icon_async,
+                                          task);
+        g_object_unref (message);
+        g_clear_pointer (&mime, g_free);
+}
+
+/**
+ * gupnp_device_info_get_icon_finish:
+ * @info: A #GUPnPDeviceInfo
+ * @res: A GAsyncResult
+ * @mime: (out) (optional): The location where to store the the format
+ * of the returned icon, or %NULL. The returned string should be freed after
+ * use
+ * @depth: (out) (optional):  The location where to store the depth of the
+ * returned icon, or %NULL
+ * @width: (out) (optional): The location where to store the width of the
+ * returned icon, or %NULL
+ * @height: (out) (optional): The location where to store the height of the
+ * returned icon, or %NULL
+ * @error: A location for GError or NULL
+ *
+ * Returns: (transfer full): A GBytes contaning the icon or NULL on either
+ * error or no matching icon was found.
+ */
+GBytes *
+gupnp_device_info_get_icon_finish (GUPnPDeviceInfo *info,
+                                   GAsyncResult *res,
+                                   char **mime,
+                                   int *depth,
+                                   int *width,
+                                   int *height,
+                                   GError **error)
+{
+        g_return_val_if_fail (GUPNP_IS_DEVICE_INFO (info), NULL);
+        g_return_val_if_fail (g_task_is_valid (res, info), NULL);
+
+        GBytes *data = g_task_propagate_pointer (G_TASK (res), error);
+        GetIconData *icon_data = g_task_get_task_data (G_TASK (res));
+
+        if (mime != NULL) {
+                *mime = (icon_data == NULL)
+                                ? NULL
+                                : g_steal_pointer (&(icon_data->mime));
+        }
+
+        if (depth != NULL) {
+                *depth = (icon_data == NULL) ? -1 : icon_data->depth;
+        }
+
+        if (width != NULL) {
+                *width = (icon_data == NULL) ? -1 : icon_data->width;
+        }
+
+        if (height != NULL) {
+                *height = (icon_data == NULL) ? -1 : icon_data->height;
+        }
+
+        return data;
 }
