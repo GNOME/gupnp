@@ -908,7 +908,7 @@ gupnp_device_info_get_icon_url (GUPnPDeviceInfo *info,
                         icon = l->data;
 
                         /* Look between icons with positive weight first */
-                        if (icon->weight >= 0) {
+                        if (icon && icon->weight >= 0) {
                                 if (!closest || icon->weight < closest->weight)
                                         closest = icon;
                         }
@@ -921,7 +921,8 @@ gupnp_device_info_get_icon_url (GUPnPDeviceInfo *info,
 
                         /* No icons with positive weight, look at ones with
                          * negative weight */
-                        if (!closest || icon->weight > closest->weight)
+                        if (!closest ||
+                            (icon && (icon->weight > closest->weight)))
                                 closest = icon;
                 }
         }
