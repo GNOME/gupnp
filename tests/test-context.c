@@ -360,25 +360,27 @@ test_gupnp_context_rewrite_uri ()
                                   "::1",
                                   NULL);
 
-        g_assert_no_error (error);
-        g_assert_nonnull (context);
-        // Rewriting a v6 uri on a v4 context should not work
-        uri = gupnp_context_rewrite_uri (context, "http://[fe80::1]");
-        char *expected = g_strdup_printf (
-                "http://[fe80::1%%25%d]",
-                gssdp_client_get_index (GSSDP_CLIENT (context)));
-        g_assert_cmpstr (uri, ==, expected);
-        g_free (expected);
-        g_free (uri);
+        // Skip test if IPv6 could not be found
+        if (error == NULL) {
+                g_assert_nonnull (context);
+                // Rewriting a v6 uri on a v4 context should not work
+                uri = gupnp_context_rewrite_uri (context, "http://[fe80::1]");
+                char *expected = g_strdup_printf (
+                                "http://[fe80::1%%25%d]",
+                                gssdp_client_get_index (GSSDP_CLIENT (context)));
+                g_assert_cmpstr (uri, ==, expected);
+                g_free (expected);
+                g_free (uri);
 
-        g_test_expect_message ("gupnp-context",
-                               G_LOG_LEVEL_WARNING,
-                               "Address*family*mismatch*");
-        uri = gupnp_context_rewrite_uri (context, "http://127.0.0.1");
-        g_assert_null (uri);
-        g_test_assert_expected_messages ();
+                g_test_expect_message ("gupnp-context",
+                                G_LOG_LEVEL_WARNING,
+                                "Address*family*mismatch*");
+                uri = gupnp_context_rewrite_uri (context, "http://127.0.0.1");
+                g_assert_null (uri);
+                g_test_assert_expected_messages ();
 
-        g_object_unref (context);
+                g_object_unref (context);
+        }
 }
 
 void
