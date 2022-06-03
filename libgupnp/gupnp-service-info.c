@@ -621,9 +621,13 @@ gupnp_service_info_introspect_async           (GUPnPServiceInfo    *info,
                 return;
         }
 
-
-        SoupMessage *message = soup_message_new (SOUP_METHOD_GET, scpd_url);
+        GUPnPContext *context = gupnp_service_info_get_context (info);
+        GUri *scpd = gupnp_context_rewrite_uri_to_uri (context, scpd_url);
         g_free (scpd_url);
+
+        SoupMessage *message = soup_message_new_from_uri (SOUP_METHOD_GET, scpd);
+        g_uri_unref (scpd);
+
         if (message == NULL) {
                 g_task_return_new_error (task,
                                          GUPNP_SERVER_ERROR,
