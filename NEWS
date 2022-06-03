@@ -1,3 +1,30 @@
+1.5.1 (development)
+===================
+
+ - Minor doc fixes
+ - Remove left-overs from WhiteList renaming
+ - Make tests a little friendlier if there is no ipv6
+ - Fix a couple of issues from scan-build
+
+DeviceInfo:
+ - Make DeviceInfo:document accessible
+ - Offer convenience function DeviceInfo:get_icon_async to combine
+   icon lookup and icon download
+
+ServiceAction:
+ - Potential fix for running g_clear_pointer on an uninitialized value
+ - Fix getting parameters from action
+
+ServiceInfo:
+ - Do not free an error that was propagated
+ - Fix introspection on IPv6 devices
+
+Service:
+ - Fix critical if Soup error other than G_IO_ERROR_CANCELLED occured
+
+All contributors to this release:
+ - Jens Georg <mail@jensge.org>
+
 1.5.0 (development)
 ===================
 
