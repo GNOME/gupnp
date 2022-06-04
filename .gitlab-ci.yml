@@ -168,10 +168,43 @@ static-scan:
     - build-fedora-container@x86_64
   script:
     - meson --buildtype=debug _scan_build
+    - export SCANBUILD="$PWD/.gitlab-ci/scanbuild-wrapper.sh"
     - ninja -C _scan_build scan-build
   artifacts:
     paths:
       - _scan_build/meson-logs
+  after_script:
+    - .gitlab-ci/scanbuild-plist-to-junit.py _scan_build/meson-logs/scanbuild/ > _scan_build/junit-scan-build.xml
+  artifacts:
+    reports:
+      junit: "_scan_build/junit-scan-build.xml"
+
+coverity:
+  extends:
+    - .fdo.distribution-image@fedora
+    - .gupnp.fedora:36@x86_64
+  stage: analysis
+  allow_failure: true
+  script:
+    - curl https://scan.coverity.com/download/linux64 --data "token=$COVERITY_TOKEN&project=gupnp" --output /tmp/coverity_tool.tgz
+    - tar zxf /tmp/coverity_tool.tgz
+    - mkdir coverity-build
+    - cd coverity-build
+    - env CC=clang meson ..
+    - ../cov-analysis-linux64-*/bin/cov-build --dir cov-int ninja
+    - tar czf cov-int.tar.gz cov-int
+    - curl https://scan.coverity.com/builds?project=gupnp
+      --form token=$COVERITY_TOKEN --form email=mail@jensge.org
+      --form file=@cov-int.tar.gz --form version="`git describe --tags`"
+      --form description="gitlab CI build"
+  needs:
+    - build-fedora-container@x86_64
+  only:
+    - master
+  except:
+    changes:
+      - po/*.po
+
 
 pages:
   extends:
