@@ -20,7 +20,3 @@ public interface GUPnP.Acl : GLib.Object {
 		public abstract async bool is_allowed_async (GUPnP.Device? device, GUPnP.Service? service, string path, string address, string? agent, GLib.Cancellable? cancellable) throws GLib.Error;
 }
 
-public class GUPnP.XMLDoc : GLib.Object {
-	[CCode (has_construct_function = false)]
-    public XMLDoc (Xml.Doc xml_doc);
-}

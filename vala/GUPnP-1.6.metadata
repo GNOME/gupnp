@@ -18,5 +18,3 @@ ServiceIntrospection
     .scpd skip
 ServiceProxy
     .add_notify skip=false
-XMLDoc
-    .new skip
