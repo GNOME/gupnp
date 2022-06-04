@@ -27,7 +27,7 @@
 // DAMAGE.
 
 imports.gi.versions.GUPnP = "1.6"
-imports.gi.versions.GSSDP = "1.2"
+imports.gi.versions.GSSDP = "1.6"
 
 const Mainloop = imports.mainloop;
 const GUPnP = imports.gi.GUPnP;
