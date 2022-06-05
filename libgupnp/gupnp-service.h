@@ -9,8 +9,6 @@
 #ifndef GUPNP_SERVICE_H
 #define GUPNP_SERVICE_H
 
-#include <stdarg.h>
-
 #include "gupnp-service-info.h"
 
 G_BEGIN_DECLS
