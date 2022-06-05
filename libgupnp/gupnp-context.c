@@ -1427,6 +1427,8 @@ gupnp_acl_server_handler (SoupServer *server,
                               "root-device", &device,
                               NULL);
 
+                // g_object_get will give us an additional reference here.
+                // drop that immediately
                 if (device != NULL) {
                         g_object_unref (device);
                 }
@@ -1466,6 +1468,10 @@ gupnp_acl_server_handler (SoupServer *server,
                                                       handler);
 
                         soup_server_pause_message (server, msg);
+                        // Since we drop the additional reference above, coverity seems to think this is
+                        // use-after-free, but the service is still holding a reference here.
+
+                        // coverity[pass_freed_arg]
                         gupnp_acl_is_allowed_async (
                                 priv->acl,
                                 device,

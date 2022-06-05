@@ -272,7 +272,6 @@ test_gupnp_context_acl (ContextTestFixture *tf, gconstpointer user_data)
         acl->is_allowed = TRUE;
 
         gupnp_context_set_acl (tf->context, GUPNP_ACL (acl));
-        g_object_unref (acl);
 
         g_assert (acl == (TestAcl *) gupnp_context_get_acl (tf->context));
 
@@ -397,6 +396,8 @@ test_gupnp_context_acl (ContextTestFixture *tf, gconstpointer user_data)
 
         g_object_unref (msg);
         g_free (request_uri);
+
+        g_object_unref (acl);
 }
 
 int

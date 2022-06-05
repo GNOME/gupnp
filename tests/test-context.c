@@ -155,6 +155,8 @@ request_range_and_compare (GMappedFile *file,
                                                 &got_length);
         g_assert_cmpint (got_start, ==, want_start);
         g_assert_cmpint (got_end, ==, want_end);
+
+        // coverity[leaked_storage]
         result = memcmp (g_mapped_file_get_contents (file) + want_start,
                          g_bytes_get_data (h.body, NULL),
                          want_length);

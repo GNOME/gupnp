@@ -95,7 +95,7 @@ on_introspection (GObject *object, GAsyncResult *res, gpointer user_data)
         if (error != NULL) {
                 g_critical ("%s", error->message);
                 g_clear_error (&error);
-        } else {
+        } else if (out_values != NULL) {
                 g_print ("Current volume: %s\n",
                          g_value_get_string (out_values->data));
         }

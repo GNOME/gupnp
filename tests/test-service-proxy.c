@@ -473,9 +473,9 @@ thread_func (gpointer data)
         gupnp_service_proxy_action_unref (action);
 
         if (d->expected_error.domain != 0)
-                g_error_matches (error,
-                                 d->expected_error.domain,
-                                 d->expected_error.code);
+                g_assert_error (error,
+                                d->expected_error.domain,
+                                d->expected_error.code);
 
         g_object_unref (gpd.p);
         g_object_unref (cp);
@@ -515,6 +515,8 @@ test_sync_call (ProxyTestFixture *tf, gconstpointer user_data)
         // Spin the loop for a bit...
         g_timeout_add (500, (GSourceFunc) delayed_loop_quitter, tf->loop);
         g_main_loop_run (tf->loop);
+
+        g_thread_unref (t);
 }
 
 gboolean
@@ -554,6 +556,7 @@ test_cancel_sync_call (ProxyTestFixture *tf, gconstpointer user_data)
         // Spin the loop for a bit...
         g_timeout_add (500, (GSourceFunc) delayed_loop_quitter, tf->loop);
         g_main_loop_run (tf->loop);
+        g_thread_unref (t);
 }
 
 void
@@ -632,6 +635,7 @@ test_finish_soap_error_sync (ProxyTestFixture *tf, gconstpointer user_data)
         // Spin the loop for a bit...
         g_timeout_add (500, (GSourceFunc) delayed_loop_quitter, tf->loop);
         g_main_loop_run (tf->loop);
+        g_thread_unref (t);
 }
 
 int
