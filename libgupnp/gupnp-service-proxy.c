@@ -1592,7 +1592,6 @@ gupnp_service_proxy_call_action (GUPnPServiceProxy       *proxy,
 {
         GUPnPContext *context = NULL;
         SoupSession *session = NULL;
-        GError *internal_error = NULL;
 
         g_return_val_if_fail (GUPNP_IS_SERVICE_PROXY (proxy), NULL);
         g_return_val_if_fail (!action->pending, NULL);
@@ -1606,9 +1605,9 @@ gupnp_service_proxy_call_action (GUPnPServiceProxy       *proxy,
         action->response = soup_session_send_and_read (session,
                                                        action->msg,
                                                        cancellable,
-                                                       &internal_error);
+                                                       &action->error);
 
-        if (internal_error != NULL) {
+        if (action->error != NULL) {
                 goto out;
         }
 
@@ -1618,21 +1617,24 @@ gupnp_service_proxy_call_action (GUPnPServiceProxy       *proxy,
                 if (prepare_action_msg (proxy,
                                         action,
                                         "M-POST",
-                                        &internal_error)) {
+                                        &action->error)) {
                         g_bytes_unref (action->response);
 
                         action->response =
                                 soup_session_send_and_read (session,
                                                             action->msg,
                                                             cancellable,
-                                                            error);
+                                                            &action->error);
                 }
         }
 
+        if (action->error == NULL)
+                gupnp_service_proxy_action_check_response (action);
+
 out:
-        if (internal_error != NULL) {
-                action->error = g_error_copy (internal_error);
-                g_propagate_error (error, internal_error);
+
+        if (action->error != NULL) {
+                g_propagate_error (error, g_error_copy (action->error));
 
                 return NULL;
         }
