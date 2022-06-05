@@ -128,7 +128,14 @@ pkg.generate(
     libgupnp,
     subdirs: GUPNP_API_NAME,
     name : GUPNP_API_NAME,
-    requires : ['glib-2.0', 'gio-2.0', 'gssdp-1.6'],
+    requires : [
+      'glib-2.0',
+      'gio-2.0',
+      'gobject-2.0',
+      'gssdp-1.6',
+      'libsoup-3.0',
+      'libxml-2.0'
+    ],
     description : 'GObject-based UPnP library',
     version : meson.project_version(),
     filebase : GUPNP_API_NAME
