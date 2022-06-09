@@ -1158,6 +1158,7 @@ subscribe_got_response (GObject *source, GAsyncResult *res, gpointer user_data)
 
         // We don't need the body, it should be empty anyway
         g_input_stream_close (is, NULL, NULL);
+        g_object_unref (is);
 
         /* Remove subscription timeout */
         g_clear_pointer (&priv->subscription_timeout_src, g_source_destroy);
