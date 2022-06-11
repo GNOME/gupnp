@@ -79,9 +79,13 @@ gupnp_context_filter_set_property (GObject *object,
         case PROP_ENABLED:
                 priv->enabled = g_value_get_boolean (value);
                 break;
-        case PROP_ENTRIES:
-                priv->entries = g_value_get_pointer (value);
-                break;
+        case PROP_ENTRIES: {
+                GList *entries = g_value_get_pointer (value);
+                g_hash_table_remove_all (priv->entries);
+                for (GList *it = entries; it != NULL; it = g_list_next (it)) {
+                        g_hash_table_add (priv->entries, g_strdup (it->data));
+                }
+        } break;
         default:
                 G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
                 break;
@@ -105,7 +109,8 @@ gupnp_context_filter_get_property (GObject *object,
                 g_value_set_boolean (value, priv->enabled);
                 break;
         case PROP_ENTRIES:
-                g_value_set_pointer (value, priv->entries);
+                g_value_set_pointer (value,
+                                     gupnp_context_filter_get_entries (list));
                 break;
         default:
                 G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -210,8 +215,10 @@ gupnp_context_filter_set_enabled (GUPnPContextFilter *context_filter,
         g_return_if_fail (GUPNP_IS_CONTEXT_FILTER (context_filter));
 
         priv = gupnp_context_filter_get_instance_private (context_filter);
-        priv->enabled = enable;
-        g_object_notify (G_OBJECT (context_filter), "enabled");
+        if (priv->enabled != enable) {
+                priv->enabled = enable;
+                g_object_notify (G_OBJECT (context_filter), "enabled");
+        }
 }
 
 /**
@@ -255,7 +262,7 @@ gupnp_context_filter_is_empty (GUPnPContextFilter *context_filter)
 
         priv = gupnp_context_filter_get_instance_private (context_filter);
 
-        return (priv->entries == NULL);
+        return (g_hash_table_size (priv->entries) == 0);
 }
 
 /**
@@ -307,12 +314,20 @@ gupnp_context_filter_add_entryv (GUPnPContextFilter *context_filter,
                                  gchar **entries)
 {
         gchar *const *iter = entries;
+        GUPnPContextFilterPrivate *priv;
 
         g_return_if_fail (GUPNP_IS_CONTEXT_FILTER (context_filter));
         g_return_if_fail ((entries != NULL));
 
-        for (; *iter != NULL; iter++)
-                gupnp_context_filter_add_entry (context_filter, *iter);
+        priv = gupnp_context_filter_get_instance_private (context_filter);
+        gboolean changed = FALSE;
+        for (; *iter != NULL; iter++) {
+                if (g_hash_table_add (priv->entries, g_strdup (*iter)))
+                        changed = TRUE;
+        }
+
+        if (changed)
+                g_object_notify (G_OBJECT (context_filter), "entries");
 }
 
 /**
@@ -355,7 +370,6 @@ gupnp_context_filter_remove_entry (GUPnPContextFilter *context_filter,
  *
  * Return value: (element-type utf8) (transfer container)(nullable):  a #GList of entries
  * used to filter networks, interfaces,... or %NULL.
- * Do not modify or free the list nor its elements.
  *
  * Since: 1.4.0
  **/
@@ -414,11 +428,9 @@ gupnp_context_filter_check_context (GUPnPContextFilter *context_filter,
                                     GUPnPContext *context)
 {
         GSSDPClient *client;
-        GList *l;
         const char *interface;
         const char *host_ip;
         const char *network;
-        gboolean match = FALSE;
         GUPnPContextFilterPrivate *priv;
 
         g_return_val_if_fail (GUPNP_IS_CONTEXT_FILTER (context_filter), FALSE);
@@ -431,17 +443,7 @@ gupnp_context_filter_check_context (GUPnPContextFilter *context_filter,
         host_ip = gssdp_client_get_host_ip (client);
         network = gssdp_client_get_network (client);
 
-        GList *head = l = g_hash_table_get_keys (priv->entries);
-
-        while (l && !match) {
-                match = (interface && !strcmp (l->data, interface)) ||
-                        (host_ip && !strcmp (l->data, host_ip)) ||
-                        (network && !strcmp (l->data, network));
-
-                l = l->next;
-        }
-
-        g_list_free (head);
-
-        return match;
+        return g_hash_table_contains (priv->entries, interface) ||
+               g_hash_table_contains (priv->entries, host_ip) ||
+               g_hash_table_contains (priv->entries, network);
 }
