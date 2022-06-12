@@ -140,8 +140,6 @@ test_context_filter_entry_management ()
         g_assert_cmpint (entry_change_count, ==, 1);
         g_assert_null (gupnp_context_filter_get_entries (filter));
 
-        g_list_free (entries);
-
         {
                 char *entryv[] = { "eth0", "eth1", "eth2", "eth3", NULL };
 
