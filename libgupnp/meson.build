@@ -1,6 +1,6 @@
 context_manager_impl = []
 context_manager_args = []
-system_deps = [guul.get_variable('guul')]
+system_deps = []
 
 if host_machine.system() == 'windows'
     context_manager_impl += 'gupnp-windows-context-manager.c'

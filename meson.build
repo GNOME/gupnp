@@ -28,7 +28,6 @@ conf.set('GLIB_VERSION_MIN_REQUIRED', 'GLIB_VERSION_2_70'.format(glib_version.un
 conf.set('GLIB_VERSION_MAX_ALLOWED', 'GLIB_VERSION_2_70'.format(glib_version.underscorify()))
 
 subdir('internal')
-guul = subproject('guul', default_options : ['default_library=static'])
 
 gssdp_dep = dependency('gssdp-1.6', version : '>= 1.5.0', default_options: ['sniffer=false'], fallback: 'gssdp-1.6')
 

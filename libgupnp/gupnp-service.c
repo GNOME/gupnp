@@ -26,10 +26,7 @@
 #include "xml-util.h"
 #include "gvalue-util.h"
 
-#include "guul.h"
-
 #define SUBSCRIPTION_TIMEOUT 300 /* DLNA (7.2.22.1) enforced */
-
 
 struct _GUPnPServicePrivate {
         GUPnPRootDevice           *root_device;
@@ -548,11 +545,12 @@ subscription_response (GUPnPService *service,
  * Generate and return a new UUID.
  *
  * Returns: (transfer full): A newly generated UUID in string representation.
+ * Deprecated: 1.6. Use [func@GLib.uuid_string_random] instead.
  */
 char *
 gupnp_get_uuid (void)
 {
-        return guul_get_uuid ();
+        return g_uuid_string_random();
 }
 
 /* Generates a new SID */
@@ -562,8 +560,7 @@ generate_sid (void)
         char *ret = NULL;
         char *uuid;
 
-
-        uuid = guul_get_uuid ();
+        uuid = g_uuid_string_random ();
         ret = g_strconcat ("uuid:", uuid, NULL);
         g_free (uuid);
 
