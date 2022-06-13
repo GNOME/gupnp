@@ -1216,8 +1216,19 @@ subscribe_got_response (GObject *source, GAsyncResult *res, gpointer user_data)
                         }
 
                         /* We want to resubscribe before the subscription
-                         * expires. */
-                        timeout = g_random_int_range (1, timeout / 2);
+                         * expires. We do that somewhat around the middle of the
+                         * subscription period and introduce some random jitter
+                         * around that, so we do not bombard the services with
+                         * all the re-subscription all at once
+                         */
+                        int jitter =
+                                g_random_int_range (-timeout / 4, timeout / 4);
+                        timeout = timeout / 2 + jitter;
+
+                        g_debug ("Service announced timeout of %s, will "
+                                 "re-subscribe in %d seconds",
+                                 hdr,
+                                 timeout);
 
                         /* Add actual timeout */
                         priv->subscription_timeout_src =
