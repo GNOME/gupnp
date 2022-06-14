@@ -6,6 +6,8 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
+#define G_LOG_DOMAIN "gupnp-context-filter"
+
 #include "gupnp-context-filter.h"
 
 #include <string.h>

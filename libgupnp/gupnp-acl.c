@@ -6,6 +6,8 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
+#define G_LOG_DOMAIN "gupnp-acl"
+
 #include <config.h>
 
 #include "gupnp-acl.h"

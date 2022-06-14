@@ -7,6 +7,7 @@
  *
  */
 
+#define G_LOG_DOMAIN "gupnp-device-proxy"
 
 #include <config.h>
 #include <string.h>

@@ -25,6 +25,8 @@
  * a device proxy type needs to be derived from [class@GUPnP.DeviceProxy]).
  */
 
+#define G_LOG_DOMAIN "gupnp-resource-factory"
+
 #include <config.h>
 #include <string.h>
 

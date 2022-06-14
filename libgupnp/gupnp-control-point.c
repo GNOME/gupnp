@@ -7,6 +7,8 @@
  *
  */
 
+#define G_LOG_DOMAIN "gupnp-control-point"
+
 /**
  * GUPnPControlPoint:
  *

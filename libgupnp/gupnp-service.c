@@ -7,6 +7,7 @@
  *
  */
 
+#define G_LOG_DOMAIN "gupnp-service"
 
 #include <config.h>
 

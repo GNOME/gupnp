@@ -7,7 +7,7 @@
  *
  */
 
-
+#define G_LOG_DOMAIN "gupnp-device-info"
 
 #include <config.h>
 #include <string.h>

@@ -10,6 +10,7 @@
  *
  */
 
+#define G_LOG_DOMAIN "gupnp-xml-doc"
 
 #include <config.h>
 #include <string.h>

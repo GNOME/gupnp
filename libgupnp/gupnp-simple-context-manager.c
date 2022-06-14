@@ -10,6 +10,8 @@
  *
  */
 
+#define G_LOG_DOMAIN "gupnp-simple-context-manager"
+
 /**
  * SECTION:gupnp-simple-context-manager
  * @short_description: Abstract implementation of basic #GUPnPContextManager.

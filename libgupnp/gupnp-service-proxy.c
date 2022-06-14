@@ -7,6 +7,8 @@
  *
  */
 
+#define G_LOG_DOMAIN "gupnp-service-proxy"
+
 #include <config.h>
 #include <libsoup/soup.h>
 #include <gobject/gvaluecollector.h>
