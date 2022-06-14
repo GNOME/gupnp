@@ -512,7 +512,7 @@ test_bgo_743233 (void)
                                   "usn:uuid:0dc60534-642c-478f-ae61-1d78dbe1f73d");
     g_assert (cp != NULL);
 
-    g_test_expect_message (G_LOG_DOMAIN,
+    g_test_expect_message ("gupnp-control-point",
                            G_LOG_LEVEL_WARNING,
                            "Invalid USN: " TEST_BGO_743233_USN);
     g_signal_emit_by_name (cp, "resource-unavailable", TEST_BGO_743233_USN);
