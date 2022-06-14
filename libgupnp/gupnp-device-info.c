@@ -1590,6 +1590,8 @@ gupnp_device_info_get_icon_async (GUPnPDeviceInfo *info,
         g_return_if_fail (GUPNP_IS_DEVICE_INFO (info));
 
         GTask *task = g_task_new (info, cancellable, callback, user_data);
+        g_task_set_name (task, "DeviceInfo icon fetcher");
+
         char *mime = NULL;
         int depth = -1;
         int width = -1;
