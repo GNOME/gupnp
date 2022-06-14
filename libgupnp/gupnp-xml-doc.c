@@ -10,15 +10,6 @@
  *
  */
 
-/**
- * SECTION:gupnp-xml-doc
- * @short_description: GObject wrapper for xmlDoc.
- *
- * GObject wrapper for xmlDoc, so that we can use refcounting and weak
- * references.
- *
- * Since: 0.13.0
- */
 
 #include <config.h>
 #include <string.h>
@@ -28,9 +19,9 @@
 
 /**
  * GUPnPXMLDoc:
- * @doc: Pointer to the document.
- *
  * Reference-counting wrapper for libxml's #xmlDoc
+ *
+ * Since: 0.14.0
  */
 struct _GUPnPXMLDoc {
         GObject parent;

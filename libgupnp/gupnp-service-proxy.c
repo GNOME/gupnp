@@ -622,8 +622,8 @@ gupnp_service_proxy_add_notify_full (GUPnPServiceProxy              *proxy,
  *
  * Get a notification for anything that happens on the peer.
  *
- * @value in @callback will be of type #G_TYPE_POINTER and contain the pre-parsed
- * #xmlDoc. Do NOT free or modify this document.
+ * @value in @callback will be of type G_TYPE_POINTER and contain the pre-parsed
+ * [type@libxml2.Doc]. Do NOT free or modify this document.
  *
  * Return value: %TRUE on success.
  *
