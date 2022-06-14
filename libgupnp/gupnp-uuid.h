@@ -9,9 +9,11 @@
 #ifndef GUPNP_UUID_H
 #define GUPNP_UUID_H
 
+#include <glib.h>
+
 G_BEGIN_DECLS
 
-char *
+G_GNUC_DEPRECATED_FOR(g_uuid_string_random) char *
 gupnp_get_uuid (void);
 
 G_END_DECLS
