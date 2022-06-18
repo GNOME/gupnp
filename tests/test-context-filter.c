@@ -215,6 +215,31 @@ test_context_filter_enable_disable ()
         g_assert_false (gupnp_context_filter_get_enabled (filter));
         g_assert_cmpint (enabled_count, ==, 1);
 
+        enabled_count = 0;
+        gupnp_context_filter_set_enabled (filter, FALSE);
+        g_assert_false (gupnp_context_filter_get_enabled (filter));
+        g_assert_cmpint (enabled_count, ==, 0);
+
+        enabled_count = 0;
+        g_object_set (G_OBJECT (filter), "enabled", FALSE, NULL);
+        g_assert_false (gupnp_context_filter_get_enabled (filter));
+        g_assert_cmpint (enabled_count, ==, 0);
+
+        enabled_count = 0;
+        g_object_set (G_OBJECT (filter), "enabled", TRUE, NULL);
+        g_assert (gupnp_context_filter_get_enabled (filter));
+        g_assert_cmpint (enabled_count, ==, 1);
+
+        enabled_count = 0;
+        g_object_set (G_OBJECT (filter), "enabled", TRUE, NULL);
+        g_assert (gupnp_context_filter_get_enabled (filter));
+        g_assert_cmpint (enabled_count, ==, 0);
+
+        enabled_count = 0;
+        g_object_set (G_OBJECT (filter), "enabled", FALSE, NULL);
+        g_assert_false (gupnp_context_filter_get_enabled (filter));
+        g_assert_cmpint (enabled_count, ==, 1);
+
         g_object_unref (filter);
 }
 

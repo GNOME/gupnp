@@ -24,7 +24,7 @@ typedef struct _GUPnPContextFilterPrivate GUPnPContextFilterPrivate;
  * Network context filter, used by [class@GUPnP.ContextManager]
  *
  * #GUPnPContextFilter handles network filtering. It provides API to manage a
- * list of entries that will be used to filter networks. The #GUPnPContextFilter
+ * list of entries that will be used to positive filter networks. The #GUPnPContextFilter
  * could be enabled or not. If it's enabled but the entries list is empty, it
  * behaves as if being disabled.
  *
@@ -99,14 +99,19 @@ gupnp_context_filter_set_property (GObject *object,
 
         switch (property_id) {
         case PROP_ENABLED:
-                priv->enabled = g_value_get_boolean (value);
+                gupnp_context_filter_set_enabled (list,
+                                                  g_value_get_boolean (value));
                 break;
         case PROP_ENTRIES: {
-                GList *entries = g_value_get_pointer (value);
                 g_hash_table_remove_all (priv->entries);
+                GPtrArray *array = g_ptr_array_new ();
+                GList *entries = g_value_get_pointer (value);
                 for (GList *it = entries; it != NULL; it = g_list_next (it)) {
-                        g_hash_table_add (priv->entries, g_strdup (it->data));
+                        g_ptr_array_add (array, it->data);
                 }
+                g_ptr_array_add (array, NULL);
+                gupnp_context_filter_add_entryv (list, (char **) array->pdata);
+                g_ptr_array_unref (array);
         } break;
         default:
                 G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -183,7 +188,8 @@ gupnp_context_filter_class_init (GUPnPContextFilterClass *klass)
                                       "TRUE if the context filter is active.",
                                       FALSE,
                                       G_PARAM_CONSTRUCT | G_PARAM_READWRITE |
-                                              G_PARAM_STATIC_STRINGS));
+                                              G_PARAM_STATIC_STRINGS |
+                                              G_PARAM_EXPLICIT_NOTIFY));
 
         /**
          * GUPnPContextFilter:entries: (type GList(utf8))(attributes org.gtk.Property.get=gupnp_context_filter_get_entries)
@@ -200,7 +206,8 @@ gupnp_context_filter_class_init (GUPnPContextFilterClass *klass)
                         "Filter entries",
                         "GList of strings that compose the context filter.",
                         G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE |
-                                G_PARAM_STATIC_STRINGS));
+                                G_PARAM_STATIC_STRINGS |
+                                G_PARAM_EXPLICIT_NOTIFY));
 }
 
 /**
