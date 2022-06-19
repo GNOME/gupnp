@@ -65,8 +65,14 @@ create_and_signal_context (const char                *interface,
         context = g_initable_new (GUPNP_TYPE_CONTEXT,
                                   NULL,
                                   &error,
-                                  "interface", interface,
-                                  "port", port,
+                                  "interface",
+                                  interface,
+                                  "port",
+                                  port,
+                                  "address-family",
+                                  gupnp_context_manager_get_socket_family (
+                                          GUPNP_CONTEXT_MANAGER (manager)),
+
                                   NULL);
         if (error != NULL) {
                 if (!(error->domain == GSSDP_ERROR &&
