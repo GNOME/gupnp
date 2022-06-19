@@ -703,8 +703,12 @@ gupnp_context_manager_create_full (GSSDPUDAVersion uda_version, GSocketFamily fa
         }
 #endif /* G_OS_WIN32 */
 
-        g_debug ("Using context manager implementation %s",
-                 g_type_name (impl_type));
+        g_debug ("Using context manager implementation %s, family: %d, UDA: "
+                 "%d, port: %u",
+                 g_type_name (impl_type),
+                 family,
+                 uda_version,
+                 port);
         impl = GUPNP_CONTEXT_MANAGER (g_object_new (impl_type,
                                                     "family", family,
                                                     "uda-version", uda_version,
