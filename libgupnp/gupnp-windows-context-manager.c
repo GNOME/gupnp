@@ -61,9 +61,12 @@ gupnp_windows_context_manager_get_interfaces
         PIP_ADAPTER_ADDRESSES adapters_addresses;
         PIP_ADAPTER_ADDRESSES adapter;
 
+        ULONG family = gupnp_context_manager_get_socket_family (
+                GUPNP_CONTEXT_MANAGER (manager));
+
         do {
                 adapters_addresses = (PIP_ADAPTER_ADDRESSES) g_malloc0 (size);
-                ret = GetAdaptersAddresses (AF_UNSPEC,
+                ret = GetAdaptersAddresses (family,
                                             flags,
                                             NULL,
                                             adapters_addresses,
