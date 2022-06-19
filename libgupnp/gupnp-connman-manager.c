@@ -96,8 +96,13 @@ loopback_context_create (gpointer data)
         context = g_initable_new (GUPNP_TYPE_CONTEXT,
                                   NULL,
                                   &error,
-                                  "interface", LOOPBACK_IFACE,
-                                  "port", port,
+                                  "interface",
+                                  LOOPBACK_IFACE,
+                                  "port",
+                                  port,
+                                  "address-family",
+                                  gupnp_context_manager_get_socket_family (
+                                          GUPNP_CONTEXT_MANAGER (manager)),
                                   NULL);
 
         if (error != NULL) {
@@ -118,13 +123,20 @@ service_context_create (CMService *cm_service)
 {
         GError  *error = NULL;
 
-        cm_service->context = g_initable_new (GUPNP_TYPE_CONTEXT,
-                                              NULL,
-                                              &error,
-                                              "interface", cm_service->iface,
-                                              "network", cm_service->name,
-                                              "port", cm_service->port,
-                                              NULL);
+        cm_service->context = g_initable_new (
+                GUPNP_TYPE_CONTEXT,
+                NULL,
+                &error,
+                "interface",
+                cm_service->iface,
+                "network",
+                cm_service->name,
+                "port",
+                cm_service->port,
+                "address-family",
+                gupnp_context_manager_get_socket_family (
+                        GUPNP_CONTEXT_MANAGER (cm_service->manager)),
+                NULL);
 
         if (error != NULL) {
                 g_warning ("Error creating GUPnP context: %s", error->message);
