@@ -192,8 +192,14 @@ create_loopback_context (gpointer data)
         context = g_initable_new (GUPNP_TYPE_CONTEXT,
                                   NULL,
                                   &error,
-                                  "interface", LOOPBACK_IFACE,
-                                  "port", port,
+                                  "interface",
+                                  LOOPBACK_IFACE,
+                                  "port",
+                                  port,
+                                  "address-family",
+                                  gupnp_context_manager_get_socket_family (
+                                          GUPNP_CONTEXT_MANAGER (manager)),
+
                                   NULL);
         if (error) {
                 g_warning ("Error creating GUPnP context: %s\n",
@@ -247,13 +253,20 @@ create_context_for_device (NMDevice *nm_device)
                 }
         }
 
-        nm_device->context = g_initable_new (GUPNP_TYPE_CONTEXT,
-                                             NULL,
-                                             &error,
-                                             "interface", iface,
-                                             "network", ssid,
-                                             "port", port,
-                                             NULL);
+        nm_device->context = g_initable_new (
+                GUPNP_TYPE_CONTEXT,
+                NULL,
+                &error,
+                "interface",
+                iface,
+                "network",
+                ssid,
+                "port",
+                port,
+                "address-family",
+                gupnp_context_manager_get_socket_family (
+                        GUPNP_CONTEXT_MANAGER (nm_device->manager)),
+                NULL);
         g_free (iface);
         g_free (ssid);
 
