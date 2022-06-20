@@ -34,21 +34,6 @@ struct _GUPnPServiceInfoClass {
         void (* _gupnp_reserved4) (void);
 };
 
-/**
- * GUPnPServiceIntrospectionCallback:
- * @info: The #GUPnPServiceInfo introspection was requested for
- * @introspection: (nullable): The new #GUPnPServiceIntrospection object
- * @error: (nullable): The #GError that occurred
- * @user_data: User data
- *
- * Callback notifying that @introspection for @info has been obtained.
- **/
-typedef void (* GUPnPServiceIntrospectionCallback) (
-                                 GUPnPServiceInfo           *info,
-                                 GUPnPServiceIntrospection  *introspection,
-                                 const GError               *error,
-                                 gpointer                    user_data);
-
 GUPnPContext *
 gupnp_service_info_get_context                (GUPnPServiceInfo *info);
 
