@@ -418,6 +418,8 @@ gupnp_service_info_get_udn (GUPnPServiceInfo *info)
  *
  * Get the UPnP service type, or %NULL.
  *
+ * Example: `urn:schemas-upnp-org:service:RenderingControl:1`
+ *
  * Returns: A constant string.
  **/
 const char *
@@ -442,7 +444,12 @@ gupnp_service_info_get_service_type (GUPnPServiceInfo *info)
  * gupnp_service_info_get_id:
  * @info: A #GUPnPServiceInfo
  *
- * Get the ID of this service, or %NULL if there is no ID.
+ * Get the serviceID of this service, or %NULL if there is no ID.
+ *
+ * The serviceID should be unique to a device. This makes it possible to provide
+ * the same serviceType multiple times on one device
+ *
+ * Example: `org:serviceId:RenderingControl`
  *
  * Return value: A string. This string should be freed with g_free() after use.
  **/
