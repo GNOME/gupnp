@@ -1,3 +1,47 @@
+1.5.2 (development)
+===================
+ - Minor doc improvements
+ - Minor example fixes
+ - Fix pkg-config dependencies
+ - Fix issues found by coverity
+ - Deprecate internal UUID generator function
+ - Set log domains everywhere
+ - Support IPv6 in all context managers (Windows still broken)
+
+ServiceProxy:
+ - Fix error handling in sync call
+ - Fix a memory leak in subscribe()
+ - Change subscribtion timeout handling
+
+ServiceInfo:
+ - Remove deprecated callback
+
+ContextFilter:
+ - Fix it
+ - Notify only if content changes
+
+DeviceInfo:
+ - Set task names
+
+ContextManager:
+ - Add tests for filtering
+ - Fix behaviour of filter. Now the filter acts as if the context is
+   appearing/disappearing
+
+Vala:
+ - Fix ownership of XML doc
+
+Bugs fixed in this release:
+ - https://gitlab.gnome.org/GNOME/gupnp/issues/10
+ - https://gitlab.gnome.org/GNOME/gupnp/issues/10
+ - https://gitlab.gnome.org/GNOME/gupnp/issues/10
+ - https://gitlab.gnome.org/GNOME/gupnp/issues/36
+ - https://gitlab.gnome.org/GNOME/gupnp/issues/37
+ - https://gitlab.gnome.org/GNOME/gupnp/issues/70
+
+All contributors to this release:
+ - Jens Georg <mail@jensge.org>
+
 1.5.1 (development)
 ===================
 
