@@ -448,14 +448,9 @@ extract_info (struct nlmsghdr *header,
 
                                 *address = NULL;
                                 addr = g_inet_address_new_from_bytes (RTA_DATA (rt_attr), family);
-                                if (family == AF_INET) {
-                                        *address = g_inet_address_to_string (addr);
-                                } else {
-                                        if (g_inet_address_get_is_link_local (addr) ||
-                                            g_inet_address_get_is_loopback (addr) ||
-                                            g_inet_address_get_is_site_local (addr)) {
-                                                *address = g_inet_address_to_string (addr);
-                                        }
+                                if (family == AF_INET || family == AF_INET6) {
+                                        *address =
+                                                g_inet_address_to_string (addr);
                                 }
                                 g_object_unref (addr);
                         }
