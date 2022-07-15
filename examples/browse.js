@@ -40,12 +40,12 @@ const Soup = imports.gi.Soup;
 const MEDIA_SERVER = "urn:schemas-upnp-org:device:MediaServer:1";
 const CONTENT_DIR = "urn:schemas-upnp-org:service:ContentDirectory";
 
-function _on_browse_ready (cd, action)
+function _on_browse_ready (cd, res)
 {
+    var action = cd.call_action_finish(res)
     let foo = [GObject.TYPE_STRING, GObject.TYPE_UINT, GObject.TYPE_UINT, GObject.TYPE_UINT];
 
-    let [a, b] = cd.end_action_list (action, ["Result", "NumberReturned", "TotalMatches", "UpdateID"], foo);
-    cd.unref();
+    let [a, b] = action.get_result_list(["Result", "NumberReturned", "TotalMatches", "UpdateID"], foo);
 
     if (a) {
         print ("Number Returned:", b[1]);
@@ -58,14 +58,11 @@ function _on_proxy_available (control_point, proxy) {
     print ("-> Proxy available!", proxy.get_friendly_name ());
     var cd = proxy.get_service (CONTENT_DIR);
 
-    // FIXME: This needs probably fixing on C side
-    cd.ref();
-
     print ("-> Start browsing of", proxy.get_friendly_name ());
-    cd.begin_action_list ("Search",
+    var action = GUPnP.ServiceProxyAction.new_from_list ("Search",
                           ["ContainerID", "Filter", "StartingIndex", "RequestedCount", "SortCriteria", "SearchCriteria"],
-                          ["0", "*", 0, 10, "+dc:title", "upnp:class derivedFrom \"object.item\""],
-                          _on_browse_ready)
+                          ["0", "*", 0, 10, "+dc:title", "upnp:class derivedFrom \"object.item\""])
+    cd.call_action_async (action, null, _on_browse_ready)
 }
 
 function _on_proxy_unavailable (control_point, proxy) {
