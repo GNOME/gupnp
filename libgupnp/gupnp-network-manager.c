@@ -117,7 +117,8 @@ typedef struct
 
         GUPnPNetworkManager *manager;
 
-        GUPnPContext *context;
+        // element-type GUPnPContext
+        GList *contexts;
 
         GDBusProxy *proxy;
         GDBusProxy *wifi_proxy;
@@ -159,18 +160,20 @@ nm_device_unref (NMDevice *nm_device)
         if (nm_device->ap_proxy != NULL)
                 g_object_unref (nm_device->ap_proxy);
 
-        if (nm_device->manager != NULL && nm_device->context != NULL) {
-                g_signal_emit_by_name (nm_device->manager,
-                                       "context-unavailable",
-                                       nm_device->context);
-
-                g_object_unref (nm_device->context);
+        if (nm_device->manager != NULL && nm_device->contexts != NULL) {
+                while (nm_device->contexts != NULL) {
+                        g_signal_emit_by_name (nm_device->manager,
+                                               "context-unavailable",
+                                               nm_device->contexts->data);
+                        g_object_unref (nm_device->contexts->data);
+                        nm_device->contexts =
+                                g_list_remove_link (nm_device->contexts,
+                                                    nm_device->contexts);
+                }
         }
 
         g_slice_free (NMDevice, nm_device);
 }
-
-#define LOOPBACK_IFACE "lo"
 
 static gboolean
 create_loopback_context (gpointer data)
@@ -185,33 +188,65 @@ create_loopback_context (gpointer data)
 
         priv->idle_context_creation_src = NULL;
 
-        g_object_get (manager,
-                      "port", &port,
-                      NULL);
+        g_object_get (manager, "port", &port, NULL);
 
-        context = g_initable_new (GUPNP_TYPE_CONTEXT,
-                                  NULL,
-                                  &error,
-                                  "interface",
-                                  LOOPBACK_IFACE,
-                                  "port",
-                                  port,
-                                  "address-family",
-                                  gupnp_context_manager_get_socket_family (
-                                          GUPNP_CONTEXT_MANAGER (manager)),
+        GSocketFamily family = gupnp_context_manager_get_socket_family (
+                GUPNP_CONTEXT_MANAGER (manager));
 
-                                  NULL);
-        if (error) {
-                g_warning ("Error creating GUPnP context: %s\n",
-                           error->message);
+        if (family == G_SOCKET_FAMILY_INVALID ||
+            family == G_SOCKET_FAMILY_IPV4) {
+                GInetAddress *addr =
+                        g_inet_address_new_loopback (G_SOCKET_FAMILY_IPV4);
 
-                g_error_free (error);
-                return FALSE;
+                context = g_initable_new (GUPNP_TYPE_CONTEXT,
+                                          NULL,
+                                          &error,
+                                          "address",
+                                          addr,
+                                          "port",
+                                          port,
+                                          NULL);
+                if (error) {
+                        g_warning ("Error creating GUPnP context: %s\n",
+                                   error->message);
+
+                        g_clear_error (&error);
+                } else {
+                        g_signal_emit_by_name (manager,
+                                               "context-available",
+                                               context);
+                }
+
+                g_object_unref (context);
+                g_object_unref (addr);
         }
 
-        g_signal_emit_by_name (manager, "context-available", context);
+        if (family == G_SOCKET_FAMILY_INVALID ||
+            family == G_SOCKET_FAMILY_IPV6) {
+                GInetAddress *addr =
+                        g_inet_address_new_loopback (G_SOCKET_FAMILY_IPV6);
+                context = g_initable_new (GUPNP_TYPE_CONTEXT,
+                                          NULL,
+                                          &error,
+                                          "address",
+                                          addr,
+                                          "port",
+                                          port,
+                                          NULL);
+                if (error) {
+                        g_warning ("Error creating GUPnP context: %s\n",
+                                   error->message);
 
-        g_object_unref (context);
+                        g_clear_error (&error);
+                } else {
+                        g_signal_emit_by_name (manager,
+                                               "context-available",
+                                               context);
+                }
+
+                g_object_unref (context);
+                g_object_unref (addr);
+        }
 
         return FALSE;
 }
@@ -253,35 +288,73 @@ create_context_for_device (NMDevice *nm_device)
                 }
         }
 
-        nm_device->context = g_initable_new (
-                GUPNP_TYPE_CONTEXT,
-                NULL,
-                &error,
-                "interface",
-                iface,
-                "network",
-                ssid,
-                "port",
-                port,
-                "address-family",
-                gupnp_context_manager_get_socket_family (
-                        GUPNP_CONTEXT_MANAGER (nm_device->manager)),
-                NULL);
-        g_free (iface);
-        g_free (ssid);
+        GSocketFamily family = gupnp_context_manager_get_socket_family (
+                GUPNP_CONTEXT_MANAGER (nm_device->manager));
 
-        if (error) {
-                g_warning ("Error creating GUPnP context: %s\n",
-                           error->message);
+        if (family == G_SOCKET_FAMILY_INVALID ||
+            family == G_SOCKET_FAMILY_IPV4) {
 
-                g_error_free (error);
+                GUPnPContext *context = g_initable_new (GUPNP_TYPE_CONTEXT,
+                                                        NULL,
+                                                        &error,
+                                                        "interface",
+                                                        iface,
+                                                        "network",
+                                                        ssid,
+                                                        "port",
+                                                        port,
+                                                        "address-family",
+                                                        G_SOCKET_FAMILY_IPV4,
+                                                        NULL);
+                if (error) {
+                        g_warning ("Error creating GUPnP context: %s\n",
+                                   error->message);
 
-                return;
+                        g_clear_error (&error);
+                } else {
+
+                        g_signal_emit_by_name (nm_device->manager,
+                                               "context-available",
+                                               context);
+
+                        nm_device->contexts =
+                                g_list_prepend (nm_device->contexts, context);
+                }
         }
 
-        g_signal_emit_by_name (nm_device->manager,
-                               "context-available",
-                               nm_device->context);
+        if (family == G_SOCKET_FAMILY_INVALID ||
+            family == G_SOCKET_FAMILY_IPV6) {
+
+                GUPnPContext *context = g_initable_new (GUPNP_TYPE_CONTEXT,
+                                                        NULL,
+                                                        &error,
+                                                        "interface",
+                                                        iface,
+                                                        "network",
+                                                        ssid,
+                                                        "port",
+                                                        port,
+                                                        "address-family",
+                                                        G_SOCKET_FAMILY_IPV6,
+                                                        NULL);
+                if (error) {
+                        g_warning ("Error creating GUPnP context: %s\n",
+                                   error->message);
+
+                        g_clear_error (&error);
+                } else {
+
+                        g_signal_emit_by_name (nm_device->manager,
+                                               "context-available",
+                                               context);
+
+                        nm_device->contexts =
+                                g_list_prepend (nm_device->contexts, context);
+                }
+        }
+
+        g_free (iface);
+        g_free (ssid);
 }
 
 static void
@@ -377,18 +450,16 @@ on_device_signal (GDBusProxy *proxy,
         if (new_state == NM_OLD_DEVICE_STATE_ACTIVATED ||
             new_state == NM_DEVICE_STATE_ACTIVATED)
                 on_device_activated (nm_device);
-        else if (nm_device->context != NULL) {
+        else if (nm_device->contexts != NULL) {
                 /* For all other states we just destroy the context */
-                g_signal_emit_by_name (nm_device->manager,
-                                       "context-unavailable",
-                                       nm_device->context);
-
-                g_object_unref (nm_device->context);
-                nm_device->context = NULL;
-
-                if (nm_device->ap_proxy != NULL) {
-                        g_object_unref (nm_device->ap_proxy);
-                        nm_device->ap_proxy = NULL;
+                while (nm_device->contexts != NULL) {
+                        g_signal_emit_by_name (nm_device->manager,
+                                               "context-unavailable",
+                                               nm_device->contexts->data);
+                        g_object_unref (nm_device->contexts->data);
+                        nm_device->contexts =
+                                g_list_remove_link (nm_device->contexts,
+                                                    nm_device->contexts);
                 }
         }
 }
