@@ -93,27 +93,63 @@ loopback_context_create (gpointer data)
 
         g_object_get (manager, "port", &port, NULL);
 
-        context = g_initable_new (GUPNP_TYPE_CONTEXT,
-                                  NULL,
-                                  &error,
-                                  "interface",
-                                  LOOPBACK_IFACE,
-                                  "port",
-                                  port,
-                                  "address-family",
-                                  gupnp_context_manager_get_socket_family (
-                                          GUPNP_CONTEXT_MANAGER (manager)),
-                                  NULL);
+        GSocketFamily family = gupnp_context_manager_get_socket_family (
+                GUPNP_CONTEXT_MANAGER (manager));
 
-        if (error != NULL) {
-                g_warning ("Error creating GUPnP context: %s", error->message);
-                g_error_free (error);
+        if (family == G_SOCKET_FAMILY_INVALID ||
+            family == G_SOCKET_FAMILY_IPV4) {
+                GInetAddress *addr =
+                        g_inet_address_new_loopback (G_SOCKET_FAMILY_IPV4);
 
-                return FALSE;
+                context = g_initable_new (GUPNP_TYPE_CONTEXT,
+                                          NULL,
+                                          &error,
+                                          "address",
+                                          addr,
+                                          "port",
+                                          port,
+                                          NULL);
+                if (error) {
+                        g_warning ("Error creating GUPnP context: %s\n",
+                                   error->message);
+
+                        g_clear_error (&error);
+                } else {
+                        g_signal_emit_by_name (manager,
+                                               "context-available",
+                                               context);
+                }
+
+                g_object_unref (context);
+                g_object_unref (addr);
         }
 
-        g_signal_emit_by_name (manager, "context-available", context);
-        g_object_unref (context);
+        if (family == G_SOCKET_FAMILY_INVALID ||
+            family == G_SOCKET_FAMILY_IPV6) {
+                GInetAddress *addr =
+                        g_inet_address_new_loopback (G_SOCKET_FAMILY_IPV6);
+                context = g_initable_new (GUPNP_TYPE_CONTEXT,
+                                          NULL,
+                                          &error,
+                                          "address",
+                                          addr,
+                                          "port",
+                                          port,
+                                          NULL);
+                if (error) {
+                        g_warning ("Error creating GUPnP context: %s\n",
+                                   error->message);
+
+                        g_clear_error (&error);
+                } else {
+                        g_signal_emit_by_name (manager,
+                                               "context-available",
+                                               context);
+                }
+
+                g_object_unref (context);
+                g_object_unref (addr);
+        }
 
         return FALSE;
 }
