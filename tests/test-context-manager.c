@@ -34,11 +34,19 @@ test_context_manager_manage ()
 {
         GError *error = NULL;
 
-        GUPnPContext *ctx = gupnp_context_new ("lo", 0, &error);
+        GUPnPContext *ctx = gupnp_context_new_full ("lo",
+                                                    NULL,
+                                                    0,
+                                                    GSSDP_UDA_VERSION_1_0,
+                                                    &error);
         g_assert_no_error (error);
         g_assert_nonnull (ctx);
 
-        GUPnPContext *ctx2 = gupnp_context_new ("lo", 0, &error);
+        GUPnPContext *ctx2 = gupnp_context_new_full ("lo",
+                                                     NULL,
+                                                     0,
+                                                     GSSDP_UDA_VERSION_1_0,
+                                                     &error);
         g_assert_no_error (error);
         g_assert_nonnull (ctx2);
 

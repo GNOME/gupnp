@@ -596,8 +596,10 @@ _gupnp_context_get_server_uri (GUPnPContext *context)
  * @port: Port to run on, or 0 if you don't care what port is used.
  * @error: (inout)(optional)(nullable): A location to store a #GError, or %NULL
  *
- * Create a new #GUPnPContext with the specified @main_context, @iface and
+ * Create a new #GUPnPContext with the specified @iface and
  * @port.
+ *
+ * Deprecated: 1.6. Use [ctor@GUPnP.Context.new_for_address] instead
  *
  * Return value: A new #GUPnPContext object, or %NULL on an error
  **/
@@ -614,7 +616,71 @@ gupnp_context_new (const char   *iface,
                                NULL);
 }
 
-\
+/**
+ * gupnp_context_new_full:
+ * @iface: (nullable): the name of a network interface
+ * @addr: (nullable): an IP address or %NULL for auto-detection. If you do not
+ * care about the address, but want to specify an address family, use
+ * [ctor@Glib.InetAddress.new_any] with the appropriate family instead.
+ * @port: The network port to use for M-SEARCH requests or 0 for
+ * random.
+ * @uda_version: The UDA version this client will adhere to
+ * @error: (allow-none): Location to store error, or %NULL.
+ *
+ * Creates a GUPnP context with address @addr on network interface @iface. If
+ * neither is specified, GUPnP will chose the address it deems most suitable.
+ *
+ * Since: 1.6.
+ *
+ * Return value: (nullable):  A new #GSSDPClient object or %NULL on error.
+ */
+GUPnPContext *
+gupnp_context_new_full (const char *iface,
+                       GInetAddress *addr,
+                       guint16 port,
+                       GSSDPUDAVersion uda_version,
+                       GError **error)
+{
+        return g_initable_new (GUPNP_TYPE_CONTEXT,
+                               NULL,
+                               error,
+                               "interface",
+                               iface,
+                               "address",
+                               addr,
+                               "port",
+                               port,
+                               "uda-version",
+                               uda_version,
+                               NULL);
+}
+
+/**
+ * gupnp_context_new_for_address
+ * @addr: (nullable): an IP address or %NULL for auto-detection. If you do not
+ * care about the address, but want to specify an address family, use
+ * [ctor@Glib.InetAddress.new_any] with the appropriate family instead.
+ * @port: The network port to use for M-SEARCH requests or 0 for
+ * random.
+ * @uda_version: The UDA version this client will adhere to
+ * @error: (allow-none): Location to store error, or %NULL.
+ *
+ * Creates a GUPnP context with address @addr. If none is specified, GUPnP
+ * will chose the address it deems most suitable.
+ *
+ * Since: 1.6.
+ *
+ * Return value: (nullable):  A new #GSSDPClient object or %NULL on error.
+ */
+GUPnPContext *
+gupnp_context_new_for_address (GInetAddress *addr,
+                                guint16 port,
+                                GSSDPUDAVersion uda_version,
+                                GError **error)
+{
+        return gupnp_context_new_full (NULL, addr, port, uda_version, error);
+}
+
 /**
  * gupnp_context_get_port:
  * @context: A #GUPnPContext

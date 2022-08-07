@@ -126,7 +126,11 @@ int main(int argc, char *argv[])
         GError *error = NULL;
         GMainLoop *loop = g_main_loop_new (NULL, FALSE);
 
-        GUPnPContext *context = gupnp_context_new ("wlp3s0", 0, &error);
+        GUPnPContext *context = gupnp_context_new_full ("wlp3s0",
+                                                        NULL,
+                                                        0,
+                                                        GSSDP_UDA_VERSION_1_0,
+                                                        &error);
 
         if (error != NULL) {
                 g_error ("%s", error->message);

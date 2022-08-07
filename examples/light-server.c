@@ -149,7 +149,7 @@ main (G_GNUC_UNUSED int argc, G_GNUC_UNUSED char **argv)
   }
 
   /* Create the UPnP context */
-  context = gupnp_context_new (NULL, 0, &error);
+  context = gupnp_context_new_for_address (NULL, 0, GSSDP_UDA_VERSION_1_0, &error);
   if (error) {
     g_printerr ("Error creating the GUPnP context: %s\n",
 		error->message);
