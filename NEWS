@@ -1,3 +1,14 @@
+1.5.3 (development)
+===================
+ - Linux context manager: Do not filter out v6 global addresses
+ - Context: Add new convenience constructors
+ - Examples: Fix browse.js for new API
+ - NetworkManager: Create v4 and v6 contexts if no family is specified
+ - Connman: Create v4 and v6 contexts if no family is specified
+
+All contributors to this release:
+ - Jens Georg <mail@jensge.org>
+
 1.5.2 (development)
 ===================
  - Minor doc improvements
