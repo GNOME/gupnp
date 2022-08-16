@@ -52,6 +52,10 @@ check-merge-request:
 .build-template: &build
   stage: build
   script:
+      - git clone --depth=1 https://gitlab.gnome.org/GNOME/libsoup.git && pushd libsoup
+      - meson _build --prefix=/usr -Dtls_check=false -Ddocs=disabled
+      - ninja -C _build install
+      - popd  
       - meson . build --prefix=/usr -Db_coverage=true
       - ninja -C build
   artifacts:
@@ -61,12 +65,19 @@ check-merge-request:
 
 .gupnp.fedora@common:
   variables:
-    BASE_TAG: '2022-05-25.0'
+    BASE_TAG: '2022-08-16.1'
     FDO_UPSTREAM_REPO: GNOME/gupnp
-    FDO_DISTRIBUTION_PACKAGES: 'clang clang-analyzer gcovr git libasan libubsan python3-gobject python3-pip xmlto gobject-introspection-devel gtk-doc libsoup3-devel libuuid-devel libxml2-devel vala ninja-build python3-setuptools'
+    FDO_DISTRIBUTION_PACKAGES: 'clang clang-analyzer gcovr git libasan libubsan python3-gobject python3-pip xmlto gobject-introspection-devel gtk-doc libxml2-devel vala ninja-build libnghttp2-devel libpsl-devel sqlite-devel python3-setuptools'
     FDO_DISTRIBUTION_EXEC: |
       dnf clean all &&
-      pip3 install meson markdown gi-docgen jinja2 Markdown markupsafe pygments toml typogrify
+      pip3 install meson markdown jinja2 Markdown markupsafe pygments toml typogrify gi-docgen
+
+.soup3:
+  before_script:
+    - git clone --depth=1 https://gitlab.gnome.org/GNOME/libsoup.git && pushd libsoup
+    - meson _build --prefix=/usr -Dtls_check=false -Ddocs=disabled
+    - ninja -C _build install
+    - popd
 
 .gupnp.fedora:36@x86_64:
   extends: .gupnp.fedora@common
@@ -131,6 +142,7 @@ test-fedora@x86_64:
   extends:
     - .fdo.distribution-image@fedora
     - .gupnp.fedora:36@x86_64
+    - .soup3
   needs:
     - build-fedora@x86_64
   <<: *test
@@ -165,6 +177,7 @@ static-scan:
   extends:
     - .fdo.distribution-image@fedora
     - .gupnp.fedora:36@x86_64
+    - .soup3
   stage: analysis
   needs:
     - build-fedora-container@x86_64
@@ -212,6 +225,7 @@ pages:
   extends:
     - .fdo.distribution-image@fedora
     - .gupnp.fedora:36@x86_64
+    - .soup3
   stage: website
   script:
       - meson doc-build -Dgtk_doc=true
