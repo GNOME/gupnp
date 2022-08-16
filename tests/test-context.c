@@ -272,7 +272,7 @@ test_gupnp_context_error_when_bound ()
         g_test_expect_message (
                 "gupnp-context",
                 G_LOG_LEVEL_WARNING,
-                "*Unable to listen*Could not listen*Address already in use*");
+                "*Unable to listen*");
         GUPnPContext *context = g_initable_new (GUPNP_TYPE_CONTEXT,
                                                 NULL,
                                                 &error,
@@ -300,8 +300,7 @@ test_gupnp_context_error_when_bound ()
 
                 g_test_expect_message ("gupnp-context",
                                        G_LOG_LEVEL_WARNING,
-                                       "*Unable to listen*Could not "
-                                       "listen*Address already in use*");
+                                       "*Unable to listen*");
                 context = g_initable_new (GUPNP_TYPE_CONTEXT,
                                           NULL,
                                           &error,
