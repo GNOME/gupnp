@@ -71,8 +71,6 @@ gupnp_service_action_get_type (void)
 static void
 finalize_action (GUPnPServiceAction *action)
 {
-        SoupServer *server;
-
         /* Embed action->response_str in a SOAP document */
         g_string_prepend (action->response_str,
                           "<?xml version=\"1.0\"?>"
@@ -125,8 +123,12 @@ finalize_action (GUPnPServiceAction *action)
                 gssdp_client_get_server_id (GSSDP_CLIENT (action->context)));
 
         /* Tell soup server that response is now ready */
-        server = gupnp_context_get_server (action->context);
+#if SOUP_CHECK_VERSION(3,1,2)
+        soup_server_message_unpause (action->msg);
+#else
+        SoupServer *server = gupnp_context_get_server (action->context);
         soup_server_unpause_message (server, action->msg);
+#endif
 
         /* Cleanup */
         gupnp_service_action_unref (action);

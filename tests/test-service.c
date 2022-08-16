@@ -36,7 +36,11 @@ on_notify (SoupServer *server,
         TestServiceNotificationCancelledData *data = user_data;
 
         // Pause message, quit mainlopp
+#if SOUP_CHECK_VERSION(3, 1, 2)
+        soup_server_message_pause (msg);
+#else
         soup_server_pause_message (server, msg);
+#endif
         data->message = msg;
         g_main_loop_quit (data->loop);
 }
@@ -144,7 +148,11 @@ test_service_notification_cancelled ()
 
         g_clear_object (&info);
 
+#if SOUP_CHECK_VERSION(3, 1, 2)
+        soup_server_message_unpause (data.message);
+#else
         soup_server_unpause_message (server, data.message);
+#endif
 
         g_main_loop_run (data.loop);
         g_clear_object (&rd);

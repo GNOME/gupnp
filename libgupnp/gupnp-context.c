@@ -1457,7 +1457,11 @@ gupnp_acl_async_callback (GUPnPAcl *acl,
         GError *error = NULL;
 
         allowed = gupnp_acl_is_allowed_finish (acl, res, &error);
+#if SOUP_CHECK_VERSION(3,1,2)
+        soup_server_message_unpause (data->message);
+#else
         soup_server_unpause_message (data->server, data->message);
+#endif
         if (!allowed)
                 soup_server_message_set_status (data->message,
                                                 SOUP_STATUS_FORBIDDEN,
@@ -1533,7 +1537,11 @@ gupnp_acl_server_handler (SoupServer *server,
                                                       query,
                                                       handler);
 
+#if SOUP_CHECK_VERSION(3,1,2)
+                        soup_server_message_pause (msg);
+#else
                         soup_server_pause_message (server, msg);
+#endif
                         // Since we drop the additional reference above, coverity seems to think this is
                         // use-after-free, but the service is still holding a reference here.
 

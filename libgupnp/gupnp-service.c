@@ -473,7 +473,11 @@ control_server_handler (SoupServer *server,
         }
 
         /* Tell soup server that response is not ready yet */
+#if SOUP_CHECK_VERSION(3,1,2)
+        soup_server_message_pause (msg);
+#else
         soup_server_pause_message (server, msg);
+#endif
 
         /* QueryStateVariable? */
         if (strcmp (action_name, "QueryStateVariable") == 0)
