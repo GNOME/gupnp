@@ -126,6 +126,8 @@ build-fedora@x86_64:
       junit: "build/meson-logs/testlog.junit.xml"
 
 test-fedora@x86_64:
+  tags:
+    - ipv6
   extends:
     - .fdo.distribution-image@fedora
     - .gupnp.fedora:36@x86_64
