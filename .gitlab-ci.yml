@@ -65,12 +65,12 @@ check-merge-request:
 
 .gupnp.fedora@common:
   variables:
-    BASE_TAG: '2022-08-16.0'
+    BASE_TAG: '2022-08-16.1'
     FDO_UPSTREAM_REPO: GNOME/gupnp
-    FDO_DISTRIBUTION_PACKAGES: 'clang clang-analyzer gcovr git libasan libubsan python3-gobject python3-pip xmlto gobject-introspection-devel gtk-doc libxml2-devel vala ninja-build libnghttp2-devel libpsl-devel sqlite-devel'
+    FDO_DISTRIBUTION_PACKAGES: 'clang clang-analyzer gcovr git libasan libubsan python3-gobject python3-pip xmlto gobject-introspection-devel gtk-doc libxml2-devel vala ninja-build libnghttp2-devel libpsl-devel sqlite-devel python3-setuptools'
     FDO_DISTRIBUTION_EXEC: |
       dnf clean all &&
-      pip3 install meson markdown gi-docgen jinja2 Markdown markupsafe pygments toml typogrify
+      pip3 install meson markdown jinja2 Markdown markupsafe pygments toml typogrify gi-docgen
 
 .soup3:
   before_script:
