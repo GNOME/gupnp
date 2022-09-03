@@ -199,6 +199,7 @@ coverity:
   extends:
     - .fdo.distribution-image@fedora
     - .gupnp.fedora:36@x86_64
+    - .soup3
   stage: analysis
   allow_failure: true
   script:
