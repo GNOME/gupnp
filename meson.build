@@ -30,8 +30,8 @@ conf.set('GLIB_VERSION_MAX_ALLOWED', 'GLIB_VERSION_2_70'.format(glib_version.und
 subdir('internal')
 
 gssdp_dep = dependency('gssdp-1.6', version : '>= 1.5.2', default_options: ['sniffer=false'], fallback: 'gssdp-1.6')
-
 gio_unix = dependency('gio-unix-2.0', version: '>= 2.44', required: host_machine.system() != 'windows')
+libxml_dep = dependency('libxml-2.0')
 
 dependencies = [
     dependency('glib-2.0', version : '>= ' + glib_version),
@@ -40,7 +40,7 @@ dependencies = [
     dependency('gobject-2.0', version : '>= ' + glib_version),
     dependency('libsoup-3.0', version : '>= 2.99.0'),
     gssdp_dep,
-    dependency('libxml-2.0'),
+    libxml_dep
 ]
 
 subdir('libgupnp')
