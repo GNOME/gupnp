@@ -222,7 +222,6 @@ coverity:
     changes:
       - po/*.po
 
-
 pages:
   extends:
     - .fdo.distribution-image@fedora
