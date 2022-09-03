@@ -1,3 +1,15 @@
+1.5.4 (development)
+===================
+ - Fix build against libsoup 3.1.2 or later
+ - Do not rely on a log message from libsoup in tests
+ - Use Docbook 4.5 for manpage
+ - Do not use env in binding generator
+ - Add missing libxml2 dependency for test
+
+All contributors to this release:
+ - Jens Georg <mail@jensge.org>
+ - Tomasz Kłoczko <kloczek@github.com>
+
 1.5.3 (development)
 ===================
  - Linux context manager: Do not filter out v6 global addresses
