@@ -1,3 +1,7 @@
+1.6.0 (stable)
+==============
+ - Re-release of 1.5.4, no functional change
+
 1.5.4 (development)
 ===================
  - Fix build against libsoup 3.1.2 or later
