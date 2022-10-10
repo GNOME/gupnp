@@ -22,10 +22,10 @@ conf.set('HAVE_NETLINK', netlink_available)
 conf.set('HAVE_IFADDRS_H', ifaddrs_available)
 conf.set('HAVE_LINUX_WIRELESS_H', cc.has_header('linux/wireless.h'))
 
-glib_version = '2.69'
+glib_version = '2.70'
 add_project_arguments(cc.get_supported_arguments('-Werror=deprecated-declarations'), language: 'c')
-conf.set('GLIB_VERSION_MIN_REQUIRED', 'GLIB_VERSION_2_70'.format(glib_version.underscorify()))
-conf.set('GLIB_VERSION_MAX_ALLOWED', 'GLIB_VERSION_2_70'.format(glib_version.underscorify()))
+conf.set('GLIB_VERSION_MIN_REQUIRED', 'GLIB_VERSION_@0@'.format(glib_version.underscorify()))
+conf.set('GLIB_VERSION_MAX_ALLOWED', 'GLIB_VERSION_@0@'.format(glib_version.underscorify()))
 
 subdir('internal')
 
