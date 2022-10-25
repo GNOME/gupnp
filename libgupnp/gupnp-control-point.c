@@ -579,6 +579,7 @@ got_description_url (GObject *source,
         GUPnPXMLDoc *doc;
         GUPnPControlPointPrivate *priv;
         GError *error = NULL;
+        gboolean retry = FALSE;
         SoupMessage *message =
                 soup_session_get_async_result_message (SOUP_SESSION (source),
                                                        res);
@@ -590,9 +591,17 @@ got_description_url (GObject *source,
         if (g_error_matches (error, G_IO_ERROR, G_IO_ERROR_CANCELLED))
                 goto out;
 
+        if (g_error_matches (error, G_IO_ERROR, G_IO_ERROR_TIMED_OUT)) {
+                g_clear_error (&error);
+                retry = TRUE;
+        }
+
         // FIXME: This needs better handling
-        if (error != NULL)
-                g_assert_not_reached ();
+        if (error != NULL) {
+                g_warning ("Retrieving the description document failed: %s",
+                           error->message);
+                goto out;
+        }
 
         priv = gupnp_control_point_get_instance_private (data->control_point);
 
@@ -611,7 +620,8 @@ got_description_url (GObject *source,
         }
 
         /* Not cached */
-        if (SOUP_STATUS_IS_SUCCESSFUL (soup_message_get_status (message))) {
+        if (!retry &&
+            SOUP_STATUS_IS_SUCCESSFUL (soup_message_get_status (message))) {
                 xmlDoc *xml_doc;
                 gsize length;
                 gconstpointer body_data;
@@ -656,7 +666,9 @@ got_description_url (GObject *source,
                         g_warning (
                                 "Failed to GET %s: %s, retrying in %d seconds",
                                 data->description_url,
-                                soup_message_get_reason_phrase (message),
+                                !retry ? soup_message_get_reason_phrase (
+                                                 message)
+                                       : "Timed out",
                                 data->timeout);
 
                         data->timeout_source = g_timeout_source_new_seconds
@@ -698,6 +710,8 @@ load_description (GUPnPControlPoint *control_point,
 {
         GUPnPXMLDoc *doc;
         GUPnPControlPointPrivate *priv;
+
+        g_debug ("Loading description document %s", description_url);
 
         priv = gupnp_control_point_get_instance_private (control_point);
         doc = g_hash_table_lookup (priv->doc_cache,
