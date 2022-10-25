@@ -10,11 +10,19 @@ bindir = join_paths(prefix, get_option('bindir'))
 netlink_available = cc.has_header('linux/rtnetlink.h')
 ifaddrs_available = cc.has_header('ifaddrs.h')
 
+ifa_flags_exists = cc.compiles('''#include <linux/if_addr.h>
+int main(int argc, char *argv[])
+{
+  if (IFA_FLAGS) {};
+  return 0;
+}''', name: 'IFA_FLAGS is defined')
+
 conf = configuration_data()
 conf.set_quoted('VERSION', meson.project_version())
 conf.set('HAVE_NETLINK', netlink_available)
 conf.set('HAVE_IFADDRS_H', ifaddrs_available)
 conf.set('HAVE_LINUX_WIRELESS_H', cc.has_header('linux/wireless.h'))
+conf.set('HAVE_IFA_FLAGS', ifa_flags_exists)
 
 glib_version = '2.66'
 add_project_arguments(cc.get_supported_arguments('-Werror=deprecated-declarations'), language: 'c')
