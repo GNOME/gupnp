@@ -479,7 +479,7 @@ gupnp_context_manager_dispose (GObject *object)
         g_ptr_array_free (priv->control_points, TRUE);
         g_ptr_array_free (priv->root_devices, TRUE);
 
-        g_list_free (priv->filtered);
+        g_list_free_full (priv->filtered, g_object_unref);
         priv->filtered = NULL;
 
         g_clear_object (&filter);
