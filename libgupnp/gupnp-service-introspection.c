@@ -218,6 +218,10 @@ gupnp_service_introspection_finalize (GObject *object)
          */
         if (priv->action_names)
                 g_list_free (priv->action_names);
+
+        GObjectClass *object_class =
+                G_OBJECT_CLASS (gupnp_service_introspection_parent_class);
+        object_class->finalize (object);
 }
 
 static void
