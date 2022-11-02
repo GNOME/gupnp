@@ -160,16 +160,17 @@ nm_device_unref (NMDevice *nm_device)
         if (nm_device->ap_proxy != NULL)
                 g_object_unref (nm_device->ap_proxy);
 
-        if (nm_device->manager != NULL && nm_device->contexts != NULL) {
-                while (nm_device->contexts != NULL) {
+        while (nm_device->contexts != NULL) {
+                if (nm_device->manager != NULL) {
                         g_signal_emit_by_name (nm_device->manager,
                                                "context-unavailable",
                                                nm_device->contexts->data);
-                        g_object_unref (nm_device->contexts->data);
-                        nm_device->contexts =
-                                g_list_remove_link (nm_device->contexts,
-                                                    nm_device->contexts);
                 }
+                GList *entry = nm_device->contexts;
+                g_object_unref (entry->data);
+                nm_device->contexts =
+                        g_list_remove_link (nm_device->contexts, entry);
+                g_list_free (entry);
         }
 
         g_slice_free (NMDevice, nm_device);
