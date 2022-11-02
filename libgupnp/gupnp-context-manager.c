@@ -208,7 +208,8 @@ on_context_unavailable (GUPnPContextManager    *manager,
                 g_signal_stop_emission_by_name (manager, "context-unavailable");
 
                 priv->filtered = g_list_remove_link (priv->filtered, ctx);
-                g_object_unref (ctx);
+                g_object_unref (ctx->data);
+                g_list_free (ctx);
         }
 
         g_hash_table_remove (priv->contexts, context);
