@@ -104,6 +104,7 @@ get_description_url_data_free (GetDescriptionURLData *data)
         g_free (data->service_type);
         g_free (data->description_url);
         g_object_unref (data->control_point);
+        g_object_unref (data->cancellable);
 
         g_slice_free (GetDescriptionURLData, data);
 }
