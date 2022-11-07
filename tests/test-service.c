@@ -162,6 +162,83 @@ test_service_notification_cancelled ()
         g_clear_object (&context);
         g_main_loop_unref (data.loop);
 }
+
+static void
+on_notify_failed (GUPnPService *service,
+                  GList *callbacks,
+                  GError *error,
+                  gpointer user_data)
+{
+        TestServiceNotificationCancelledData *data = user_data;
+
+        g_assert_error (error, G_IO_ERROR, G_IO_ERROR_CONNECTION_REFUSED);
+        g_main_loop_quit (data->loop);
+}
+
+static void
+test_service_notification_remote_disappears (void)
+{
+        // Check that the notification message is cancelled correctly if the service is
+        // Shut down during sending
+        GUPnPContext *context = NULL;
+        GError *error = NULL;
+        GUPnPRootDevice *rd;
+        GUPnPServiceInfo *info = NULL;
+
+        TestServiceNotificationCancelledData data = { NULL, NULL };
+
+        data.loop = g_main_loop_new (NULL, FALSE);
+
+        context = create_context (0, &error);
+        g_assert_no_error (error);
+        g_assert (context != NULL);
+
+        rd = gupnp_root_device_new (context,
+                                    "TestDevice.xml",
+                                    DATA_PATH,
+                                    &error);
+        g_assert_no_error (error);
+        g_assert (rd != NULL);
+        gupnp_root_device_set_available (rd, TRUE);
+
+        // Generate SUBSCRIBE message
+        info = gupnp_device_info_get_service (
+                GUPNP_DEVICE_INFO (rd),
+                "urn:test-gupnp-org:service:TestService:1");
+        char *url = gupnp_service_info_get_event_subscription_url (info);
+
+        g_signal_connect (info,
+                          "notify-failed",
+                          G_CALLBACK (on_notify_failed),
+                          &data);
+
+        SoupMessage *msg = soup_message_new ("SUBSCRIBE", url);
+
+        SoupMessageHeaders *h = soup_message_get_request_headers (msg);
+        soup_message_headers_append (h, "Callback", "<http://127.0.0.1:1312>");
+
+        soup_message_headers_append (h, "NT", "upnp:event");
+
+        SoupSession *session = soup_session_new ();
+        // FIXME: Add timeout header
+        soup_session_send_and_read_async (session,
+                                          msg,
+                                          G_PRIORITY_DEFAULT,
+                                          NULL,
+                                          NULL,
+                                          &data);
+
+        g_main_loop_run (data.loop);
+
+        g_clear_object (&info);
+
+        g_clear_object (&rd);
+        g_clear_object (&msg);
+        g_clear_object (&session);
+        g_clear_object (&context);
+        g_main_loop_unref (data.loop);
+}
+
 int
 main (int argc, char *argv[])
 {
@@ -169,6 +246,9 @@ main (int argc, char *argv[])
 
         g_test_add_func ("/service/notify/cancel",
                          test_service_notification_cancelled);
+
+        g_test_add_func ("/service/notify/handle-remote-disappering",
+                         test_service_notification_remote_disappears);
 
         return g_test_run ();
 }

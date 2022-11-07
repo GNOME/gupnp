@@ -1428,7 +1428,7 @@ notify_got_response (GObject *source, GAsyncResult *res, gpointer user_data)
                                            g_bytes_ref (data->property_set));
                 } else {
                         /* Emit 'notify-failed' signal */
-                        GError *inner_error;
+                        GError *inner_error = NULL;
 
                         // We have an error, so just propagate that
                         if (error != NULL) {
