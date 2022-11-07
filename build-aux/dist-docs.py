@@ -4,7 +4,7 @@ import os
 import shutil
 
 references = [
-    'doc/GUPnP',
+    'doc/gupnp-1.6',
 ]
 
 sourceroot = os.environ.get('MESON_SOURCE_ROOT')
