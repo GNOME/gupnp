@@ -230,9 +230,9 @@ pages:
   stage: website
   script:
       - meson doc-build -Dgtk_doc=true
-      - ninja -C doc-build doc/GUPnP
+      - ninja -C doc-build doc/gupnp-1.6
       - mkdir -p public
-      - mv doc-build/doc/GUPnP public/docs
+      - mv doc-build/doc/gupnp-1.6 public/docs
   artifacts:
     paths:
       - public

@@ -21,7 +21,7 @@ if get_option('gtk_doc')
       configuration: entities
   )
 
-  docs_dir = join_paths(get_option('prefix'), get_option('datadir')) / 'doc' / GUPNP_API_NAME / 'reference'
+  docs_dir = join_paths(get_option('prefix'), get_option('datadir'), 'doc')
 
   if gssdp_dep.type_name() == 'internal'
     gssdp_gir_dirs = subproject('gssdp-1.6').get_variable('gssdp_gir_dir')
@@ -32,7 +32,7 @@ if get_option('gtk_doc')
   custom_target(
       'gupnp-doc',
       input: [ gupnp_toml, gir[0] ],
-      output: 'GUPnP',
+      output: GUPNP_API_NAME,
       command : [
           gidocgen,
           'generate',
