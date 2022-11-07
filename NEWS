@@ -1,3 +1,21 @@
+1.6.1 (stable)
+==============
+ - ControlPoint: Fix error handling if description download fails
+ - Use proper method for detecting IFA_FLAGS availability
+ - ContextManager: Do not leak filtered contexts
+ - Network ContextManager: Do not leak list parts of context lists
+ - Introspection: Properly chain up to parent class
+ - ContextManager: Fix freeing unavailable contexts
+ - ControlPoint: Do not leak cancellable
+ - Service: Fix crash if subscription callback is points unreachable host
+
+Bugs fixed in this release:
+ - https://gitlab.gnome.org/GNOME/gupnp/issues/80
+ - https://gitlab.gnome.org/GNOME/gupnp/issues/78
+
+All contributors to this release:
+ - Jens Georg <mail@jensge.org>
+
 1.6.0 (stable)
 ==============
  - Re-release of 1.5.4, no functional change
