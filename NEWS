@@ -1,3 +1,21 @@
+1.4.4 (stable)
+==============
+
+- Respect bindir option while installing
+- Fix ContextFilter to actually work again
+- Update Docbook to 4.5
+- Explicitly depend on libxml2 for tests
+- Fix IFA_FLAGS detection for Linux CM
+- Fix missing chain-up in instrospection dispose
+
+Bugs fixed in this release:
+ - https://gitlab.gnome.org/GNOME/gupnp/issues/68
+
+All contributors to this release:
+ - Jens Georg <mail@jensge.org>
+ - Tomasz Kłoczko <kloczek@github.com>
+ - Marvin Schmidt <marv@exherbo.org>
+
 1.4.3 (stable)
 =====
 
