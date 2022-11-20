@@ -1098,6 +1098,8 @@ test_gupnp_context_host_path_invalid_methods (ContextTestFixture *tf,
         }
         g_free (rewritten_uri);
 }
+
+
 int
 main (int argc, char *argv[])
 {
@@ -1268,6 +1270,7 @@ main (int argc, char *argv[])
                             test_fixture_setup,
                             test_gupnp_context_host_path_invalid_methods,
                             test_fixture_teardown);
+                g_free (name);
 
                 it++;
         }

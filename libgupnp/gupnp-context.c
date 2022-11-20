@@ -88,13 +88,14 @@ G_DEFINE_TYPE_EXTENDED (GUPnPContext,
                                 (G_TYPE_INITABLE,
                                  gupnp_context_initable_iface_init))
 
-enum {
+enum
+{
         PROP_0,
         PROP_SERVER,
         PROP_SESSION,
         PROP_SUBSCRIPTION_TIMEOUT,
         PROP_DEFAULT_LANGUAGE,
-        PROP_ACL
+        PROP_ACL,
 };
 
 typedef struct {

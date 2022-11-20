@@ -859,6 +859,52 @@ test_ggo_60_no_crash ()
         g_main_loop_unref (data.loop);
 }
 
+void
+test_ggo_81 ()
+{
+        GInetAddress *address =
+                g_inet_address_new_loopback (G_SOCKET_FAMILY_IPV4);
+        GError *error = NULL;
+
+        GUPnPContext *context =
+                gupnp_context_new_for_address (address,
+                                               4711,
+                                               GSSDP_UDA_VERSION_1_0,
+                                               &error);
+        g_assert_nonnull (context);
+        g_assert_no_error (error);
+        g_assert_cmpint (4711, ==, gupnp_context_get_port (context));
+        g_assert_cmpint (4711,
+                         ==,
+                         gssdp_client_get_port (GSSDP_CLIENT (context)));
+
+        guint port = 0;
+        g_object_get (context, "port", &port, NULL);
+        g_assert_cmpint (4711, ==, port);
+
+        g_object_unref (context);
+
+        context = gupnp_context_new_for_address (address,
+                                                 0,
+                                                 GSSDP_UDA_VERSION_1_0,
+                                                 &error);
+
+        g_assert_nonnull (context);
+        g_assert_no_error (error);
+        port = gupnp_context_get_port (context);
+        g_assert_cmpint (0, !=, port);
+
+        guint port2 = 0;
+        g_object_get (context, "port", &port2, NULL);
+        g_assert_cmpint (port, ==, port2);
+
+        g_assert_cmpint (port2,
+                         ==,
+                         gssdp_client_get_port (GSSDP_CLIENT (context)));
+
+        g_object_unref (context);
+        g_object_unref (address);
+}
 int
 main (int argc, char *argv[]) {
     g_test_init (&argc, &argv, NULL);
@@ -871,6 +917,7 @@ main (int argc, char *argv[]) {
     g_test_add_func ("/bugs/ggo/42", test_ggo_42);
     g_test_add_func ("/bugs/ggo/63", test_ggo_63);
     g_test_add_func ("/bugs/ggo/60", test_ggo_60_no_crash);
+    g_test_add_func ("/bugs/ggo/81", test_ggo_81);
 
     return g_test_run ();
 }
