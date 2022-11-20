@@ -1,3 +1,13 @@
+1.6.2 (stable)
+==============
+ - Add test for issue 81
+
+Bugs fixed in this release:
+ - https://gitlab.gnome.org/GNOME/gupnp/issues/81
+
+All contributors to this release:
+ - Jens Georg <mail@jensge.org>
+
 1.6.1 (stable)
 ==============
  - ControlPoint: Fix error handling if description download fails
