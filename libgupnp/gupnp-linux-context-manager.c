@@ -864,12 +864,6 @@ receive_netlink_message (GUPnPLinuxContextManager *self, GError **error)
                                 g_debug ("Received RTM_DELADDR");
                                 ifa = NLMSG_DATA (header);
 
-                                if (ifa->ifa_family == AF_INET6 &&
-                                        (ifa->ifa_scope != RT_SCOPE_SITE &&
-                                         ifa->ifa_scope != RT_SCOPE_LINK &&
-                                         ifa->ifa_scope != RT_SCOPE_HOST))
-                                        break;
-
                                 extract_info (header,
                                               priv->dump_netlink_packets,
                                               ifa->ifa_family,
