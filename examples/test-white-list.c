@@ -259,7 +259,7 @@ main (G_GNUC_UNUSED int argc, G_GNUC_UNUSED char **argv)
 
         setlocale (LC_ALL, "");
 
-        cm = gupnp_context_manager_create(0);
+        cm = gupnp_context_manager_create_full(GSSDP_UDA_VERSION_1_0, G_SOCKET_FAMILY_INVALID, 0);
 
         g_signal_connect(cm,
                          "context-available",
@@ -273,7 +273,7 @@ main (G_GNUC_UNUSED int argc, G_GNUC_UNUSED char **argv)
 
         main_loop = g_main_loop_new (NULL, FALSE);
 
-        id = g_timeout_add_seconds (5, change_context_filter, cm);
+        //id = g_timeout_add_seconds (5, change_context_filter, cm);
 
 #ifndef G_OS_WIN32
         g_unix_signal_add (SIGINT, unix_signal_handler, NULL);
