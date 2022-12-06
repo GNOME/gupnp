@@ -97,11 +97,28 @@ typedef enum {
         NETWORK_INTERFACE_PRECONFIGURED = 1 << 2
 } NetworkInterfaceFlags;
 
+
+static const char *IFA_FLAGS_DECODE[] = { [IFA_F_SECONDARY] = "IFA_F_SECONDARY",
+                                          [IFA_F_NODAD] = "IFA_F_NODAD",
+                                          [IFA_F_OPTIMISTIC] = "IFA_F_OPTIMISTIC",
+                                          [IFA_F_DADFAILED] = "IFA_F_DADFAILED",
+                                          [IFA_F_HOMEADDRESS] =
+                                                  "IFA_F_HOMEADDRESS",
+                                          [IFA_F_DEPRECATED] = "IFA_F_DEPRECATED",
+                                          [IFA_F_TENTATIVE] = "IFA_F_TENTATIVE",
+                                          [IFA_F_PERMANENT] = "IFA_F_PERMANENT",
+                                          [IFA_F_MANAGETEMPADDR] = "IFA_F_MANAGETEMPADDR",
+                                          [IFA_F_NOPREFIXROUTE] = "IFA_F_NOPREFIXROUTE",
+                                          [IFA_F_MCAUTOJOIN] = "IFA_F_MCAUTOJOIN",
+                                          [IFA_F_STABLE_PRIVACY] = "IFA_F_STABLE_PRIVACY",
+};
+
 static void
 dump_rta_attr (sa_family_t family, struct rtattr *rt_attr)
 {
         const char *data = NULL;
         const char *label = NULL;
+        g_autoptr (GString) builder = NULL;
         char buf[INET6_ADDRSTRLEN];
 
         if (rt_attr->rta_type == IFA_ADDRESS ||
@@ -114,6 +131,33 @@ dump_rta_attr (sa_family_t family, struct rtattr *rt_attr)
                                   sizeof (buf));
         } else if (rt_attr->rta_type == IFA_LABEL) {
                 data = (const char *) RTA_DATA (rt_attr);
+        } else if (rt_attr->rta_type == IFA_CACHEINFO) {
+                struct ifa_cacheinfo *ci =
+                        (struct ifa_cacheinfo *) RTA_DATA (rt_attr);
+                builder = g_string_new (NULL);
+                g_string_append_printf (builder,
+                                        "Cache Info: c: %u p: %u v: %u t: %u",
+                                        ci->cstamp,
+                                        ci->ifa_prefered,
+                                        ci->ifa_valid,
+                                        ci->tstamp);
+                data = builder->str;
+#if defined(HAVE_IFA_FLAGS)
+        } else if (rt_attr->rta_type == IFA_FLAGS) {
+                uint32_t flags = *(uint32_t *) RTA_DATA (rt_attr);
+                builder = g_string_new (NULL);
+                g_string_append_printf (builder, "IFA flags: 0x%04x, ", flags);
+                for (uint32_t i = IFA_F_SECONDARY; i <= IFA_F_STABLE_PRIVACY;
+                     i <<= 1) {
+                        if (flags & i) {
+                                g_string_append_printf (builder,
+                                                        " %s(0x%04x)",
+                                                        IFA_FLAGS_DECODE[i],
+                                                        i);
+                        }
+                }
+                data = builder->str;
+#endif
         } else {
                 data = "Unknown";
         }
@@ -135,7 +179,7 @@ dump_rta_attr (sa_family_t family, struct rtattr *rt_attr)
                 default: label = "Unknown"; break;
         }
 
-        g_debug ("  %s: %s", label, data);
+        g_debug ("  %s(%d): %s", label, rt_attr->rta_type, data);
 }
 
 static void
@@ -425,8 +469,7 @@ on_netlink_message_available (G_GNUC_UNUSED GSocket     *socket,
 static void
 extract_info (struct nlmsghdr *header,
               gboolean         dump,
-              sa_family_t      family,
-              guint8           prefixlen,
+              struct ifaddrmsg *ifa,
               char           **address,
               char           **label,
               char           **mask)
@@ -437,20 +480,27 @@ extract_info (struct nlmsghdr *header,
 
         rt_attr = IFA_RTA (NLMSG_DATA (header));
         rt_attr_len = IFA_PAYLOAD (header);
+        uint32_t flags = ifa->ifa_flags;
+
         while (RT_ATTR_OK (rt_attr, rt_attr_len)) {
                 if (dump) {
-                        dump_rta_attr (family, rt_attr);
+                        dump_rta_attr (ifa->ifa_family, rt_attr);
                 }
 
                 if (rt_attr->rta_type == IFA_LABEL) {
                         *label = g_strdup ((char *) RTA_DATA (rt_attr));
+#if defined(HAVE_IFA_FLAGS)
+                } else if (rt_attr->rta_type == IFA_FLAGS) {
+                        // Overwrite flags with IFA_FLAGS message if present
+                        flags = *(uint32_t *) RTA_DATA (rt_attr);
+#endif
                 } else if (rt_attr->rta_type == IFA_ADDRESS) {
                         if (address != NULL) {
                                 GInetAddress *addr;
 
                                 *address = NULL;
-                                addr = g_inet_address_new_from_bytes (RTA_DATA (rt_attr), family);
-                                if (family == AF_INET || family == AF_INET6) {
+                                addr = g_inet_address_new_from_bytes (RTA_DATA (rt_attr), ifa->ifa_family);
+                                if (ifa->ifa_family == AF_INET || ifa->ifa_family == AF_INET6) {
                                         *address =
                                                 g_inet_address_to_string (addr);
                                 }
@@ -459,14 +509,14 @@ extract_info (struct nlmsghdr *header,
 
                         if (mask != NULL) {
                                 struct in6_addr addr = { 0 }, *data;
-                                int i = 0, bits = prefixlen;
+                                int i = 0, bits = ifa->ifa_prefixlen;
                                 guint8 *outbuf = (guint8 *)&addr.s6_addr;
                                 guint8 *inbuf;
 
                                 data = RTA_DATA (rt_attr);
                                 inbuf = (guint8 *)&data->s6_addr;
 
-                                for (i = 0; i < (family == AF_INET ? 4 : 16); i++) {
+                                for (i = 0; i < (ifa->ifa_family == AF_INET ? 4 : 16); i++) {
                                         if (bits > 8) {
                                                 bits -= 8;
                                                 outbuf[i] = inbuf[i] & 0xff;
@@ -484,15 +534,24 @@ extract_info (struct nlmsghdr *header,
                                         }
                                 }
 
-                                inet_ntop (family,
+                                inet_ntop (ifa->ifa_family,
                                            &addr,
                                            buf,
                                            sizeof (buf));
                                 *mask = g_strdup (buf);
-
                         }
                 }
                 rt_attr = RTA_NEXT (rt_attr, rt_attr_len);
+        }
+
+        // Address should not be used anymore or is not really ready yet
+        if (flags & IFA_F_DEPRECATED || flags & IFA_F_TENTATIVE) {
+                if (address != NULL)
+                        g_clear_pointer (address, g_free);
+                if (label != NULL)
+                        g_clear_pointer (label, g_free);
+                if (mask != NULL)
+                        g_clear_pointer (mask, g_free);
         }
 }
 
@@ -743,8 +802,10 @@ handle_device_status_change (GUPnPLinuxContextManager *self,
 
         device = network_device_new (self, name, ifi->ifi_index);
         if (device) {
-                if (!INTERFACE_IS_VALID (ifi))
+/*                if (!INTERFACE_IS_VALID (ifi)) {
+                        g_debug ("Ignoring interface %s", name);
                         device->flags |= NETWORK_INTERFACE_IGNORE;
+                } */
                 if (ifi->ifi_flags & IFF_UP)
                         device->flags |= NETWORK_INTERFACE_UP;
 
@@ -815,6 +876,8 @@ receive_netlink_message (GUPnPLinuxContextManager *self, GError **error)
                 switch (header->nlmsg_type) {
                         /* RTM_NEWADDR and RTM_DELADDR are sent on real address
                          * changes.
+                         * RTM_NEWADDR can also be sent regularly for information
+                         * about v6 address lifetime
                          * RTM_NEWLINK is sent on various occasions:
                          *  - Creation of a new device
                          *  - Device goes up/down
@@ -826,14 +889,39 @@ receive_netlink_message (GUPnPLinuxContextManager *self, GError **error)
                                 char *label = NULL;
                                 char *address = NULL;
                                 char *mask = NULL;
+                                uint32_t flags = 0;
 
                                 g_debug ("Received RTM_NEWADDR");
                                 ifa = NLMSG_DATA (header);
 
+                                {
+                                        g_autoptr (GString) builder =
+                                                g_string_new ("ifa_flags from "
+                                                              "struct");
+                                        uint32_t flags = ifa->ifa_flags;
+                                        g_string_append_printf (
+                                                builder,
+                                                "IFA flags: 0x%04x, ",
+                                                flags);
+                                        for (uint32_t i = IFA_F_SECONDARY;
+                                             i <= IFA_F_STABLE_PRIVACY;
+                                             i <<= 1) {
+                                                if (flags & i) {
+                                                        g_string_append_printf (
+                                                                builder,
+                                                                " %s(0x%04x)",
+                                                                IFA_FLAGS_DECODE
+                                                                        [i],
+                                                                i);
+                                                }
+                                        }
+
+                                        g_debug ("      %s", builder->str);
+                                }
+
                                 extract_info (header,
                                               priv->dump_netlink_packets,
-                                              ifa->ifa_family,
-                                              ifa->ifa_prefixlen,
+                                              ifa,
                                               &address,
                                               &label,
                                               &mask);
@@ -866,8 +954,7 @@ receive_netlink_message (GUPnPLinuxContextManager *self, GError **error)
 
                                 extract_info (header,
                                               priv->dump_netlink_packets,
-                                              ifa->ifa_family,
-                                              ifa->ifa_prefixlen,
+                                              ifa,
                                               &address,
                                               &label,
                                               NULL);
