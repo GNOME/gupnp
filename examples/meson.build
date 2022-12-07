@@ -17,7 +17,7 @@ executable(
     dependencies: gupnp
 )
 
-foreach program : ['browsing', 'proxy', 'server', 'introspection', 'white-list']
+foreach program : ['browsing', 'proxy', 'server', 'introspection', 'white-list', 'context-manager']
     executable(
         'test-' + program,
         sources : 'test-@0@.c'.format(program),
