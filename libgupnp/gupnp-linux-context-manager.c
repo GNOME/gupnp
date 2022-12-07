@@ -50,6 +50,76 @@
 #include "gupnp-linux-context-manager.h"
 #include "gupnp-context.h"
 
+struct _RtmAddrInfo {
+        uint32_t flags;
+        char *label;
+        char *ip_string;
+        GInetAddress *address;
+        GInetAddressMask *mask;
+        uint32_t preferred;
+        uint32_t valid;
+        struct ifaddrmsg *ifa;
+};
+typedef struct _RtmAddrInfo RtmAddrInfo;
+
+static void
+rtm_addr_info_free (RtmAddrInfo *info)
+{
+        g_clear_pointer (&info->ip_string, g_free);
+        g_clear_pointer (&info->label, g_free);
+        g_clear_object (&info->address);
+        g_clear_object (&info->mask);
+}
+
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (RtmAddrInfo, rtm_addr_info_free)
+
+static GInetAddressMask *
+generate_mask (struct ifaddrmsg *ifa, struct rtattr *rt_attr)
+{
+        struct in6_addr addr = { 0 };
+        int i = 0;
+        int bits = ifa->ifa_prefixlen;
+        guint8 *outbuf = (guint8 *) &addr.s6_addr;
+
+        struct in6_addr *data = RTA_DATA (rt_attr);
+        guint8 *inbuf = (guint8 *) &data->s6_addr;
+
+        for (i = 0; i < (ifa->ifa_family == AF_INET ? 4 : 16); i++) {
+                if (bits > 8) {
+                        bits -= 8;
+                        outbuf[i] = inbuf[i] & 0xff;
+                } else {
+                        static const guint8 bits_a[] = { 0x00,
+                                                         0x08,
+                                                         0x0C,
+                                                         0x0E,
+                                                         0x0F };
+
+                        if (bits >= 4) {
+                                outbuf[i] = inbuf[i] & 0xf0;
+                                bits -= 4;
+                        }
+                        outbuf[i] = outbuf[i] | (inbuf[i] & bits_a[bits]);
+                        break;
+                }
+        }
+        g_autoptr (GInetAddress) mask_address =
+                g_inet_address_new_from_bytes (outbuf, ifa->ifa_family);
+
+        g_autoptr (GError) error = NULL;
+        GInetAddressMask *mask = g_inet_address_mask_new (mask_address,
+                                                          ifa->ifa_prefixlen,
+                                                          &error);
+
+        if (error != NULL) {
+                g_debug ("Could not create address "
+                         "mask: %s",
+                         error->message);
+        }
+
+        return mask;
+}
+
 struct _GUPnPLinuxContextManagerPrivate {
         /* Socket used for IOCTL calls */
         int fd;
@@ -97,11 +167,27 @@ typedef enum {
         NETWORK_INTERFACE_PRECONFIGURED = 1 << 2
 } NetworkInterfaceFlags;
 
+static const char *IFA_FLAGS_DECODE[] = {
+        [IFA_F_SECONDARY] = "IFA_F_SECONDARY",
+        [IFA_F_NODAD] = "IFA_F_NODAD",
+        [IFA_F_OPTIMISTIC] = "IFA_F_OPTIMISTIC",
+        [IFA_F_DADFAILED] = "IFA_F_DADFAILED",
+        [IFA_F_HOMEADDRESS] = "IFA_F_HOMEADDRESS",
+        [IFA_F_DEPRECATED] = "IFA_F_DEPRECATED",
+        [IFA_F_TENTATIVE] = "IFA_F_TENTATIVE",
+        [IFA_F_PERMANENT] = "IFA_F_PERMANENT",
+        [IFA_F_MANAGETEMPADDR] = "IFA_F_MANAGETEMPADDR",
+        [IFA_F_NOPREFIXROUTE] = "IFA_F_NOPREFIXROUTE",
+        [IFA_F_MCAUTOJOIN] = "IFA_F_MCAUTOJOIN",
+        [IFA_F_STABLE_PRIVACY] = "IFA_F_STABLE_PRIVACY",
+};
+
 static void
 dump_rta_attr (sa_family_t family, struct rtattr *rt_attr)
 {
         const char *data = NULL;
         const char *label = NULL;
+        g_autoptr (GString) builder = NULL;
         char buf[INET6_ADDRSTRLEN];
 
         if (rt_attr->rta_type == IFA_ADDRESS ||
@@ -114,6 +200,33 @@ dump_rta_attr (sa_family_t family, struct rtattr *rt_attr)
                                   sizeof (buf));
         } else if (rt_attr->rta_type == IFA_LABEL) {
                 data = (const char *) RTA_DATA (rt_attr);
+        } else if (rt_attr->rta_type == IFA_CACHEINFO) {
+                struct ifa_cacheinfo *ci =
+                        (struct ifa_cacheinfo *) RTA_DATA (rt_attr);
+                builder = g_string_new (NULL);
+                g_string_append_printf (builder,
+                                        "Cache Info: c: %u p: %u v: %u t: %u",
+                                        ci->cstamp,
+                                        ci->ifa_prefered,
+                                        ci->ifa_valid,
+                                        ci->tstamp);
+                data = builder->str;
+#if defined(HAVE_IFA_FLAGS)
+        } else if (rt_attr->rta_type == IFA_FLAGS) {
+                uint32_t flags = *(uint32_t *) RTA_DATA (rt_attr);
+                builder = g_string_new (NULL);
+                g_string_append_printf (builder, "IFA flags: 0x%04x, ", flags);
+                for (uint32_t i = IFA_F_SECONDARY; i <= IFA_F_STABLE_PRIVACY;
+                     i <<= 1) {
+                        if (flags & i) {
+                                g_string_append_printf (builder,
+                                                        " %s(0x%04x)",
+                                                        IFA_FLAGS_DECODE[i],
+                                                        i);
+                        }
+                }
+                data = builder->str;
+#endif
         } else {
                 data = "Unknown";
         }
@@ -135,7 +248,7 @@ dump_rta_attr (sa_family_t family, struct rtattr *rt_attr)
                 default: label = "Unknown"; break;
         }
 
-        g_debug ("  %s: %s", label, data);
+        g_debug ("  %s(%d): %s", label, rt_attr->rta_type, data);
 }
 
 static void
@@ -261,22 +374,17 @@ network_device_update_essid (NetworkInterface *device)
 }
 
 static void
-network_device_create_context (NetworkInterface *device,
-                               const char       *address,
-                               GSocketFamily     family,
-                               const char       *label,
-                               const char       *mask,
-                               GInetAddressMask *host_mask)
+network_device_create_context (NetworkInterface *device, RtmAddrInfo *info)
 {
         guint port;
         GError *error = NULL;
         GUPnPContext *context;
         GSSDPUDAVersion version;
 
-        if (g_hash_table_contains (device->contexts, address)) {
+        if (g_hash_table_contains (device->contexts, info->ip_string)) {
                 g_debug ("Context for address %s on %s already exists",
-                         address,
-                         label);
+                         info->ip_string,
+                         info->label);
 
                 return;
         }
@@ -288,17 +396,24 @@ network_device_create_context (NetworkInterface *device,
 
         network_device_update_essid (device);
 
+        g_autofree char *mask = g_inet_address_mask_to_string (info->mask);
         context = g_initable_new (GUPNP_TYPE_CONTEXT,
                                   NULL,
                                   &error,
-                                  "host-ip", address,
-                                  "address-family", family,
-                                  "uda-version", version,
-                                  "interface", label,
-                                  "network", device->essid ? device->essid
-                                                           : mask,
-                                  "host-mask", host_mask,
-                                  "port", port,
+                                  "address",
+                                  info->address,
+                                  "address-family",
+                                  info->ifa->ifa_family,
+                                  "uda-version",
+                                  version,
+                                  "interface",
+                                  info->label,
+                                  "network",
+                                  device->essid ? device->essid : mask,
+                                  "host-mask",
+                                  info->mask,
+                                  "port",
+                                  port,
                                   NULL);
 
         if (error) {
@@ -308,7 +423,9 @@ network_device_create_context (NetworkInterface *device,
 
                 return;
         }
-        g_hash_table_insert (device->contexts, g_strdup (address), context);
+        g_hash_table_insert (device->contexts,
+                             g_steal_pointer (&info->ip_string),
+                             context);
 
         if (device->flags & NETWORK_INTERFACE_UP) {
                 g_signal_emit_by_name (device->manager,
@@ -394,16 +511,10 @@ static void query_all_network_interfaces (GUPnPLinuxContextManager *self);
 static void query_all_addresses (GUPnPLinuxContextManager *self);
 static void receive_netlink_message (GUPnPLinuxContextManager  *self,
                                      GError                   **error);
-static void create_context (GUPnPLinuxContextManager *self,
-                            const char               *label,
-                            const char               *address,
-                            const char               *mask,
-                            struct ifaddrmsg         *ifa,
-                            GInetAddressMask         *host_mask);
-static void remove_context (GUPnPLinuxContextManager *self,
-                            const char               *address,
-                            const char               *label,
-                            struct ifaddrmsg         *ifa);
+static void
+create_context (GUPnPLinuxContextManager *self, RtmAddrInfo *info);
+static void
+remove_context (GUPnPLinuxContextManager *self, RtmAddrInfo *info);
 
 static gboolean
 on_netlink_message_available (G_GNUC_UNUSED GSocket     *socket,
@@ -422,78 +533,65 @@ on_netlink_message_available (G_GNUC_UNUSED GSocket     *socket,
 #define RT_ATTR_OK(a,l) \
         ((l > 0) && RTA_OK (a, l))
 
-static void
-extract_info (struct nlmsghdr *header,
-              gboolean         dump,
-              sa_family_t      family,
-              guint8           prefixlen,
-              char           **address,
-              char           **label,
-              char           **mask)
+static RtmAddrInfo *
+extract_info (struct nlmsghdr *header, gboolean dump, struct ifaddrmsg *ifa)
 {
+        RtmAddrInfo *info = g_new0 (RtmAddrInfo, 1);
+        info->ifa = ifa;
+        info->flags = ifa->ifa_flags;
+
         int rt_attr_len;
         struct rtattr *rt_attr;
-        char buf[INET6_ADDRSTRLEN];
 
         rt_attr = IFA_RTA (NLMSG_DATA (header));
         rt_attr_len = IFA_PAYLOAD (header);
+
         while (RT_ATTR_OK (rt_attr, rt_attr_len)) {
                 if (dump) {
-                        dump_rta_attr (family, rt_attr);
+                        dump_rta_attr (ifa->ifa_family, rt_attr);
                 }
 
                 if (rt_attr->rta_type == IFA_LABEL) {
-                        *label = g_strdup ((char *) RTA_DATA (rt_attr));
+                        info->label = g_strdup ((char *) RTA_DATA (rt_attr));
+#if defined(HAVE_IFA_FLAGS)
+                } else if (rt_attr->rta_type == IFA_FLAGS) {
+                        // Overwrite flags with IFA_FLAGS message if present
+                        info->flags = *(uint32_t *) RTA_DATA (rt_attr);
+#endif
                 } else if (rt_attr->rta_type == IFA_ADDRESS) {
-                        if (address != NULL) {
-                                GInetAddress *addr;
+                        info->address = g_inet_address_new_from_bytes (
+                                RTA_DATA (rt_attr),
+                                ifa->ifa_family);
 
-                                *address = NULL;
-                                addr = g_inet_address_new_from_bytes (RTA_DATA (rt_attr), family);
-                                if (family == AF_INET || family == AF_INET6) {
-                                        *address =
-                                                g_inet_address_to_string (addr);
-                                }
-                                g_object_unref (addr);
-                        }
+                        if (info->address != NULL) {
+                                info->ip_string = g_inet_address_to_string (
+                                        info->address);
 
-                        if (mask != NULL) {
-                                struct in6_addr addr = { 0 }, *data;
-                                int i = 0, bits = prefixlen;
-                                guint8 *outbuf = (guint8 *)&addr.s6_addr;
-                                guint8 *inbuf;
-
-                                data = RTA_DATA (rt_attr);
-                                inbuf = (guint8 *)&data->s6_addr;
-
-                                for (i = 0; i < (family == AF_INET ? 4 : 16); i++) {
-                                        if (bits > 8) {
-                                                bits -= 8;
-                                                outbuf[i] = inbuf[i] & 0xff;
-                                        } else {
-                                                static const guint8 bits_a[] =
-                                                { 0x00, 0x08, 0x0C, 0x0E, 0x0F };
-
-                                                if (bits >= 4) {
-                                                        outbuf[i] = inbuf[i] & 0xf0;
-                                                        bits -= 4;
-                                                }
-                                                outbuf[i] = outbuf[i] |
-                                                            (inbuf[i] & bits_a[bits]);
-                                                break;
-                                        }
-                                }
-
-                                inet_ntop (family,
-                                           &addr,
-                                           buf,
-                                           sizeof (buf));
-                                *mask = g_strdup (buf);
-
+                                info->mask = generate_mask (ifa, rt_attr);
                         }
                 }
                 rt_attr = RTA_NEXT (rt_attr, rt_attr_len);
         }
+
+        if (dump) {
+                g_autoptr (GString) builder = g_string_new ("    ");
+                g_string_append_printf (builder,
+                                        "IFA flags: 0x%04x, ",
+                                        info->flags);
+                for (uint32_t i = IFA_F_SECONDARY; i <= IFA_F_STABLE_PRIVACY;
+                     i <<= 1) {
+                        if (info->flags & i) {
+                                g_string_append_printf (builder,
+                                                        " %s(0x%04x)",
+                                                        IFA_FLAGS_DECODE[i],
+                                                        i);
+                        }
+                }
+
+                g_debug ("%s", builder->str);
+        }
+
+        return info;
 }
 
 static void
@@ -526,24 +624,19 @@ extract_link_message_info (struct nlmsghdr *header,
 }
 
 static void
-create_context (GUPnPLinuxContextManager *self,
-                const char               *address,
-                const char               *label,
-                const char               *mask,
-                struct ifaddrmsg         *ifa,
-                GInetAddressMask         *host_mask)
+create_context (GUPnPLinuxContextManager *self, RtmAddrInfo *info)
 {
         NetworkInterface *device;
         GUPnPLinuxContextManagerPrivate *priv;
 
         priv = gupnp_linux_context_manager_get_instance_private (self);
         device = g_hash_table_lookup (priv->interfaces,
-                                      GINT_TO_POINTER (ifa->ifa_index));
+                                      GINT_TO_POINTER (info->ifa->ifa_index));
 
         if (!device) {
                 g_warning ("Got new address for device %d but device is"
                            " not active",
-                           ifa->ifa_index);
+                           info->ifa->ifa_index);
 
                 return;
         }
@@ -552,19 +645,11 @@ create_context (GUPnPLinuxContextManager *self,
         if (device->flags & NETWORK_INTERFACE_IGNORE)
                 return;
 
-        network_device_create_context (device,
-                                       address,
-                                       ifa->ifa_family,
-                                       label,
-                                       mask,
-                                       host_mask);
+        network_device_create_context (device, info);
 }
 
 static void
-remove_context (GUPnPLinuxContextManager *self,
-                const char               *address,
-                const char               *label,
-                struct ifaddrmsg         *ifa)
+remove_context (GUPnPLinuxContextManager *self, RtmAddrInfo *info)
 {
         NetworkInterface *device;
         GUPnPContext *context;
@@ -572,26 +657,26 @@ remove_context (GUPnPLinuxContextManager *self,
 
         priv = gupnp_linux_context_manager_get_instance_private (self);
         device = g_hash_table_lookup (priv->interfaces,
-                                      GINT_TO_POINTER (ifa->ifa_index));
+                                      GINT_TO_POINTER (info->ifa->ifa_index));
 
         if (!device) {
                 g_debug ("Device with index %d not found, ignoring",
-                         ifa->ifa_index);
+                         info->ifa->ifa_index);
 
                 return;
         }
 
-        context = g_hash_table_lookup (device->contexts, address);
+        context = g_hash_table_lookup (device->contexts, info->ip_string);
         if (context) {
                 if (device->flags & NETWORK_INTERFACE_UP) {
                         g_signal_emit_by_name (self,
                                                "context-unavailable",
                                                context);
                 }
-                g_hash_table_remove (device->contexts, address);
+                g_hash_table_remove (device->contexts, info->ip_string);
         } else {
                 g_debug ("Failed to find context with address %s",
-                         address);
+                         info->ip_string);
         }
 
         if (g_hash_table_size (device->contexts) == 0)
@@ -813,74 +898,56 @@ receive_netlink_message (GUPnPLinuxContextManager *self, GError **error)
 
         for (;NLMSG_IS_VALID (header, len); header = NLMSG_NEXT (header,len)) {
                 switch (header->nlmsg_type) {
-                        /* RTM_NEWADDR and RTM_DELADDR are sent on real address
+                /* RTM_NEWADDR and RTM_DELADDR are sent on real address
                          * changes.
+                         * RTM_NEWADDR can also be sent regularly for information
+                         * about v6 address lifetime
                          * RTM_NEWLINK is sent on various occasions:
                          *  - Creation of a new device
                          *  - Device goes up/down
                          *  - Wireless status changes
                          * RTM_DELLINK is sent only if device is removed, like
                          * openvpn --rmtun /dev/tun0, NOT on ifconfig down. */
-                        case RTM_NEWADDR:
-                            {
-                                char *label = NULL;
-                                char *address = NULL;
-                                char *mask = NULL;
+                case RTM_NEWADDR: {
+                        g_debug ("Received RTM_NEWADDR");
+                        ifa = NLMSG_DATA (header);
 
-                                g_debug ("Received RTM_NEWADDR");
-                                ifa = NLMSG_DATA (header);
-
+                        g_autoptr (RtmAddrInfo) info =
                                 extract_info (header,
                                               priv->dump_netlink_packets,
-                                              ifa->ifa_family,
-                                              ifa->ifa_prefixlen,
-                                              &address,
-                                              &label,
-                                              &mask);
+                                              ifa);
 
-                                if (address != NULL) {
-                                        GInetAddress *mask_addr;
-                                        GInetAddressMask *host_mask;
+                        if (info->flags & IFA_F_TENTATIVE) {
+                                g_debug ("IP address %s is only tentative, "
+                                         "skipping",
+                                         info->ip_string);
+                                continue;
+                        }
 
-                                        mask_addr = g_inet_address_new_from_string (mask);
-                                        host_mask = g_inet_address_mask_new (mask_addr,
-                                                                             ifa->ifa_prefixlen,
-                                                                             NULL);
-                                        create_context (self, address, label, mask, ifa, host_mask);
+                        if (info->flags & IFA_F_DEPRECATED) {
+                                g_debug ("Ip address %s is deprecated, "
+                                         "skipping",
+                                         info->ip_string);
+                                continue;
+                        }
 
-                                        g_object_unref (host_mask);
-                                        g_object_unref (mask_addr);
-                                }
-                                g_free (label);
-                                g_free (address);
-                                g_free (mask);
-                            }
-                            break;
+                        if (info->address != NULL) {
+                                create_context (self, info);
+                        }
+                } break;
                         case RTM_DELADDR:
                             {
-                                char *label = NULL;
-                                char *address = NULL;
-
                                 g_debug ("Received RTM_DELADDR");
                                 ifa = NLMSG_DATA (header);
 
-                                if (ifa->ifa_family == AF_INET6 &&
-                                        (ifa->ifa_scope != RT_SCOPE_SITE &&
-                                         ifa->ifa_scope != RT_SCOPE_LINK &&
-                                         ifa->ifa_scope != RT_SCOPE_HOST))
-                                        break;
+                                g_autoptr (RtmAddrInfo) info = extract_info (
+                                        header,
+                                        priv->dump_netlink_packets,
+                                        ifa);
 
-                                extract_info (header,
-                                              priv->dump_netlink_packets,
-                                              ifa->ifa_family,
-                                              ifa->ifa_prefixlen,
-                                              &address,
-                                              &label,
-                                              NULL);
-                                if (address != NULL)
-                                        remove_context (self, address, label, ifa);
-                                g_free (label);
-                                g_free (address);
+                                if (info->address != NULL) {
+                                        remove_context (self, info);
+                                }
                             }
                             break;
                         case RTM_NEWLINK: {
