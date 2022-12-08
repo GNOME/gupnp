@@ -69,6 +69,8 @@ rtm_addr_info_free (RtmAddrInfo *info)
         g_clear_pointer (&info->label, g_free);
         g_clear_object (&info->address);
         g_clear_object (&info->mask);
+
+        g_free (info);
 }
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC (RtmAddrInfo, rtm_addr_info_free)
