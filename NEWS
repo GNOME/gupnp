@@ -1,3 +1,15 @@
+1.6.3 (stable)
+==============
+ - Fix handling of deprecated and tentative v6 addresses
+ - Bump GSSDP minimjal version to 1.6.2
+
+Bugs fixed in this release:
+ - https://gitlab.gnome.org/GNOME/gupnp/issues/82
+ - https://gitlab.gnome.org/GNOME/gupnp/issues/83
+
+All contributors to this release:
+ - Jens Georg <mail@jensge.org>
+
 1.6.2 (stable)
 ==============
  - Add test for issue 81
