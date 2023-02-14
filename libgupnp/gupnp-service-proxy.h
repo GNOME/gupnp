@@ -186,6 +186,11 @@ gupnp_service_proxy_call_action (GUPnPServiceProxy       *proxy,
                                  GCancellable            *cancellable,
                                  GError                 **error);
 
+void
+gupnp_service_proxy_set_credentials (GUPnPServiceProxy *proxy,
+                                     const char        *user,
+                                     const char        *password);
+
 G_END_DECLS
 
 #endif /* GUPNP_SERVICE_PROXY_H */

@@ -638,6 +638,173 @@ test_finish_soap_error_sync (ProxyTestFixture *tf, gconstpointer user_data)
         g_thread_unref (t);
 }
 
+void
+auth_message_callback (GObject      *source,
+                       GAsyncResult *res,
+                       gpointer      user_data)
+{
+        ProxyTestFixture *tf = user_data;
+        GError *error = NULL;
+        GBytes *bytes = soup_session_send_and_read_finish (SOUP_SESSION (source),
+                                                      res,
+                                                      &error);
+        g_assert_no_error (error);
+        g_assert_null (g_bytes_get_data (bytes, NULL));
+
+        g_main_loop_quit (tf->loop);
+}
+
+static gboolean
+on_auth_verification_callback (SoupAuthDomain    *domain,
+                               SoupServerMessage *msg,
+                               const char        *username,
+                               const char        *password,
+                               gpointer           user_data)
+{
+        if (g_strcmp0 (username, "user") == 0 && g_strcmp0 (password, "password") == 0)
+                return TRUE;
+
+        return FALSE;
+}
+
+void
+on_test_async_unauth_call (GObject *source, GAsyncResult *res, gpointer user_data)
+{
+        GError *error = NULL;
+        g_assert_nonnull (user_data);
+
+        gupnp_service_proxy_call_action_finish (GUPNP_SERVICE_PROXY (source),
+                                                res,
+                                                &error);
+        g_assert_nonnull (error);
+
+        ProxyTestFixture *tf = (ProxyTestFixture *) user_data;
+        g_main_loop_quit (tf->loop);
+}
+
+void
+on_test_async_auth_call (GObject *source, GAsyncResult *res, gpointer user_data)
+{
+        GError *error = NULL;
+        g_assert_nonnull (user_data);
+
+        gupnp_service_proxy_call_action_finish (GUPNP_SERVICE_PROXY (source),
+                                                res,
+                                                &error);
+        g_assert_no_error (error);
+
+        ProxyTestFixture *tf = (ProxyTestFixture *) user_data;
+        g_main_loop_quit (tf->loop);
+}
+
+void
+test_finish_soap_authentication_no_credentials (ProxyTestFixture *tf, gconstpointer user_data)
+{
+        SoupServer *soup_server = gupnp_context_get_server (tf->server_context);
+        SoupAuthDomain *auth_domain;
+        GUPnPServiceProxyAction *action;
+
+        auth_domain = soup_auth_domain_basic_new ("realm", "Test", NULL);
+        soup_auth_domain_add_path (auth_domain, "/TestService/Control");
+        soup_auth_domain_basic_set_auth_callback (auth_domain,
+                                                  on_auth_verification_callback,
+                                                  tf,
+                                                  NULL);
+        soup_server_add_auth_domain (soup_server, auth_domain);
+
+        g_signal_connect (tf->service,
+                          "action-invoked::Ping",
+                          G_CALLBACK (on_test_async_call_ping_success),
+                          tf);
+
+        action = gupnp_service_proxy_action_new ("Ping", NULL);
+
+
+        gupnp_service_proxy_call_action_async (tf->proxy,
+                                               action,
+                                               NULL,
+                                               on_test_async_unauth_call,
+                                               tf);
+        gupnp_service_proxy_action_unref (action);
+        test_run_loop(tf->loop, g_test_get_path());
+
+        // Spin the loop for a bit...
+        g_timeout_add (500, (GSourceFunc) delayed_loop_quitter, tf->loop);
+        g_main_loop_run (tf->loop);
+}
+
+void
+test_finish_soap_authentication_wrong_credentials (ProxyTestFixture *tf, gconstpointer user_data)
+{
+        SoupServer *soup_server = gupnp_context_get_server (tf->server_context);
+        SoupAuthDomain *auth_domain;
+        GUPnPServiceProxyAction *action;
+
+        auth_domain = soup_auth_domain_basic_new ("realm", "Test", NULL);
+        soup_auth_domain_add_path (auth_domain, "/TestService/Control");
+        soup_auth_domain_basic_set_auth_callback (auth_domain,
+                                                  on_auth_verification_callback,
+                                                  tf,
+                                                  NULL);
+        soup_server_add_auth_domain (soup_server, auth_domain);
+
+        g_signal_connect (tf->service,
+                          "action-invoked::Ping",
+                          G_CALLBACK (on_test_async_call_ping_success),
+                          tf);
+
+        gupnp_service_proxy_set_credentials (tf->proxy, "user", "wrong_password");
+        action = gupnp_service_proxy_action_new ("Ping", NULL);
+
+        gupnp_service_proxy_call_action_async (tf->proxy,
+                                               action,
+                                               NULL,
+                                               on_test_async_unauth_call,
+                                               tf);
+        gupnp_service_proxy_action_unref (action);
+        test_run_loop(tf->loop, g_test_get_path());
+
+        // Spin the loop for a bit...
+        g_timeout_add (500, (GSourceFunc) delayed_loop_quitter, tf->loop);
+        g_main_loop_run (tf->loop);
+}
+
+void
+test_finish_soap_authentication_valid_credentials (ProxyTestFixture *tf, gconstpointer user_data)
+{
+        SoupServer *soup_server = gupnp_context_get_server (tf->server_context);
+        SoupAuthDomain *auth_domain;
+        GUPnPServiceProxyAction *action;
+
+        auth_domain = soup_auth_domain_basic_new ("realm", "Test", NULL);
+        soup_auth_domain_add_path (auth_domain, "/TestService/Control");
+        soup_auth_domain_basic_set_auth_callback (auth_domain,
+                                                  on_auth_verification_callback,
+                                                  tf,
+                                                  NULL);
+        soup_server_add_auth_domain (soup_server, auth_domain);
+
+        g_signal_connect (tf->service,
+                          "action-invoked::Ping",
+                          G_CALLBACK (on_test_async_call_ping_success),
+                          tf);
+
+        gupnp_service_proxy_set_credentials (tf->proxy, "user", "password");
+        action = gupnp_service_proxy_action_new ("Ping", NULL);
+
+        gupnp_service_proxy_call_action_async (tf->proxy,
+                                               action,
+                                               NULL,
+                                               on_test_async_auth_call,
+                                               tf);
+        gupnp_service_proxy_action_unref (action);
+        test_run_loop(tf->loop, g_test_get_path());
+
+        // Spin the loop for a bit...
+        g_timeout_add (500, (GSourceFunc) delayed_loop_quitter, tf->loop);
+        g_main_loop_run (tf->loop);
+}
+
 int
 main (int argc, char *argv[])
 {
@@ -697,6 +864,27 @@ main (int argc, char *argv[])
                     "127.0.0.1",
                     test_fixture_setup,
                     test_finish_soap_error_sync,
+                    test_fixture_teardown);
+
+        g_test_add ("/service-proxy/sync/authentication-no-credentials",
+                    ProxyTestFixture,
+                    "127.0.0.1",
+                    test_fixture_setup,
+                    test_finish_soap_authentication_no_credentials,
+                    test_fixture_teardown);
+
+        g_test_add ("/service-proxy/sync/authentication-wrong-credentials",
+                    ProxyTestFixture,
+                    "127.0.0.1",
+                    test_fixture_setup,
+                    test_finish_soap_authentication_no_credentials,
+                    test_fixture_teardown);
+
+        g_test_add ("/service-proxy/sync/authentication-valid-credentials",
+                    ProxyTestFixture,
+                    "127.0.0.1",
+                    test_fixture_setup,
+                    test_finish_soap_authentication_valid_credentials,
                     test_fixture_teardown);
 
         return g_test_run ();

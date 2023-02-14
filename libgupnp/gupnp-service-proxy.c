@@ -32,6 +32,10 @@ struct _GUPnPServiceProxyPrivate {
 
         char *path; /* Path to this proxy */
 
+        // Credentials
+        char *user;
+        char *password;
+
         char *sid; /* Subscription ID */
         GSource *subscription_timeout_src;
 
@@ -325,6 +329,42 @@ gupnp_service_proxy_class_init (GUPnPServiceProxyClass *klass)
                               G_TYPE_POINTER);
 }
 
+static gboolean
+on_authenticate (SoupMessage *msg,
+                 SoupAuth    *auth,
+                 gboolean     retrying,
+                 gpointer     user_data)
+{
+        GUPnPServiceProxy *proxy = user_data;
+        GUPnPServiceProxyPrivate *priv;
+
+        priv = gupnp_service_proxy_get_instance_private (proxy);
+
+        if (!retrying && priv->user != NULL && priv->password != NULL) {
+            soup_auth_authenticate (auth, priv->user, priv->password);
+            return FALSE;
+        }
+
+        return FALSE;
+}
+
+static void
+on_restarted (SoupMessage *msg, gpointer user_data)
+{
+        GUPnPServiceProxyAction *action = user_data;
+        g_autoptr (GBytes) body = NULL;
+        const char *service_type;
+
+        service_type = gupnp_service_info_get_service_type
+                                        (GUPNP_SERVICE_INFO (action->proxy));
+        gupnp_service_proxy_action_serialize (action, service_type);
+        body = g_string_free_to_bytes (action->msg_str);
+        soup_message_set_request_body_from_bytes (msg,
+                                                  "text/xml; charset=\"utf-8\"",
+                                                  body);
+        action->msg_str = NULL;
+}
+
 /* Begins a basic action message */
 static gboolean
 prepare_action_msg (GUPnPServiceProxy *proxy,
@@ -371,6 +411,8 @@ prepare_action_msg (GUPnPServiceProxy *proxy,
 
         g_clear_object (&action->msg);
         action->msg = soup_message_new (method, local_control_url);
+        g_signal_connect_object (G_OBJECT (action->msg), "authenticate", G_CALLBACK (on_authenticate), G_OBJECT (proxy), 0);
+        g_signal_connect (G_OBJECT (action->msg), "restarted", G_CALLBACK (on_restarted), action);
         g_free (local_control_url);
 
         SoupMessageHeaders *headers =
@@ -1659,4 +1701,31 @@ out:
         }
 
         return action;
+}
+
+
+/**
+ * gupnp_service_proxy_set_credentials:
+ * @proxy: A #GUPnPServiceProxy
+ * @user: user name for authentication
+ * @password: user password for authentication
+ *
+ * Sets user and password for authentication
+ *
+ * Since: 1.6.4
+ **/
+void
+gupnp_service_proxy_set_credentials (GUPnPServiceProxy *proxy,
+                                     const char        *user,
+                                     const char        *password)
+{
+  GUPnPServiceProxyPrivate *priv;
+
+  priv = gupnp_service_proxy_get_instance_private (proxy);
+
+  g_clear_pointer (&priv->user, g_free);
+  g_clear_pointer (&priv->password, g_free);
+
+  priv->user = g_strdup (user);
+  priv->password = g_strdup (password);
 }
