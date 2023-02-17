@@ -65,7 +65,7 @@ check-merge-request:
 
 .gupnp.fedora@common:
   variables:
-    BASE_TAG: '2022-08-16.1'
+    BASE_TAG: '2023-02-18.1'
     FDO_UPSTREAM_REPO: GNOME/gupnp
     FDO_DISTRIBUTION_PACKAGES: 'clang clang-analyzer gcovr git libasan libubsan python3-gobject python3-pip xmlto gobject-introspection-devel gtk-doc libxml2-devel vala ninja-build libnghttp2-devel libpsl-devel sqlite-devel python3-setuptools'
     FDO_DISTRIBUTION_EXEC: |
@@ -79,16 +79,16 @@ check-merge-request:
     - ninja -C _build install
     - popd
 
-.gupnp.fedora:36@x86_64:
+.gupnp.fedora:37@x86_64:
   extends: .gupnp.fedora@common
   variables:
-    FDO_DISTRIBUTION_VERSION: 36
+    FDO_DISTRIBUTION_VERSION: 37
     FDO_DISTRIBUTION_TAG: "x86_64-${BASE_TAG}"
 
 build-fedora-container@x86_64:
   extends:
     - .fdo.container-build@fedora
-    - .gupnp.fedora:36@x86_64
+    - .gupnp.fedora:37@x86_64
   stage: prepare
   variables:
     GIT_STRATEGY: none
@@ -97,7 +97,7 @@ build-fedora-container@x86_64:
 build-fedora@x86_64:
     extends:
         - .fdo.distribution-image@fedora
-        - .gupnp.fedora:36@x86_64
+        - .gupnp.fedora:37@x86_64
     needs:
         - build-fedora-container@x86_64
     <<: *build
@@ -141,7 +141,7 @@ test-fedora@x86_64:
     - ipv6
   extends:
     - .fdo.distribution-image@fedora
-    - .gupnp.fedora:36@x86_64
+    - .gupnp.fedora:37@x86_64
     - .soup3
   needs:
     - build-fedora@x86_64
@@ -158,7 +158,7 @@ test-fedora@x86_64:
 coverage-analysis:
   extends:
     - .fdo.distribution-image@fedora
-    - .gupnp.fedora:36@x86_64
+    - .gupnp.fedora:37@x86_64
     - .soup3
   stage: analysis
   allow_failure: true
@@ -177,7 +177,7 @@ coverage-analysis:
 static-scan:
   extends:
     - .fdo.distribution-image@fedora
-    - .gupnp.fedora:36@x86_64
+    - .gupnp.fedora:37@x86_64
     - .soup3
   stage: analysis
   needs:
@@ -199,7 +199,7 @@ static-scan:
 coverity:
   extends:
     - .fdo.distribution-image@fedora
-    - .gupnp.fedora:36@x86_64
+    - .gupnp.fedora:37@x86_64
     - .soup3
   stage: analysis
   allow_failure: true
@@ -226,7 +226,7 @@ coverity:
 pages:
   extends:
     - .fdo.distribution-image@fedora
-    - .gupnp.fedora:36@x86_64
+    - .gupnp.fedora:37@x86_64
     - .soup3
   stage: website
   script:
