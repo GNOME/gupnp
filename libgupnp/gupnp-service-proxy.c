@@ -415,7 +415,7 @@ prepare_action_msg (GUPnPServiceProxy *proxy,
 }
 
 static void
-gupnp_service_proxy_action_queue_task (GUPnPServiceProxy *proxy, GTask *task);
+gupnp_service_proxy_action_queue_task (GTask *task);
 
 static void
 action_task_got_response (GObject *source,
@@ -424,8 +424,8 @@ action_task_got_response (GObject *source,
 {
         GTask *task = G_TASK (user_data);
         GError *error = NULL;
-        GUPnPServiceProxyAction *action = (GUPnPServiceProxyAction *) g_task_get_task_data (task);
-        GUPnPServiceProxy *proxy = GUPNP_SERVICE_PROXY(g_task_get_source_object (task));
+        GUPnPServiceProxyAction *action =
+                (GUPnPServiceProxyAction *) g_task_get_task_data (task);
 
         action->response =
                 soup_session_send_and_read_finish (SOUP_SESSION (source),
@@ -448,7 +448,7 @@ action_task_got_response (GObject *source,
                         g_debug ("POST returned with METHOD_NOT_ALLOWED, "
                                  "trying with M-POST");
                         g_bytes_unref (action->response);
-                        if (!prepare_action_msg (proxy,
+                        if (!prepare_action_msg (action->proxy,
                                                  action,
                                                  "M-POST",
                                                  &error)) {
@@ -457,7 +457,7 @@ action_task_got_response (GObject *source,
 
                                 g_object_unref (task);
                         } else {
-                                gupnp_service_proxy_action_queue_task (proxy, task);
+                                gupnp_service_proxy_action_queue_task (task);
                         }
 
                 } else {
@@ -487,15 +487,15 @@ action_task_got_response (GObject *source,
 }
 
 static void
-gupnp_service_proxy_action_queue_task (GUPnPServiceProxy *proxy, GTask *task)
+gupnp_service_proxy_action_queue_task (GTask *task)
 {
         GUPnPContext *context;
         SoupSession *session;
         GUPnPServiceProxyAction *action = g_task_get_task_data (task);
 
         /* Send the message */
-        context = gupnp_service_info_get_context
-                                (GUPNP_SERVICE_INFO (proxy));
+        context = gupnp_service_info_get_context (
+                GUPNP_SERVICE_INFO (action->proxy));
         session = gupnp_context_get_session (context);
 
         soup_session_send_and_read_async (
@@ -1546,9 +1546,10 @@ gupnp_service_proxy_call_action_async (GUPnPServiceProxy       *proxy,
         char *task_name = g_strdup_printf ("UPnP Call \"%s\"", action->name);
         g_task_set_name (task, task_name);
         g_free (task_name);
-        g_task_set_task_data (task,
-                              gupnp_service_proxy_action_ref (action),
-                              (GDestroyNotify) gupnp_service_proxy_action_unref);
+        g_task_set_task_data (
+                task,
+                gupnp_service_proxy_action_ref (action),
+                (GDestroyNotify) gupnp_service_proxy_action_unref);
 
         prepare_action_msg (proxy, action, SOUP_METHOD_POST, &error);
 
@@ -1556,7 +1557,10 @@ gupnp_service_proxy_call_action_async (GUPnPServiceProxy       *proxy,
                 g_task_return_error (task, error);
                 g_object_unref (task);
         } else {
-                gupnp_service_proxy_action_queue_task (proxy, task);
+                action->proxy = proxy;
+                g_object_add_weak_pointer (G_OBJECT (proxy),
+                                           (gpointer *) &(action->proxy));
+                gupnp_service_proxy_action_queue_task (task);
         }
 }
 
@@ -1580,6 +1584,7 @@ gupnp_service_proxy_call_action_finish (GUPnPServiceProxy *proxy,
         g_return_val_if_fail (g_task_is_valid (G_TASK (result), proxy), NULL);
 
         GUPnPServiceProxyAction *action = g_task_get_task_data (G_TASK (result));
+        g_clear_weak_pointer (&action->proxy);
         action->pending = FALSE;
 
         return g_task_propagate_pointer (G_TASK (result), error);

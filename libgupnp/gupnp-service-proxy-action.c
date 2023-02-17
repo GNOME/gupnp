@@ -89,6 +89,10 @@ gupnp_service_proxy_action_ref (GUPnPServiceProxyAction *action)
 static void
 action_dispose (GUPnPServiceProxyAction *action)
 {
+        if (action->proxy != NULL) {
+                g_object_remove_weak_pointer (G_OBJECT (action->proxy),
+                                              (gpointer *) &(action->proxy));
+        }
         g_clear_error (&action->error);
         g_clear_object (&action->msg);
 

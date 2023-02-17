@@ -133,6 +133,7 @@ G_BEGIN_DECLS
         } G_STMT_END
 
 struct _GUPnPServiceProxyAction {
+        GUPnPServiceProxy *proxy;
         char *name;
         gint header_pos;
 
