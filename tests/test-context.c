@@ -269,6 +269,21 @@ test_gupnp_context_error_when_bound ()
         const char *address = g_uri_get_host (uris->data);
         int port = g_uri_get_port (uris->data);
 
+        SoupServer *s = soup_server_new (NULL, NULL);
+        soup_server_listen_local (server,
+                                  port,
+                                  SOUP_SERVER_LISTEN_IPV4_ONLY,
+                                  &error);
+
+        g_object_unref (s);
+
+        if (error == NULL) {
+                g_object_unref (server);
+                // Skip the test, for some reason it is possible to bind to the
+                // same TCP port twice here
+                return;
+        }
+
         g_test_expect_message (
                 "gupnp-context",
                 G_LOG_LEVEL_WARNING,
