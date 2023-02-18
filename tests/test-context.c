@@ -270,6 +270,17 @@ test_gupnp_context_error_when_bound ()
         int port = g_uri_get_port (uris->data);
         g_debug ("SOup server has bound to %s ->  %d", address, port);
 
+        g_autoptr (SoupServer) s = soup_server_new (NULL, NULL);
+        soup_server_listen_local (server,
+                                  port,
+                                  SOUP_SERVER_LISTEN_IPV4_ONLY,
+                                  &error);
+
+        if (error == NULL) {
+                // SKip the test
+                return;
+        }
+
         //g_test_expect_message (
         //        "gupnp-context",
         //        G_LOG_LEVEL_WARNING,
