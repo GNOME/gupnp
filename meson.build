@@ -57,6 +57,7 @@ subdir('tools')
 
 gidocgen_dep = dependency('gi-docgen', version: '>= 2021.1',
                           fallback: ['gi-docgen', 'dummy_dep'],
+                          native: true,
                           required: get_option('gtk_doc') and get_option('introspection')
                       )
 
