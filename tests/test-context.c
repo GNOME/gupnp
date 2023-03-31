@@ -283,6 +283,7 @@ test_gupnp_context_error_when_bound ()
                 // same TCP port twice here
                 return;
         }
+        g_clear_error (&error);
 
         g_test_expect_message (
                 "gupnp-context",
