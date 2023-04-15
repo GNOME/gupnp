@@ -453,6 +453,10 @@ prepare_action_msg (GUPnPServiceProxy *proxy,
         g_bytes_unref (body);
         action->msg_str = NULL;
 
+        action->proxy = proxy;
+        g_object_add_weak_pointer (G_OBJECT (proxy),
+                                   (gpointer *) &(action->proxy));
+
         return TRUE;
 }
 
@@ -1599,9 +1603,6 @@ gupnp_service_proxy_call_action_async (GUPnPServiceProxy       *proxy,
                 g_task_return_error (task, error);
                 g_object_unref (task);
         } else {
-                action->proxy = proxy;
-                g_object_add_weak_pointer (G_OBJECT (proxy),
-                                           (gpointer *) &(action->proxy));
                 gupnp_service_proxy_action_queue_task (task);
         }
 }
