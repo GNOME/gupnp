@@ -87,8 +87,11 @@ check_action_response (G_GNUC_UNUSED GUPnPServiceProxy *proxy,
         }
 
         /* Parse response */
-        response = xmlRecoverMemory (action->msg->response_body->data,
-                                     action->msg->response_body->length);
+        response = xmlReadMemory (action->msg->response_body->data,
+                                  action->msg->response_body->length,
+                                  NULL,
+                                  NULL,
+                                  XML_PARSE_NONET | XML_PARSE_RECOVER);
 
         if (!response) {
                 if (action->msg->status_code == SOUP_STATUS_OK) {

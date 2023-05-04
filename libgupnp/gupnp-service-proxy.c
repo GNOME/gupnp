@@ -1561,8 +1561,11 @@ server_handler (G_GNUC_UNUSED SoupServer        *soup_server,
         }
 
         /* Parse the actual XML message content */
-        doc = xmlRecoverMemory (msg->request_body->data,
-                                msg->request_body->length);
+        doc = xmlReadMemory (msg->request_body->data,
+                             msg->request_body->length,
+                             NULL,
+                             NULL,
+                             XML_PARSE_NONET | XML_PARSE_RECOVER);
         if (doc == NULL) {
                 /* Failed */
                 g_warning ("Failed to parse NOTIFY message body");

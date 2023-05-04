@@ -592,8 +592,11 @@ got_scpd_url (G_GNUC_UNUSED SoupSession *session,
         if (SOUP_STATUS_IS_SUCCESSFUL (msg->status_code)) {
                 xmlDoc *scpd;
 
-                scpd = xmlRecoverMemory (msg->response_body->data,
-                                         msg->response_body->length);
+                scpd = xmlReadMemory (msg->response_body->data,
+                                      msg->response_body->length,
+                                      NULL,
+                                      NULL,
+                                      XML_PARSE_NONET | XML_PARSE_RECOVER);
                 if (scpd) {
                         introspection = gupnp_service_introspection_new (scpd);
 

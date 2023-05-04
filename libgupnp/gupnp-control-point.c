@@ -613,8 +613,11 @@ got_description_url (SoupSession           *session,
                 xmlDoc *xml_doc;
 
                 /* Parse response */
-                xml_doc = xmlRecoverMemory (msg->response_body->data,
-                                            msg->response_body->length);
+                xml_doc = xmlReadMemory (msg->response_body->data,
+                                         msg->response_body->length,
+                                         NULL,
+                                         NULL,
+                                         XML_PARSE_NONET | XML_PARSE_RECOVER);
                 if (xml_doc) {
                         doc = gupnp_xml_doc_new (xml_doc);
 
