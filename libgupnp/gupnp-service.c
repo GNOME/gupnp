@@ -417,7 +417,11 @@ control_server_handler (SoupServer *server,
                 *end = '\0';
 
         /* Parse action_node */
-        doc = xmlRecoverMemory (request_body->data, request_body->length);
+        doc = xmlReadMemory (request_body->data,
+                             request_body->length,
+                             NULL,
+                             NULL,
+                             XML_PARSE_NONET | XML_PARSE_RECOVER);
         if (doc == NULL) {
                 soup_server_message_set_status (msg,
                                                 SOUP_STATUS_BAD_REQUEST,

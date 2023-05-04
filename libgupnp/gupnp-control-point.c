@@ -630,7 +630,11 @@ got_description_url (GObject *source,
                 body_data = g_bytes_get_data (body, &length);
 
                 /* Parse response */
-                xml_doc = xmlRecoverMemory (body_data, length);
+                xml_doc = xmlReadMemory (body_data,
+                                         length,
+                                         NULL,
+                                         NULL,
+                                         XML_PARSE_NONET | XML_PARSE_RECOVER);
                 if (xml_doc) {
                         doc = gupnp_xml_doc_new (xml_doc);
 

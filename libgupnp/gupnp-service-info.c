@@ -564,7 +564,11 @@ get_scpd_document_finished (GObject *source,
 
         gsize length;
         gconstpointer data = g_bytes_get_data (bytes, &length);
-        scpd = xmlRecoverMemory (data, length);
+        scpd = xmlReadMemory (data,
+                              length,
+                              NULL,
+                              NULL,
+                              XML_PARSE_NONET | XML_PARSE_RECOVER);
         if (scpd == NULL) {
                 g_task_return_new_error (task,
                                          GUPNP_SERVER_ERROR,

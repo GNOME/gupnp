@@ -391,7 +391,12 @@ gupnp_service_proxy_action_check_response (GUPnPServiceProxyAction *action)
         gconstpointer data;
         gsize length;
         data = g_bytes_get_data (action->response, &length);
-        response = xmlRecoverMemory (data, length);
+        response = xmlReadMemory (data,
+                                  length,
+                                  NULL,
+                                  NULL,
+                                  XML_PARSE_NONET | XML_PARSE_RECOVER);
+
         g_clear_pointer (&action->response, g_bytes_unref);
 
         if (!response) {
