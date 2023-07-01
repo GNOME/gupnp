@@ -1,3 +1,18 @@
+1.6.4 (stable)
+==============
+ - Keep a weak reference to proxy in action
+ - Add API to provide HTTP credentials for simple authentication
+ - Remove xmlRecoverMemory usage
+
+Bugs fixed in this release:
+ - Fixes: https://gitlab.gnome.org/GNOME/gupnp/-/issues/85
+ - https://gitlab.gnome.org/GNOME/gupnp/issues/86
+
+All contributors to this release:
+ - Jens Georg <mail@jensge.org>
+ - Jan-Michael Brummer <jan.brummer@tabos.org>
+ - Colin <colin@uninsane.org>
+
 1.6.3 (stable)
 ==============
  - Fix handling of deprecated and tentative v6 addresses
