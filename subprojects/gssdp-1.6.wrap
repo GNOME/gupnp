@@ -3,6 +3,6 @@ url = https://gitlab.gnome.org/GNOME/gssdp.git
 revision = master
 depth = 1
  
-[provides]
+[provide]
 dependency_name = gssdp-1.6
 
