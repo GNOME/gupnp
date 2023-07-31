@@ -1,3 +1,6 @@
+1.6.5 (stable)
+ - Fix build with meson 1.2
+
 1.6.4 (stable)
 ==============
  - Keep a weak reference to proxy in action
