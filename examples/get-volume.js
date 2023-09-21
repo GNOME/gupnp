@@ -44,7 +44,8 @@ function on_service_introspection(proxy, res) {
     var channel = result.get_state_variable (state_variable_name);
 
     print ("Calling GetVolume for channel ", channel.allowed_values[0]);
-    var action = GUPnP.ServiceProxyAction.new_from_list("GetVolume", ["InstanceID", "Channel"], [0, channel.allowed_values[0]]);
+    var action = GUPnP.ServiceProxyAction.new_plain("GetVolume");
+    action.add_argument("InstanceID", 0).add_argument("Channel", channel.allowed_values[0]);
     proxy.call_action_async (action, null, on_action);
 }
 
