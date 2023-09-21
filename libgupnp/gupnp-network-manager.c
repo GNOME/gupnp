@@ -176,82 +176,6 @@ nm_device_unref (NMDevice *nm_device)
         g_slice_free (NMDevice, nm_device);
 }
 
-static gboolean
-create_loopback_context (gpointer data)
-{
-        GUPnPNetworkManager *manager = (GUPnPNetworkManager *) data;
-        GUPnPContext *context;
-        guint port;
-        GError *error = NULL;
-        GUPnPNetworkManagerPrivate *priv;
-
-        priv = gupnp_network_manager_get_instance_private (manager);
-
-        priv->idle_context_creation_src = NULL;
-
-        g_object_get (manager, "port", &port, NULL);
-
-        GSocketFamily family = gupnp_context_manager_get_socket_family (
-                GUPNP_CONTEXT_MANAGER (manager));
-
-        if (family == G_SOCKET_FAMILY_INVALID ||
-            family == G_SOCKET_FAMILY_IPV4) {
-                GInetAddress *addr =
-                        g_inet_address_new_loopback (G_SOCKET_FAMILY_IPV4);
-
-                context = g_initable_new (GUPNP_TYPE_CONTEXT,
-                                          NULL,
-                                          &error,
-                                          "address",
-                                          addr,
-                                          "port",
-                                          port,
-                                          NULL);
-                if (error) {
-                        g_warning ("Error creating GUPnP context: %s\n",
-                                   error->message);
-
-                        g_clear_error (&error);
-                } else {
-                        g_signal_emit_by_name (manager,
-                                               "context-available",
-                                               context);
-                }
-
-                g_object_unref (context);
-                g_object_unref (addr);
-        }
-
-        if (family == G_SOCKET_FAMILY_INVALID ||
-            family == G_SOCKET_FAMILY_IPV6) {
-                GInetAddress *addr =
-                        g_inet_address_new_loopback (G_SOCKET_FAMILY_IPV6);
-                context = g_initable_new (GUPNP_TYPE_CONTEXT,
-                                          NULL,
-                                          &error,
-                                          "address",
-                                          addr,
-                                          "port",
-                                          port,
-                                          NULL);
-                if (error) {
-                        g_warning ("Error creating GUPnP context: %s\n",
-                                   error->message);
-
-                        g_clear_error (&error);
-                } else {
-                        g_signal_emit_by_name (manager,
-                                               "context-available",
-                                               context);
-                }
-
-                g_object_unref (context);
-                g_object_unref (addr);
-        }
-
-        return FALSE;
-}
-
 static void
 create_context_for_device (NMDevice *nm_device)
 {
@@ -707,26 +631,6 @@ get_devices_cb (GObject      *source_object,
 }
 
 static void
-schedule_loopback_context_creation (GUPnPNetworkManager *manager)
-{
-        GUPnPNetworkManagerPrivate *priv;
-
-        /* Create contexts in mainloop so that is happens after user has hooked
-         * to the "context-available" signal.
-         */
-        priv = gupnp_network_manager_get_instance_private (manager);
-
-        priv->idle_context_creation_src = g_idle_source_new ();
-        g_source_attach (priv->idle_context_creation_src,
-                         g_main_context_get_thread_default ());
-        g_source_set_callback (priv->idle_context_creation_src,
-                               create_loopback_context,
-                               manager,
-                               NULL);
-        g_source_unref (priv->idle_context_creation_src);
-}
-
-static void
 init_network_manager (GUPnPNetworkManager *manager)
 {
         GUPnPNetworkManagerPrivate *priv;
@@ -788,8 +692,6 @@ gupnp_network_manager_constructed (GObject *object)
         priv->system_bus = g_bus_get_sync (G_BUS_TYPE_SYSTEM, NULL, NULL);
 
         init_network_manager (manager);
-
-        schedule_loopback_context_creation (manager);
 
         /* Call super */
         object_class = G_OBJECT_CLASS (gupnp_network_manager_parent_class);
