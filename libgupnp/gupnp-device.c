@@ -13,10 +13,9 @@
 #include <string.h>
 
 #include "gupnp-device.h"
-#include "gupnp-service.h"
-#include "gupnp-root-device.h"
 #include "gupnp-resource-factory-private.h"
-#include "xml-util.h"
+#include "gupnp-root-device.h"
+#include "gupnp-service.h"
 
 struct _GUPnPDevicePrivate {
         GUPnPRootDevice *root_device;
@@ -91,7 +90,8 @@ gupnp_device_get_service (GUPnPDeviceInfo *info,
         GUPnPResourceFactory *factory;
         GUPnPContext         *context;
         GUPnPDevice          *root_device;
-        const char           *location, *udn;
+        const char *location;
+        const char *udn;
         const GUri *url_base;
 
         device = GUPNP_DEVICE (info);

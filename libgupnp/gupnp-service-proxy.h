@@ -131,6 +131,9 @@ gupnp_service_proxy_action_new (const char *action,
                                 ...) G_GNUC_NULL_TERMINATED;
 
 GUPnPServiceProxyAction *
+gupnp_service_proxy_action_new_plain (const char *action);
+
+GUPnPServiceProxyAction *
 gupnp_service_proxy_action_new_from_list (const char *action,
                                           GList      *in_names,
                                           GList      *in_values);
@@ -143,6 +146,11 @@ gupnp_service_proxy_action_unref (GUPnPServiceProxyAction *action);
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC (GUPnPServiceProxyAction,
                                gupnp_service_proxy_action_unref)
+
+GUPnPServiceProxyAction *
+gupnp_service_proxy_action_add_argument (GUPnPServiceProxyAction *action,
+                                         const char *name,
+                                         const GValue *value);
 
 gboolean
 gupnp_service_proxy_action_set (GUPnPServiceProxyAction *action,

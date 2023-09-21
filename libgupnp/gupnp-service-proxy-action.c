@@ -53,9 +53,33 @@ read_out_parameter (const char *arg_name,
         gvalue_util_set_value_from_xml_node (value, param);
 }
 
-
+/**
+ * gupnp_service_proxy_action_new_plain:
+ * @action: The name of a remote action to call
+ *
+ * Prepares action @action with to be sent off to
+ * a remote service later with gupnp_service_proxy_call_action() or
+ * gupnp_service_proxy_call_action_async() if no arguments required or by adding more
+ * parameters with gupnp_service_proxy_action_add()
+ *
+ * After the action call has finished, the results of the call may be
+ * retrived from the #GUPnPServiceProxyAction by using
+ * gupnp_service_proxy_action_get_result(),
+ * gupnp_service_proxy_action_get_result_list() or
+ * gupnp_service_proxy_action_get_result_hash()
+ *
+ * ```c
+ * GUPnPServiceProxyAction *action =
+ *         gupnp_service_proxy_action_new_plain ("GetVolume");
+ * gupnp_service_proxy_action_add (action, "InstanceID", value_instance);
+ * gupnp_service_proxy_action_add (action, "Channel", value_channel);
+ * ````
+ *
+ * Returns: A newly created #GUPnPServiceProxyAction
+ */
 GUPnPServiceProxyAction *
-gupnp_service_proxy_action_new_internal (const char *action) {
+gupnp_service_proxy_action_new_plain (const char *action)
+{
         GUPnPServiceProxyAction *ret;
 
         g_return_val_if_fail (action != NULL, NULL);
@@ -67,7 +91,6 @@ gupnp_service_proxy_action_new_internal (const char *action) {
 
         return ret;
 }
-
 
 /**
  * gupnp_service_proxy_action_ref:
@@ -212,22 +235,19 @@ gupnp_service_proxy_action_new (const char *action,
         va_start (var_args, action);
         const char *arg_name = va_arg (var_args, const char *);
 
-        result = gupnp_service_proxy_action_new_internal (action);
+        result = gupnp_service_proxy_action_new_plain (action);
 
-        gint position = 0;
         while (arg_name != NULL) {
-                ActionArgument *arg = g_new0 (ActionArgument, 1);
-                arg->name = g_strdup (arg_name);
+                GValue value = G_VALUE_INIT;
 
                 GType type = va_arg (var_args, GType);
                 char *error = NULL;
 
-                G_VALUE_COLLECT_INIT (&arg->value, type, var_args, 0, &error);
+                G_VALUE_COLLECT_INIT (&value, type, var_args, 0, &error);
                 if (error == NULL) {
-                        g_hash_table_insert (result->arg_map,
-                                             arg->name,
-                                             GUINT_TO_POINTER (position));
-                        g_ptr_array_add (result->args, arg);
+                        gupnp_service_proxy_action_add_argument (result,
+                                                                 arg_name,
+                                                                 &value);
                 } else {
                         g_warning (
                                 "Failed to collect value of type %s for %s: %s",
@@ -295,26 +315,56 @@ gupnp_service_proxy_action_new_from_list (const char *action_name,
                                           GList      *in_values)
 {
         GUPnPServiceProxyAction *action;
-        GList *names, *values;
+        GList *names = NULL;
+        GList *values = NULL;
         guint position;
 
-        action = gupnp_service_proxy_action_new_internal (action_name);
+        action = gupnp_service_proxy_action_new_plain (action_name);
 
         /* Arguments */
         for (names = in_names, values = in_values, position = 0;
              names && values;
              names = names->next, values = values->next, position++) {
                 GValue *val = values->data;
-
-                ActionArgument *arg = g_new0 (ActionArgument, 1);
-                arg->name = g_strdup (names->data);
-                g_value_init (&arg->value, G_VALUE_TYPE (val));
-                g_value_copy (val, &arg->value);
-                g_hash_table_insert (action->arg_map,
-                                     arg->name,
-                                     GUINT_TO_POINTER (position));
-                g_ptr_array_add (action->args, arg);
+                gupnp_service_proxy_action_add_argument (
+                        action,
+                        (const char *) names->data,
+                        val);
         }
+
+        return action;
+}
+
+/**
+ * gupnp_service_proxy_action_add_argument:
+ * @action: The action to append to
+ * @name: The name of the argument
+ * @value: The value of the argument
+ *
+ * Append @name to the list of arguments used by @action
+ *
+ * Returns: (transfer none): @action
+ * Since: 1.6.6
+ */
+GUPnPServiceProxyAction *
+gupnp_service_proxy_action_add_argument (GUPnPServiceProxyAction *action,
+                                         const char *name,
+                                         const GValue *value)
+{
+        g_return_val_if_fail (g_hash_table_lookup_extended (action->arg_map,
+                                                            name,
+                                                            NULL,
+                                                            NULL) == FALSE,
+                              NULL);
+
+        ActionArgument *arg = g_new0 (ActionArgument, 1);
+        arg->name = g_strdup (name);
+        g_value_init (&arg->value, G_VALUE_TYPE (value));
+        g_value_copy (value, &arg->value);
+        g_hash_table_insert (action->arg_map,
+                             arg->name,
+                             GUINT_TO_POINTER (action->args->len));
+        g_ptr_array_add (action->args, arg);
 
         return action;
 }
