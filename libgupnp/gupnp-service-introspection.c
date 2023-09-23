@@ -534,7 +534,7 @@ static GUPnPServiceStateVariableInfo *
 get_state_variable (xmlNodePtr variable_node)
 {
         GUPnPServiceStateVariableInfo *variable;
-        xmlChar *send_events;
+        char *send_events;
         char *data_type;
         gboolean success;
 
@@ -550,24 +550,28 @@ get_state_variable (xmlNodePtr variable_node)
 
         success = set_variable_type (variable, data_type);
         g_free (data_type);
-        if (!success)
+        if (!success) {
                 return NULL;
+        }
 
         set_variable_limits (variable_node, variable);
         set_default_value (variable_node, variable);
 
-        send_events = xml_util_get_child_element_content
-                                       (variable_node, "sendEventsAttribute");
+        send_events =
+                xml_util_get_child_element_content_glib (variable_node,
+                                                         "sendEventsAttribute");
         if (send_events == NULL) {
+                xmlChar *attr = xml_util_get_attribute_contents (variable_node,
+                                                                 "sendEvents");
                 /* Some documents put it as attribute of the tag */
-                send_events = xml_util_get_attribute_contents (variable_node,
-                                                               "sendEvents");
+                send_events = g_strdup ((char *) attr);
+                xmlFree (attr);
         }
 
         if (send_events) {
-                if (strcmp ("yes", (char *) send_events) == 0)
-                        variable->send_events = TRUE;
-                xmlFree (send_events);
+                variable->send_events =
+                        g_str_equal ("yes", g_strstrip (send_events));
+                g_free (send_events);
         }
 
         return variable;
@@ -583,38 +587,40 @@ static GUPnPServiceActionArgInfo *
 get_action_argument (xmlNodePtr argument_node)
 {
         GUPnPServiceActionArgInfo *argument;
-        char *name, *state_var;
-        xmlChar *direction;
+        char *name = NULL;
+        char *state_var = NULL;
+        char *direction = NULL;
 
-        name      = xml_util_get_child_element_content_glib
-                                       (argument_node, "name");
-        state_var = xml_util_get_child_element_content_glib
-                                       (argument_node, "relatedStateVariable");
-        direction = xml_util_get_child_element_content
-                                       (argument_node, "direction");
+        name = xml_util_get_child_element_content_glib (argument_node, "name");
+        state_var = xml_util_get_child_element_content_glib (
+                argument_node,
+                "relatedStateVariable");
+        direction = xml_util_get_child_element_content_glib (argument_node,
+                                                             "direction");
 
         if (!name || !state_var || !direction) {
                 g_free (name);
                 g_free (state_var);
-
-                xmlFree (direction);
+                g_free (direction);
 
                 return NULL;
         }
 
         argument = g_rc_box_new0 (GUPnPServiceActionArgInfo);
 
-        argument->name = name;
-        argument->related_state_variable = state_var;
+        argument->name = g_strstrip (name);
+        argument->related_state_variable = g_strstrip (state_var);
 
-        if (strcmp ("in", (char *) direction) == 0)
+        if (strcmp ("in", g_strstrip (direction)) == 0) {
                 argument->direction = GUPNP_SERVICE_ACTION_ARG_DIRECTION_IN;
-        else
+        } else {
                 argument->direction = GUPNP_SERVICE_ACTION_ARG_DIRECTION_OUT;
-        xmlFree (direction);
+        }
+        g_free (direction);
 
-        if (xml_util_get_element (argument_node, "retval", NULL) != NULL)
+        if (xml_util_get_element (argument_node, "retval", NULL) != NULL) {
                 argument->retval = TRUE;
+        }
 
         return argument;
 }
@@ -729,7 +735,7 @@ get_state_variables (xmlNode *list_element)
                         continue;
                 }
 
-                variable->name = name;
+                variable->name = g_strstrip (name);
                 variables = g_list_append (variables, variable);
         }
 
