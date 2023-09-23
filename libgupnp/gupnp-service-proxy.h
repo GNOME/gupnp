@@ -9,7 +9,6 @@
 #ifndef GUPNP_SERVICE_PROXY_H
 #define GUPNP_SERVICE_PROXY_H
 
-#include "gupnp-error.h"
 #include "gupnp-service-info.h"
 
 G_BEGIN_DECLS
@@ -53,6 +52,18 @@ struct _GUPnPServiceProxyClass {
  * Opaque structure for holding in-progress action data.
  **/
 typedef struct _GUPnPServiceProxyAction GUPnPServiceProxyAction;
+
+G_DECLARE_FINAL_TYPE (GUPnPServiceProxyActionIter,
+                      gupnp_service_proxy_action_iter,
+                      GUPNP,
+                      SERVICE_PROXY_ACTION_ITER,
+                      GObject);
+/**
+ * GUPnPServiceProxyActionIter:
+ *
+ * An opaque object representing an iterator over the out parameters of an action
+ * Since: 1.6.6
+ **/
 
 /**
  * GUPnPServiceProxyActionCallback:
@@ -158,6 +169,19 @@ gupnp_service_proxy_action_set (GUPnPServiceProxyAction *action,
                                 const GValue *value,
                                 GError **error);
 
+GUPnPServiceProxyActionIter *
+gupnp_service_proxy_action_iterate (GUPnPServiceProxyAction *action,
+                                    GError **error);
+
+gboolean
+gupnp_service_proxy_action_iter_next (GUPnPServiceProxyActionIter *self);
+
+const char *
+gupnp_service_proxy_action_iter_get_name (GUPnPServiceProxyActionIter *self);
+
+gboolean
+gupnp_service_proxy_action_iter_get_value (GUPnPServiceProxyActionIter *self,
+                                           GValue *value);
 gboolean
 gupnp_service_proxy_action_get_result (GUPnPServiceProxyAction *action,
                                        GError                 **error,

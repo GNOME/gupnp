@@ -805,6 +805,247 @@ test_finish_soap_authentication_valid_credentials (ProxyTestFixture *tf, gconstp
         g_main_loop_run (tf->loop);
 }
 
+void
+on_test_action_iter_call_browse (G_GNUC_UNUSED GUPnPService *service,
+                                 GUPnPServiceAction *action,
+                                 G_GNUC_UNUSED gpointer user_data)
+{
+        gupnp_service_action_set (action,
+                                  "Result",
+                                  G_TYPE_STRING,
+                                  "FAKE_RESULT",
+                                  "NumberReturned",
+                                  G_TYPE_UINT,
+                                  10,
+                                  "TotalMatches",
+                                  G_TYPE_UINT,
+                                  10,
+                                  "UpdateID",
+                                  G_TYPE_UINT,
+                                  12345,
+                                  NULL);
+        gupnp_service_action_return_success (action);
+}
+
+void
+test_action_iter (ProxyTestFixture *tf, gconstpointer user_data)
+{
+        g_signal_connect (tf->service,
+                          "action-invoked::Browse",
+                          G_CALLBACK (on_test_action_iter_call_browse),
+                          tf);
+
+        GUPnPServiceProxyAction *action;
+        action = gupnp_service_proxy_action_new ("Browse",
+                                                 "ObjectID",
+                                                 G_TYPE_STRING,
+                                                 "0",
+                                                 "BrowseFlag",
+                                                 G_TYPE_STRING,
+                                                 "BrowseDirectChildren",
+                                                 "Filter",
+                                                 G_TYPE_STRING,
+                                                 "res,dc:date,res@size",
+                                                 "StartingIndex",
+                                                 G_TYPE_UINT,
+                                                 0,
+                                                 "RequestedCount",
+                                                 G_TYPE_UINT,
+                                                 0,
+                                                 "SortCriteria",
+                                                 G_TYPE_STRING,
+                                                 "",
+                                                 NULL);
+
+        gupnp_service_proxy_call_action_async (tf->proxy,
+                                               action,
+                                               NULL,
+                                               on_test_async_auth_call,
+                                               tf);
+        test_run_loop (tf->loop, g_test_get_path ());
+
+        GError *error = NULL;
+        GUPnPServiceProxyActionIter *iter =
+                gupnp_service_proxy_action_iterate (action, &error);
+        g_assert (G_OBJECT_TYPE (iter) != G_TYPE_NONE);
+        g_assert (G_IS_OBJECT (iter));
+        g_assert_no_error (error);
+        g_assert_nonnull (iter);
+
+        g_assert (gupnp_service_proxy_action_iter_next (iter));
+
+        g_assert_cmpstr (gupnp_service_proxy_action_iter_get_name (iter),
+                         ==,
+                         "Result");
+
+        GValue value = G_VALUE_INIT;
+        g_assert (gupnp_service_proxy_action_iter_get_value (iter, &value));
+        g_assert (G_VALUE_HOLDS_STRING (&value));
+        g_assert_cmpstr (g_value_get_string (&value), ==, "FAKE_RESULT");
+        g_value_unset (&value);
+
+        g_assert (gupnp_service_proxy_action_iter_next (iter));
+
+        g_assert_cmpstr (gupnp_service_proxy_action_iter_get_name (iter),
+                         ==,
+                         "NumberReturned");
+
+        g_assert (gupnp_service_proxy_action_iter_get_value (iter, &value));
+        g_assert (G_VALUE_HOLDS_STRING (&value));
+        g_assert_cmpstr (g_value_get_string (&value), ==, "10");
+        g_value_unset (&value);
+
+        g_assert (gupnp_service_proxy_action_iter_next (iter));
+
+        g_assert_cmpstr (gupnp_service_proxy_action_iter_get_name (iter),
+                         ==,
+                         "TotalMatches");
+
+        g_assert (gupnp_service_proxy_action_iter_get_value (iter, &value));
+        g_assert (G_VALUE_HOLDS_STRING (&value));
+        g_assert_cmpstr (g_value_get_string (&value), ==, "10");
+        g_value_unset (&value);
+
+        gupnp_service_proxy_action_unref (action);
+        g_assert (gupnp_service_proxy_action_iter_next (iter));
+
+        g_assert_cmpstr (gupnp_service_proxy_action_iter_get_name (iter),
+                         ==,
+                         "UpdateID");
+
+        g_assert (gupnp_service_proxy_action_iter_get_value (iter, &value));
+        g_assert (G_VALUE_HOLDS_STRING (&value));
+        g_assert_cmpstr (g_value_get_string (&value), ==, "12345");
+        g_value_unset (&value);
+
+        g_assert (!gupnp_service_proxy_action_iter_next (iter));
+
+        // Spin the loop for a bit...
+        g_timeout_add (500, (GSourceFunc) delayed_loop_quitter, tf->loop);
+        g_main_loop_run (tf->loop);
+}
+
+void
+on_introspection (GObject *source, GAsyncResult *res, gpointer data)
+{
+        ProxyTestFixture *tf = data;
+        GError *error = NULL;
+
+        GObject *obj = G_OBJECT (gupnp_service_info_introspect_finish (
+                GUPNP_SERVICE_INFO (source),
+                res,
+                &error));
+        g_assert_no_error (error);
+        g_assert_nonnull (obj);
+        g_object_unref (obj);
+
+        g_main_loop_quit (tf->loop);
+}
+
+void
+test_action_iter_introspected (ProxyTestFixture *tf, gconstpointer user_data)
+{
+        gupnp_service_info_introspect_async (GUPNP_SERVICE_INFO (tf->proxy),
+                                             NULL,
+                                             on_introspection,
+                                             tf);
+
+        test_run_loop (tf->loop, g_test_get_path ());
+
+        g_signal_connect (tf->service,
+                          "action-invoked::Browse",
+                          G_CALLBACK (on_test_action_iter_call_browse),
+                          tf);
+
+        GUPnPServiceProxyAction *action;
+        action = gupnp_service_proxy_action_new ("Browse",
+                                                 "ObjectID",
+                                                 G_TYPE_STRING,
+                                                 "0",
+                                                 "BrowseFlag",
+                                                 G_TYPE_STRING,
+                                                 "BrowseDirectChildren",
+                                                 "Filter",
+                                                 G_TYPE_STRING,
+                                                 "res,dc:date,res@size",
+                                                 "StartingIndex",
+                                                 G_TYPE_UINT,
+                                                 0,
+                                                 "RequestedCount",
+                                                 G_TYPE_UINT,
+                                                 0,
+                                                 "SortCriteria",
+                                                 G_TYPE_STRING,
+                                                 "",
+                                                 NULL);
+
+        gupnp_service_proxy_call_action_async (tf->proxy,
+                                               action,
+                                               NULL,
+                                               on_test_async_auth_call,
+                                               tf);
+        test_run_loop (tf->loop, g_test_get_path ());
+
+        GError *error = NULL;
+        GUPnPServiceProxyActionIter *iter =
+                gupnp_service_proxy_action_iterate (action, &error);
+        g_assert_no_error (error);
+        g_assert_nonnull (iter);
+
+        g_assert (gupnp_service_proxy_action_iter_next (iter));
+
+        g_assert_cmpstr (gupnp_service_proxy_action_iter_get_name (iter),
+                         ==,
+                         "Result");
+
+        GValue value = G_VALUE_INIT;
+
+        g_assert (gupnp_service_proxy_action_iter_get_value (iter, &value));
+        g_assert (G_VALUE_HOLDS_STRING (&value));
+        g_assert_cmpstr (g_value_get_string (&value), ==, "FAKE_RESULT");
+        g_value_unset (&value);
+
+        g_assert (gupnp_service_proxy_action_iter_next (iter));
+
+        g_assert_cmpstr (gupnp_service_proxy_action_iter_get_name (iter),
+                         ==,
+                         "NumberReturned");
+
+        g_assert (gupnp_service_proxy_action_iter_get_value (iter, &value));
+        g_assert (G_VALUE_HOLDS_UINT (&value));
+        g_assert_cmpuint (g_value_get_uint (&value), ==, 10);
+        g_value_unset (&value);
+
+        g_assert (gupnp_service_proxy_action_iter_next (iter));
+
+        g_assert_cmpstr (gupnp_service_proxy_action_iter_get_name (iter),
+                         ==,
+                         "TotalMatches");
+
+        g_assert (gupnp_service_proxy_action_iter_get_value (iter, &value));
+        g_assert (G_VALUE_HOLDS_UINT (&value));
+        g_assert_cmpuint (g_value_get_uint (&value), ==, 10);
+        g_value_unset (&value);
+
+        gupnp_service_proxy_action_unref (action);
+        g_assert (gupnp_service_proxy_action_iter_next (iter));
+
+        g_assert_cmpstr (gupnp_service_proxy_action_iter_get_name (iter),
+                         ==,
+                         "UpdateID");
+
+        g_assert (gupnp_service_proxy_action_iter_get_value (iter, &value));
+        g_assert (G_VALUE_HOLDS_UINT (&value));
+        g_assert_cmpuint (g_value_get_uint (&value), ==, 12345);
+        g_value_unset (&value);
+
+        g_assert (!gupnp_service_proxy_action_iter_next (iter));
+
+        // Spin the loop for a bit...
+        g_timeout_add (500, (GSourceFunc) delayed_loop_quitter, tf->loop);
+        g_main_loop_run (tf->loop);
+}
+
 int
 main (int argc, char *argv[])
 {
@@ -885,6 +1126,20 @@ main (int argc, char *argv[])
                     "127.0.0.1",
                     test_fixture_setup,
                     test_finish_soap_authentication_valid_credentials,
+                    test_fixture_teardown);
+
+        g_test_add ("/service-proxy/action/iter",
+                    ProxyTestFixture,
+                    "127.0.0.1",
+                    test_fixture_setup,
+                    test_action_iter,
+                    test_fixture_teardown);
+
+        g_test_add ("/service-proxy/action/iter_introspected",
+                    ProxyTestFixture,
+                    "127.0.0.1",
+                    test_fixture_setup,
+                    test_action_iter_introspected,
                     test_fixture_teardown);
 
         return g_test_run ();

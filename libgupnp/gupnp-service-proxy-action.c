@@ -9,12 +9,204 @@
 
 #include <config.h>
 
-#include "gupnp-error-private.h"
+#include "gupnp-error.h"
 #include "gupnp-service-proxy.h"
-#include "gupnp-service-proxy-private.h"
-#include "gupnp-service-proxy-action-private.h"
 #include "gvalue-util.h"
 #include "xml-util.h"
+
+#include "gupnp-error-private.h"
+#include "gupnp-service-info-private.h"
+#include "gupnp-service-proxy-action-private.h"
+
+struct _GUPnPServiceProxyActionIter {
+        GObject parent;
+
+        GUPnPServiceProxyAction *action;
+        xmlNode *current;
+        GUPnPServiceIntrospection *introspection;
+        gboolean iterating;
+};
+
+G_DEFINE_TYPE (GUPnPServiceProxyActionIter,
+               gupnp_service_proxy_action_iter,
+               G_TYPE_OBJECT)
+
+static void
+gupnp_service_proxy_action_iter_init (GUPnPServiceProxyActionIter *self)
+{
+}
+
+static void
+gupnp_service_proxy_action_iter_dispose (GObject *object)
+{
+        GUPnPServiceProxyActionIter *self =
+                GUPNP_SERVICE_PROXY_ACTION_ITER (object);
+        g_clear_pointer (&self->action, gupnp_service_proxy_action_unref);
+        g_clear_object (&self->introspection);
+
+        G_OBJECT_CLASS (gupnp_service_proxy_action_iter_parent_class)
+                ->dispose (object);
+}
+
+static void
+gupnp_service_proxy_action_iter_class_init (
+        GUPnPServiceProxyActionIterClass *klass)
+{
+        GObjectClass *object_class = G_OBJECT_CLASS (klass);
+        object_class->dispose = gupnp_service_proxy_action_iter_dispose;
+}
+
+/**
+ * gupnp_service_proxy_action_iterate:
+ * @action: A finished GUPnPServiceProxyAction
+ * @error: (out)(nullable): Return location for an optional error
+ *
+ * Iterate over the out arguments of a finished action
+ *
+ * Returns: (transfer full)(nullable): A newly created GUPnPServiceProxyActionIterator, or %NULL on error
+ * Since: 1.6.6
+ */
+GUPnPServiceProxyActionIter *
+gupnp_service_proxy_action_iterate (GUPnPServiceProxyAction *action,
+                                    GError **error)
+{
+        g_return_val_if_fail (action != NULL, NULL);
+        g_return_val_if_fail (!action->pending, NULL);
+
+        /* Check for saved error from begin_action() */
+        if (action->error) {
+                g_propagate_error (error, g_error_copy (action->error));
+
+                return NULL;
+        }
+
+        /* Check response for errors and do initial parsing */
+        gupnp_service_proxy_action_check_response (action);
+        if (action->error != NULL) {
+                g_propagate_error (error, g_error_copy (action->error));
+
+                return NULL;
+        }
+
+        g_type_ensure (gupnp_service_proxy_action_iter_get_type ());
+
+        GUPnPServiceProxyActionIter *iter =
+                g_object_new (gupnp_service_proxy_action_iter_get_type (),
+                              NULL);
+        iter->action = gupnp_service_proxy_action_ref (action);
+
+        if (action->proxy != NULL) {
+                iter->introspection =
+                        g_object_ref (gupnp_service_info_get_introspection (
+                                GUPNP_SERVICE_INFO (action->proxy)));
+        }
+
+        return g_object_ref (iter);
+}
+
+/**
+ * gupnp_service_proxy_action_iter_next:
+ * @self: A GUPnP.ServiceProxyActionIter
+ *
+ * Move @self to the next out value of the iterated action
+ *
+ * Returns: %TRUE if the next value was available
+ * Since: 1.6.6
+ */
+gboolean
+gupnp_service_proxy_action_iter_next (GUPnPServiceProxyActionIter *self)
+{
+        if (self->iterating) {
+                self->current = self->current->next;
+        } else {
+                self->current = self->action->params->children;
+                self->iterating = TRUE;
+        }
+
+        return self->current != NULL;
+}
+
+/**
+ * gupnp_service_proxy_action_iter_get_name:
+ * @self: A GUPnP.ServiceProxyActionIter
+ *
+ * Get the name of the current out argument
+ *
+ * Returns: Name of the current argument
+ * Since: 1.6.6
+ */
+const char *
+gupnp_service_proxy_action_iter_get_name (GUPnPServiceProxyActionIter *self)
+{
+        g_return_val_if_fail (self->current != NULL, NULL);
+
+        return (const char *) self->current->name;
+}
+
+static int
+find_argument (gconstpointer a, gconstpointer b)
+{
+        const GUPnPServiceActionArgInfo *arg = a;
+        const char *needle = b;
+
+        return g_strcmp0 (arg->name, needle);
+}
+
+/**
+ * gupnp_service_proxy_action_iter_get_value:
+ * @self: A GUPnP.ServiceProxyActionIter
+ * @value: (out): The value
+ *
+ * Get the value of the current parameter.
+ *
+ * If the service proxy had a successful introspection, the type according
+ * to the introspection data will be used, otherwise it will be string.
+ *
+ * Returns: %TRUE if the value could be read successfully
+ * Since: 1.6.6
+ */
+
+gboolean
+gupnp_service_proxy_action_iter_get_value (GUPnPServiceProxyActionIter *self,
+                                           GValue *value)
+{
+        if (self->introspection != NULL) {
+                const GUPnPServiceActionInfo *action_info =
+                        gupnp_service_introspection_get_action (
+                                self->introspection,
+                                self->action->name);
+                GList *result = g_list_find_custom (action_info->arguments,
+                                                    self->current->name,
+                                                    find_argument);
+                if (result == NULL) {
+                        g_print ("No argument %s\n", self->current->name);
+                        return FALSE;
+                }
+
+                const GUPnPServiceActionArgInfo *arg = result->data;
+                const char *var = arg->related_state_variable;
+                const GUPnPServiceStateVariableInfo *info =
+                        gupnp_service_introspection_get_state_variable (
+                                self->introspection,
+                                var);
+
+                if (info == NULL) {
+                        g_print ("No state variable for %s\n",
+                                 self->current->name);
+                        return FALSE;
+                }
+
+                g_value_init (value, info->type);
+        } else {
+                g_print ("No introspection\n");
+                // We know nothing about the type, so just give out the string and let
+                // the user transform the value
+                g_value_init (value, G_TYPE_STRING);
+        }
+
+        gvalue_util_set_value_from_xml_node (value, self->current);
+        return TRUE;
+}
 
 struct _ActionArgument {
         char *name;
@@ -76,6 +268,7 @@ read_out_parameter (const char *arg_name,
  * ````
  *
  * Returns: A newly created #GUPnPServiceProxyAction
+ * Since: 1.6.6
  */
 GUPnPServiceProxyAction *
 gupnp_service_proxy_action_new_plain (const char *action)
@@ -343,7 +536,7 @@ gupnp_service_proxy_action_new_from_list (const char *action_name,
  *
  * Append @name to the list of arguments used by @action
  *
- * Returns: (transfer none): @action
+ * Returns: (transfer none): @action for convenience.
  * Since: 1.6.6
  */
 GUPnPServiceProxyAction *

@@ -453,6 +453,7 @@ prepare_action_msg (GUPnPServiceProxy *proxy,
         g_bytes_unref (body);
         action->msg_str = NULL;
 
+        g_clear_weak_pointer (&action->proxy);
         action->proxy = proxy;
         g_object_add_weak_pointer (G_OBJECT (proxy),
                                    (gpointer *) &(action->proxy));
@@ -1630,8 +1631,8 @@ gupnp_service_proxy_call_action_finish (GUPnPServiceProxy *proxy,
 {
         g_return_val_if_fail (g_task_is_valid (G_TASK (result), proxy), NULL);
 
-        GUPnPServiceProxyAction *action = g_task_get_task_data (G_TASK (result));
-        g_clear_weak_pointer (&action->proxy);
+        GUPnPServiceProxyAction *action =
+                g_task_get_task_data (G_TASK (result));
         action->pending = FALSE;
 
         return g_task_propagate_pointer (G_TASK (result), error);
@@ -1704,6 +1705,8 @@ out:
 
                 return NULL;
         }
+
+        g_clear_weak_pointer (&action->proxy);
 
         return action;
 }

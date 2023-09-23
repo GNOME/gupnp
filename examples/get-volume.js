@@ -32,8 +32,13 @@ const CONTENT_DIR = "urn:schemas-upnp-org:service:RenderingControl:1";
 
 function on_action(proxy, res) {
     let action = proxy.call_action_finish (res);
-    let [success, volume] = action.get_result_list(["CurrentVolume"], [GObject.TYPE_FLOAT]);
-    print(volume);
+    let iter = action.iterate();
+    while (iter.next()) {
+      print("name:", iter.get_name());
+      if (iter.get_name() == "CurrentVolume") {
+        print(iter.get_value());
+      }
+    }
 }
 
 function on_service_introspection(proxy, res) {

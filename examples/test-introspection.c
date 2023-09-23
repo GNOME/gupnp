@@ -246,10 +246,14 @@ main (int argc, char **argv)
         GUPnPControlPoint *cp;
 
         error = NULL;
-        context = g_initable_new (GUPNP_TYPE_CONTEXT, NULL, &error, NULL);
+        context = gupnp_context_new_for_address (
+                g_inet_address_new_from_string ("192.168.178.78"),
+                0,
+                GSSDP_UDA_VERSION_1_0,
+                &error);
         if (error) {
                 g_printerr ("Error creating the GUPnP context: %s\n",
-			    error->message);
+                            error->message);
                 g_error_free (error);
 
                 return EXIT_FAILURE;

@@ -15,13 +15,13 @@
 #include <libsoup/soup.h>
 #include <string.h>
 
+#include "gupnp-context-private.h"
+#include "gupnp-error-private.h"
+#include "gupnp-error.h"
+#include "gupnp-service-info-private.h"
 #include "gupnp-service-info.h"
 #include "gupnp-service-introspection-private.h"
-#include "gupnp-context-private.h"
-#include "gupnp-error.h"
-#include "gupnp-error-private.h"
 #include "gupnp-xml-doc.h"
-#include "http-headers.h"
 #include "xml-util.h"
 
 struct _GUPnPServiceInfoPrivate {
@@ -38,6 +38,7 @@ struct _GUPnPServiceInfoPrivate {
         xmlNode *element;
 
         GCancellable *pending_downloads_cancellable;
+        GUPnPServiceIntrospection *introspection;
 };
 
 typedef struct _GUPnPServiceInfoPrivate GUPnPServiceInfoPrivate;
@@ -165,6 +166,7 @@ gupnp_service_info_dispose (GObject *object)
 
         g_clear_object (&priv->context);
         g_clear_object (&priv->doc);
+        g_clear_object (&priv->introspection);
 
         G_OBJECT_CLASS (gupnp_service_info_parent_class)->dispose (object);
 }
@@ -578,8 +580,11 @@ get_scpd_document_finished (GObject *source,
                 goto out;
         }
 
-        GUPnPServiceIntrospection *introspection =
-                gupnp_service_introspection_new (scpd, &error);
+        GUPnPServiceInfo *info =
+                GUPNP_SERVICE_INFO (g_task_get_source_object (task));
+        GUPnPServiceInfoPrivate *priv =
+                gupnp_service_info_get_instance_private (info);
+        priv->introspection = gupnp_service_introspection_new (scpd, &error);
 
         if (error != NULL) {
                 g_task_return_error (task, error);
@@ -587,7 +592,9 @@ get_scpd_document_finished (GObject *source,
                 goto out;
         }
 
-        g_task_return_pointer (task, introspection, g_object_unref);
+        g_task_return_pointer (task,
+                               g_object_ref (priv->introspection),
+                               g_object_unref);
 
 out:
         g_clear_pointer (&scpd, xmlFreeDoc);
@@ -617,8 +624,21 @@ gupnp_service_info_introspect_async           (GUPnPServiceInfo    *info,
                                                GAsyncReadyCallback  callback,
                                                gpointer             user_data)
 {
+        GUPnPServiceInfoPrivate *priv =
+                gupnp_service_info_get_instance_private (info);
         GTask *task = g_task_new (info, cancellable, callback, user_data);
         g_task_set_name (task, "UPnP service introspection");
+
+        // This service has been previously introspected. Shortcut the introspection
+        // from the cached variable
+        if (priv->introspection != NULL) {
+                g_task_return_pointer (task,
+                                       g_object_ref (priv->introspection),
+                                       g_object_unref);
+
+                g_object_unref (task);
+                return;
+        }
 
         char *scpd_url = gupnp_service_info_get_scpd_url (info);
         if (scpd_url == NULL) {
@@ -659,8 +679,6 @@ gupnp_service_info_introspect_async           (GUPnPServiceInfo    *info,
         }
 
         /* Send off the message */
-        GUPnPServiceInfoPrivate *priv =
-                gupnp_service_info_get_instance_private (info);
         soup_session_send_and_read_async (
                 gupnp_context_get_session (priv->context),
                 message,
@@ -694,4 +712,21 @@ gupnp_service_info_introspect_finish          (GUPnPServiceInfo   *info,
         g_return_val_if_fail (g_task_is_valid (res, info), NULL);
 
         return g_task_propagate_pointer (G_TASK (res), error);
+}
+
+/**
+ * gupnp_service_info_get_introspection:
+ * @info: A GUPnPServiceInfo
+ * Returns: (nullable)(transfer none): The cached GUPnPServiceIntrospection if
+ * available, %NULL otherwise.
+ */
+GUPnPServiceIntrospection *
+gupnp_service_info_get_introspection (GUPnPServiceInfo *info)
+{
+        g_return_val_if_fail (GUPNP_IS_SERVICE_INFO (info), NULL);
+
+        GUPnPServiceInfoPrivate *priv =
+                gupnp_service_info_get_instance_private (info);
+
+        return priv->introspection;
 }

@@ -48,8 +48,9 @@ def on_service_introspection(proxy, res):
     action = GUPnP.ServiceProxyAction.new_plain('GetVolume');
     action.add_argument("InstanceID", 0).add_argument("Channel", channel.allowed_values[0])
     proxy.call_action (action, None)
-    success, [volume] = action.get_result_list (["CurrentVolume"], [GObject.TYPE_FLOAT])
-    print(volume)
+    it = action.iterate()
+    while it.next():
+        print(it.get_name(), it.get_value()[1])
 
 def on_sp_available(cp, proxy):
     print(f'Got ServiceProxy {proxy.get_id()} at {proxy.get_location()}')
