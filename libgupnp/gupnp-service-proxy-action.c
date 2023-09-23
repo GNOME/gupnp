@@ -11,12 +11,14 @@
 
 #include "gupnp-error-private.h"
 #include "gupnp-service-info-private.h"
-#include "gupnp-service-proxy-action-private.h"
 #include "gupnp-service-proxy.h"
+#include "gupnp-service-proxy-action-private.h"
 #include "gvalue-util.h"
 #include "xml-util.h"
 
 struct _GUPnPServiceProxyActionIter {
+        GObject parent;
+
         GUPnPServiceProxyAction *action;
         xmlNode *current;
         GUPnPServiceIntrospection *introspection;
@@ -39,6 +41,9 @@ gupnp_service_proxy_action_iter_dispose (GObject *object)
                 GUPNP_SERVICE_PROXY_ACTION_ITER (object);
         g_clear_pointer (&self->action, gupnp_service_proxy_action_unref);
         g_clear_object (&self->introspection);
+
+        G_OBJECT_CLASS (gupnp_service_proxy_action_iter_parent_class)
+                ->dispose (object);
 }
 
 static void
