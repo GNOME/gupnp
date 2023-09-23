@@ -54,6 +54,14 @@ struct _GUPnPServiceProxyClass {
  **/
 typedef struct _GUPnPServiceProxyAction GUPnPServiceProxyAction;
 
+G_DECLARE_FINAL_TYPE (GUPnPServiceProxyActionIter,
+                      gupnp_service_proxy_action_iter,
+                      GUPNP,
+                      SERVICE_PROXY_ACTION_ITER,
+                      GObject);
+
+typedef struct _GUPnPServiceProxyActionIter GUPnPServiceProxyActionIter;
+
 /**
  * GUPnPServiceProxyActionCallback:
  * @proxy: The #GUPnPServiceProxy @action is called from
@@ -158,6 +166,19 @@ gupnp_service_proxy_action_set (GUPnPServiceProxyAction *action,
                                 const GValue *value,
                                 GError **error);
 
+GUPnPServiceProxyActionIter *
+gupnp_service_proxy_action_iterate (GUPnPServiceProxyAction *action,
+                                    GError **error);
+
+gboolean
+gupnp_service_proxy_action_iter_next (GUPnPServiceProxyActionIter *self);
+
+const char *
+gupnp_service_proxy_action_iter_get_name (GUPnPServiceProxyActionIter *self);
+
+gboolean
+gupnp_service_proxy_action_iter_get_value (GUPnPServiceProxyActionIter *self,
+                                           GValue *value);
 gboolean
 gupnp_service_proxy_action_get_result (GUPnPServiceProxyAction *action,
                                        GError                 **error,

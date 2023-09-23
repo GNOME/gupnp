@@ -134,4 +134,7 @@ TabWidth:        8
 UseCRLF:         false
 UseTab:          Never
 ...
-
+---
+Language: JavaScript
+ColumnLimit: 100
+...
