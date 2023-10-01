@@ -23,28 +23,28 @@ typedef struct _GUPnPAcl GUPnPAcl;
 typedef struct _GUPnPAclInterface GUPnPAclInterface;
 
 /* Forward declarations to avoid recursive includes */
-struct _GUPnPDevice;
-struct _GUPnPService;
+typedef struct _GUPnPDevice GUPnPDevice;
+typedef struct _GUPnPService GUPnPService;
 
 struct _GUPnPAclInterface {
     GTypeInterface parent;
 
-    gboolean (*is_allowed) (GUPnPAcl     *self,
-                            struct _GUPnPDevice  *device,
-                            struct _GUPnPService *service,
-                            const char   *path,
-                            const char   *address,
-                            const char   *agent);
+    gboolean (*is_allowed) (GUPnPAcl *self,
+                            GUPnPDevice *device,
+                            GUPnPService *service,
+                            const char *path,
+                            const char *address,
+                            const char *agent);
 
-    void     (*is_allowed_async) (GUPnPAcl           *self,
-                                  struct _GUPnPDevice        *device,
-                                  struct _GUPnPService       *service,
-                                  const char         *path,
-                                  const char         *address,
-                                  const char         *agent,
-                                  GCancellable       *cancellable,
-                                  GAsyncReadyCallback callback,
-                                  gpointer            user_data);
+    void (*is_allowed_async) (GUPnPAcl *self,
+                              GUPnPDevice *device,
+                              GUPnPService *service,
+                              const char *path,
+                              const char *address,
+                              const char *agent,
+                              GCancellable *cancellable,
+                              GAsyncReadyCallback callback,
+                              gpointer user_data);
 
     gboolean (*is_allowed_finish) (GUPnPAcl      *self,
                                    GAsyncResult  *res,
@@ -64,23 +64,23 @@ struct _GUPnPAclInterface {
 };
 
 gboolean
-gupnp_acl_is_allowed (GUPnPAcl     *self,
-                      struct _GUPnPDevice  *device,
-                      struct _GUPnPService *service,
-                      const char   *path,
-                      const char   *address,
-                      const char   *agent);
+gupnp_acl_is_allowed (GUPnPAcl *self,
+                      GUPnPDevice *device,
+                      GUPnPService *service,
+                      const char *path,
+                      const char *address,
+                      const char *agent);
 
 void
-gupnp_acl_is_allowed_async (GUPnPAcl           *self,
-                            struct _GUPnPDevice        *device,
-                            struct _GUPnPService       *service,
-                            const char         *path,
-                            const char         *address,
-                            const char         *agent,
-                            GCancellable       *cancellable,
+gupnp_acl_is_allowed_async (GUPnPAcl *self,
+                            GUPnPDevice *device,
+                            GUPnPService *service,
+                            const char *path,
+                            const char *address,
+                            const char *agent,
+                            GCancellable *cancellable,
                             GAsyncReadyCallback callback,
-                            gpointer            user_data);
+                            gpointer user_data);
 
 gboolean
 gupnp_acl_is_allowed_finish (GUPnPAcl      *self,
