@@ -96,9 +96,11 @@ gupnp_service_proxy_action_iterate (GUPnPServiceProxyAction *action,
         iter->action = gupnp_service_proxy_action_ref (action);
 
         if (action->proxy != NULL) {
-                iter->introspection =
-                        g_object_ref (gupnp_service_info_get_introspection (
-                                GUPNP_SERVICE_INFO (action->proxy)));
+                iter->introspection = gupnp_service_info_get_introspection (
+                        GUPNP_SERVICE_INFO (action->proxy));
+                if (iter->introspection != NULL) {
+                        g_object_ref (iter->introspection);
+                }
         }
 
         return g_object_ref (iter);
