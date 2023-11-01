@@ -147,6 +147,7 @@ test_service_notification_cancelled ()
                           &data);
 
         g_clear_object (&info);
+        g_free (url);
 
 #if SOUP_CHECK_VERSION(3, 1, 2)
         soup_server_message_unpause (data.message);
@@ -237,6 +238,7 @@ test_service_notification_remote_disappears (void)
         g_clear_object (&session);
         g_clear_object (&context);
         g_main_loop_unref (data.loop);
+        g_free (url);
 }
 
 int

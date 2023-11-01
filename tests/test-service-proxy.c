@@ -472,10 +472,12 @@ thread_func (gpointer data)
         gupnp_service_proxy_call_action (gpd.p, action, d->cancellable, &error);
         gupnp_service_proxy_action_unref (action);
 
-        if (d->expected_error.domain != 0)
+        if (d->expected_error.domain != 0) {
                 g_assert_error (error,
                                 d->expected_error.domain,
                                 d->expected_error.code);
+                g_clear_error (&error);
+        }
 
         g_object_unref (gpd.p);
         g_object_unref (cp);
@@ -553,10 +555,15 @@ test_cancel_sync_call (ProxyTestFixture *tf, gconstpointer user_data)
 
         g_thread_join (t);
 
+        // Free action. There should not be any callback
+        gupnp_service_action_return_success (
+                (GUPnPServiceAction *) tf->payload);
+
         // Spin the loop for a bit...
         g_timeout_add (500, (GSourceFunc) delayed_loop_quitter, tf->loop);
         g_main_loop_run (tf->loop);
         g_thread_unref (t);
+        g_object_unref (d.cancellable);
 }
 
 void
@@ -677,6 +684,8 @@ on_test_async_unauth_call (GObject *source, GAsyncResult *res, gpointer user_dat
                                                 res,
                                                 &error);
         g_assert_nonnull (error);
+        g_assert_error (error, GUPNP_SERVER_ERROR, GUPNP_SERVER_ERROR_OTHER);
+        g_clear_error (&error);
 
         ProxyTestFixture *tf = (ProxyTestFixture *) user_data;
         g_main_loop_quit (tf->loop);
@@ -731,6 +740,8 @@ test_finish_soap_authentication_no_credentials (ProxyTestFixture *tf, gconstpoin
         // Spin the loop for a bit...
         g_timeout_add (500, (GSourceFunc) delayed_loop_quitter, tf->loop);
         g_main_loop_run (tf->loop);
+
+        g_object_unref (auth_domain);
 }
 
 void
@@ -767,6 +778,8 @@ test_finish_soap_authentication_wrong_credentials (ProxyTestFixture *tf, gconstp
         // Spin the loop for a bit...
         g_timeout_add (500, (GSourceFunc) delayed_loop_quitter, tf->loop);
         g_main_loop_run (tf->loop);
+
+        g_object_unref (auth_domain);
 }
 
 void
@@ -803,6 +816,7 @@ test_finish_soap_authentication_valid_credentials (ProxyTestFixture *tf, gconstp
         // Spin the loop for a bit...
         g_timeout_add (500, (GSourceFunc) delayed_loop_quitter, tf->loop);
         g_main_loop_run (tf->loop);
+        g_object_unref (auth_domain);
 }
 
 void
@@ -923,6 +937,8 @@ test_action_iter (ProxyTestFixture *tf, gconstpointer user_data)
         // Spin the loop for a bit...
         g_timeout_add (500, (GSourceFunc) delayed_loop_quitter, tf->loop);
         g_main_loop_run (tf->loop);
+
+        g_object_unref (iter);
 }
 
 void
@@ -1044,6 +1060,8 @@ test_action_iter_introspected (ProxyTestFixture *tf, gconstpointer user_data)
         // Spin the loop for a bit...
         g_timeout_add (500, (GSourceFunc) delayed_loop_quitter, tf->loop);
         g_main_loop_run (tf->loop);
+
+        g_object_unref (iter);
 }
 
 int
