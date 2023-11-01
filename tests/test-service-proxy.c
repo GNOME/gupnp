@@ -1125,21 +1125,21 @@ main (int argc, char *argv[])
                     test_finish_soap_error_sync,
                     test_fixture_teardown);
 
-        g_test_add ("/service-proxy/sync/authentication-no-credentials",
+        g_test_add ("/service-proxy/authentication/no-credentials",
                     ProxyTestFixture,
                     "127.0.0.1",
                     test_fixture_setup,
                     test_finish_soap_authentication_no_credentials,
                     test_fixture_teardown);
 
-        g_test_add ("/service-proxy/sync/authentication-wrong-credentials",
+        g_test_add ("/service-proxy/authentication/wrong-credentials",
                     ProxyTestFixture,
                     "127.0.0.1",
                     test_fixture_setup,
-                    test_finish_soap_authentication_no_credentials,
+                    test_finish_soap_authentication_wrong_credentials,
                     test_fixture_teardown);
 
-        g_test_add ("/service-proxy/sync/authentication-valid-credentials",
+        g_test_add ("/service-proxy/authentication/valid-credentials",
                     ProxyTestFixture,
                     "127.0.0.1",
                     test_fixture_setup,
