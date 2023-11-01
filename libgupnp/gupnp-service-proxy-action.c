@@ -103,7 +103,7 @@ gupnp_service_proxy_action_iterate (GUPnPServiceProxyAction *action,
                 }
         }
 
-        return g_object_ref (iter);
+        return iter;
 }
 
 /**
