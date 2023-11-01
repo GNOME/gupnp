@@ -271,6 +271,9 @@ gupnp_service_proxy_finalize (GObject *object)
 
         g_hash_table_destroy (priv->notify_hash);
 
+        g_clear_pointer (&priv->user, g_free);
+        g_clear_pointer (&priv->password, g_free);
+
         /* Call super */
         object_class = G_OBJECT_CLASS (gupnp_service_proxy_parent_class);
         object_class->finalize (object);
