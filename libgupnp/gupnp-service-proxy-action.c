@@ -443,6 +443,7 @@ gupnp_service_proxy_action_new (const char *action,
                         gupnp_service_proxy_action_add_argument (result,
                                                                  arg_name,
                                                                  &value);
+                        g_value_unset (&value);
                 } else {
                         g_warning (
                                 "Failed to collect value of type %s for %s: %s",
