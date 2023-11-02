@@ -1,4 +1,17 @@
+1.6.6 (stable)
+==============
+ - NetworkManager: Drop manual creation of lo contexts
+ - ServiceProxy: Add new API for creating actions
+ - Introspection: Be more resilient against weird formatting
+ - Acl: Improve introspectability
+ - ServiceProxy: Add result iterator for Action
+ - Plug various smaller leaks
+
+All contributors to this release:
+ - Jens Georg <mail@jensge.org>
+
 1.6.5 (stable)
+==============
  - Fix build with meson 1.2
 
 1.6.4 (stable)
