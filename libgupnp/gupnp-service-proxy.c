@@ -18,6 +18,7 @@
 
 #include <config.h>
 #include <libsoup/soup.h>
+#include <libxml/parser.h>
 #include <gobject/gvaluecollector.h>
 #include <string.h>
 #include <locale.h>

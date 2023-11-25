@@ -9,6 +9,8 @@
 
 #include <config.h>
 
+#include <libxml/parser.h>
+
 #include "gupnp-error-private.h"
 #include "gupnp-service-proxy.h"
 #include "gupnp-service-proxy-private.h"
