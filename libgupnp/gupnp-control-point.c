@@ -27,6 +27,8 @@
 #include <config.h>
 #include <string.h>
 
+#include <libxml/parser.h>
+
 #include "gupnp-control-point.h"
 #include "gupnp-context-private.h"
 #include "gupnp-resource-factory-private.h"

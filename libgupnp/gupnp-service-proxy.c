@@ -16,6 +16,8 @@
 #include <locale.h>
 #include <errno.h>
 
+#include <libxml/globals.h>
+
 #include "gena-protocol.h"
 #include "gupnp-context-private.h"
 #include "gupnp-error-private.h"

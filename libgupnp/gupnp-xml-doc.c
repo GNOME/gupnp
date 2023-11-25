@@ -15,6 +15,9 @@
 #include <config.h>
 #include <string.h>
 #include <gio/gio.h>
+
+#include <libxml/parser.h>
+
 #include "gupnp-xml-doc.h"
 #include "gupnp-error.h"
 

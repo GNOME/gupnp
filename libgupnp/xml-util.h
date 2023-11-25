@@ -10,6 +10,8 @@
 #define GUPNP_XML_UTIL_H
 
 #include <libxml/tree.h>
+#include <libxml/parser.h>
+
 #include <stdarg.h>
 #include <glib-object.h>
 
