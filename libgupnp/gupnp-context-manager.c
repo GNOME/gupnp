@@ -791,6 +791,7 @@ gupnp_context_manager_manage_control_point (GUPnPContextManager *manager,
         GPtrArray *objects = ensure_context (priv->contexts, ctx);
 
         g_ptr_array_add (objects, g_object_ref (control_point));
+        g_ptr_array_add (priv->control_points, control_point);
 
         g_object_weak_ref (G_OBJECT (control_point),
                            (GWeakNotify) g_ptr_array_remove_fast,
