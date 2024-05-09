@@ -845,6 +845,7 @@ gupnp_context_manager_manage_root_device (GUPnPContextManager *manager,
 
         g_ptr_array_add (objects, g_object_ref (root_device));
 
+        g_ptr_array_add (priv->root_devices, root_device);
         g_object_weak_ref (G_OBJECT (root_device),
                            (GWeakNotify) g_ptr_array_remove_fast,
                            priv->root_devices);
