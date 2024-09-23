@@ -1,3 +1,15 @@
+1.6.7 (stable)
+==============
+ - Fix compatiblity with libxml2 2.12.x
+ - Improve reproducability
+ - ControlPoint: Fix re-scan
+ - ContextManager: Fix boot-id update
+ - Context: Fix crash if served URI is not an IP address
+
+All contributors to this release:
+ - Jens Georg <mail@jensge.org>
+ - Markus Volk <f_l_k@t-online.de>
+
 1.6.6 (stable)
 ==============
  - NetworkManager: Drop manual creation of lo contexts
