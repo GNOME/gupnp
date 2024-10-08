@@ -305,13 +305,10 @@ gupnp_service_proxy_action_ref (GUPnPServiceProxyAction *action)
         return g_atomic_rc_box_acquire (action);
 }
 
-static void
-action_dispose (GUPnPServiceProxyAction *action)
+void
+gupnp_service_proxy_action_reset (GUPnPServiceProxyAction *action)
 {
-        if (action->proxy != NULL) {
-                g_object_remove_weak_pointer (G_OBJECT (action->proxy),
-                                              (gpointer *) &(action->proxy));
-        }
+        g_clear_weak_pointer (&action->proxy);
         g_clear_error (&action->error);
         g_clear_object (&action->msg);
 
@@ -319,10 +316,17 @@ action_dispose (GUPnPServiceProxyAction *action)
                 g_string_free (action->msg_str, TRUE);
                 action->msg_str = NULL;
         }
+        g_clear_pointer (&action->response, g_bytes_unref);
+        action->params = NULL;
+        g_clear_pointer (&action->doc, xmlFreeDoc);
+}
+
+static void
+action_dispose (GUPnPServiceProxyAction *action)
+{
+        gupnp_service_proxy_action_reset (action);
         g_hash_table_destroy (action->arg_map);
         g_ptr_array_unref (action->args);
-        g_clear_pointer (&action->response, g_bytes_unref);
-        g_clear_pointer (&action->doc, xmlFreeDoc);
 
         g_free (action->name);
 }

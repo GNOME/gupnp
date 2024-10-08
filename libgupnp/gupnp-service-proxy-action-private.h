@@ -170,4 +170,7 @@ G_GNUC_INTERNAL void
 gupnp_service_proxy_action_check_response (GUPnPServiceProxyAction *action);
 G_END_DECLS
 
+G_GNUC_INTERNAL void
+gupnp_service_proxy_action_reset (GUPnPServiceProxyAction *action);
+
 #endif /* GUPNP_SERVICE_PROXY_ACTION_H */

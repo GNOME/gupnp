@@ -380,6 +380,8 @@ prepare_action_msg (GUPnPServiceProxy *proxy,
         char *control_url, *full_action;
         const char *service_type;
 
+        gupnp_service_proxy_action_reset (action);
+
         /* Make sure we have a service type */
         service_type = gupnp_service_info_get_service_type
                                         (GUPNP_SERVICE_INFO (proxy));
@@ -414,7 +416,6 @@ prepare_action_msg (GUPnPServiceProxy *proxy,
         local_control_url = gupnp_context_rewrite_uri (context, control_url);
         g_free (control_url);
 
-        g_clear_object (&action->msg);
         action->msg = soup_message_new (method, local_control_url);
         g_signal_connect_object (G_OBJECT (action->msg), "authenticate", G_CALLBACK (on_authenticate), G_OBJECT (proxy), 0);
         g_signal_connect (G_OBJECT (action->msg), "restarted", G_CALLBACK (on_restarted), action);
@@ -458,7 +459,6 @@ prepare_action_msg (GUPnPServiceProxy *proxy,
         g_bytes_unref (body);
         action->msg_str = NULL;
 
-        g_clear_weak_pointer (&action->proxy);
         action->proxy = proxy;
         g_object_add_weak_pointer (G_OBJECT (proxy),
                                    (gpointer *) &(action->proxy));
@@ -499,7 +499,7 @@ action_task_got_response (GObject *source,
                                  "POST")) {
                         g_debug ("POST returned with METHOD_NOT_ALLOWED, "
                                  "trying with M-POST");
-                        g_bytes_unref (action->response);
+                        g_clear_pointer (&action->response, g_bytes_unref);
                         if (!prepare_action_msg (action->proxy,
                                                  action,
                                                  "M-POST",
@@ -1690,7 +1690,7 @@ gupnp_service_proxy_call_action (GUPnPServiceProxy       *proxy,
                                         action,
                                         "M-POST",
                                         &action->error)) {
-                        g_bytes_unref (action->response);
+                        g_clear_pointer (&action->response, g_bytes_unref);
 
                         action->response =
                                 soup_session_send_and_read (session,
