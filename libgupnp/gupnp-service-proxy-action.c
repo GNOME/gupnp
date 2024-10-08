@@ -211,6 +211,32 @@ gupnp_service_proxy_action_iter_get_value (GUPnPServiceProxyActionIter *self,
         return TRUE;
 }
 
+/**
+ * gupnp_service_proxy_action_iter_get_value_as:
+ * @self: A GUPnP.ServiceProxyActionIter
+ * @type: The type to convert the value to
+ * @value: (out): The value
+ *
+ * Get the value of the current parameter.
+ *
+ * Converts the value to the given type, similar to the other
+ * finish_action functions.
+ *
+ * Returns: %TRUE if the value could be read successfully
+ * Since: 1.6.8
+ */
+
+gboolean
+gupnp_service_proxy_action_iter_get_value_as (GUPnPServiceProxyActionIter *self,
+                                              GType type,
+                                              GValue *value)
+{
+        g_value_init (value, type);
+
+        gvalue_util_set_value_from_xml_node (value, self->current);
+        return TRUE;
+}
+
 struct _ActionArgument {
         char *name;
         GValue value;

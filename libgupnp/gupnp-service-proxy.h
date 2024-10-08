@@ -182,6 +182,12 @@ gupnp_service_proxy_action_iter_get_name (GUPnPServiceProxyActionIter *self);
 gboolean
 gupnp_service_proxy_action_iter_get_value (GUPnPServiceProxyActionIter *self,
                                            GValue *value);
+
+gboolean
+gupnp_service_proxy_action_iter_get_value_as (GUPnPServiceProxyActionIter *self,
+                                              GType type,
+                                              GValue *value);
+
 gboolean
 gupnp_service_proxy_action_get_result (GUPnPServiceProxyAction *action,
                                        GError                 **error,
