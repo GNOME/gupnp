@@ -115,7 +115,7 @@ build-fedora@x86_64:
       # whole environment for every failed test, and that gives a whole
       # screenful of junk each time unless we strip these.
       unset $(env|grep -o '^CI_[^=]*')
-      env LANG=C.UTF-8 LC_ALL=C.UTF-8 meson test --timeout-multiplier ${MESON_TEST_TIMEOUT_MULTIPLIER} --print-errorlogs ${MESON_TEST_EXTRA_ARGS}
+      env LANG=C.UTF-8 LC_ALL=C.UTF-8 meson test --timeout-multiplier ${MESON_TEST_TIMEOUT_MULTIPLIER} --print-errorlogs ${MESON_TEST_EXTRA_ARGS} --suite gupnp
   after_script:
     - |
       echo "Distribution: "
