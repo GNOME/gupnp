@@ -631,7 +631,7 @@ gupnp_context_new (const char   *iface,
  * Creates a GUPnP context with address @addr on network interface @iface. If
  * neither is specified, GUPnP will chose the address it deems most suitable.
  *
- * Since: 1.6.
+ * Since: 1.6
  *
  * Return value: (nullable):  A new #GSSDPClient object or %NULL on error.
  */
@@ -669,7 +669,7 @@ gupnp_context_new_full (const char *iface,
  * Creates a GUPnP context with address @addr. If none is specified, GUPnP
  * will chose the address it deems most suitable.
  *
- * Since: 1.6.
+ * Since: 1.6
  *
  * Return value: (nullable):  A new #GSSDPClient object or %NULL on error.
  */

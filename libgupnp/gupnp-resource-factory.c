@@ -18,7 +18,7 @@
  * [class@GUPnP.DeviceProxy] and [class@GUPnP.Device] to create resource proxy and resource
  * objects.
  *
- * Register UPnP type - [alias@GLib.Type] pairs to have resource or resource proxy
+ * Register UPnP type - [alias@GObject.Type] pairs to have resource or resource proxy
  * objects created with the specified #GType whenever an object for a resource
  * of the specified UPnP type is requested. The #GType needs
  * to be derived from the relevant resource or resource proxy type (e.g.
