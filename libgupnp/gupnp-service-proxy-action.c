@@ -183,7 +183,7 @@ gupnp_service_proxy_action_iter_get_value (GUPnPServiceProxyActionIter *self,
                                                     self->current->name,
                                                     find_argument);
                 if (result == NULL) {
-                        g_print ("No argument %s\n", self->current->name);
+                        g_debug ("No argument %s\n", self->current->name);
                         return FALSE;
                 }
 
@@ -195,14 +195,13 @@ gupnp_service_proxy_action_iter_get_value (GUPnPServiceProxyActionIter *self,
                                 var);
 
                 if (info == NULL) {
-                        g_print ("No state variable for %s\n",
+                        g_debug ("No state variable for %s\n",
                                  self->current->name);
                         return FALSE;
                 }
 
                 g_value_init (value, info->type);
         } else {
-                g_print ("No introspection\n");
                 // We know nothing about the type, so just give out the string and let
                 // the user transform the value
                 g_value_init (value, G_TYPE_STRING);
