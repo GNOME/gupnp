@@ -1,6 +1,6 @@
 include:
-    - remote: "https://gitlab.freedesktop.org/freedesktop/ci-templates/-/raw/0c312d9c7255f46e741d43bcd1930f09cd12efe7/templates/ci-fairy.yml"
-    - remote: 'https://gitlab.freedesktop.org/freedesktop/ci-templates/-/raw/0c312d9c7255f46e741d43bcd1930f09cd12efe7/templates/fedora.yml'
+    - remote: "https://gitlab.gnome.org/Infrastructure/freedesktop-ci-templates/-/raw/0c312d9c7255f46e741d43bcd1930f09cd12efe7/templates/ci-fairy.yml"
+    - remote: 'https://gitlab.gnome.org/Infrastructure/freedesktop-ci-templates/-/raw/0c312d9c7255f46e741d43bcd1930f09cd12efe7/templates/fedora.yml'
 
 variables:
     MESON_TEST_TIMEOUT_MULTIPLIER: 3
