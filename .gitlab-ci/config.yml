@@ -24,4 +24,4 @@ distributions:
 
 packages:
   fedora:
-  needed: ['clang,clang-analyzer,gcovr,git,libasan,libubsan,python3-gobject,python3-pip,xmlto,gobject-introspection-devel,gtk-doc,libxml2-devel,vala,ninja-build,libnghttp2-devel,libpsl-devel,sqlite-devel,python3-setuptools']
+  needed: ['clang', 'clang-analyzer', 'gcovr', 'git', 'libasan', 'libubsan', 'python3-gobject', 'python3-pip', 'xmlto', 'gobject-introspection-devel', 'gtk-doc', 'libxml2-devel', 'vala', 'ninja-build', 'libnghttp2-devel', 'libpsl-devel', 'sqlite-devel', 'python3-setuptools']
