@@ -109,7 +109,7 @@ check-merge-request:
    variables:
       BASE_TAG: '${FEDORA_BASE_TAG}'
       FDO_UPSTREAM_REPO: GNOME/gupnp
-      FDO_DISTRIBUTION_PACKAGES: "clang clang-analyzer gcovr git libasan libubsan python3-gobject python3-pip xmlto gobject-introspection-devel gtk-doc libxml2-devel vala ninja-build libnghttp2-devel libpsl-devel sqlite-devel python3-setuptools"
+      FDO_DISTRIBUTION_PACKAGES: "clang clang-analyzer gcovr git libasan libubsan python3-gobject python3-pip xmlto gobject-introspection-devel gtk-doc libxml2-devel vala ninja-build libnghttp2-devel libpsl-devel sqlite-devel python3-setuptools libsoup3-devel"
       FDO_DISTRIBUTION_EXEC: .gitlab-ci/setup-image-fedora.sh
 
 .gupnp.fedora:41@x86_64:
