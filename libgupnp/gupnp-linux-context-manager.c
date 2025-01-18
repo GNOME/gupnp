@@ -554,6 +554,7 @@ extract_info (struct nlmsghdr *header, gboolean dump, struct ifaddrmsg *ifa)
                 }
 
                 if (rt_attr->rta_type == IFA_LABEL) {
+                        g_clear_pointer (&info->label, g_free);
                         info->label = g_strdup ((char *) RTA_DATA (rt_attr));
 #if defined(HAVE_IFA_FLAGS)
                 } else if (rt_attr->rta_type == IFA_FLAGS) {
@@ -561,6 +562,7 @@ extract_info (struct nlmsghdr *header, gboolean dump, struct ifaddrmsg *ifa)
                         info->flags = *(uint32_t *) RTA_DATA (rt_attr);
 #endif
                 } else if (rt_attr->rta_type == IFA_ADDRESS) {
+                        g_clear_object (&info->address);
                         info->address = g_inet_address_new_from_bytes (
                                 RTA_DATA (rt_attr),
                                 ifa->ifa_family);
