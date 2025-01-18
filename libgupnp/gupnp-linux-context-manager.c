@@ -901,19 +901,22 @@ receive_netlink_message (GUPnPLinuxContextManager *self, GError **error)
         for (;NLMSG_IS_VALID (header, len); header = NLMSG_NEXT (header,len)) {
                 switch (header->nlmsg_type) {
                 /* RTM_NEWADDR and RTM_DELADDR are sent on real address
-                         * changes.
-                         * RTM_NEWADDR can also be sent regularly for information
-                         * about v6 address lifetime
-                         * RTM_NEWLINK is sent on various occasions:
-                         *  - Creation of a new device
-                         *  - Device goes up/down
-                         *  - Wireless status changes
-                         * RTM_DELLINK is sent only if device is removed, like
-                         * openvpn --rmtun /dev/tun0, NOT on ifconfig down. */
+                 * changes.
+                 * RTM_NEWADDR can also be sent regularly for information
+                 * about v6 address lifetime
+                 * RTM_NEWLINK is sent on various occasions:
+                 *  - Creation of a new device
+                 *  - Device goes up/down
+                 *  - Wireless status changes
+                 * RTM_DELLINK is sent only if device is removed, like
+                 * openvpn --rmtun /dev/tun0, NOT on ifconfig down. */
                 case RTM_NEWADDR: {
                         g_debug ("Received RTM_NEWADDR");
                         ifa = NLMSG_DATA (header);
 
+#ifdef __clang_analyzer__
+                        [[clang::suppress]]
+#endif
                         g_autoptr (RtmAddrInfo) info =
                                 extract_info (header,
                                               priv->dump_netlink_packets,
