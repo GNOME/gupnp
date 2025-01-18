@@ -1,3 +1,15 @@
+1.6.8 (stable)
+
+ - ServiceProxyAction: Remove some left-over debug output
+ - ServiceProxyAction: Stop leaking the HTTP response
+ - Docs: Fix various issues
+ - ServiceProxyAction: Add get_value_as()
+ - Linux-CM: Silence a false-positive with scan-build
+
+All contributors to this release:
+ - Jens Georg <mail@jensge.org>
+ - Bartłomiej Piotrowski <b@bpiotrowski.pl>
+
 1.6.7 (stable)
 ==============
  - Fix compatiblity with libxml2 2.12.x
