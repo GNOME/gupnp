@@ -587,9 +587,9 @@ static GUPnPServiceActionArgInfo *
 get_action_argument (xmlNodePtr argument_node)
 {
         GUPnPServiceActionArgInfo *argument;
-        g_autofree char *name = NULL;
-        g_autofree char *state_var = NULL;
-        g_autofree char *direction = NULL;
+        char *name = NULL;
+        char *state_var = NULL;
+        char *direction = NULL;
 
         name = xml_util_get_child_element_content_glib (argument_node, "name");
         state_var = xml_util_get_child_element_content_glib (
@@ -599,6 +599,10 @@ get_action_argument (xmlNodePtr argument_node)
                                                              "direction");
 
         if (!name || !state_var || !direction) {
+                g_free (name);
+                g_free (state_var);
+                g_free (direction);
+
                 return NULL;
         }
 
@@ -612,6 +616,7 @@ get_action_argument (xmlNodePtr argument_node)
         } else {
                 argument->direction = GUPNP_SERVICE_ACTION_ARG_DIRECTION_OUT;
         }
+        g_free (direction);
 
         if (xml_util_get_element (argument_node, "retval", NULL) != NULL) {
                 argument->retval = TRUE;
@@ -711,7 +716,7 @@ get_state_variables (xmlNode *list_element)
         for (variable_node = list_element->children;
              variable_node;
              variable_node = variable_node->next) {
-                g_autofree char *name = NULL;
+                char *name;
                 GUPnPServiceStateVariableInfo *variable;
 
                 if (strcmp ("stateVariable",
