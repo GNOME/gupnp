@@ -37,7 +37,7 @@ conf.set('GLIB_VERSION_MAX_ALLOWED', 'GLIB_VERSION_@0@'.format(glib_version.unde
 
 subdir('internal')
 
-gssdp_dep = dependency('gssdp-1.6', version : '>= 1.6.2', default_options: ['sniffer=false', 'manpages=false', 'gtk_doc=false'], fallback: 'gssdp-1.6')
+gssdp_dep = dependency('gssdp-1.6', version : '>= 1.6.2', default_options: ['sniffer=false', 'manpages=false', 'gtk_doc=false', 'introspection=' + get_option('introspection')], fallback: 'gssdp-1.6')
 gio_unix = dependency('gio-unix-2.0', version: '>= 2.44', required: host_machine.system() != 'windows')
 libxml_dep = dependency('libxml-2.0')
 
