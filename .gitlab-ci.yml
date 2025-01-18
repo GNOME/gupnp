@@ -223,9 +223,8 @@ pages:
       - public
   needs:
     - build-fedora:41@x86_64
-  only:
-    - master
-    - /^wip\/.*\/ci.*$/
-    - /^wip\/.*\/.*doc.*$/
-
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+    - if: $CI_COMMIT_BRANCH == /^wip\/.*\/ci.*$/
+    - if: $CI_COMMIT_BRANCH == /^wip\/.*\/.*doc.*$/
 

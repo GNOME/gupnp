@@ -238,9 +238,9 @@ pages:
       - public
   needs:
     - build-{{targets["pages"]}}
-  only:
-    - master
-    - /^wip\/.*\/ci.*$/
-    - /^wip\/.*\/.*doc.*$/
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+    - if: $CI_COMMIT_BRANCH == /^wip\/.*\/ci.*$/
+    - if: $CI_COMMIT_BRANCH == /^wip\/.*\/.*doc.*$/
 
 
