@@ -37,7 +37,7 @@ docs_url = "https://gnome.pages.gitlab.gnome.org/gssdp/docs/"
 [dependencies."Soup-3.0"]
 name = "Soup"
 description = "A HTTP handling library"
-docs_url = "https://libsoup.org/libsoup-3.0/index.html"
+docs_url = "https://libsoup.gnome.org/libsoup-3.0/index.html"
 
 [dependencies."libxml2-2.0"]
 name = "LibXML2"
