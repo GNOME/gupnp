@@ -517,8 +517,6 @@ test_sync_call (ProxyTestFixture *tf, gconstpointer user_data)
         // Spin the loop for a bit...
         g_timeout_add (500, (GSourceFunc) delayed_loop_quitter, tf->loop);
         g_main_loop_run (tf->loop);
-
-        g_thread_unref (t);
 }
 
 gboolean
@@ -562,7 +560,6 @@ test_cancel_sync_call (ProxyTestFixture *tf, gconstpointer user_data)
         // Spin the loop for a bit...
         g_timeout_add (500, (GSourceFunc) delayed_loop_quitter, tf->loop);
         g_main_loop_run (tf->loop);
-        g_thread_unref (t);
         g_object_unref (d.cancellable);
 }
 
@@ -642,7 +639,6 @@ test_finish_soap_error_sync (ProxyTestFixture *tf, gconstpointer user_data)
         // Spin the loop for a bit...
         g_timeout_add (500, (GSourceFunc) delayed_loop_quitter, tf->loop);
         g_main_loop_run (tf->loop);
-        g_thread_unref (t);
 }
 
 void
