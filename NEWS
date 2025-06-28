@@ -1,3 +1,17 @@
+1.6.9 (stable)
+
+ - Linux-CM: Fix a potential memory leak
+ - Fix documentation link for libsoup
+ - Fix unnecessary g_thread_unref in tests
+ - Fix issues with Since: in documentation
+
+Merge requests included in this release:
+ - https://gitlab.gnome.org/GNOME/gupnp/merge_requests/444
+
+All contributors to this release:
+ - Jens Georg <mail@jensge.org>
+ - Simon McVittie <smcv@collabora.com>
+
 1.6.8 (stable)
 
  - ServiceProxyAction: Remove some left-over debug output
