@@ -3,16 +3,17 @@ api_version: 1.6
 
 # TODO: Hardcode architecture for now
 arch: x86_64
+template_ref: aec7a6ce7bb38902c70641526f6611e27141784a
 
 # Those are all jobs that are just run once, not on all distributions and versions
 # format has to be distribution:version@arch
 targets:
-  coverage: fedora:41@x86_64
-  coverity: fedora:41@x86_64
-  static-scan: fedora:41@x86_64
-  pages: fedora:41@x86_64
-  downstream: fedora:41@x86_64
-  dist: fedora:41@x86_64
+  coverage: fedora:43@x86_64
+  coverity: fedora:43@x86_64
+  static-scan: fedora:43@x86_64
+  pages: fedora:43@x86_64
+  downstream: fedora:43@x86_64
+  dist: fedora:43@x86_64
 
 # Projects to trigger after a successful build
 # Format is name: gitlab project on this server
@@ -20,8 +21,8 @@ triggers:
 
 # Distribution configurations
 distributions:
-  fedora: [41]
+  fedora: [43]
 
 packages:
   fedora:
-    needed: ['clang', 'clang-analyzer', 'gcovr', 'git', 'libasan', 'libubsan', 'python3-gobject', 'python3-pip', 'xmlto', 'gobject-introspection-devel', 'gtk-doc', 'libxml2-devel', 'vala', 'ninja-build', 'libnghttp2-devel', 'libpsl-devel', 'sqlite-devel', 'python3-setuptools', 'libsoup3-devel']
+    needed: ['file', 'clang', 'clang-analyzer', 'gcovr', 'git', 'libasan', 'libubsan', 'python3-gobject', 'python3-pip', 'xmlto', 'gobject-introspection-devel', 'gtk-doc', 'libxml2-devel', 'vala', 'ninja-build', 'libnghttp2-devel', 'libpsl-devel', 'sqlite-devel', 'python3-setuptools', 'libsoup3-devel']

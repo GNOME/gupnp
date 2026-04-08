@@ -4,10 +4,10 @@ include:
     - '/.gitlab-ci/tags.yml'
     - project: "Infrastructure/freedesktop-ci-templates"
       file: "templates/fedora.yml"
-      ref: "e195d80f35b45cc73668be3767b923fd76c70ed5"
+      ref: "{{template_ref}}"  
     - project: "Infrastructure/freedesktop-ci-templates"
       file: "templates/ci-fairy.yml"
-      ref: "e195d80f35b45cc73668be3767b923fd76c70ed5"
+      ref: "{{template_ref}}"  
     - component: "gitlab.gnome.org/GNOME/citemplates/release-service@master"
       inputs:
         dist-job-name: build-{{targets["dist"]}}

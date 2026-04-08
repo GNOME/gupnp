@@ -4,13 +4,13 @@ include:
     - '/.gitlab-ci/tags.yml'
     - project: "Infrastructure/freedesktop-ci-templates"
       file: "templates/fedora.yml"
-      ref: "e195d80f35b45cc73668be3767b923fd76c70ed5"
+      ref: "aec7a6ce7bb38902c70641526f6611e27141784a"  
     - project: "Infrastructure/freedesktop-ci-templates"
       file: "templates/ci-fairy.yml"
-      ref: "e195d80f35b45cc73668be3767b923fd76c70ed5"
+      ref: "aec7a6ce7bb38902c70641526f6611e27141784a"  
     - component: "gitlab.gnome.org/GNOME/citemplates/release-service@master"
       inputs:
-        dist-job-name: build-fedora:41@x86_64
+        dist-job-name: build-fedora:43@x86_64
         # gupnp tags are always of the format {PROJECT_NAME}-{version}
         tarball-artifact-path: "build/meson-dist/${CI_COMMIT_TAG}.tar.xz"
     - project: "GNOME/citemplates"
@@ -116,43 +116,43 @@ check-merge-request:
       FDO_DISTRIBUTION_PACKAGES: "clang clang-analyzer gcovr git libasan libubsan python3-gobject python3-pip xmlto gobject-introspection-devel gtk-doc libxml2-devel vala ninja-build libnghttp2-devel libpsl-devel sqlite-devel python3-setuptools libsoup3-devel"
       FDO_DISTRIBUTION_EXEC: .gitlab-ci/setup-image-fedora.sh
 
-.gupnp.fedora:41@x86_64:
+.gupnp.fedora:43@x86_64:
     extends: .gupnp.fedora@common
     variables:
-      FDO_DISTRIBUTION_VERSION: "41"
+      FDO_DISTRIBUTION_VERSION: "43"
       FDO_DISTRIBUTION_TAG: "x86_64-${BASE_TAG}"
 
-build-container-fedora:41@x86_64:
+build-container-fedora:43@x86_64:
     extends:
         - .fdo.container-build@fedora
-        - .gupnp.fedora:41@x86_64
+        - .gupnp.fedora:43@x86_64
     stage: prepare
     variables:
         GIT_STRATEGY: none
 
-build-fedora:41@x86_64:
+build-fedora:43@x86_64:
     extends:
         - .fdo.distribution-image@fedora
-        - .gupnp.fedora:41@x86_64
+        - .gupnp.fedora:43@x86_64
     needs:
-        - build-container-fedora:41@x86_64
+        - build-container-fedora:43@x86_64
     <<: *build
 
-test-fedora:41@x86_64:
+test-fedora:43@x86_64:
     tags:
         - ipv6
     extends:
         - .fdo.distribution-image@fedora
-        - .gupnp.fedora:41@x86_64
+        - .gupnp.fedora:43@x86_64
     needs:
-        - build-fedora:41@x86_64
+        - build-fedora:43@x86_64
     <<: *test
 
 
 coverage-analysis:
   extends:
     - .fdo.distribution-image@fedora
-    - .gupnp.fedora:41@x86_64
+    - .gupnp.fedora:43@x86_64
   stage: analysis
   allow_failure: true
   script:
@@ -165,15 +165,15 @@ coverage-analysis:
     paths:
     - build/coveragereport
   needs:
-    - test-fedora:41@x86_64
+    - test-fedora:43@x86_64
 
 static-scan:
   extends:
     - .fdo.distribution-image@fedora
-    - .gupnp.fedora:41@x86_64
+    - .gupnp.fedora:43@x86_64
   stage: analysis
   needs:
-    - build-container-fedora:41@x86_64
+    - build-container-fedora:43@x86_64
   script:
     - meson --buildtype=debug _scan_build -Dintrospection=false
     - export SCANBUILD="$PWD/.gitlab-ci/scanbuild-wrapper.sh"
@@ -190,7 +190,7 @@ static-scan:
 coverity:
   extends:
     - .fdo.distribution-image@fedora
-    - .gupnp.fedora:41@x86_64
+    - .gupnp.fedora:43@x86_64
   stage: analysis
   allow_failure: true
   script:
@@ -206,7 +206,7 @@ coverity:
       --form file=@cov-int.tar.gz --form version="`git describe --tags`"
       --form description="gitlab CI build"
   needs:
-    - build-container-fedora:41@x86_64
+    - build-container-fedora:43@x86_64
   only:
     - master
   except:
@@ -216,7 +216,7 @@ coverity:
 pages:
   extends:
     - .fdo.distribution-image@fedora
-    - .gupnp.fedora:41@x86_64
+    - .gupnp.fedora:43@x86_64
   stage: website
   script:
       - mkdir -p public
@@ -226,7 +226,7 @@ pages:
     paths:
       - public
   needs:
-    - build-fedora:41@x86_64
+    - build-fedora:43@x86_64
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
     - if: $CI_COMMIT_BRANCH == /^wip\/.*\/ci.*$/
