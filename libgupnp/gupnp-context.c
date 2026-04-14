@@ -1751,7 +1751,7 @@ gupnp_context_rewrite_uri_to_uri (GUPnPContext *context, const char *uri)
 
 gboolean
 validate_host_header (const char *host_header,
-                      const char *host_ip,
+                      GInetAddress *host_addr,
                       guint context_port)
 {
 
@@ -1763,6 +1763,9 @@ validate_host_header (const char *host_header,
         char *host = NULL;
         int port = 0;
         GError *error = NULL;
+        GInetAddress *parsed_host = NULL;
+        gboolean host_matches;
+        gchar *normalized_host_str = NULL;
 
         g_uri_split_network (uri_from_host,
                              G_URI_FLAGS_NONE,
@@ -1783,11 +1786,15 @@ validate_host_header (const char *host_header,
                 port = 80;
         }
 
-        if (!g_str_equal (host, host_ip)) {
+        parsed_host = g_inet_address_new_from_string (host);
+        host_matches = parsed_host != NULL &&
+                       g_inet_address_equal (parsed_host, host_addr);
+        if (!host_matches) {
+                normalized_host_str = g_inet_address_to_string (host_addr);
                 g_debug ("Mismatch between host header and host IP (%s, "
                          "expected: %s)",
                          host,
-                         host_ip);
+                         normalized_host_str);
         }
 
         if (port != context_port) {
@@ -1797,9 +1804,11 @@ validate_host_header (const char *host_header,
                          context_port);
         }
 
-        retval = g_str_equal (host, host_ip) && port == context_port;
+        retval = host_matches && port == context_port;
 
 out:
+        g_free (normalized_host_str);
+        g_clear_object (&parsed_host);
         g_clear_error (&error);
         g_free (host);
         g_free (uri_from_host);
@@ -1813,6 +1822,6 @@ gupnp_context_validate_host_header (GUPnPContext *context,
 {
         return validate_host_header (
                 host_header,
-                gssdp_client_get_host_ip (GSSDP_CLIENT (context)),
+                gssdp_client_get_address (GSSDP_CLIENT (context)),
                 gupnp_context_get_port (context));
 }

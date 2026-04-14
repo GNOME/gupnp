@@ -525,67 +525,81 @@ test_bgo_743233 (void)
 static void
 test_ggo_24 (void)
 {
+        g_autoptr (GInetAddress) addr_127 = g_inet_address_new_from_string ("127.0.0.1");
+        g_autoptr (GInetAddress) addr_192 = g_inet_address_new_from_string ("192.168.1.2");
+        g_autoptr (GInetAddress) addr_lo6 = g_inet_address_new_from_string ("::1");
+        g_autoptr (GInetAddress) addr_fe80_acab = g_inet_address_new_from_string ("fe80::acab");
+
         // IPv4
         g_assert (
-                validate_host_header ("127.0.0.1:4711", "127.0.0.1", 4711));
+                validate_host_header ("127.0.0.1:4711", addr_127, 4711));
 
         g_assert (
-                validate_host_header ("127.0.0.1", "127.0.0.1", 80));
+                validate_host_header ("127.0.0.1", addr_127, 80));
 
         g_assert_false (
-                validate_host_header ("example.com", "127.0.0.1", 4711));
+                validate_host_header ("example.com", addr_127, 4711));
 
         g_assert_false (
-                validate_host_header ("example.com:80", "127.0.0.1", 4711));
+                validate_host_header ("example.com:80", addr_127, 4711));
 
         g_assert_false (
-                validate_host_header ("example.com:4711", "127.0.0.1", 4711));
+                validate_host_header ("example.com:4711", addr_127, 4711));
 
         g_assert_false (
-                validate_host_header ("192.168.1.2:4711", "127.0.0.1", 4711));
+                validate_host_header ("192.168.1.2:4711", addr_127, 4711));
 
         g_assert_false (
-                validate_host_header ("[fe80::01]", "127.0.0.1", 4711));
+                validate_host_header ("[fe80::01]", addr_127, 4711));
 
         // Link ids should not be parsed
         g_assert_false (
-                validate_host_header ("[fe80::01%1]", "127.0.0.1", 4711));
+                validate_host_header ("[fe80::01%1]", addr_127, 4711));
 
         g_assert_false (
-                validate_host_header ("[fe80::01%eth0]", "127.0.0.1", 4711));
+                validate_host_header ("[fe80::01%eth0]", addr_127, 4711));
 
         // IPv6
         g_assert (
-                validate_host_header ("[::1]:4711", "::1", 4711));
+                validate_host_header ("[::1]:4711", addr_lo6, 4711));
 
         g_assert (
-                validate_host_header ("[::1]", "::1", 80));
+                validate_host_header ("[::1]", addr_lo6, 80));
+
+        g_assert (
+                validate_host_header ("[fe80::acab]", addr_fe80_acab, 80));
+
+        g_assert (
+                validate_host_header ("[FE80::ACAB]", addr_fe80_acab, 80));
+
+        g_assert (
+                validate_host_header ("[fe80:0000:0000:0000:0000:0000:0000:acab]", addr_fe80_acab, 80));
 
         // Host header needs to be enclosed in [] even without port
         g_assert_false (
-                validate_host_header ("::1", "::1", 80));
+                validate_host_header ("::1", addr_lo6, 80));
 
         g_assert_false (
-                validate_host_header ("example.com", "::1", 4711));
+                validate_host_header ("example.com", addr_lo6, 4711));
 
         g_assert_false (
-                validate_host_header ("example.com:80", "::1", 4711));
+                validate_host_header ("example.com:80", addr_lo6, 4711));
 
         g_assert_false (
-                validate_host_header ("example.com:4711", "::1", 4711));
+                validate_host_header ("example.com:4711", addr_lo6, 4711));
 
         g_assert_false (
-                validate_host_header ("192.168.1.2:4711", "::1", 4711));
+                validate_host_header ("192.168.1.2:4711", addr_lo6, 4711));
 
         g_assert_false (
-                validate_host_header ("[fe80::01]", "::1", 4711));
+                validate_host_header ("[fe80::01]", addr_lo6, 4711));
 
         // Link ids should not be parsed
         g_assert_false (
-                validate_host_header ("[fe80::01%1]", "fe80::acab", 4711));
+                validate_host_header ("[fe80::01%1]", addr_fe80_acab, 4711));
 
         g_assert_false (
-                validate_host_header ("[fe80::01%eth0]", "fe80::acab", 4711));
+                validate_host_header ("[fe80::01%eth0]", addr_fe80_acab, 4711));
 }
 
 void

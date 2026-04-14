@@ -31,7 +31,7 @@ gupnp_context_validate_host_header (GUPnPContext *context, const char *host);
 
 gboolean
 validate_host_header (const char *host_header,
-                      const char *host_ip,
+                      GInetAddress *host_addr,
                       guint context_port);
 
 G_END_DECLS
