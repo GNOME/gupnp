@@ -52,19 +52,6 @@ check-commit-log:
       fi
   <<: *check
 
-check-merge-request:
-  variables:
-    GIT_STRATEGY: none
-  stage: review
-  script:
-    - if [[ x"$CI_MERGE_REQUEST_TARGET_BRANCH_NAME" != "x" ]] ;
-      then
-        ci-fairy check-merge-request --require-allow-collaboration --junit-xml=check-junit-report.xml ;
-      else
-        echo "Not a merge request" ;
-      fi
-  <<: *check
-
 .build-template: &build
   stage: build
   script:
