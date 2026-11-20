@@ -74,7 +74,7 @@ gupnp_xml_doc_initable_init (GInitable *initable,
                 return FALSE;
         }
 
-        int flags = XML_PARSE_PEDANTIC;
+        int flags = XML_PARSE_PEDANTIC | XML_PARSE_NONET;
         if (!g_getenv ("GUPNP_DEBUG")) {
                 flags |= XML_PARSE_NOWARNING | XML_PARSE_NOERROR;
         }
